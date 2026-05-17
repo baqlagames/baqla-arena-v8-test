@@ -122,41 +122,218 @@ export function createArenaSceneRenderer({ ctx, view, randomRange } = {}) {
     return true;
   }
 
-  function drawPaintedArena25D() {
-    const img = getPaintedArena25DImage();
-    if (img && img.complete && img.naturalWidth > 0) paintedArena25DReady = true;
-    if (!img || !paintedArena25DReady) return false;
+  function arena25DPath(points) {
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+    ctx.closePath();
+  }
 
+  function arena25DStrokeLine(x1, y1, x2, y2) {
+    const a = arena_camPoint(x1, y1);
+    const b = arena_camPoint(x2, y2);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+
+  function drawPainted25DTorch(x, y, scale) {
+    const p = arena_camPoint(x, y);
     ctx.save();
-    ctx.fillStyle = '#070913';
-    ctx.fillRect(0, 0, W, H);
-    ctx.save();
-    ctx.globalAlpha = 0.28;
-    drawCoverImage(img, 0, 0, W, H);
+    ctx.translate(p.x, p.y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#2a1a0d';
+    ctx.fillRect(-3, -16, 6, 18);
+    ctx.fillStyle = '#5b3516';
+    ctx.fillRect(-7, -18, 14, 5);
+    ctx.fillStyle = 'rgba(255,170,42,0.28)';
+    ctx.beginPath();
+    ctx.arc(0, -23, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffcf45';
+    ctx.beginPath();
+    ctx.moveTo(0, -36);
+    ctx.quadraticCurveTo(9, -24, 0, -14);
+    ctx.quadraticCurveTo(-8, -24, 0, -36);
+    ctx.fill();
+    ctx.fillStyle = '#ff6b2c';
+    ctx.beginPath();
+    ctx.moveTo(1, -30);
+    ctx.quadraticCurveTo(5, -23, 0, -17);
+    ctx.quadraticCurveTo(-4, -23, 1, -30);
+    ctx.fill();
     ctx.restore();
-    ctx.fillStyle = 'rgba(5,8,20,0.28)';
-    ctx.fillRect(0, 0, W, H);
-    drawFullHeightImage(img, 0, 0, W, H);
+  }
 
-    const topFade = ctx.createLinearGradient(0, 0, 0, Math.max(160, H * 0.18));
-    topFade.addColorStop(0, 'rgba(5,8,20,0.20)');
-    topFade.addColorStop(1, 'rgba(5,8,20,0.00)');
-    ctx.fillStyle = topFade;
-    ctx.fillRect(0, 0, W, Math.max(160, H * 0.18));
+  function drawPainted25DGate(floor) {
+    const midX = (floor.left + floor.right) / 2;
+    const p = arena_camPoint(midX, floor.top - 36);
+    const gateW = Math.max(58, (floor.right - floor.left) * 0.20);
+    const scale = arena_camDepthScaleAt(floor.top);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#263023';
+    ctx.strokeStyle = '#7d6744';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(-gateW / 2, -30, gateW, 58, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(237,213,134,0.45)';
+    ctx.lineWidth = 1.5;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * gateW / 6, -28);
+      ctx.lineTo(i * gateW / 6, 26);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
-    const bottomFade = ctx.createLinearGradient(0, Math.max(0, H - 190), 0, H);
-    bottomFade.addColorStop(0, 'rgba(5,8,20,0.00)');
-    bottomFade.addColorStop(1, 'rgba(5,8,20,0.24)');
-    ctx.fillStyle = bottomFade;
-    ctx.fillRect(0, Math.max(0, H - 190), W, 190);
-
+  function drawPaintedArena25D() {
     const theme = arena_bossArenaTheme();
+    const floorPad = Math.max(cellW * 1.65, 92);
+    const minWide = Math.min(ARENA_R - ARENA_L - 18, Math.max(gridW + floorPad * 2, (ARENA_R - ARENA_L) * 0.94));
+    const centerX = gridX + gridW / 2;
+    let left = centerX - minWide / 2;
+    let right = centerX + minWide / 2;
+    if (left < ARENA_L + 9) {
+      right += ARENA_L + 9 - left;
+      left = ARENA_L + 9;
+    }
+    if (right > ARENA_R - 9) {
+      left -= right - (ARENA_R - 9);
+      right = ARENA_R - 9;
+    }
+    const floor = {
+      left: Math.max(ARENA_L + 9, left),
+      right: Math.min(ARENA_R - 9, right),
+      top: Math.max(ARENA_TOP + 36, gridY - cellH * 4.45),
+      bottom: Math.min(ARENA_BOT - 22, gridY + cellH * (gridRows + 1.82))
+    };
+
+    ctx.save();
+    ctx.fillStyle = '#071019';
+    ctx.fillRect(0, 0, W, H);
+
+    const sky = ctx.createLinearGradient(0, ARENA_TOP, 0, ARENA_BOT);
+    sky.addColorStop(0, '#314a58');
+    sky.addColorStop(0.42, '#5d7c5a');
+    sky.addColorStop(1, '#33231c');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, ARENA_TOP, W, ARENA_BOT - ARENA_TOP);
+
+    const glow = ctx.createRadialGradient(W / 2, ARENA_TOP + 120, 30, W / 2, ARENA_TOP + 150, W * 0.78);
+    glow.addColorStop(0, theme ? (theme.color + '33') : 'rgba(255,214,102,0.18)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, ARENA_TOP, W, ARENA_BOT - ARENA_TOP);
+
+    const lt = arena_camPoint(floor.left, floor.top);
+    const rt = arena_camPoint(floor.right, floor.top);
+    const lb = arena_camPoint(floor.left, floor.bottom);
+    const rb = arena_camPoint(floor.right, floor.bottom);
+
+    ctx.fillStyle = '#59627f';
+    arena25DPath([lt, rt, { x: rt.x, y: rt.y - 74 }, { x: lt.x, y: lt.y - 74 }]);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 9; i++) {
+      const x = floor.left + (floor.right - floor.left) * i / 9;
+      arena25DStrokeLine(x, floor.top - 58, x, floor.top);
+    }
+
+    ctx.fillStyle = '#3f4665';
+    arena25DPath([lt, lb, { x: lb.x - 64, y: lb.y - 24 }, { x: lt.x - 42, y: lt.y - 60 }]);
+    ctx.fill();
+    arena25DPath([rt, rb, { x: rb.x + 64, y: rb.y - 24 }, { x: rt.x + 42, y: rt.y - 60 }]);
+    ctx.fill();
+
+    drawPainted25DGate(floor);
+
+    const floorGrad = ctx.createLinearGradient(0, floor.top, 0, floor.bottom);
+    floorGrad.addColorStop(0, '#8fc357');
+    floorGrad.addColorStop(0.48, '#b7c96a');
+    floorGrad.addColorStop(1, '#5e4b32');
+    ctx.fillStyle = floorGrad;
+    arena_pathCamQuad(floor.left, floor.top, floor.right - floor.left, floor.bottom - floor.top);
+    ctx.fill();
+
+    const cols = Math.max(9, gridCols + 4);
+    const rows = Math.max(11, gridRows + 7);
+    const tileW = (floor.right - floor.left) / cols;
+    const tileH = (floor.bottom - floor.top) / rows;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const isSand = (r + c) % 2 === 0;
+        ctx.fillStyle = isSand ? 'rgba(232,211,148,0.74)' : 'rgba(103,173,62,0.68)';
+        arena_pathCamQuad(floor.left + c * tileW + 1.2, floor.top + r * tileH + 1.2, tileW - 2.4, tileH - 2.4);
+        ctx.fill();
+      }
+    }
+
+    ctx.strokeStyle = 'rgba(255,248,205,0.26)';
+    ctx.lineWidth = 1.2;
+    for (let c = 0; c <= gridCols; c++) {
+      const x = gridX + c * cellW;
+      arena25DStrokeLine(x, gridY, x, gridY + gridRows * cellH);
+    }
+    for (let r = 0; r <= gridRows; r++) {
+      const y = gridY + r * cellH;
+      arena25DStrokeLine(gridX, y, gridX + gridCols * cellW, y);
+    }
+
+    const edgeAlpha = 0.60;
+    ctx.strokeStyle = 'rgba(43,29,18,' + edgeAlpha + ')';
+    ctx.lineWidth = 4;
+    arena25DStrokeLine(floor.left + 15, floor.top + 8, floor.left + 15, floor.bottom - 18);
+    arena25DStrokeLine(floor.right - 15, floor.top + 8, floor.right - 15, floor.bottom - 18);
+    ctx.lineWidth = 5;
+    arena25DStrokeLine(floor.left + 18, floor.bottom - 6, floor.right - 18, floor.bottom - 6);
+
+    ctx.fillStyle = 'rgba(16,32,25,0.48)';
+    arena25DPath([
+      arena_camPoint(ARENA_L - 30, floor.top + 30),
+      arena_camPoint(floor.left - 8, floor.top + 12),
+      arena_camPoint(floor.left - 8, floor.bottom),
+      arena_camPoint(ARENA_L - 30, floor.bottom + 42)
+    ]);
+    ctx.fill();
+    arena25DPath([
+      arena_camPoint(floor.right + 8, floor.top + 12),
+      arena_camPoint(ARENA_R + 30, floor.top + 30),
+      arena_camPoint(ARENA_R + 30, floor.bottom + 42),
+      arena_camPoint(floor.right + 8, floor.bottom)
+    ]);
+    ctx.fill();
+
+    drawPainted25DTorch(floor.left + 24, floor.top + 24, 0.72);
+    drawPainted25DTorch(floor.right - 24, floor.top + 24, 0.72);
+    drawPainted25DTorch(floor.left + 24, floor.bottom - 42, 1.00);
+    drawPainted25DTorch(floor.right - 24, floor.bottom - 42, 1.00);
+
+    const sheen = ctx.createLinearGradient(0, ARENA_TOP, 0, ARENA_BOT);
+    sheen.addColorStop(0, 'rgba(255,255,255,0.12)');
+    sheen.addColorStop(0.42, 'rgba(255,255,255,0.02)');
+    sheen.addColorStop(1, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, ARENA_TOP, W, ARENA_BOT - ARENA_TOP);
+
     if (theme && state === 'battle') {
       ctx.globalAlpha = 0.06;
       ctx.fillStyle = theme.color || theme.accent || '#ffd166';
       ctx.fillRect(0, ARENA_TOP, W, ARENA_BOT - ARENA_TOP);
       ctx.globalAlpha = 1;
     }
+
+    const vignette = ctx.createRadialGradient(W / 2, (ARENA_TOP + ARENA_BOT) / 2, W * 0.20, W / 2, (ARENA_TOP + ARENA_BOT) / 2, W * 0.92);
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.42)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, ARENA_TOP, W, ARENA_BOT - ARENA_TOP);
 
     ctx.restore();
     return true;
