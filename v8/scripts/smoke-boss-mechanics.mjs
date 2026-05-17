@@ -1,0 +1,232 @@
+import { BOSSES } from '../src/data/bosses.js';
+import { ENEMIES } from '../src/data/enemies.js';
+import { ARENA_L, ARENA_R } from '../src/data/tuning.js';
+import { spawnBossById } from '../src/systems/boss-spawn.js';
+import { drainHealToBarrier, tickAerialBombs, updateBoss } from '../src/systems/boss-mechanics.js';
+
+const WIDTH = 500;
+const ARENA_TOP = 42;
+const ARENA_BOT = 932;
+
+function makeUnit(id, arch, x, y, opts = {}) {
+  return {
+    id,
+    name: arch + ' test unit',
+    arch,
+    x,
+    y,
+    size: opts.size || 20,
+    maxHp: opts.maxHp || 20000,
+    hp: opts.hp || opts.maxHp || 20000,
+    isPlayer: true,
+    isGhost: false,
+    untargetable: false,
+    divineShield: false,
+    taunt: arch === 'tank',
+    debuffs: {},
+    ...opts
+  };
+}
+
+function makeContext() {
+  const arena = { phase: 'wave', activeBarrier: null, lieutenants: [], aerialBombs: [] };
+  const units = [
+    makeUnit(0, 'tank', 235, 660, { maxHp: 32000, size: 26 }),
+    makeUnit(1, 'melee', 205, 700, { maxHp: 22000 }),
+    makeUnit(2, 'ranged', 292, 735, { maxHp: 18000, prefersRanged: true }),
+    makeUnit(3, 'healer', 260, 775, { maxHp: 17000 }),
+  ];
+  const enemies = [];
+  const bombs = [];
+  const groundFx = [];
+  const beamFx = [];
+  const particles = [];
+  const damageText = [];
+  const projectiles = [];
+  const flashes = [];
+  let shakes = 0;
+
+  const ctx = {
+    arena,
+    units,
+    enemies,
+    bombs,
+    groundFx,
+    beamFx,
+    frame: 0,
+    width: WIDTH,
+    arenaTop: ARENA_TOP,
+    arenaBottom: ARENA_BOT,
+    dealDamage(target, amount) {
+      if (!target || !Number.isFinite(target.hp)) return;
+      target.hp = Math.max(0, target.hp - Math.max(0, Math.round(amount || 0)));
+    },
+    addParticle(x, y, color, count = 1, size = 1) {
+      particles.push({ x, y, color, count, size });
+    },
+    addDamageText(x, y, text, color) {
+      damageText.push({ x, y, text, color });
+    },
+    showFlash(text, color, timer) {
+      flashes.push({ text, color, timer });
+    },
+    fireProjectile(from, target, damage, opts = {}) {
+      projectiles.push({ from: from && from.name, target: target && target.name, damage, opts });
+    },
+    spawnEnemyByIndex(enemyIdx) {
+      const tmpl = ENEMIES[enemyIdx] || ENEMIES.find(enemy => enemy && enemy.id === enemyIdx) || ENEMIES[0];
+      if (!tmpl) throw new Error('missing enemy template ' + enemyIdx);
+      enemies.push({
+        ...tmpl,
+        x: WIDTH / 2,
+        y: ARENA_TOP + 160,
+        maxHp: tmpl.hp || 100,
+        hp: tmpl.hp || 100,
+        isEnemy: true,
+        cd: 0,
+        facing: -1,
+        bobPhase: 0,
+        debuffs: {},
+      });
+    },
+    tuneBossSupportMinion(enemy) {
+      if (!enemy) return;
+      enemy.bossSupport = true;
+      enemy.hp = Math.max(1, Math.round(enemy.hp || enemy.maxHp || 1));
+      enemy.maxHp = Math.max(enemy.hp, Math.round(enemy.maxHp || enemy.hp));
+    },
+    clampToArena(actor) {
+      if (!actor) return;
+      actor.x = Math.max(ARENA_L + 10, Math.min(ARENA_R - 10, actor.x || WIDTH / 2));
+      actor.y = Math.max(ARENA_TOP + 40, Math.min(ARENA_BOT - 40, actor.y || ARENA_TOP + 120));
+    },
+    SFX: { bossSlam() {} },
+    shake(value) {
+      shakes = Math.max(shakes, value || 0);
+    },
+    summary() {
+      return { particles: particles.length, damageText: damageText.length, projectiles: projectiles.length, flashes: flashes.length, shakes };
+    }
+  };
+  return ctx;
+}
+
+function spawnBossForSmoke(bossId, ctx) {
+  return spawnBossById({
+    bossId,
+    state: 'battle',
+    arenaState: ctx.arena,
+    frame: ctx.frame,
+    width: WIDTH,
+    arenaTop: ARENA_TOP,
+    arenaBottom: ARENA_BOT,
+    spawnLeft: ARENA_L,
+    spawnRight: ARENA_R,
+    enemies: ctx.enemies,
+    randomFloat: () => 0.5,
+    clampValue: (value, min, max) => Math.max(min, Math.min(max, value)),
+    showFlash: ctx.showFlash,
+    emitParticle: ctx.addParticle,
+    shake: ctx.shake,
+  });
+}
+
+function tickBoss(ctx, boss, frames = 1) {
+  for (let i = 0; i < frames; i++) {
+    ctx.frame++;
+    updateBoss(boss, ctx);
+  }
+}
+
+function forcePhase(ctx, boss, hpPct) {
+  boss.hp = Math.max(1, Math.round(boss.maxHp * hpPct));
+  boss.mechCD = {};
+  tickBoss(ctx, boss, 2);
+}
+
+function tickAerialBombsToCompletion(ctx, frames = 140) {
+  for (let i = 0; i < frames; i++) {
+    ctx.frame++;
+    tickAerialBombs(ctx);
+  }
+}
+
+function smokeBarrierBoss(ctx, boss) {
+  if (!boss.hasBarrier) return null;
+  if (!ctx.arena.activeBarrier) throw new Error('barrier boss spawned without activeBarrier');
+  drainHealToBarrier(ctx.arena.activeBarrier.healHpMax * 2, null, ctx);
+  if (ctx.arena.activeBarrier) throw new Error('barrier purification did not clear activeBarrier');
+  if (boss.untargetable || boss.lockedAtTop) throw new Error('barrier purification did not reveal boss');
+  tickBoss(ctx, boss, 2);
+  return 'barrier-purified';
+}
+
+function smokeAerialBoss(ctx, boss) {
+  if (!boss.aerial && !boss.isAerial) return null;
+  tickBoss(ctx, boss, 3);
+  if (!ctx.arena.aerialBombs || !ctx.arena.aerialBombs.length) throw new Error('aerial boss did not schedule aerial bombs');
+  tickAerialBombsToCompletion(ctx);
+  for (const lieutenant of ctx.arena.lieutenants || []) lieutenant.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if (boss.aerial || boss.untargetable) throw new Error('aerial boss did not land after lieutenants died');
+  return 'aerial-landed';
+}
+
+function smokeRoyalCarapace(ctx, boss) {
+  if (!boss.royalCarapaceAt) return null;
+  const thresholds = Array.isArray(boss.royalCarapaceAt) ? boss.royalCarapaceAt : [boss.royalCarapaceAt];
+  boss.hp = Math.max(1, Math.round(boss.maxHp * Math.min(...thresholds) * 0.92));
+  boss.mechCD = {};
+  tickBoss(ctx, boss, 1);
+  if (!boss.hiveShield || !(boss.royalCarapaceTimer > 0)) throw new Error('royal carapace did not start');
+  boss.hiveShield.hp = 0;
+  tickBoss(ctx, boss, 1);
+  if (boss.hiveShield || boss.royalCarapaceTimer) throw new Error('royal carapace did not resolve when shield broke');
+  return 'carapace-broken';
+}
+
+function smokeBoss(bossTemplate) {
+  const ctx = makeContext();
+  const boss = spawnBossForSmoke(bossTemplate.id, ctx);
+  if (!boss) throw new Error(`spawnBossById returned null for ${bossTemplate.name}`);
+  const notes = [];
+
+  const barrierNote = smokeBarrierBoss(ctx, boss);
+  if (barrierNote) notes.push(barrierNote);
+
+  const aerialNote = smokeAerialBoss(ctx, boss);
+  if (aerialNote) notes.push(aerialNote);
+
+  for (const hpPct of [0.9, 0.5, 0.25]) forcePhase(ctx, boss, hpPct);
+
+  const carapaceNote = smokeRoyalCarapace(ctx, boss);
+  if (carapaceNote) notes.push(carapaceNote);
+
+  if (!Number.isFinite(boss.x) || !Number.isFinite(boss.y)) throw new Error(`${boss.name} position became non-finite`);
+  if (!Array.isArray(ctx.enemies) || !Array.isArray(ctx.groundFx) || !Array.isArray(ctx.bombs)) throw new Error('context arrays corrupted');
+
+  return {
+    id: boss.id,
+    name: boss.name,
+    notes,
+    enemies: ctx.enemies.length,
+    bombs: ctx.bombs.length,
+    groundFx: ctx.groundFx.length,
+    ...ctx.summary()
+  };
+}
+
+const results = [];
+for (const boss of BOSSES) {
+  try {
+    results.push(smokeBoss(boss));
+  } catch (error) {
+    throw new Error(`${boss.name} boss smoke failed: ${error.message}`, { cause: error });
+  }
+}
+
+console.log(`Smoke-tested ${results.length} bosses through spawn, phase gates, and special mechanics.`);
+for (const result of results) {
+  const note = result.notes.length ? ` (${result.notes.join(', ')})` : '';
+  console.log(`- ${result.id}: ${result.name}${note}`);
+}

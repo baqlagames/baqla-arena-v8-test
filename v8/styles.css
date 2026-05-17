@@ -1,0 +1,13 @@
+﻿*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  background:#0a0a1a;height:100%;width:100%;
+  overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  /* Safe areas for notch / Dynamic Island / home indicator */
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+}
+body{display:flex;justify-content:center;align-items:center}
+canvas{border-radius:0;cursor:pointer;display:block;max-width:100%;max-height:100%;touch-action:manipulation}

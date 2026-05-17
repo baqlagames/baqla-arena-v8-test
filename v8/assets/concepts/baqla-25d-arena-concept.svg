@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Baqla Arena 2.5D fortress board concept">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10182d"/>
+      <stop offset="0.55" stop-color="#172116"/>
+      <stop offset="1" stop-color="#2b1714"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4e4337"/>
+      <stop offset="0.48" stop-color="#8a7358"/>
+      <stop offset="1" stop-color="#36251a"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#505a82"/>
+      <stop offset="1" stop-color="#242a47"/>
+    </linearGradient>
+    <radialGradient id="gateGlow" cx="50%" cy="55%" r="60%">
+      <stop offset="0" stop-color="#ffd166" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+      <feOffset dx="0" dy="10"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.35"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#sky)"/>
+  <ellipse cx="640" cy="310" rx="480" ry="230" fill="#6680ff" opacity="0.08"/>
+
+  <polygon points="256,112 1024,112 1128,244 152,244" fill="url(#wall)"/>
+  <polygon points="152,244 256,112 256,560 96,634" fill="#272e4f"/>
+  <polygon points="1024,112 1128,244 1184,634 1024,560" fill="#272e4f"/>
+  <polygon points="256,112 1024,112 1024,190 256,190" fill="#3b4266"/>
+
+  <g opacity="0.38" stroke="#d8defa" stroke-width="2">
+    <path d="M272 145 H1008"/>
+    <path d="M270 174 H1010"/>
+    <path d="M222 224 L144 281"/>
+    <path d="M206 306 L128 356"/>
+    <path d="M190 392 L112 439"/>
+    <path d="M172 484 L96 522"/>
+    <path d="M1058 224 L1136 281"/>
+    <path d="M1074 306 L1152 356"/>
+    <path d="M1090 392 L1168 439"/>
+    <path d="M1108 484 L1184 522"/>
+  </g>
+
+  <g>
+    <rect x="576" y="116" width="128" height="96" rx="18" fill="#171621" stroke="#caa95f" stroke-width="5"/>
+    <rect x="592" y="134" width="96" height="72" rx="12" fill="url(#gateGlow)"/>
+    <g stroke="#77643d" stroke-width="5">
+      <path d="M600 132 V208"/>
+      <path d="M624 128 V212"/>
+      <path d="M648 128 V212"/>
+      <path d="M672 132 V208"/>
+    </g>
+  </g>
+
+  <g fill="#606a94" stroke="#232842" stroke-width="3">
+    <rect x="248" y="82" width="34" height="36"/>
+    <rect x="328" y="82" width="34" height="36"/>
+    <rect x="408" y="82" width="34" height="36"/>
+    <rect x="488" y="82" width="34" height="36"/>
+    <rect x="758" y="82" width="34" height="36"/>
+    <rect x="838" y="82" width="34" height="36"/>
+    <rect x="918" y="82" width="34" height="36"/>
+    <rect x="998" y="82" width="34" height="36"/>
+  </g>
+
+  <polygon points="284,196 996,196 1088,592 192,592" fill="url(#floor)" filter="url(#softShadow)"/>
+  <g stroke="#2c211a" stroke-width="2" opacity="0.55">
+    <path d="M324 215 L956 215 L1026 556 L250 556 Z" fill="none"/>
+    <path d="M300 265 H980"/>
+    <path d="M278 318 H1002"/>
+    <path d="M254 376 H1026"/>
+    <path d="M228 438 H1052"/>
+    <path d="M208 506 H1072"/>
+    <path d="M380 203 L320 586"/>
+    <path d="M460 201 L438 590"/>
+    <path d="M540 198 L556 590"/>
+    <path d="M620 197 L640 590"/>
+    <path d="M700 198 L724 590"/>
+    <path d="M780 201 L842 590"/>
+    <path d="M860 203 L960 586"/>
+  </g>
+
+  <g opacity="0.95">
+    <path d="M304 244 L976 244" stroke="#ffdf9c" stroke-opacity="0.2" stroke-width="4"/>
+    <path d="M284 196 L996 196 L1088 592 L192 592 Z" fill="none" stroke="#ffdf9c" stroke-opacity="0.28" stroke-width="3"/>
+  </g>
+
+  <g fill="#6a5430" stroke="#1b1309" stroke-width="3">
+    <circle cx="260" cy="260" r="10"/>
+    <circle cx="242" cy="344" r="11"/>
+    <circle cx="224" cy="432" r="12"/>
+    <circle cx="206" cy="526" r="13"/>
+    <circle cx="1020" cy="260" r="10"/>
+    <circle cx="1038" cy="344" r="11"/>
+    <circle cx="1056" cy="432" r="12"/>
+    <circle cx="1074" cy="526" r="13"/>
+  </g>
+  <path d="M206 576 Q640 530 1074 576" fill="none" stroke="#2a1f12" stroke-width="12"/>
+
+  <g filter="url(#softShadow)">
+    <g transform="translate(640 520)">
+      <ellipse cx="0" cy="32" rx="46" ry="12" fill="#000" opacity="0.38"/>
+      <polygon points="-18,-42 18,-42 28,28 -28,28" fill="#3b4f94" stroke="#f5c86a" stroke-width="4"/>
+      <circle cx="0" cy="-56" r="22" fill="#d0aa68" stroke="#51391f" stroke-width="4"/>
+      <path d="M-18 -70 Q0 -98 18 -70" fill="#f0c15a"/>
+    </g>
+    <g fill="#cbd0dc" stroke="#3a3d4f" stroke-width="3">
+      <g transform="translate(506 352) scale(.72)">
+        <ellipse cx="0" cy="32" rx="24" ry="8" fill="#000" opacity="0.3"/>
+        <circle cx="0" cy="-18" r="20"/>
+        <rect x="-18" y="4" width="36" height="40" rx="8" fill="#737b91"/>
+        <rect x="-6" y="-48" width="12" height="22" fill="#e75645"/>
+      </g>
+      <g transform="translate(590 344) scale(.62)">
+        <ellipse cx="0" cy="32" rx="24" ry="8" fill="#000" opacity="0.3"/>
+        <circle cx="0" cy="-18" r="20"/>
+        <rect x="-18" y="4" width="36" height="40" rx="8" fill="#737b91"/>
+        <rect x="-6" y="-48" width="12" height="22" fill="#e75645"/>
+      </g>
+      <g transform="translate(716 344) scale(.62)">
+        <ellipse cx="0" cy="32" rx="24" ry="8" fill="#000" opacity="0.3"/>
+        <circle cx="0" cy="-18" r="20"/>
+        <rect x="-18" y="4" width="36" height="40" rx="8" fill="#737b91"/>
+        <rect x="-6" y="-48" width="12" height="22" fill="#e75645"/>
+      </g>
+      <g transform="translate(790 352) scale(.72)">
+        <ellipse cx="0" cy="32" rx="24" ry="8" fill="#000" opacity="0.3"/>
+        <circle cx="0" cy="-18" r="20"/>
+        <rect x="-18" y="4" width="36" height="40" rx="8" fill="#737b91"/>
+        <rect x="-6" y="-48" width="12" height="22" fill="#e75645"/>
+      </g>
+    </g>
+  </g>
+
+  <g fill="none" stroke-linecap="round">
+    <path d="M790 392 Q858 346 930 305" stroke="#ffd7a1" stroke-width="8" opacity="0.86"/>
+    <path d="M790 392 Q858 346 930 305" stroke="#fff" stroke-width="3"/>
+    <path d="M500 394 Q430 350 350 310" stroke="#ffd7a1" stroke-width="8" opacity="0.7"/>
+    <path d="M500 394 Q430 350 350 310" stroke="#fff" stroke-width="3"/>
+  </g>
+
+  <text x="48" y="88" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="#ffffff">Baqla Arena 2.5D target</text>
+  <text x="48" y="126" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e1">Projected board, fortress walls, depth-scaled units, readable square grid.</text>
+</svg>

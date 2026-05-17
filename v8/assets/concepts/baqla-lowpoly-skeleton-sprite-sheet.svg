@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Baqla Arena low-poly skeleton sprite concept sheet">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c7d8ea"/>
+      <stop offset="1" stop-color="#7796bd"/>
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-40%" width="200%" height="190%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
+      <feOffset dx="0" dy="11"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.28"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect x="42" y="44" width="1196" height="632" rx="32" fill="rgba(255,255,255,0.16)" stroke="rgba(255,255,255,0.32)"/>
+  <text x="72" y="96" font-family="Arial, sans-serif" font-size="34" font-weight="800" fill="#172033">Low-poly enemy sprite direction</text>
+  <text x="72" y="132" font-family="Arial, sans-serif" font-size="18" fill="#34445d">Flat-color 3D forms with readable weapons, big eyes, chunky helmets, and clean silhouettes for mobile scale.</text>
+
+  <g transform="translate(124 486)" filter="url(#shadow)">
+    <ellipse cx="0" cy="56" rx="62" ry="14" fill="#0b1020" opacity="0.28"/>
+    <polygon points="-28,-112 28,-112 42,-58 20,-10 -22,-10 -42,-58" fill="#f0e4d0" stroke="#3c3442" stroke-width="5"/>
+    <polygon points="-24,-104 0,-126 24,-104 12,-70 -12,-70" fill="#e5d2ad"/>
+    <circle cx="-11" cy="-78" r="7" fill="#101827"/>
+    <circle cx="11" cy="-78" r="7" fill="#101827"/>
+    <rect x="-8" y="-54" width="16" height="8" rx="3" fill="#101827"/>
+    <polygon points="-34,-30 34,-30 24,36 -24,36" fill="#182139" stroke="#39324a" stroke-width="5"/>
+    <polygon points="-48,-36 -76,-10 -68,34 -36,12" fill="#315d35"/>
+    <polygon points="48,-36 76,-10 68,34 36,12" fill="#315d35"/>
+    <path d="M-58 -12 L-94 28" stroke="#5a3718" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-96 28 Q-54 -52 22 -18" fill="none" stroke="#d69b36" stroke-width="8" stroke-linecap="round"/>
+    <g stroke="#f15c48" stroke-width="7" stroke-linecap="round">
+      <path d="M-74 -44 L-36 -60"/>
+      <path d="M-76 -30 L-38 -48"/>
+      <path d="M-76 -16 L-36 -34"/>
+    </g>
+    <text x="-72" y="106" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1d2b3f">Archer</text>
+  </g>
+
+  <g transform="translate(364 486)" filter="url(#shadow)">
+    <ellipse cx="0" cy="56" rx="70" ry="14" fill="#0b1020" opacity="0.28"/>
+    <polygon points="-38,-118 38,-118 54,-54 26,-10 -26,-10 -54,-54" fill="#d7bd80" stroke="#4c3b20" stroke-width="5"/>
+    <circle cx="-15" cy="-80" r="8" fill="#152235"/>
+    <circle cx="15" cy="-80" r="8" fill="#152235"/>
+    <path d="M-12 -52 L0 -44 L12 -52" fill="none" stroke="#152235" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#79cf6f">
+      <polygon points="-52,-112 -88,-142 -68,-88"/>
+      <polygon points="-22,-128 -34,-178 6,-134"/>
+      <polygon points="20,-128 34,-178 42,-120"/>
+      <polygon points="52,-112 88,-142 68,-88"/>
+      <polygon points="-70,-72 -118,-70 -72,-36"/>
+      <polygon points="70,-72 118,-70 72,-36"/>
+    </g>
+    <polygon points="-38,-18 38,-18 30,42 -30,42" fill="#7b4bb3" stroke="#3b2463" stroke-width="5"/>
+    <polygon points="-58,-22 -88,18 -60,34 -30,-6" fill="#9d74cb"/>
+    <polygon points="58,-22 88,18 60,34 30,-6" fill="#9d74cb"/>
+    <text x="-95" y="106" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1d2b3f">Cactus Shaman</text>
+  </g>
+
+  <g transform="translate(614 486)" filter="url(#shadow)">
+    <ellipse cx="0" cy="56" rx="60" ry="14" fill="#0b1020" opacity="0.28"/>
+    <polygon points="-32,-106 32,-106 46,-48 20,0 -20,0 -46,-48" fill="#eee6db" stroke="#3c3442" stroke-width="5"/>
+    <path d="M-48 -102 Q0 -156 48 -102 L38 -36 Q0 -80 -38 -36 Z" fill="#6f3cb4" stroke="#3b2463" stroke-width="5"/>
+    <circle cx="-13" cy="-70" r="7" fill="#101827"/>
+    <circle cx="13" cy="-70" r="7" fill="#101827"/>
+    <rect x="-12" y="-44" width="24" height="7" rx="3" fill="#101827"/>
+    <polygon points="-30,-12 30,-12 42,48 -42,48" fill="#2b2636" stroke="#3b2463" stroke-width="5"/>
+    <polygon points="-46,-16 -72,46 -42,44 -18,4" fill="#5f3aa0"/>
+    <polygon points="46,-16 72,46 42,44 18,4" fill="#5f3aa0"/>
+    <text x="-54" y="106" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1d2b3f">Caster</text>
+  </g>
+
+  <g transform="translate(854 486)" filter="url(#shadow)">
+    <ellipse cx="0" cy="56" rx="62" ry="14" fill="#0b1020" opacity="0.28"/>
+    <polygon points="-32,-106 32,-106 46,-48 22,2 -22,2 -46,-48" fill="#eee6db" stroke="#3c3442" stroke-width="5"/>
+    <polygon points="-44,-132 44,-132 54,-108 36,-92 -36,-92 -54,-108" fill="#b9c0cc" stroke="#4d5462" stroke-width="5"/>
+    <rect x="-9" y="-160" width="18" height="30" rx="5" fill="#e85b47" stroke="#7f2f26" stroke-width="4"/>
+    <circle cx="-13" cy="-70" r="7" fill="#101827"/>
+    <circle cx="13" cy="-70" r="7" fill="#101827"/>
+    <polygon points="-32,-12 32,-12 42,44 -42,44" fill="#bfc7d4" stroke="#596173" stroke-width="5"/>
+    <polygon points="-54,-10 -84,20 -64,42 -32,8" fill="#e85b47"/>
+    <polygon points="54,-10 84,20 64,42 32,8" fill="#e85b47"/>
+    <path d="M66 -4 L104 44" stroke="#56483c" stroke-width="8" stroke-linecap="round"/>
+    <polygon points="106 40 126 55 110 72 92 52" fill="#d9dde6" stroke="#4c5361" stroke-width="4"/>
+    <text x="-54" y="106" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1d2b3f">Guard</text>
+  </g>
+
+  <g transform="translate(1110 486)" filter="url(#shadow)">
+    <ellipse cx="0" cy="62" rx="86" ry="18" fill="#0b1020" opacity="0.28"/>
+    <polygon points="-48,-128 48,-128 70,-52 38,20 -38,20 -70,-52" fill="#f0e4d0" stroke="#3c3442" stroke-width="7"/>
+    <polygon points="-62,-160 62,-160 78,-128 50,-108 -50,-108 -78,-128" fill="#8f918d" stroke="#33363a" stroke-width="7"/>
+    <circle cx="-22" cy="-84" r="10" fill="#101827"/>
+    <circle cx="22" cy="-84" r="10" fill="#101827"/>
+    <path d="M-18 -52 H18" stroke="#101827" stroke-width="8" stroke-linecap="round"/>
+    <polygon points="-68,-20 68,-20 80,64 -80,64" fill="#8a8b86" stroke="#414243" stroke-width="7"/>
+    <polygon points="-102,-14 -142,34 -100,60 -62,6" fill="#9c9b95" stroke="#4e4e50" stroke-width="6"/>
+    <polygon points="102,-14 142,34 100,60 62,6" fill="#9c9b95" stroke="#4e4e50" stroke-width="6"/>
+    <g stroke="#3f3532" stroke-width="10" stroke-linecap="round">
+      <path d="M-100 42 L-150 96"/>
+      <path d="M96 36 L148 92"/>
+    </g>
+    <polygon points="-160 78 -122 92 -124 142 -166 128" fill="#655b70" stroke="#343044" stroke-width="6"/>
+    <path d="M126 82 L172 124" stroke="#3b3340" stroke-width="10" stroke-linecap="round"/>
+    <polygon points="186 138 164 154 144 132 164 110" fill="#737883" stroke="#343944" stroke-width="6"/>
+    <text x="-54" y="118" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1d2b3f">Tank</text>
+  </g>
+
+  <g transform="translate(70 620)" font-family="Arial, sans-serif">
+    <text x="0" y="0" font-size="18" font-weight="700" fill="#172033">Sprite notes</text>
+    <text x="0" y="28" font-size="15" fill="#2f4159">Use as a 3D target: five role silhouettes, low-detail geometry, front-facing idle frame, strong weapon reads.</text>
+  </g>
+</svg>
