@@ -1,3 +1,3 @@
-﻿import { startArena } from './systems/arena-runtime.js';
+import { startArena } from './systems/arena-runtime.js?v=20260517-wide-bg';
 
 startArena();

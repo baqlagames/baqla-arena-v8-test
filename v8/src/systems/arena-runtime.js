@@ -37,7 +37,7 @@ import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js';
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js';
 import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js';
-import { createArenaSceneRenderer } from '../render/arena-scene.js';
+import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-wide-bg';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 import { drawBombEffects } from '../render/bombs.js';
 import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js';
