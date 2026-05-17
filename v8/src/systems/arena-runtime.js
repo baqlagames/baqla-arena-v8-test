@@ -37,7 +37,7 @@ import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js';
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js';
 import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js';
-import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-new-building-bg';
+import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-grid-calibration';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 import { drawBombEffects } from '../render/bombs.js';
 import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js';
@@ -51,7 +51,7 @@ import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js
 import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js';
 import { updateArenaEnemyAi } from './combat-enemy-ai.js';
 import { createCombatEnemyRuntime } from './combat-enemy-runtime.js';
-import { spawnEnemyByIndex } from './enemy-spawn.js';
+import { spawnEnemyByIndex } from './enemy-spawn.js?v=20260517-grid-calibration';
 import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived, applyTrackedHeal } from './combat-healing.js';
 import { compactRemovedCombatUnits, tickEnemyCombatUnits, tickPlayerCombatUnits } from './combat-loop.js';
 import { createCombatTransientsRuntime } from './combat-transients-runtime.js';
@@ -67,10 +67,10 @@ import { tickEnemyPostUpdateStatusEffects } from './combat-status-effects.js';
 import { loadProgress, saveProgress } from './progress.js';
 import { getPerkEffects, perkSlotCount, stageBeansReward, toggleSelectedPerk, unlockPerk } from './perks.js';
 import { showRewardedAd } from './rewarded-ads.js';
-import { createStageFlowRuntime } from './stage-flow-runtime.js';
+import { createStageFlowRuntime } from './stage-flow-runtime.js?v=20260517-grid-calibration';
 import { startStageRun } from './stage-runner.js';
 import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js';
-import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js';
+import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260517-grid-calibration';
 import { drainHealToBarrier as drainHealToBarrierFromBossMechanics, tickAerialBombs as tickBossAerialBombs, updateBoss as updateBossMechanics } from './boss-mechanics.js';
 import { tickTimedFieldEffects } from './timed-field-effects.js';
 import { createStageRunSetup } from './stage-lifecycle.js';
@@ -340,26 +340,59 @@ let gridW=GRID_W;
 let cellW=CELL_W;
 let GRID_Y=200;           // recomputed from the painted arena board in recomputeGrid
 let CELL_H=70;            // recomputed once canvas is sized in applyCanvasDims
-const PAINTED_ARENA_IMAGE_W=807;
-const PAINTED_ARENA_IMAGE_H=1351;
-const PAINTED_BOARD_X=135;
-const PAINTED_BOARD_TOP=270;
-const PAINTED_BOARD_TILE=89.5;
-const PAINTED_BUILD_ROW_START=4;
+const PAINTED_ARENA_IMAGE_W=1086;
+const PAINTED_ARENA_IMAGE_H=1448;
+const PAINTED_BUILD_TOP=540;
+const PAINTED_BUILD_BOTTOM=1115;
+const PAINTED_BUILD_LEFT_TOP=188;
+const PAINTED_BUILD_RIGHT_TOP=898;
+const PAINTED_BUILD_LEFT_BOTTOM=151;
+const PAINTED_BUILD_RIGHT_BOTTOM=935;
+const PAINTED_ENEMY_SPAWN_Y=328;
+function arena_paintedImageScale(){
+  return H/PAINTED_ARENA_IMAGE_H;
+}
+function arena_paintedImageX(){
+  return (W-PAINTED_ARENA_IMAGE_W*arena_paintedImageScale())/2;
+}
+function arena_paintedSourceToScreenX(x){
+  return arena_paintedImageX()+x*arena_paintedImageScale();
+}
+function arena_paintedSourceToScreenY(y){
+  return y*arena_paintedImageScale();
+}
+function arena_projectedWorldYForScreenY(screenY){
+  const top=ARENA_TOP+28,bot=ARENA_BOT-18;
+  const t=Math.pow(Math.max(0,Math.min(1,(screenY-top)/Math.max(1,bot-top))),1/1.18);
+  return top+t*(bot-top);
+}
+function arena_paintedGridWidthScaleAt(y){
+  const top=ARENA_TOP+28,bot=ARENA_BOT-18;
+  const t=Math.max(0,Math.min(1,(y-top)/Math.max(1,bot-top)));
+  return 0.76+0.27*t;
+}
+function arena_projectedWorldXForScreenX(screenX,worldY){
+  const s=arena_paintedGridWidthScaleAt(worldY);
+  return W/2+(screenX-W/2)/Math.max(0.01,s);
+}
+function arena_paintedWorldYForSourceY(sourceY){
+  return arena_projectedWorldYForScreenY(arena_paintedSourceToScreenY(sourceY));
+}
+function arena_enemySpawnY(){
+  return arena_paintedWorldYForSourceY(PAINTED_ENEMY_SPAWN_Y);
+}
 function recomputeGrid(){
-  const scale=Math.max(W/PAINTED_ARENA_IMAGE_W,H/PAINTED_ARENA_IMAGE_H);
-  const imgX=(W-PAINTED_ARENA_IMAGE_W*scale)/2;
-  const imgY=(H-PAINTED_ARENA_IMAGE_H*scale)/2;
-  cellW=PAINTED_BOARD_TILE*scale;
-  CELL_H=cellW;
-  gridX=imgX+PAINTED_BOARD_X*scale;
-  gridW=cellW*GRID_COLS;
-  GRID_Y=imgY+(PAINTED_BOARD_TOP+PAINTED_BUILD_ROW_START*PAINTED_BOARD_TILE)*scale;
-  const kingTop=ARENA_BOT-GRID_BOT_PAD+12;
-  const gridBottom=GRID_Y+CELL_H*GRID_ROWS;
-  if(gridBottom>kingTop){
-    GRID_Y-=gridBottom-kingTop;
-  }
+  const topWorld=arena_paintedWorldYForSourceY(PAINTED_BUILD_TOP);
+  const bottomWorld=arena_paintedWorldYForSourceY(PAINTED_BUILD_BOTTOM);
+  GRID_Y=topWorld;
+  CELL_H=(bottomWorld-topWorld)/GRID_ROWS;
+  const leftTop=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_LEFT_TOP),topWorld);
+  const rightTop=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_RIGHT_TOP),topWorld);
+  const leftBottom=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_LEFT_BOTTOM),bottomWorld);
+  const rightBottom=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_RIGHT_BOTTOM),bottomWorld);
+  gridX=(leftTop+leftBottom)/2;
+  gridW=((rightTop+rightBottom)/2)-gridX;
+  cellW=gridW/GRID_COLS;
 }
 function cellCenterX(col){return gridX+col*cellW+cellW/2}
 function cellCenterY(row){return GRID_Y+row*CELL_H+CELL_H/2}
@@ -2993,6 +3026,7 @@ const stageFlowRuntime=createStageFlowRuntime({
     state,arena,stageTime,currentStageIdx,currentStage,waveIdx,frame,
     arenaTop:ARENA_TOP,arenaBottom:ARENA_BOT,width:W,enemies,
     spawnLeft:arena_laneBounds().left,spawnRight:arena_laneBounds().right,
+    spawnY:arena_enemySpawnY(),
     stageOver,playerCastle,selectedPerks,maxStage
   }),
   randomRange:rnd,

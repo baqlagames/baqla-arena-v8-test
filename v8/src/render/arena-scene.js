@@ -224,7 +224,10 @@ function arena_camY(y){
   const top=ARENA_TOP+28,bot=ARENA_BOT-18;
   return top+Math.pow(arena_camT(y),1.18)*(bot-top);
 }
-function arena_camWidthScaleAt(y){return 0.53+0.50*arena_camT(y)}
+function arena_camWidthScaleAt(y){
+  const t=arena_camT(y);
+  return arena_isPainted25D()?0.76+0.27*t:0.53+0.50*t;
+}
 function arena_camDepthScaleAt(y){return 0.72+0.42*arena_camT(y)}
 function arena_camPoint(x,y){
   const s=arena_camWidthScaleAt(y);

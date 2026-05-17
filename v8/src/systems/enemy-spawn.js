@@ -42,6 +42,7 @@ export function spawnEnemyByIndex({
   waveIdx,
   frame,
   arenaTop,
+  spawnY,
   spawnLeft,
   spawnRight,
   enemies,
@@ -90,11 +91,12 @@ export function spawnEnemyByIndex({
   const laneRight = Number.isFinite(spawnRight) ? spawnRight : ARENA_R;
   const spawnMin = laneLeft + 34;
   const spawnMax = Math.max(spawnMin + 1, laneRight - 34);
+  const entryY = Number.isFinite(spawnY) && inArena ? spawnY : arenaTop + 75;
   const hp = Math.round(template.hp * stageHpM * waveScale);
   const enemy = {
     ...template,
     x: spawnMin + randomFloat() * (spawnMax - spawnMin),
-    y: arenaTop + 75 + randomFloat() * 30,
+    y: entryY + randomFloat() * (inArena ? 18 : 30),
     size: (template.size || 16) * sizeScale,
     maxHp: hp,
     hp,

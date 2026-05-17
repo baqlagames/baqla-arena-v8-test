@@ -29,6 +29,7 @@ export function clampTopSpawnBossToVisibleArena(boss, {
 export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
   width,
   arenaTop,
+  spawnY,
   frame,
   spawnLeft,
   spawnRight,
@@ -87,7 +88,7 @@ export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
     lieutenants.push({
       ...signature,
       x: xs[i],
-      y: arenaTop + 90,
+      y: Number.isFinite(spawnY) ? spawnY + 58 : arenaTop + 90,
       maxHp: baseHp,
       hp: baseHp,
       dmg: baseDmg,
@@ -123,6 +124,7 @@ export function spawnBossById({
   width,
   arenaTop,
   arenaBottom,
+  spawnY,
   spawnLeft,
   spawnRight,
   enemies,
@@ -148,7 +150,10 @@ export function spawnBossById({
   const spawnX = template.spawnFromTop
     ? spawnMin + randomFloat() * (spawnMax - spawnMin)
     : width / 2;
-  const spawnTop = template.spawnFromTop
+  const paintedSpawnY = Number.isFinite(spawnY) && inArena ? spawnY : null;
+  const spawnTop = paintedSpawnY != null
+    ? paintedSpawnY
+    : template.spawnFromTop
     ? bossVisibleTop({ state, arenaState, arenaTop })
     : arenaTop;
   const boss = {
@@ -186,7 +191,7 @@ export function spawnBossById({
   if (template.hasBarrier) {
     boss.untargetable = true;
     boss.lockedAtTop = true;
-    boss.y = arenaTop + 90;
+    boss.y = paintedSpawnY != null ? paintedSpawnY + 58 : arenaTop + 90;
     const barrier = {
       isBarrier: true,
       name: 'Cursed Barrier',
@@ -215,7 +220,7 @@ export function spawnBossById({
     boss.untargetable = true;
     boss.aerial = true;
     boss.aerialPatrolT = 0;
-    boss.aerialAnchor = { x: width / 2, y: arenaTop + 65 };
+    boss.aerialAnchor = { x: width / 2, y: paintedSpawnY != null ? paintedSpawnY + 40 : arenaTop + 65 };
   }
 
   if (template.lieutenantSpawn) {
@@ -223,6 +228,7 @@ export function spawnBossById({
     const lieutenants = buildLieutenantsFor(template, stageHpM, stageDmgM, boss, {
       width,
       arenaTop,
+      spawnY,
       frame,
       spawnLeft,
       spawnRight,
