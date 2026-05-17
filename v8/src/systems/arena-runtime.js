@@ -37,7 +37,7 @@ import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js';
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js';
 import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js';
-import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-grid-preload';
+import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-nogrid-6x3';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 import { drawBombEffects } from '../render/bombs.js';
 import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js';
@@ -342,12 +342,12 @@ let GRID_Y=200;           // recomputed from the painted arena board in recomput
 let CELL_H=70;            // recomputed once canvas is sized in applyCanvasDims
 const PAINTED_ARENA_IMAGE_W=1086;
 const PAINTED_ARENA_IMAGE_H=1448;
-const PAINTED_BUILD_TOP=540;
-const PAINTED_BUILD_BOTTOM=1115;
-const PAINTED_BUILD_LEFT_TOP=188;
-const PAINTED_BUILD_RIGHT_TOP=898;
-const PAINTED_BUILD_LEFT_BOTTOM=151;
-const PAINTED_BUILD_RIGHT_BOTTOM=935;
+const PAINTED_BUILD_TOP=748;
+const PAINTED_BUILD_BOTTOM=1124;
+const PAINTED_BUILD_LEFT_TOP=180;
+const PAINTED_BUILD_RIGHT_TOP=914;
+const PAINTED_BUILD_LEFT_BOTTOM=149;
+const PAINTED_BUILD_RIGHT_BOTTOM=950;
 const PAINTED_ENEMY_SPAWN_Y=328;
 function arena_paintedImageScale(){
   return H/PAINTED_ARENA_IMAGE_H;
@@ -378,6 +378,57 @@ function arena_projectedWorldXForScreenX(screenX,worldY){
 function arena_paintedWorldYForSourceY(sourceY){
   return arena_projectedWorldYForScreenY(arena_paintedSourceToScreenY(sourceY));
 }
+function arena_paintedSourceToWorldPoint(x,y){
+  const worldY=arena_paintedWorldYForSourceY(y);
+  return {x:arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(x),worldY),y:worldY};
+}
+function arena_paintedPlacementActive(){
+  try{return arenaSceneRenderer&&arenaSceneRenderer.arenaViewMode==='25d'}catch(_){return false}
+}
+function arena_lerp(a,b,t){return a+(b-a)*t}
+function arena_paintedBuildEdgeAt(rowT){
+  return {
+    y:arena_lerp(PAINTED_BUILD_TOP,PAINTED_BUILD_BOTTOM,rowT),
+    left:arena_lerp(PAINTED_BUILD_LEFT_TOP,PAINTED_BUILD_LEFT_BOTTOM,rowT),
+    right:arena_lerp(PAINTED_BUILD_RIGHT_TOP,PAINTED_BUILD_RIGHT_BOTTOM,rowT)
+  };
+}
+function arena_paintedBuildSourcePoint(colT,rowT){
+  const edge=arena_paintedBuildEdgeAt(rowT);
+  return {x:arena_lerp(edge.left,edge.right,colT),y:edge.y};
+}
+function arena_paintedCellSourceQuad(col,row){
+  const c0=col/GRID_COLS,c1=(col+1)/GRID_COLS;
+  const r0=row/GRID_ROWS,r1=(row+1)/GRID_ROWS;
+  return [
+    arena_paintedBuildSourcePoint(c0,r0),
+    arena_paintedBuildSourcePoint(c1,r0),
+    arena_paintedBuildSourcePoint(c1,r1),
+    arena_paintedBuildSourcePoint(c0,r1)
+  ];
+}
+function arena_paintedCellScreenQuad(col,row){
+  return arena_paintedCellSourceQuad(col,row).map(p=>({
+    x:arena_paintedSourceToScreenX(p.x),
+    y:arena_paintedSourceToScreenY(p.y)
+  }));
+}
+function arena_paintedCellScreenPoint(col,row){
+  const p=arena_paintedBuildSourcePoint((col+0.5)/GRID_COLS,(row+0.5)/GRID_ROWS);
+  return {x:arena_paintedSourceToScreenX(p.x),y:arena_paintedSourceToScreenY(p.y)};
+}
+function arena_paintedCellWorldPoint(col,row){
+  const p=arena_paintedBuildSourcePoint((col+0.5)/GRID_COLS,(row+0.5)/GRID_ROWS);
+  return arena_paintedSourceToWorldPoint(p.x,p.y);
+}
+function arena_pointInSourcePoly(x,y,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const pi=poly[i],pj=poly[j];
+    if(((pi.y>y)!==(pj.y>y))&&(x<(pj.x-pi.x)*(y-pi.y)/((pj.y-pi.y)||1e-6)+pi.x))inside=!inside;
+  }
+  return inside;
+}
 function arena_enemySpawnY(){
   return arena_paintedWorldYForSourceY(PAINTED_ENEMY_SPAWN_Y);
 }
@@ -394,13 +445,31 @@ function recomputeGrid(){
   gridW=((rightTop+rightBottom)/2)-gridX;
   cellW=gridW/GRID_COLS;
 }
-function cellCenterX(col){return gridX+col*cellW+cellW/2}
-function cellCenterY(row){return GRID_Y+row*CELL_H+CELL_H/2}
+function cellCenterWorld(col,row){
+  if(arena_paintedPlacementActive())return arena_paintedCellWorldPoint(col,row);
+  return {x:gridX+col*cellW+cellW/2,y:GRID_Y+row*CELL_H+CELL_H/2};
+}
+function cellCenterX(col,row){return cellCenterWorld(col,row||0).x}
+function cellCenterY(row,col){return cellCenterWorld(col||0,row).y}
 function cellCenterScreen(col,row){
-  const x=cellCenterX(col),y=cellCenterY(row);
+  if(arena_paintedPlacementActive())return arena_paintedCellScreenPoint(col,row);
+  const {x,y}=cellCenterWorld(col,row);
   return arenaSceneRenderer&&arenaSceneRenderer.clashCamera?arena_camPoint(x,y):{x,y};
 }
 function xyToCell(x,y){
+  if(arena_paintedPlacementActive()){
+    const scale=arena_paintedImageScale();
+    const sourceX=(x-arena_paintedImageX())/Math.max(0.01,scale);
+    const sourceY=y/Math.max(0.01,scale);
+    for(let row=0;row<GRID_ROWS;row++){
+      for(let col=0;col<GRID_COLS;col++){
+        if(arena_pointInSourcePoly(sourceX,sourceY,arena_paintedCellSourceQuad(col,row))){
+          return {col,row,key:row*GRID_COLS+col};
+        }
+      }
+    }
+    return null;
+  }
   const world=arena_screenToWorldPoint(x,y);
   x=world.x;y=world.y;
   if(x<gridX||x>gridX+gridW)return null;
@@ -3269,7 +3338,7 @@ function arena_respawnSquad(){
     frame,
     tickHz:GAME_TICK_HZ,
     statsForCell:c=>(c.unitIdx===99)?getStats(VODKA,c.level||1):getStats(PLAYER_UNITS[c.unitIdx],c.level||1),
-    centerForCell:c=>({x:cellCenterX(c.col),y:cellCenterY(c.row)}),
+    centerForCell:c=>cellCenterWorld(c.col,c.row),
     lerpColor,
     applyPassives:arena_applyPassives,
     applyMoveSpeedTuning:arena_applyPlayerMoveSpeedTuning,
@@ -4240,6 +4309,8 @@ const battleHudRuntime=createBattleHudRuntime({
   threatPanelHeight:arena_threatPanelHeight,
   statsFormat:arena_statsFormat,
   currentStageRounds:arena_currentStageRounds,
+  cellScreenQuad:(col,row)=>arena_paintedPlacementActive()?arena_paintedCellScreenQuad(col,row):null,
+  cellScreenPoint:(col,row)=>arena_paintedPlacementActive()?arena_paintedCellScreenPoint(col,row):null,
   drawThreatsPanel:arena_drawThreatsPanel,
   drawPicker:arena_drawPicker,
   drawManagePanel:arena_drawManagePanel,

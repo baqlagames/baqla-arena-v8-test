@@ -138,6 +138,8 @@ function arena_drawProjectedBuildGrid(){
     pathCamQuad:arena_pathCamQuad,
     camPoint:arena_camPoint,
     camDepthScaleAt:arena_camDepthScaleAt,
+    cellScreenQuad:deps.cellScreenQuad,
+    cellScreenPoint:deps.cellScreenPoint,
     isCapstoneLevel:arena_isCapstoneLevel
   });
 }

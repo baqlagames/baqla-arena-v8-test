@@ -101,6 +101,8 @@ export function drawProjectedBuildGrid(ctx, view){
     pathCamQuad,
     camPoint,
     camDepthScaleAt,
+    cellScreenQuad,
+    cellScreenPoint,
     isCapstoneLevel
   }=view;
 
@@ -112,20 +114,37 @@ export function drawProjectedBuildGrid(ctx, view){
     'rgba(136,124,68,0.045)',
     'rgba(156,135,70,0.050)'
   ];
+  const pathQuad=q=>{
+    ctx.beginPath();
+    ctx.moveTo(q[0].x,q[0].y);
+    ctx.lineTo(q[1].x,q[1].y);
+    ctx.lineTo(q[2].x,q[2].y);
+    ctx.lineTo(q[3].x,q[3].y);
+    ctx.closePath();
+  };
+  const quadCenter=q=>({
+    x:(q[0].x+q[1].x+q[2].x+q[3].x)/4,
+    y:(q[0].y+q[1].y+q[2].y+q[3].y)/4
+  });
 
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
       const x=gridX+c*cellW,y=gridY+r*cellH;
       const occupied=cells[c+','+r];
+      const q=typeof cellScreenQuad==='function'?cellScreenQuad(c,r):null;
       if(!occupied){
-        ctx.fillStyle=rowTints[r]||'rgba(255,255,255,0.03)';
-        pathCamQuad(x+7,y+6,cellW-14,cellH-12);ctx.fill();
+        ctx.fillStyle=q?'rgba(255,230,154,0.055)':(rowTints[r]||'rgba(255,255,255,0.03)');
+        if(q)pathQuad(q);else pathCamQuad(x+7,y+6,cellW-14,cellH-12);
+        ctx.fill();
       }
-      ctx.strokeStyle='rgba(255,238,166,0.14)';
+      ctx.strokeStyle=q?'rgba(255,238,166,0.28)':'rgba(255,238,166,0.14)';
       ctx.lineWidth=1;
-      pathCamQuad(x+7.5,y+6.5,cellW-15,cellH-13);ctx.stroke();
+      if(q)pathQuad(q);else pathCamQuad(x+7.5,y+6.5,cellW-15,cellH-13);
+      ctx.stroke();
       if(!occupied){
-        const p=camPoint(x+cellW/2,y+cellH/2),sc=camDepthScaleAt(y+cellH/2);
+        const screenPoint=typeof cellScreenPoint==='function'?cellScreenPoint(c,r):null;
+        const p=screenPoint||(q?quadCenter(q):camPoint(x+cellW/2,y+cellH/2));
+        const sc=q?1:camDepthScaleAt(y+cellH/2);
         ctx.fillStyle='rgba(255,238,166,0.14)';
         ctx.beginPath();ctx.arc(p.x,p.y,2.2*sc,0,Math.PI*2);ctx.fill();
       }
@@ -136,13 +155,17 @@ export function drawProjectedBuildGrid(ctx, view){
     const cell=cells[k];if(!cell)continue;
     const def=cell.unitIdx===99?vodka:units[cell.unitIdx];if(!def)continue;
     const x=gridX+cell.col*cellW,y=gridY+cell.row*cellH;
+    const q=typeof cellScreenQuad==='function'?cellScreenQuad(cell.col,cell.row):null;
     ctx.fillStyle=def.color+'22';
-    pathCamQuad(x+3,y+3,cellW-6,cellH-6);ctx.fill();
+    if(q)pathQuad(q);else pathCamQuad(x+3,y+3,cellW-6,cellH-6);
+    ctx.fill();
     ctx.strokeStyle=def.color;ctx.lineWidth=1.4;ctx.globalAlpha=0.62;
-    pathCamQuad(x+2.5,y+2.5,cellW-5,cellH-5);ctx.stroke();
+    if(q)pathQuad(q);else pathCamQuad(x+2.5,y+2.5,cellW-5,cellH-5);
+    ctx.stroke();
     ctx.globalAlpha=1;
     const level=cell.level||1,levelLabel='L'+level;
-    const p=camPoint(x+cellW-13,y+13),sc=camDepthScaleAt(y+cellH/2);
+    const p=q?{x:(q[1].x+q[2].x)/2-10,y:(q[1].y+q[2].y)/2-14}:camPoint(x+cellW-13,y+13);
+    const sc=q?1:camDepthScaleAt(y+cellH/2);
     ctx.save();ctx.translate(p.x,p.y);ctx.scale(sc,sc);
     ctx.font='bold 9px Arial';
     const levelW=ctx.measureText(levelLabel).width+8;
