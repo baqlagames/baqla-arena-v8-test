@@ -1,18 +1,13 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
-import { ENEMIES } from '../data/enemies.js';
 import { ARENA_UNIT_BRANCHES } from '../data/passives.js';
-import { ARENA_SPRITE_BUILD_SCALE, ARENA_SPRITE_WAVE_SCALE, drawUnitSprite as renderDrawUnitSprite, loadSpriteFrameSet, loadUnitSpriteAssets, pickAnimFrame as renderPickAnimFrame, refreshFelfelPoisonGreenFrames } from './sprites.js';
-import { drawHealthBar } from './health-bars.js';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js';
+import { ARENA_SPRITE_BUILD_SCALE, ARENA_SPRITE_WAVE_SCALE, loadSpriteFrameSet, loadUnitSpriteAssets, refreshFelfelPoisonGreenFrames } from './sprites.js';
 import { drawVodkaSprite } from './vodka.js';
-import { drawSummonSprite as renderDrawSummonSprite } from './summon-sprites.js';
-import { drawEnemyVfxOver as renderDrawEnemyVfxOver, drawEnemyVfxUnder as renderDrawEnemyVfxUnder, drawPlayerAuraOver as renderDrawPlayerAuraOver, drawPlayerAuraUnder as renderDrawPlayerAuraUnder, playerVfxColor as renderPlayerVfxColor } from './actor-vfx.js';
-import { createBossSpriteRenderer } from './boss-sprites.js';
-import { createEnemySpriteRenderer } from './enemy-sprites.js';
+import { createActorOverlayRenderer } from './actor-overlays.js';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';
 import { createUnitSpriteOverlayRenderer } from './unit-sprite-overlays.js';
-import { projectileColor } from '../systems/combat-projectiles.js';
 
 export function createActorRenderer(deps) {
   const ctx = deps.ctx;
@@ -100,42 +95,38 @@ const unitSpriteOverlays=createUnitSpriteOverlayRenderer({
   emitParticle:addP
 });
 
-function arena_drawUnitSprite(img,x,y,u,opts){
-  return renderDrawUnitSprite(ctx,{img,x,y,unit:u,isWave:arena&&arena.phase==='wave',options:opts||{}});
-}
-function arena_pickAnimFrame(frames,ready,speed){
-  return renderPickAnimFrame(frames,ready,frame,speed);
-}
+const actorSprites=createActorSpriteHelpers({
+  ctx,
+  unitSprites:_v8UnitSprites,
+  getFrame:()=>frame,
+  getArena:()=>arena,
+  randomRange:rnd,
+  emitParticle:addP
+});
+const actorOverlays=createActorOverlayRenderer({
+  ctx,
+  tickHz:GAME_TICK_HZ,
+  getFrame:()=>frame,
+  getState:()=>state,
+  getArenaTop:()=>ARENA_TOP
+});
+const arena_drawUnitSprite=actorSprites.drawUnitSprite;
+const arena_pickAnimFrame=actorSprites.pickAnimFrame;
 // Canvas adapts to device portrait ratio (clamped 4:3 Ã¢â€ â€ 19.5:9):
 //   iPad / 4:3 portrait                Ã¢â€ â€™  500Ãƒâ€”667  (1.33:1)
 //   iPhone 7 (16:9)                    Ã¢â€ â€™  500Ãƒâ€”890  (1.78:1)
 //   modern iPhones (X..17 Pro Max)     Ã¢â€ â€™  500Ãƒâ€”1085 (2.17:1)
 // Every supported device fills the screen exactly with no letterboxing.
-function arena_drawSummonSprite(x,y,u){
-  return renderDrawSummonSprite(ctx,{
-    x,
-    y,
-    unit:u,
-    unitSprites:_v8UnitSprites,
-    frame,
-    drawUnitSprite:arena_drawUnitSprite,
-    randomRange:rnd,
-    emitParticle:addP
-  });
-}
+const arena_drawSummonSprite=actorSprites.drawSummonSprite;
 
-function projColor(t){
-  return projectileColor(t);
-}
-function arena_playerVfxColor(u){
-  return renderPlayerVfxColor(u);
-}
-function arena_drawPlayerAuraUnder(u,x,y,s){
-  renderDrawPlayerAuraUnder(ctx,{unit:u,x,y,size:s,frame});
-}
-function arena_drawPlayerAuraOver(u,x,y,s){
-  renderDrawPlayerAuraOver(ctx,{unit:u,x,y,size:s,frame,emitParticle:addP,randomRange:rnd});
-}
+const projColor=actorSprites.projColor;
+const arena_playerVfxColor=actorSprites.playerVfxColor;
+const arena_drawPlayerAuraUnder=actorSprites.drawPlayerAuraUnder;
+const arena_drawPlayerAuraOver=actorSprites.drawPlayerAuraOver;
+const arena_drawEnemyVfxUnder=actorSprites.drawEnemyVfxUnder;
+const arena_drawEnemyVfxOver=actorSprites.drawEnemyVfxOver;
+const drawStatusIcons=actorOverlays.drawStatusIcons;
+const drawHpBar=actorOverlays.drawHpBar;
 
 // =====================
 // DRAWING Ã¢â‚¬â€ UNITS
@@ -722,16 +713,6 @@ function drawUnitRaw(u){
     ctx.beginPath();ctx.ellipse(u.x,y,u.size*0.85,u.size*0.95,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
-}
-
-// Status / buff / debuff icons stacked above the unit head.
-// Each icon is a 12x12 colored chip with a single glyph.
-function drawStatusIcons(t,x,topY){
-  const icons=collectStatusIcons(t,GAME_TICK_HZ);
-  drawStatusIconChips(ctx,{icons,x,topY,state,arenaTop:ARENA_TOP,frame});
-}
-function drawHpBar(x,y,hp,maxHp,w,kind='player'){
-  drawHealthBar(ctx,{x,y,hp,maxHp,width:w,kind});
 }
 
 // All veggie draw functions
@@ -2244,180 +2225,21 @@ function drawCritter(x,y,s,critterType){
 // =====================================================================
 // ARCHETYPE-SPECIFIC ENEMY RENDERERS Ã¢â‚¬â€ distinct silhouette per type
 // =====================================================================
-function _drawEnemyBody(e,x,y,s){
-  if(e.isBoss)return _drawBossBody(e,x,y,s);
-  if(e.isElite){
-    ctx.save();ctx.strokeStyle='#ffd700';ctx.lineWidth=2.5;ctx.globalAlpha=0.55+0.3*Math.sin(frame*0.1);
-    ctx.beginPath();ctx.arc(x,y,s+4,0,Math.PI*2);ctx.stroke();ctx.restore();
-  }
-  if(e.enemyArt==='classic')return enemySprites.drawClassicEnemyBody(e,x,y,s);
-  return enemySprites.drawGerbanBroodVehicle(e,x,y,s);
-}
-function arena_drawEnemyVfxUnder(e,x,y,s){
-  renderDrawEnemyVfxUnder(ctx,{enemy:e,x,y,size:s,frame});
-}
-function arena_drawEnemyVfxOver(e,x,y,s){
-  renderDrawEnemyVfxOver(ctx,{enemy:e,x,y,size:s,frame,emitParticle:addP,randomRange:rnd});
-}
-const enemySprites=createEnemySpriteRenderer({
+const actorEnemies=createActorEnemyRenderer({
   ctx,
-  view:()=>({frame})
-});
-// ===== BOSS-SPECIFIC RENDERERS =====
-const bossSprites=createBossSpriteRenderer({
-  ctx,
-  view:()=>({frame}),
+  getFrame:()=>frame,
+  getArenaTop:()=>ARENA_TOP,
   randomRange:rnd,
   emitParticle:addP,
-  drawFallbackEnemyBody:enemySprites.drawDpsBody
+  drawWithClashCamera:arena_drawWithClashCamera,
+  drawEnemyVfxUnder:arena_drawEnemyVfxUnder,
+  drawEnemyVfxOver:arena_drawEnemyVfxOver,
+  drawHpBar,
+  drawStatusIcons,
+  drawCritter
 });
-function _drawBossBody(e,x,y,s){return bossSprites.drawBossBody(e,x,y,s)}
-function drawDummy(e){
-  if(!e||e.hp<=0)return;
-  arena_drawWithClashCamera(e.x,e.y,()=>drawDummyRaw(e));
-}
-function drawDummyRaw(e){
-  if(e.hp<=0)return;
-  // S7 Wall Boss Ã¢â‚¬â€ purification barrier renders as a glowing oval halo around
-  // the boss. Pulsing magic ring + corruption motes fading to green as heals
-  // purify it. Heal-progress bar sits below the boss area.
-  if(e.isBarrier){
-    const r=e.rx||70;                       // perfect circle now (rx==ry)
-    const pct=Math.max(0,Math.min(1,(e.healHp||0)/(e.healHpMax||1)));
-    // Color blend: purple corruption Ã¢â€ â€™ emerald purification
-    const cr=Math.round(0xa8+(0x3a-0xa8)*pct),cg=Math.round(0x55+(0xff-0x55)*pct),cb=Math.round(0xf7+(0x66-0xf7)*pct);
-    const ringCol='rgb('+cr+','+cg+','+cb+')';
-    ctx.save();
-    // Outer pulsing aura Ã¢â‚¬â€ wider, softer, stronger pulse
-    const _pulse=0.65+0.30*Math.sin(frame*0.08);
-    ctx.strokeStyle=ringCol;ctx.globalAlpha=0.20*_pulse;ctx.lineWidth=16;
-    ctx.beginPath();ctx.arc(e.x,e.y,r+10,0,Math.PI*2);ctx.stroke();
-    // Mid translucent fill Ã¢â‚¬â€ slightly more opaque so the boss reads as INSIDE
-    ctx.fillStyle=ringCol;ctx.globalAlpha=0.13;
-    ctx.beginPath();ctx.arc(e.x,e.y,r,0,Math.PI*2);ctx.fill();
-    // Hex-shield chord lines Ã¢â‚¬â€ 6 lines connecting points around the perimeter,
-    // rotating slowly. Reads as a sci-fi force field, not a fog cloud.
-    if(pct<0.97){
-      ctx.globalAlpha=0.32*(1-pct*0.5);
-      ctx.strokeStyle=ringCol;ctx.lineWidth=1;
-      const _rot=frame*0.004;
-      for(let i=0;i<6;i++){
-        const a1=_rot+i*Math.PI/3,a2=a1+Math.PI*2/3;
-        ctx.beginPath();
-        ctx.moveTo(e.x+Math.cos(a1)*r,e.y+Math.sin(a1)*r);
-        ctx.lineTo(e.x+Math.cos(a2)*r,e.y+Math.sin(a2)*r);
-        ctx.stroke();
-      }
-      ctx.globalAlpha=1;
-    }
-    // Sharp inner edge ring
-    ctx.globalAlpha=0.95;ctx.strokeStyle=ringCol;ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(e.x,e.y,r,0,Math.PI*2);ctx.stroke();
-    // Apple-style hairline highlight just inside the edge
-    ctx.globalAlpha=0.55;ctx.strokeStyle='#fff';ctx.lineWidth=1;
-    ctx.beginPath();ctx.arc(e.x,e.y,r-2,0,Math.PI*2);ctx.stroke();
-    ctx.globalAlpha=1;
-    // Corruption motes orbiting the perimeter (fade as purified)
-    if(pct<0.95){
-      const moteN=10;
-      for(let i=0;i<moteN;i++){
-        const ang=(frame*0.022+i*Math.PI*2/moteN)%(Math.PI*2);
-        const mx=e.x+Math.cos(ang)*r,my=e.y+Math.sin(ang)*r;
-        ctx.fillStyle='#a855f7';ctx.globalAlpha=0.55*(1-pct);
-        ctx.beginPath();ctx.arc(mx,my,3,0,Math.PI*2);ctx.fill();
-      }
-      ctx.globalAlpha=1;
-    }
-    ctx.restore();
-    ctx.textAlign='left';
-    // (Cinematic purify bar is drawn from arena_drawHud so it layers ABOVE the
-    // top HUD pills instead of getting clipped underneath them.)
-    return;
-  }
-  // Burrowed: render only a small mound + dust, no sprite. Untargetable phase.
-  if(e.burrowing){
-    const bx=e.x,by=e.y;
-    ctx.fillStyle='#7a5028';ctx.globalAlpha=0.8;
-    ctx.beginPath();ctx.ellipse(bx,by+4,e.size*0.5,e.size*0.18,0,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=0.24+0.10*Math.sin(frame*0.12);
-    ctx.strokeStyle='#d0a060';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.ellipse(bx,by+7,e.size*0.85,e.size*0.28,0,0,Math.PI*2);ctx.stroke();
-    ctx.globalAlpha=0.18;
-    ctx.fillStyle='#a07050';
-    ctx.beginPath();ctx.ellipse(bx,by+2,e.size*0.24,e.size*0.10,0,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=1;
-    if(frame%8===0)addP(bx+rnd(-6,6),by+6,'#a07050',1,3);
-    return;
-  }
-  const flying=!!e.flying;
-  // Flying enemies float higher with stronger bob; render a larger ground shadow
-  // detached below to telegraph "this thing is in the air."
-  const s=e.size,x=e.x,y=e.y+Math.sin(e.bobPhase)*(flying?5:1.5)-(flying?14:0);
-  if(e.polymorphTimer>0){
-    drawCritter(x,y,s,e._critterType||0);
-    if(frame%8===0)addP(x+rnd(-s/2,s/2),y-s,'#fff0bb',1,2);
-    drawHpBar(e.x,Math.max(ARENA_TOP+18,e.y-(flying?14:0)-s-8),e.hp,e.maxHp,s+8,e.isBoss?'boss':(e.isElite?'elite':'enemy'));
-    return;
-  }
-  if(flying){
-    // Detached ground shadow on the arena floor (matches enemy x, fixed y at e.y+8).
-    ctx.fillStyle='#0008';
-    ctx.beginPath();ctx.ellipse(e.x,e.y+12,s*0.5,s*0.14,0,0,Math.PI*2);ctx.fill();
-    // Wing flap sparkles.
-    if(frame%4===0){
-      addP(x-s*0.6,y-s*0.1,e.accent||'#fff',1,2);
-      addP(x+s*0.6,y-s*0.1,e.accent||'#fff',1,2);
-    }
-  }
-  arena_drawEnemyVfxUnder(e,x,y,s);
-  _drawEnemyBody(e,x,y,s);
-  arena_drawEnemyVfxOver(e,x,y,s);
-  // poison/curse hue overlay
-  if(e.poisonTimer>0&&frame%6===0)addP(x+rnd(-s/2,s/2),y-s,'#88ff44',1,2);
-  if(e.livingBombTimer>0)addP(x+rnd(-s/2,s/2),y-s,'#ff8800',1,3);
-  if(e._livingBombTimer>0&&frame%6===0)addP(x+rnd(-s/2,s/2),y-s,'#ff4400',1,3);
-  if(e._igniteStacks&&e._igniteStacks.length>0&&frame%8===0)addP(x+rnd(-s/3,s/3),y+s*0.3,'#ff4400',1,2);
-  if(e.doomTimer>0)addP(x+rnd(-s/2,s/2),y-s,'#aa66cc',1,3);
-  // Hit flash overlay Ã¢â‚¬â€ bright white ellipse fades over ~6 frames.
-  if(e.hitFlash>0){
-    ctx.save();
-    ctx.fillStyle='#ffffff';ctx.globalAlpha=Math.min(0.7,e.hitFlash*0.12);
-    ctx.beginPath();ctx.ellipse(x,y,s*0.85,s*0.95,0,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-  }
-  // Hive Shield visual Ã¢â‚¬â€ pulsing golden ring around boss
-  if(e.hiveShield&&e.hiveShield.hp>0){
-    ctx.save();
-    const shPct=e.hiveShield.hp/e.hiveShield.maxHp;
-    const pulse=0.7+0.3*Math.sin(frame*0.1);
-    ctx.strokeStyle='#ffdd44';ctx.globalAlpha=0.6*pulse*shPct;ctx.lineWidth=4;
-    ctx.beginPath();ctx.arc(x,y,s+8,0,Math.PI*2);ctx.stroke();
-    ctx.globalAlpha=0.15*pulse*shPct;ctx.fillStyle='#ffdd44';
-    ctx.beginPath();ctx.arc(x,y,s+6,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-  }
-  if(e.royalCarapaceTimer>0){
-    ctx.save();
-    const pct=1-(e.royalCarapaceTimer/(e.royalCarapaceMax||1));
-    const bw=Math.min(170,Math.max(92,s*3.2));
-    const bh=10;
-    const bx=x-bw/2;
-    const by=Math.max(ARENA_TOP+2,y-s-28);
-    ctx.fillStyle='rgba(20,8,6,0.86)';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,4);ctx.fill();
-    ctx.fillStyle='#ff5533';ctx.beginPath();ctx.roundRect(bx,by,Math.max(3,bw*pct),bh,4);ctx.fill();
-    ctx.strokeStyle='#ffdd44';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx+0.5,by+0.5,bw-1,bh-1,4);ctx.stroke();
-    ctx.font='bold 8px Segoe UI';ctx.textAlign='center';ctx.fillStyle='#fff';
-    ctx.fillText('HIVE BURST',x,by-2);
-    ctx.restore();
-  }
-  const _enemyHudMinY=ARENA_TOP+18;
-  const _enemyBarBaseY=e.y-(flying?14:0);
-  const _enemyHpY=Math.max(_enemyHudMinY,_enemyBarBaseY-s-8);
-  const _enemyHudY=_enemyHpY;
-  drawHpBar(e.x,_enemyHudY,e.hp,e.maxHp,s+8,e.isBoss?'boss':(e.isElite?'elite':'enemy'));
-  drawStatusIcons(e,e.x,_enemyHudY-8);
-}
-
+const drawDummy=actorEnemies.drawDummy;
+const drawDummyRaw=actorEnemies.drawDummyRaw;
 
   const exportedDrawFns = {};
   for (const key of Object.keys(drawFns)) {

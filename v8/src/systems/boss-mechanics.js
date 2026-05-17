@@ -6,31 +6,100 @@ import { tryRoyalCarapace, updateRoyalCarapace } from './boss-royal-carapace.js'
 
 export { bossPhase };
 
+const NOOP = () => {};
+
+function normalizeBossContext(ctx = {}) {
+  ctx.units = Array.isArray(ctx.units) ? ctx.units : [];
+  ctx.enemies = Array.isArray(ctx.enemies) ? ctx.enemies : [];
+  ctx.bombs = Array.isArray(ctx.bombs) ? ctx.bombs : [];
+  ctx.groundFx = Array.isArray(ctx.groundFx) ? ctx.groundFx : [];
+  ctx.beamFx = Array.isArray(ctx.beamFx) ? ctx.beamFx : [];
+  ctx.frame = Number.isFinite(ctx.frame) ? ctx.frame : 0;
+  ctx.width = Number.isFinite(ctx.width) ? ctx.width : 500;
+  ctx.arenaTop = Number.isFinite(ctx.arenaTop) ? ctx.arenaTop : 88;
+  ctx.arenaBottom = Number.isFinite(ctx.arenaBottom) ? ctx.arenaBottom : 820;
+  ctx.dealDamage = typeof ctx.dealDamage === 'function' ? ctx.dealDamage : NOOP;
+  ctx.addParticle = typeof ctx.addParticle === 'function' ? ctx.addParticle : NOOP;
+  ctx.addDamageText = typeof ctx.addDamageText === 'function' ? ctx.addDamageText : NOOP;
+  ctx.showFlash = typeof ctx.showFlash === 'function' ? ctx.showFlash : NOOP;
+  ctx.fireProjectile = typeof ctx.fireProjectile === 'function' ? ctx.fireProjectile : NOOP;
+  ctx.spawnEnemyByIndex = typeof ctx.spawnEnemyByIndex === 'function' ? ctx.spawnEnemyByIndex : NOOP;
+  ctx.tuneBossSupportMinion = typeof ctx.tuneBossSupportMinion === 'function' ? ctx.tuneBossSupportMinion : NOOP;
+  ctx.clampToArena = typeof ctx.clampToArena === 'function' ? ctx.clampToArena : NOOP;
+  ctx.shake = typeof ctx.shake === 'function' ? ctx.shake : NOOP;
+  ctx.SFX = ctx.SFX || {};
+  ctx.SFX.bossSlam = typeof ctx.SFX.bossSlam === 'function' ? ctx.SFX.bossSlam : NOOP;
+  return ctx;
+}
+
+function normalizeBossActor(b, ctx) {
+  if (!b || b.hp <= 0) return false;
+  ctx = normalizeBossContext(ctx);
+  if (!Number.isFinite(b.maxHp) || b.maxHp <= 0) b.maxHp = Math.max(1, b.hp || 1);
+  if (!Number.isFinite(b.hp)) b.hp = b.maxHp;
+  if (!Number.isFinite(b.x)) b.x = ctx.width / 2;
+  if (!Number.isFinite(b.y)) b.y = ctx.arenaTop + 90;
+  if (!Number.isFinite(b.size) || b.size <= 0) b.size = b.isLieutenant ? 34 : 42;
+  if (!Number.isFinite(b.dmg)) b.dmg = 0;
+  if (!Number.isFinite(b.atkSpd) || b.atkSpd <= 0) b.atkSpd = 60;
+  if (!Number.isFinite(b.bobPhase)) b.bobPhase = 0;
+  if (!b.mechCD || typeof b.mechCD !== 'object') b.mechCD = {};
+  if (!b.debuffs || typeof b.debuffs !== 'object') b.debuffs = {};
+  if (ctx.arena) {
+    if (ctx.arena.lieutenants && !Array.isArray(ctx.arena.lieutenants)) ctx.arena.lieutenants = [];
+    if (ctx.arena.activeBarrier && ctx.arena.activeBarrier.bossRef && ctx.arena.activeBarrier.bossRef.hp <= 0) ctx.arena.activeBarrier = null;
+  }
+  return true;
+}
+
+function safeBossAbility(b, key, cdKey, phase, handler, ctx) {
+  try {
+    return fireBossAbil(b, key, cdKey, phase, handler, ctx);
+  } catch (err) {
+    b._lastBossAbilityError = {
+      key,
+      message: err && err.message ? err.message : String(err),
+      frame: ctx && Number.isFinite(ctx.frame) ? ctx.frame : 0,
+    };
+    if (ctx && typeof ctx.addDamageText === 'function' && Number.isFinite(b.x) && Number.isFinite(b.y)) {
+      ctx.addDamageText(b.x, b.y - (b.size || 32), 'ABILITY SKIPPED', '#ffaa44');
+    }
+    return false;
+  }
+}
+
 export function tickAerialBombs(ctx) {
+  ctx = normalizeBossContext(ctx);
   const { arena, units, groundFx, dealDamage, addParticle: addP, shake } = ctx;
   if (!arena || !arena.aerialBombs || !arena.aerialBombs.length) return;
   for (let i = arena.aerialBombs.length - 1; i >= 0; i--) {
     const bomb = arena.aerialBombs[i];
-    bomb.t--;
+    if (!bomb || !Number.isFinite(bomb.x) || !Number.isFinite(bomb.y)) {
+      arena.aerialBombs.splice(i, 1);
+      continue;
+    }
+    const radius = Math.max(1, Number.isFinite(bomb.radius) ? bomb.radius : 60);
+    const dmg = Math.max(0, Number.isFinite(bomb.dmg) ? bomb.dmg : 0);
+    bomb.t = Number.isFinite(bomb.t) ? bomb.t - 1 : 0;
     if (bomb.t > 0) continue;
     for (const unit of units) {
       if (unit.hp <= 0 || !unit.isPlayer || unit.isGhost || unit.untargetable) continue;
       const distance = Math.hypot(unit.x - bomb.x, unit.y - bomb.y);
-      if (distance <= bomb.radius) {
-        dealDamage(unit, bomb.dmg, bomb.from, 'normal');
+      if (distance <= radius) {
+        dealDamage(unit, dmg, bomb.from, 'normal');
         addP(unit.x, unit.y, '#ff8844', 6, 4);
       }
     }
     for (let j = 0; j < 24; j++) {
       addP(
-        bomb.x + rnd(-bomb.radius * 0.6, bomb.radius * 0.6),
-        bomb.y + rnd(-bomb.radius * 0.6, bomb.radius * 0.6),
+        bomb.x + rnd(-radius * 0.6, radius * 0.6),
+        bomb.y + rnd(-radius * 0.6, radius * 0.6),
         bomb.strafe ? '#ffaa44' : '#ff8844',
         1,
         4
       );
     }
-    groundFx.push({ x: bomb.x, y: bomb.y, r: 0, maxR: bomb.radius, life: 0.4, color: '#ff8844' });
+    groundFx.push({ x: bomb.x, y: bomb.y, r: 0, maxR: radius, life: 0.4, color: '#ff8844' });
     if (!bomb.strafe) shake(10);
     arena.aerialBombs.splice(i, 1);
   }
@@ -70,9 +139,13 @@ function bossDebuff(b,ctx){
 // heal is drained into the active barrier (within 250 px). When healHp
 // reaches healHpMax, the barrier shatters and reveals the boss.
 export function drainHealToBarrier(amount,srcUnit,ctx){
+  ctx = normalizeBossContext(ctx);
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
-  if(!arena||!arena.activeBarrier)return;
+  if(!arena||!arena.activeBarrier||!Number.isFinite(amount)||amount<=0)return;
   const bar=arena.activeBarrier;
+  if(!Number.isFinite(bar.x)||!Number.isFinite(bar.y))return;
+  bar.healHpMax=Math.max(1,Number.isFinite(bar.healHpMax)?bar.healHpMax:1);
+  bar.healHp=Math.max(0,Number.isFinite(bar.healHp)?bar.healHp:0);
   // Proximity gate is generous Ã¢â‚¬â€ barrier sits up near the boss now, so any
   // healer in the squad zone (grid) is within range.
   if(srcUnit){
@@ -89,13 +162,16 @@ export function drainHealToBarrier(amount,srcUnit,ctx){
   if(bar.healHp>=bar.healHpMax)arena_breakBarrier(ctx);
 }
 function arena_breakBarrier(ctx){
+  ctx = normalizeBossContext(ctx);
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   const bar=arena&&arena.activeBarrier;
   if(!bar)return;
   arena.activeBarrier=null;
   // Shatter VFX
-  for(let i=0;i<60;i++)addP(bar.x+rnd(-bar.w/2,bar.w/2),bar.y+rnd(-bar.h*1.2,bar.h*1.2),'#a855f7',2,5);
-  for(let i=0;i<30;i++)addP(bar.x+rnd(-bar.w/2,bar.w/2),bar.y+rnd(-bar.h,bar.h),'#ffffff',1,3);
+  const rx=Math.max(24,bar.rx||bar.w||70);
+  const ry=Math.max(24,bar.ry||bar.h||70);
+  for(let i=0;i<60;i++)addP(bar.x+rnd(-rx,rx),bar.y+rnd(-ry*1.2,ry*1.2),'#a855f7',2,5);
+  for(let i=0;i<30;i++)addP(bar.x+rnd(-rx,rx),bar.y+rnd(-ry,ry),'#ffffff',1,3);
   groundFx.push({x:bar.x,y:bar.y,r:0,maxR:220,life:0.7,color:'#a855f7'});
   shake(18);
   showFlash('BARRIER PURIFIED Ã¢â‚¬â€ THE GATE OPENS','#a855f7',150);
@@ -447,6 +523,8 @@ function bossDarkWind(b,ctx){
 }
 // === MAIN BOSS UPDATE ===
 export function updateBoss(b,ctx){
+  ctx=normalizeBossContext(ctx);
+  if(!normalizeBossActor(b,ctx))return;
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   if(!b.mechCD)b.mechCD={};
   // Ice block grants invulnerability
@@ -564,9 +642,10 @@ export function updateBoss(b,ctx){
     if(phase>1){
       const phaseNames=['','','PHASE 2','PHASE 3'];
       const phaseColors=['','','#ff8c00','#ff0040'];
-      showFlash(phaseNames[phase]+'!  NEW ABILITIES UNLOCKED','#ff8c00',100);
+      const phaseIdx=Math.max(2,Math.min(phase,phaseNames.length-1));
+      showFlash(phaseNames[phaseIdx]+'!  NEW ABILITIES UNLOCKED','#ff8c00',100);
       shake(16);
-      for(let i=0;i<60;i++)addP(b.x,b.y,phaseColors[phase],1,6);
+      for(let i=0;i<60;i++)addP(b.x,b.y,phaseColors[phaseIdx],1,6);
     }
   }
   // Time-based enrage Ã¢â‚¬â€ measured from when THIS boss spawned, not from stage start.
@@ -595,34 +674,34 @@ export function updateBoss(b,ctx){
   // bombDrop / skyStrafe / sandStorm instead. Once landed, ground abilities
   // (lunge, aoe, magicBolt) resume.
   if(!b.aerial){
-    fireBossAbil(b,'aoe','aoeCD',b.aoePhase||1,bossAoEPulse,ctx);
-    fireBossAbil(b,'lunge','lungeCD',b.lungePhase||1,bossLunge,ctx);
-    fireBossAbil(b,'magicBolt','magicBoltCD',b.magicBoltPhase||1,bossMagicBolt,ctx);
-    fireBossAbil(b,'emberVolley','emberVolleyCD',b.emberVolleyPhase||1,bossEmberVolley,ctx);
-    fireBossAbil(b,'emberDecree','emberDecreeCD',b.emberDecreePhase||1,bossEmberDecree,ctx);
-    fireBossAbil(b,'royalDive','royalDiveCD',b.royalDivePhase||1,bossRoyalDive,ctx);
+    safeBossAbility(b,'aoe','aoeCD',b.aoePhase||1,bossAoEPulse,ctx);
+    safeBossAbility(b,'lunge','lungeCD',b.lungePhase||1,bossLunge,ctx);
+    safeBossAbility(b,'magicBolt','magicBoltCD',b.magicBoltPhase||1,bossMagicBolt,ctx);
+    safeBossAbility(b,'emberVolley','emberVolleyCD',b.emberVolleyPhase||1,bossEmberVolley,ctx);
+    safeBossAbility(b,'emberDecree','emberDecreeCD',b.emberDecreePhase||1,bossEmberDecree,ctx);
+    safeBossAbility(b,'royalDive','royalDiveCD',b.royalDivePhase||1,bossRoyalDive,ctx);
   }
-  fireBossAbil(b,'debuff','debuffCD',b.debuffPhase||2,bossDebuff,ctx);
-  fireBossAbil(b,'spawn','spawnCD',b.spawnPhase||1,bossSpawn,ctx);
-  fireBossAbil(b,'meteor','meteorCD',b.meteorPhase||1,bossMeteor,ctx);
+  safeBossAbility(b,'debuff','debuffCD',b.debuffPhase||2,bossDebuff,ctx);
+  safeBossAbility(b,'spawn','spawnCD',b.spawnPhase||1,bossSpawn,ctx);
+  safeBossAbility(b,'meteor','meteorCD',b.meteorPhase||1,bossMeteor,ctx);
   // S12 Sky Tyrant aerial abilities Ã¢â‚¬â€ only fire while aerial.
   if(b.aerial){
-    fireBossAbil(b,'bombDrop','bombDropCD',b.bombDropPhase||1,bossBombDrop,ctx);
-    fireBossAbil(b,'skyStrafe','skyStrafeCD',b.skyStrafePhase||1,bossSkyStrafe,ctx);
-    fireBossAbil(b,'sandStorm','sandStormCD',b.sandStormPhase||1,bossSandStorm,ctx);
+    safeBossAbility(b,'bombDrop','bombDropCD',b.bombDropPhase||1,bossBombDrop,ctx);
+    safeBossAbility(b,'skyStrafe','skyStrafeCD',b.skyStrafePhase||1,bossSkyStrafe,ctx);
+    safeBossAbility(b,'sandStorm','sandStormCD',b.sandStormPhase||1,bossSandStorm,ctx);
   }
-  fireBossAbil(b,'burrow','burrowCD',b.burrowPhase||1,bossBurrow,ctx);
-  fireBossAbil(b,'vanish','vanishCD',b.vanishPhase||1,bossVanish,ctx);
-  fireBossAbil(b,'pcloud','poisonCloudCD',b.poisonCloudPhase||1,bossPoisonCloud,ctx);
-  fireBossAbil(b,'bliz','blizzardCD',b.blizzardPhase||1,bossBlizzard,ctx);
-  fireBossAbil(b,'stomp','stompCD',b.stompPhase||1,bossStomp,ctx);
-  fireBossAbil(b,'iceblock','iceBlockCD',b.iceBlockPhase||1,bossIceBlock,ctx);
+  safeBossAbility(b,'burrow','burrowCD',b.burrowPhase||1,bossBurrow,ctx);
+  safeBossAbility(b,'vanish','vanishCD',b.vanishPhase||1,bossVanish,ctx);
+  safeBossAbility(b,'pcloud','poisonCloudCD',b.poisonCloudPhase||1,bossPoisonCloud,ctx);
+  safeBossAbility(b,'bliz','blizzardCD',b.blizzardPhase||1,bossBlizzard,ctx);
+  safeBossAbility(b,'stomp','stompCD',b.stompPhase||1,bossStomp,ctx);
+  safeBossAbility(b,'iceblock','iceBlockCD',b.iceBlockPhase||1,bossIceBlock,ctx);
   // Crow Gerban abilities
-  fireBossAbil(b,'caw','cawCD',b.cawPhase||1,bossCaw,ctx);
-  fireBossAbil(b,'dive','diveCD',b.divePhase||1,bossDive,ctx);
-  fireBossAbil(b,'feather','featherCD',b.featherPhase||1,bossFeatherVolley,ctx);
-  fireBossAbil(b,'storm','stormCD',b.stormPhase||1,bossPlagueStorm,ctx);
-  fireBossAbil(b,'wind','windCD',b.windPhase||1,bossDarkWind,ctx);
+  safeBossAbility(b,'caw','cawCD',b.cawPhase||1,bossCaw,ctx);
+  safeBossAbility(b,'dive','diveCD',b.divePhase||1,bossDive,ctx);
+  safeBossAbility(b,'feather','featherCD',b.featherPhase||1,bossFeatherVolley,ctx);
+  safeBossAbility(b,'storm','stormCD',b.stormPhase||1,bossPlagueStorm,ctx);
+  safeBossAbility(b,'wind','windCD',b.windPhase||1,bossDarkWind,ctx);
   // === One-shot mechanics ===
   // Ember Crow Prince: at low HP, calls two weak fire-crow chicks as a distraction.
   // Chick damage is authored separately so boss buffs do not secretly buff them.

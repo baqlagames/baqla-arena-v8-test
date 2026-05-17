@@ -29,11 +29,15 @@ export function drawPauseButton(ctx,x,y,w,h,label,color,subtitle){
 
 export function drawPauseMenu(ctx,view){
   const W=view.width,H=view.height;
+  const arenaMode=view.arenaViewMode||'25d';
+  const arenaModeLabel=arenaMode==='flat'?'Flat':(arenaMode==='draw25d'?'Draw 2.5D':'BG 2.5D');
   const labels={
     title:'PAUSED',
     stageSeparator:' - ',
     resume:'Resume',
     resumeSub:'Continue playing',
+    arenaView:'Arena: '+arenaModeLabel,
+    arenaViewSub:'Tap to switch arena view',
     restart:'Restart Stage',
     restartSub:'Try this stage from round 1',
     quit:'Back to Map',
@@ -45,7 +49,7 @@ export function drawPauseMenu(ctx,view){
     ...view.labels
   };
   ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,0,W,H);
-  const pw=Math.min(320,W-40),ph=350,px=(W-pw)/2,py=(H-ph)/2-20;
+  const pw=Math.min(320,W-40),ph=Math.min(410,H-44),px=(W-pw)/2,py=(H-ph)/2-12;
   const cg=ctx.createLinearGradient(0,py,0,py+ph);
   cg.addColorStop(0,'rgba(32,32,48,0.97)');cg.addColorStop(1,'rgba(18,18,28,0.97)');
   ctx.fillStyle=cg;ctx.beginPath();ctx.roundRect(px,py,pw,ph,20);ctx.fill();
@@ -64,6 +68,18 @@ export function drawPauseMenu(ctx,view){
   const rects={};
   rects.resume={x:bx,y:by,w:bw,h:bh};
   drawPauseButton(ctx,bx,by,bw,bh,labels.resume,'#3aa84e',labels.resumeSub);
+  by+=bh+12;
+  rects.arenaView={x:bx,y:by,w:bw,h:bh};
+  drawPauseButton(
+    ctx,
+    bx,
+    by,
+    bw,
+    bh,
+    labels.arenaView,
+    arenaMode==='flat'?'#8a6940':(arenaMode==='draw25d'?'#6649a8':'#32709a'),
+    labels.arenaViewSub
+  );
   by+=bh+12;
   rects.restart={x:bx,y:by,w:bw,h:bh};
   drawPauseButton(ctx,bx,by,bw,bh,labels.restart,'#c08a30',labels.restartSub);

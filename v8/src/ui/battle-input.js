@@ -3,6 +3,7 @@ import { pointInRectObject } from './input.js';
 export function resolvePauseOverlayAction(point, arenaState) {
   if (!arenaState || !arenaState.pauseMenu) return { type: 'none' };
   if (pointInRectObject(point, arenaState._pauseResumeRect)) return { type: 'resume' };
+  if (pointInRectObject(point, arenaState._pauseArenaViewRect)) return { type: 'arenaViewToggle' };
   if (pointInRectObject(point, arenaState._pauseRestartRect)) return { type: 'restart' };
   if (pointInRectObject(point, arenaState._pauseQuitRect)) return { type: 'quit' };
   if (pointInRectObject(point, arenaState._pauseSoundRect)) return { type: 'sound' };
@@ -11,7 +12,6 @@ export function resolvePauseOverlayAction(point, arenaState) {
 
 export function resolveBattleChromeAction(point, arenaState) {
   if (!arenaState) return { type: 'none' };
-  if (pointInRectObject(point, arenaState._arenaViewToggleRect)) return { type: 'arenaViewToggle' };
   if (pointInRectObject(point, arenaState._pauseBtnRect)) return { type: 'pause' };
   if (arenaState.pickerOpen) return { type: 'picker' };
   if (arenaState.managePanelCell) return { type: 'manage' };

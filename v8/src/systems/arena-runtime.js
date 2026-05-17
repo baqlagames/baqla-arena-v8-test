@@ -32,12 +32,12 @@ import { drawCodexScreen } from '../ui/codex-screen.js';
 import { createCodexDetailRuntime } from '../ui/codex-detail-runtime.js';
 import { drawThreatsPanel as drawThreatPreviewPanel, threatPanelHeight } from '../ui/threat-panel.js';
 import { drawCombatReportPanel as drawResultCombatReportPanel, resultButtonRects as getResultButtonRects } from '../ui/results.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=20260517-zavs-sprite';
+import { createActorRenderer } from '../render/actor-renderer.js?v=495d015';
 import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js';
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js';
 import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js';
-import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-nogrid-6x3';
+import { createArenaSceneRenderer } from '../render/arena-scene.js?v=495d015';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 import { drawBombEffects } from '../render/bombs.js';
 import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js';
@@ -51,7 +51,7 @@ import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js
 import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js';
 import { updateArenaEnemyAi } from './combat-enemy-ai.js';
 import { createCombatEnemyRuntime } from './combat-enemy-runtime.js';
-import { spawnEnemyByIndex } from './enemy-spawn.js?v=20260517-grid-calibration';
+import { spawnEnemyByIndex } from './enemy-spawn.js?v=495d015';
 import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived, applyTrackedHeal } from './combat-healing.js';
 import { compactRemovedCombatUnits, tickEnemyCombatUnits, tickPlayerCombatUnits } from './combat-loop.js';
 import { createCombatTransientsRuntime } from './combat-transients-runtime.js';
@@ -67,10 +67,11 @@ import { tickEnemyPostUpdateStatusEffects } from './combat-status-effects.js';
 import { loadProgress, saveProgress } from './progress.js';
 import { getPerkEffects, perkSlotCount, stageBeansReward, toggleSelectedPerk, unlockPerk } from './perks.js';
 import { showRewardedAd } from './rewarded-ads.js';
-import { createStageFlowRuntime } from './stage-flow-runtime.js?v=20260517-grid-calibration';
+import { createStageFlowRuntime } from './stage-flow-runtime.js?v=495d015';
+import { createPaintedArenaGrid } from './arena-painted-grid.js';
 import { startStageRun } from './stage-runner.js';
 import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js';
-import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260517-grid-calibration';
+import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=495d015';
 import { drainHealToBarrier as drainHealToBarrierFromBossMechanics, tickAerialBombs as tickBossAerialBombs, updateBoss as updateBossMechanics } from './boss-mechanics.js';
 import { tickTimedFieldEffects } from './timed-field-effects.js';
 import { createStageRunSetup } from './stage-lifecycle.js';
@@ -340,135 +341,44 @@ let gridW=GRID_W;
 let cellW=CELL_W;
 let GRID_Y=200;           // recomputed from the painted arena board in recomputeGrid
 let CELL_H=70;            // recomputed once canvas is sized in applyCanvasDims
-const PAINTED_ARENA_IMAGE_W=1086;
-const PAINTED_ARENA_IMAGE_H=1448;
-const PAINTED_BUILD_TOP=748;
-const PAINTED_BUILD_BOTTOM=1124;
-const PAINTED_BUILD_LEFT_TOP=180;
-const PAINTED_BUILD_RIGHT_TOP=914;
-const PAINTED_BUILD_LEFT_BOTTOM=149;
-const PAINTED_BUILD_RIGHT_BOTTOM=950;
-const PAINTED_ENEMY_SPAWN_Y=328;
-function arena_paintedImageScale(){
-  return H/PAINTED_ARENA_IMAGE_H;
-}
-function arena_paintedImageX(){
-  return (W-PAINTED_ARENA_IMAGE_W*arena_paintedImageScale())/2;
-}
-function arena_paintedSourceToScreenX(x){
-  return arena_paintedImageX()+x*arena_paintedImageScale();
-}
-function arena_paintedSourceToScreenY(y){
-  return y*arena_paintedImageScale();
-}
-function arena_projectedWorldYForScreenY(screenY){
-  const top=ARENA_TOP+28,bot=ARENA_BOT-18;
-  const t=Math.pow(Math.max(0,Math.min(1,(screenY-top)/Math.max(1,bot-top))),1/1.18);
-  return top+t*(bot-top);
-}
-function arena_paintedGridWidthScaleAt(y){
-  const top=ARENA_TOP+28,bot=ARENA_BOT-18;
-  const t=Math.max(0,Math.min(1,(y-top)/Math.max(1,bot-top)));
-  return 0.76+0.27*t;
-}
-function arena_projectedWorldXForScreenX(screenX,worldY){
-  const s=arena_paintedGridWidthScaleAt(worldY);
-  return W/2+(screenX-W/2)/Math.max(0.01,s);
-}
-function arena_paintedWorldYForSourceY(sourceY){
-  return arena_projectedWorldYForScreenY(arena_paintedSourceToScreenY(sourceY));
-}
-function arena_paintedSourceToWorldPoint(x,y){
-  const worldY=arena_paintedWorldYForSourceY(y);
-  return {x:arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(x),worldY),y:worldY};
-}
+const paintedArenaGrid=createPaintedArenaGrid({
+  getWidth:()=>W,
+  getHeight:()=>H,
+  getArenaTop:()=>ARENA_TOP,
+  getArenaBot:()=>ARENA_BOT,
+  getGridCols:()=>GRID_COLS,
+  getGridRows:()=>GRID_ROWS,
+  isActive:()=>arenaSceneRenderer&&arenaSceneRenderer.arenaViewMode==='25d'
+});
 function arena_paintedPlacementActive(){
-  try{return arenaSceneRenderer&&arenaSceneRenderer.arenaViewMode==='25d'}catch(_){return false}
-}
-function arena_lerp(a,b,t){return a+(b-a)*t}
-function arena_paintedBuildEdgeAt(rowT){
-  return {
-    y:arena_lerp(PAINTED_BUILD_TOP,PAINTED_BUILD_BOTTOM,rowT),
-    left:arena_lerp(PAINTED_BUILD_LEFT_TOP,PAINTED_BUILD_LEFT_BOTTOM,rowT),
-    right:arena_lerp(PAINTED_BUILD_RIGHT_TOP,PAINTED_BUILD_RIGHT_BOTTOM,rowT)
-  };
-}
-function arena_paintedBuildSourcePoint(colT,rowT){
-  const edge=arena_paintedBuildEdgeAt(rowT);
-  return {x:arena_lerp(edge.left,edge.right,colT),y:edge.y};
-}
-function arena_paintedCellSourceQuad(col,row){
-  const c0=col/GRID_COLS,c1=(col+1)/GRID_COLS;
-  const r0=row/GRID_ROWS,r1=(row+1)/GRID_ROWS;
-  return [
-    arena_paintedBuildSourcePoint(c0,r0),
-    arena_paintedBuildSourcePoint(c1,r0),
-    arena_paintedBuildSourcePoint(c1,r1),
-    arena_paintedBuildSourcePoint(c0,r1)
-  ];
-}
-function arena_paintedCellScreenQuad(col,row){
-  return arena_paintedCellSourceQuad(col,row).map(p=>({
-    x:arena_paintedSourceToScreenX(p.x),
-    y:arena_paintedSourceToScreenY(p.y)
-  }));
-}
-function arena_paintedCellScreenPoint(col,row){
-  const p=arena_paintedBuildSourcePoint((col+0.5)/GRID_COLS,(row+0.5)/GRID_ROWS);
-  return {x:arena_paintedSourceToScreenX(p.x),y:arena_paintedSourceToScreenY(p.y)};
-}
-function arena_paintedCellWorldPoint(col,row){
-  const p=arena_paintedBuildSourcePoint((col+0.5)/GRID_COLS,(row+0.5)/GRID_ROWS);
-  return arena_paintedSourceToWorldPoint(p.x,p.y);
-}
-function arena_pointInSourcePoly(x,y,poly){
-  let inside=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-    const pi=poly[i],pj=poly[j];
-    if(((pi.y>y)!==(pj.y>y))&&(x<(pj.x-pi.x)*(y-pi.y)/((pj.y-pi.y)||1e-6)+pi.x))inside=!inside;
-  }
-  return inside;
+  return paintedArenaGrid.isActive();
 }
 function arena_enemySpawnY(){
-  return arena_paintedWorldYForSourceY(PAINTED_ENEMY_SPAWN_Y);
+  return paintedArenaGrid.enemySpawnY();
 }
 function recomputeGrid(){
-  const topWorld=arena_paintedWorldYForSourceY(PAINTED_BUILD_TOP);
-  const bottomWorld=arena_paintedWorldYForSourceY(PAINTED_BUILD_BOTTOM);
+  const metrics=paintedArenaGrid.gridMetrics();
+  const {topWorld,bottomWorld,leftTop,rightTop,leftBottom,rightBottom}=metrics;
   GRID_Y=topWorld;
   CELL_H=(bottomWorld-topWorld)/GRID_ROWS;
-  const leftTop=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_LEFT_TOP),topWorld);
-  const rightTop=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_RIGHT_TOP),topWorld);
-  const leftBottom=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_LEFT_BOTTOM),bottomWorld);
-  const rightBottom=arena_projectedWorldXForScreenX(arena_paintedSourceToScreenX(PAINTED_BUILD_RIGHT_BOTTOM),bottomWorld);
   gridX=(leftTop+leftBottom)/2;
   gridW=((rightTop+rightBottom)/2)-gridX;
   cellW=gridW/GRID_COLS;
 }
 function cellCenterWorld(col,row){
-  if(arena_paintedPlacementActive())return arena_paintedCellWorldPoint(col,row);
+  if(arena_paintedPlacementActive())return paintedArenaGrid.cellWorldPoint(col,row);
   return {x:gridX+col*cellW+cellW/2,y:GRID_Y+row*CELL_H+CELL_H/2};
 }
 function cellCenterX(col,row){return cellCenterWorld(col,row||0).x}
 function cellCenterY(row,col){return cellCenterWorld(col||0,row).y}
 function cellCenterScreen(col,row){
-  if(arena_paintedPlacementActive())return arena_paintedCellScreenPoint(col,row);
+  if(arena_paintedPlacementActive())return paintedArenaGrid.cellScreenPoint(col,row);
   const {x,y}=cellCenterWorld(col,row);
   return arenaSceneRenderer&&arenaSceneRenderer.clashCamera?arena_camPoint(x,y):{x,y};
 }
 function xyToCell(x,y){
   if(arena_paintedPlacementActive()){
-    const scale=arena_paintedImageScale();
-    const sourceX=(x-arena_paintedImageX())/Math.max(0.01,scale);
-    const sourceY=y/Math.max(0.01,scale);
-    for(let row=0;row<GRID_ROWS;row++){
-      for(let col=0;col<GRID_COLS;col++){
-        if(arena_pointInSourcePoly(sourceX,sourceY,arena_paintedCellSourceQuad(col,row))){
-          return {col,row,key:row*GRID_COLS+col};
-        }
-      }
-    }
-    return null;
+    return paintedArenaGrid.xyToCell(x,y);
   }
   const world=arena_screenToWorldPoint(x,y);
   x=world.x;y=world.y;
@@ -4309,8 +4219,8 @@ const battleHudRuntime=createBattleHudRuntime({
   threatPanelHeight:arena_threatPanelHeight,
   statsFormat:arena_statsFormat,
   currentStageRounds:arena_currentStageRounds,
-  cellScreenQuad:(col,row)=>arena_paintedPlacementActive()?arena_paintedCellScreenQuad(col,row):null,
-  cellScreenPoint:(col,row)=>arena_paintedPlacementActive()?arena_paintedCellScreenPoint(col,row):null,
+  cellScreenQuad:(col,row)=>arena_paintedPlacementActive()?paintedArenaGrid.cellScreenQuad(col,row):null,
+  cellScreenPoint:(col,row)=>arena_paintedPlacementActive()?paintedArenaGrid.cellScreenPoint(col,row):null,
   drawThreatsPanel:arena_drawThreatsPanel,
   drawPicker:arena_drawPicker,
   drawManagePanel:arena_drawManagePanel,

@@ -100,26 +100,6 @@ function drawBattleHud(){
   setBossWarning(hud.bossWarning);
 }
 let spellBtnRects=[];
-function drawArenaViewToggle(){
-  const label=arenaViewMode==='flat'?'FLAT':(arenaViewMode==='draw25d'?'DRAW 2.5D':'BG 2.5D');
-  const rect={x:14,y:28,w:86,h:24};
-  const active=arenaViewMode!=='flat';
-  const bg=ctx.createLinearGradient(0,rect.y,0,rect.y+rect.h);
-  bg.addColorStop(0,arenaViewMode==='draw25d'?'rgba(74,62,112,0.96)':(active?'rgba(44,70,96,0.96)':'rgba(56,50,48,0.96)'));
-  bg.addColorStop(1,arenaViewMode==='draw25d'?'rgba(38,28,76,0.96)':(active?'rgba(18,36,58,0.96)':'rgba(30,26,25,0.96)'));
-  ctx.save();
-  ctx.fillStyle=bg;
-  ctx.beginPath();ctx.roundRect(rect.x,rect.y,rect.w,rect.h,7);ctx.fill();
-  ctx.strokeStyle=arenaViewMode==='draw25d'?'rgba(198,170,255,0.58)':(active?'rgba(136,221,255,0.55)':'rgba(255,211,145,0.45)');
-  ctx.lineWidth=1;
-  ctx.beginPath();ctx.roundRect(rect.x+0.5,rect.y+0.5,rect.w-1,rect.h-1,7);ctx.stroke();
-  ctx.fillStyle=arenaViewMode==='draw25d'?'#eee5ff':(active?'#dff7ff':'#ffe5ba');
-  ctx.font='bold 10px Segoe UI';
-  ctx.textAlign='center';
-  ctx.fillText(label,rect.x+rect.w/2,rect.y+15);
-  ctx.restore();
-  return rect;
-}
 
 // =====================================================================
 // arena RENDER + INPUT (Legion TD)
@@ -284,7 +264,7 @@ function arena_drawHud(){
     totalRounds:arena_currentStageRounds()
   });
   arena._pauseBtnRect=topChrome.pause;
-  arena._arenaViewToggleRect=drawArenaViewToggle();
+  arena._arenaViewToggleRect=null;
   arena._testResetRect=null;arena._testGoldRect=null;arena._testQuitRect=null;
   // Purify bar (S7 Wall Boss) + Lieutenants bar (S12/S9 Aerial Boss) Ã¢â‚¬â€ drawn
   // AFTER top HUD pills so they layer on top if any overlap. Both share the
@@ -334,10 +314,12 @@ function arena_drawPauseMenu(){
     width:W,
     height:H,
     stage:currentStage,
+    arenaViewMode,
     soundMuted:_sfxMuted,
     labels:{stageSeparator:' - '}
   });
   arena._pauseResumeRect=rects.resume;
+  arena._pauseArenaViewRect=rects.arenaView;
   arena._pauseRestartRect=rects.restart;
   arena._pauseQuitRect=rects.quit;
   arena._pauseSoundRect=rects.sound;

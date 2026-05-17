@@ -145,13 +145,13 @@ export function createArenaInputHandlers(deps){
     if(v.state==='battle'){
       const pauseAction=resolvePauseOverlayAction(p,v.arena);
       if(pauseAction.type==='resume'){v.arena.pauseMenu=false;return}
+      if(pauseAction.type==='arenaViewToggle'){if(deps.toggleArenaViewMode)deps.toggleArenaViewMode();return}
       if(pauseAction.type==='restart'){v.arena.pauseMenu=false;deps.startStage(v.currentStageIdx);return}
       if(pauseAction.type==='quit'){v.arena.pauseMenu=false;deps.setScreen('stageSelect');deps.setStageSelectScroll(0);return}
       if(pauseAction.type==='sound'){deps.toggleSound();return}
       if(pauseAction.type==='blocked')return;
 
       const chromeAction=resolveBattleChromeAction(p,v.arena);
-      if(chromeAction.type==='arenaViewToggle'){if(deps.toggleArenaViewMode)deps.toggleArenaViewMode();return}
       if(chromeAction.type==='pause'){v.arena.pauseMenu=true;return}
       if(chromeAction.type==='picker')return deps.handlePickerClick(p);
       if(chromeAction.type==='manage')return deps.handleManagePanelClick(p);
