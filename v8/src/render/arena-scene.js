@@ -22,6 +22,8 @@ export function createArenaSceneRenderer({ ctx, view, randomRange } = {}) {
   let paintedArena25DFailed = false;
   let paintedArena25DSrcIndex = 0;
   const paintedArena25DSources = [
+    SPRITE_BASE + 'BG%202.5D%20New%20Building.png',
+    '/BaqlaGames/BaqlaArena/BG%202.5D%20New%20Building.png',
     SPRITE_BASE + 'BG%202.5D%20Wide.png',
     '/BaqlaGames/BaqlaArena/BG%202.5D%20Wide.png',
     SPRITE_BASE + 'BG%202.5D.png',
