@@ -753,16 +753,9 @@ drawFns.drawTreant=function(x,y,u){
 };
 
 drawFns.drawMalfof=function(x,y,u){
-  const s=u.size,f=u.facing||1;
-  if(_zavsReady){
-    const frameIdx=Math.floor(frame/10)%6;
-    const img=_zavsFrames[frameIdx];
-    const sprH=s*(arena&&arena.phase==='wave'?ARENA_SPRITE_WAVE_SCALE:ARENA_SPRITE_BUILD_SCALE);const sprW=sprH*(img.naturalWidth/img.naturalHeight);
-    const drawW=Math.round(sprW),drawH=Math.round(sprH);
-    ctx.save();ctx.translate(Math.round(x),Math.round(y));
-    if(f<0)ctx.scale(-1,1);
-    ctx.drawImage(img,Math.round(-drawW/2),Math.round(-drawH*0.45),drawW,drawH);
-    ctx.restore();
+  const s=u.size;
+  const _zavsSprite=arena_pickAnimFrame(_zavsFrames,_zavsReady,10);
+  if(arena_drawUnitSprite(_zavsSprite,x,y,u,{buildScale:ARENA_SPRITE_BUILD_SCALE,waveScale:ARENA_SPRITE_WAVE_SCALE,anchor:0.48,glow:u.accent||'#266026',glowAlpha:0.08})){
     return;
   }
   // Shadow

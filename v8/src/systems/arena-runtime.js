@@ -32,7 +32,7 @@ import { drawCodexScreen } from '../ui/codex-screen.js';
 import { createCodexDetailRuntime } from '../ui/codex-detail-runtime.js';
 import { drawThreatsPanel as drawThreatPreviewPanel, threatPanelHeight } from '../ui/threat-panel.js';
 import { drawCombatReportPanel as drawResultCombatReportPanel, resultButtonRects as getResultButtonRects } from '../ui/results.js';
-import { createActorRenderer } from '../render/actor-renderer.js';
+import { createActorRenderer } from '../render/actor-renderer.js?v=20260517-zavs-sprite';
 import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js';
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js';
