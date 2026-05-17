@@ -70,6 +70,9 @@ export function createArenaSceneRenderer({ ctx, view, randomRange } = {}) {
     return paintedArena25DImage;
   }
 
+  getPaintedArenaImage();
+  getPaintedArena25DImage();
+
   function drawCoverImage(img, x, y, w, h) {
     const iw = img.naturalWidth || img.width;
     const ih = img.naturalHeight || img.height;
