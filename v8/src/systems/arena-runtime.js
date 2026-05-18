@@ -14,7 +14,6 @@ import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
 import { createActorRenderer } from '../render/actor-renderer.js?v=20260517-zavs-sprite';
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js';
 import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-nogrid-6x3';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';
@@ -46,15 +45,16 @@ import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js';
 import { createPlacementEconomyRuntime } from './placement-economy-runtime.js';
 import { createScreenProgressRuntime } from './screen-progress-runtime.js';
 import { createBattleObjectiveRuntime } from './battle-objective-runtime.js';
-import { createArenaShellRuntime } from './arena-shell-runtime.js';
-import { createArenaInputRuntime } from './arena-input-runtime.js';
 import { createArenaScreenUiComposition } from './arena-screen-ui-composition.js';
 import { createArenaGridRuntime } from './arena-grid-runtime.js';
 import { createUnitRuntimeComposition } from './unit-runtime-composition.js';
 import { createArenaCombatEffectsRuntime } from './arena-combat-effects-runtime.js';
-import { createArenaCodexRuntime } from './arena-codex-runtime.js';
 import { createArenaGameStateRuntime } from './arena-game-state-runtime.js';
 import { createArenaBattleArrayRuntime } from './arena-battle-array-runtime.js';
+import { createArenaCodexComposition } from './arena-codex-composition.js';
+import { createArenaInputComposition } from './arena-input-composition.js';
+import { createBattleSceneComposition } from './battle-scene-composition.js';
+import { createArenaShellComposition } from './arena-shell-composition.js';
 
 export function startArena(){
 'use strict';
@@ -827,7 +827,7 @@ function drawSigBanner(...args){return combatEffectsRuntime.drawSigBanner(...arg
 // =====================
 // CODEX OVERLAY
 // =====================
-const arenaCodexRuntime=createArenaCodexRuntime({
+const arenaCodexRuntime=createArenaCodexComposition({
   ctx,
   playerUnits:PLAYER_UNITS,
   vodka:VODKA,
@@ -836,15 +836,20 @@ const arenaCodexRuntime=createArenaCodexRuntime({
   baseSignatures:ARENA_BASE_SIGNATURES,
   branchSignatures:ARENA_BRANCH_SIGNATURES,
   maxUnitLevel:ARENA_MAX_UNIT_LEVEL,
-  view:()=>({width:W,height:H,codexUnit:uiState.codexUnit,codexScroll:uiState.codexScroll}),
-  detailView:()=>({width:W,height:H,arena,codexUnit:uiState.codexUnit,codexScroll:uiState.codexScroll,unitLevels:squadState.unitLevels,vodkaLevel:squadState.vodkaLevel,frame:combatRuntimeState.frame,signatures:ARENA_SIGNATURES,drawFns}),
-  threatTagColor:arena_threatTagColor,
-  rgba:arena_rgba,
-  getStats,
-  baseSpec:arena_baseSpec,
-  isCapstoneLevel:arena_isCapstoneLevel,
-  drawPillBtn,
-  drawVodka
+  states:{uiState,squadState,combatRuntimeState},
+  layoutView:()=>({width:W,height:H}),
+  arenaState:()=>arena,
+  signatures:arena_getSignatures,
+  drawFns,
+  helpers:{
+    threatTagColor:arena_threatTagColor,
+    rgba:arena_rgba,
+    getStats,
+    baseSpec:arena_baseSpec,
+    isCapstoneLevel:arena_isCapstoneLevel,
+    drawPillBtn,
+    drawVodka
+  }
 });
 function drawCodex(...args){return arenaCodexRuntime.drawCodex(...args)}
 function drawCodexThreatsLegend(...args){return arenaCodexRuntime.drawCodexThreatsLegend(...args)}
@@ -1105,47 +1110,49 @@ const combatUpdateRuntime=createCombatUpdateRuntime({
   tickCombatTransients:()=>combatTransientsRuntime.tickCombatTransients(),
   clearDeadVodka:()=>{if(squadState.vodkaUnit&&squadState.vodkaUnit.hp<=0)setVodkaUnit(null);}
 });
-const arenaInputRuntime=createArenaInputRuntime({
-  uiState,
+const arenaInputRuntime=createArenaInputComposition({
   tickHz:GAME_TICK_HZ,
-  view:()=>({
-    W,H,state:gameState.screen,
-    maxStage:progressState.maxStage,
-    stageSelectScroll:uiState.stageSelectScroll,
-    currentStageIdx:campaignState.currentStageIdx,
-    currentStage:campaignState.currentStage,
-    deckPickStage:squadState.deckPickStage,
-    selectedSpells:progressState.selectedSpells,
-    spellPickStage:squadState.spellPickStage,
-    deckPickScroll:uiState.deckPickScroll,
-    spellPickScroll:uiState.spellPickScroll,
-    perkPickScroll:uiState.perkPickScroll,
-    beans:progressState.beans,
-    unlockedPerks:progressState.unlockedPerks,
-    selectedPerks:progressState.selectedPerks,
-    abilityTargeting:uiState.abilityTargeting,
-    selectedDeck:progressState.selectedDeck,
-    arena,frame:combatRuntimeState.frame,cardHand:squadState.cardHand,selectedCard:uiState.selectedCard,HERO_BTN,
-    heroButton:HERO_BTN,
-    vodkaUnit:squadState.vodkaUnit,
-    vodkaDead:squadState.vodkaDead,
-    vodkaDeployCD:squadState.vodkaDeployCD,
-    codexOpen:uiState.codexOpen,codexUnit:uiState.codexUnit,codexScroll:uiState.codexScroll
-  }),
-  inRect,
-  distance:dist,
-  perkSlotCount,
-  arenaBounds:{get left(){return ARENA_L},get right(){return ARENA_R},get deployTop(){return DEPLOY_TOP},get bottom(){return ARENA_BOT}},
-  setScreen,setStageSelectScroll,setCodexOpen,setCodexUnit,setCodexScroll,setCurrentStageIdx,setCurrentStage,
-  startStage,setSelectedDeck,setDeckPickStage,setDeckPickScroll,setSpellPickStage,setSpellPickScroll,setPerkPickScroll,
-  saveSave,setSelectedSpells,resultButtonRects:arena_resultButtonRects,
-  unlockPerk:arena_unlockPerk,togglePerk:arena_togglePerk,claimDoubleBeansReward:arena_claimDoubleBeansReward,claimSecondChanceRetry:arena_claimSecondChanceRetry,
-  levelUpSound:()=>SFX.levelUp(),toggleSound:()=>arenaAudio.toggleSound(),
-  handlePickerClick:arena_handlePickerClick,handleManagePanelClick:arena_handleManagePanelClick,
-  handleSpellButton:arena_handleSpellButton,castAbilityAt:castAbility,
-  activateBloodlust:arena_activateBloodlust,activateTranquility:arena_activateTranquility,addGold,showFlash,
-  xyToCell,screenToWorldPoint:p=>arena_screenToWorldPoint(p.x,p.y),toggleArenaViewMode:arena_toggleViewMode,deployVodka,upgradeBtnRect,tryUpgradeUnit,cardRowLayout,deployUnit,setSelectedCard,
-  pickerMaxScroll:arena_pickerMaxScroll
+  states:{progressState,economyState,squadState,campaignState,uiState,combatRuntimeState},
+  layoutView:()=>({width:W,height:H}),
+  boundsView:()=>({left:ARENA_L,right:ARENA_R,deployTop:DEPLOY_TOP,bottom:ARENA_BOT}),
+  screenState:()=>gameState.screen,
+  arenaState:()=>arena,
+  heroButton:()=>HERO_BTN,
+  setters:{
+    setScreen,setStageSelectScroll,setCodexOpen,setCodexUnit,setCodexScroll,setCurrentStageIdx,setCurrentStage,
+    setSelectedDeck,setDeckPickStage,setDeckPickScroll,setSpellPickStage,setSpellPickScroll,setPerkPickScroll,
+    setSelectedSpells,addGold,setSelectedCard
+  },
+  helpers:{
+    inRect,
+    distance:dist,
+    perkSlotCount,
+    startStage,
+    saveSave,
+    resultButtonRects:arena_resultButtonRects,
+    unlockPerk:arena_unlockPerk,
+    togglePerk:arena_togglePerk,
+    claimDoubleBeansReward:arena_claimDoubleBeansReward,
+    claimSecondChanceRetry:arena_claimSecondChanceRetry,
+    levelUpSound:()=>SFX.levelUp(),
+    toggleSound:()=>arenaAudio.toggleSound(),
+    handlePickerClick:arena_handlePickerClick,
+    handleManagePanelClick:arena_handleManagePanelClick,
+    handleSpellButton:arena_handleSpellButton,
+    castAbilityAt:castAbility,
+    activateBloodlust:arena_activateBloodlust,
+    activateTranquility:arena_activateTranquility,
+    showFlash,
+    xyToCell,
+    screenToWorldPoint:p=>arena_screenToWorldPoint(p.x,p.y),
+    toggleArenaViewMode:arena_toggleViewMode,
+    deployVodka,
+    upgradeBtnRect,
+    tryUpgradeUnit,
+    cardRowLayout,
+    deployUnit,
+    pickerMaxScroll:arena_pickerMaxScroll
+  }
 });
 const arenaInputHandlers=arenaInputRuntime.handlers;
 
@@ -1155,22 +1162,31 @@ const arenaInputHandlers=arenaInputRuntime.handlers;
 function update(){
   return combatUpdateRuntime.update();
 }
-const battleSceneRuntime=createBattleSceneRuntime({
+const battleSceneRuntime=createBattleSceneComposition({
   ctx,
-  view:()=>({state:gameState.screen,codexOpen:uiState.codexOpen,arena,bossRef:campaignState.bossRef,screenShake:uiState.screenShake,arenaTop:ARENA_TOP,arenaTopBase:ARENA_TOP_BASE,arenaBot:ARENA_BOT,width:W,height:H,playerCastle:campaignState.playerCastle,frame:combatRuntimeState.frame,enemies:battleState.enemies,units:battleState.units,tickHz:GAME_TICK_HZ}),
-  setArenaTop:value=>{ARENA_TOP=value;arena_syncLayoutState();},
-  randomRange:rnd,
-  emitParticle:addP,
-  dist,
-  applyRenderQuality:arena_applyRenderQuality,
-  recomputeGrid,
-  drawMenu,drawFlash,drawCodex,drawStageSelect,drawStageBrief,drawDeckPick,drawSpellPick,drawPerkPick,
-  drawArena,drawWeather,drawGroundFx,arena_drawGrid,drawCastle,drawDummy,arena_specHalo,arena_isCapstoneLevel,
-  drawUnit,drawUnitOverlays,drawBeamFx,drawProjectiles,drawBombs,drawParticles,drawDmgNums,arena_drawHud,
-  drawSigBanner,drawWinScreen,drawLoseScreen
+  tickHz:GAME_TICK_HZ,
+  arenaTopBase:ARENA_TOP_BASE,
+  states:{battleState,campaignState,uiState,combatRuntimeState},
+  layoutView:()=>({width:W,height:H,arenaTop:ARENA_TOP,arenaBot:ARENA_BOT}),
+  screenState:()=>gameState.screen,
+  arenaState:()=>arena,
+  helpers:{
+    setArenaTop:value=>{ARENA_TOP=value;arena_syncLayoutState();},
+    randomRange:rnd,
+    emitParticle:addP,
+    distance:dist,
+    applyRenderQuality:arena_applyRenderQuality,
+    recomputeGrid
+  },
+  drawers:{
+    drawMenu,drawFlash,drawCodex,drawStageSelect,drawStageBrief,drawDeckPick,drawSpellPick,drawPerkPick,
+    drawArena,drawWeather,drawGroundFx,arena_drawGrid,drawCastle,drawDummy,arena_specHalo,arena_isCapstoneLevel,
+    drawUnit,drawUnitOverlays,drawBeamFx,drawProjectiles,drawBombs,drawParticles,drawDmgNums,arena_drawHud,
+    drawSigBanner,drawWinScreen,drawLoseScreen
+  }
 });
 function render(){return battleSceneRuntime.render()}
-const arenaShellRuntime=createArenaShellRuntime({
+const arenaShellRuntime=createArenaShellComposition({
   canvas,
   ctx,
   tickHz:GAME_TICK_HZ,
@@ -1178,14 +1194,12 @@ const arenaShellRuntime=createArenaShellRuntime({
   getCanvasXY,
   update,
   render,
-  view:()=>({width:W,state:gameState.screen,arena,frame:combatRuntimeState.frame}),
-  requestAnimationFrame:fn=>requestAnimationFrame(fn),
-  performanceNow:()=>performance.now()
-});
-arenaShellRuntime.installInputHandlers();
-arenaShellRuntime.installPlaytest({
-  view:()=>({state:gameState.screen,arena,width:W,height:H,gold:economyState.gold,maxUnitLevel:ARENA_MAX_UNIT_LEVEL}),
-  grid:()=>arenaGridRuntime.playtestGrid(),
+  maxUnitLevel:ARENA_MAX_UNIT_LEVEL,
+  states:{economyState,combatRuntimeState},
+  layoutView:()=>({width:W,height:H}),
+  screenState:()=>gameState.screen,
+  arenaState:()=>arena,
+  playtestGrid:()=>arenaGridRuntime.playtestGrid(),
   stageCount:()=>STAGES.length,
   setGold,
   setCurrentStageIdx,
