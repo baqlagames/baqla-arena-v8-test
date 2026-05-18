@@ -2,6 +2,7 @@ import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_UNIT_SIZE_SCA
 import { STAGE_HP_MULT, STAGE_DMG_MULT } from '../data/stages.js';
 import { ENEMIES } from '../data/enemies.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
+import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
 
 export const WARMUP_FRAMES = 18 * GAME_TICK_HZ;
 export const WARMUP_HP_MULT = 0.60;
@@ -42,6 +43,7 @@ export function spawnEnemyByIndex({
   waveIdx,
   frame,
   arenaTop,
+  arenaBottom,
   spawnY,
   spawnLeft,
   spawnRight,
@@ -89,6 +91,14 @@ export function spawnEnemyByIndex({
   const sizeScale = inArena ? ARENA_UNIT_SIZE_SCALE : UNIT_VISUAL_SCALE;
   const laneLeft = Number.isFinite(spawnLeft) ? spawnLeft : ARENA_L;
   const laneRight = Number.isFinite(spawnRight) ? spawnRight : ARENA_R;
+  const spawnArea = spawnAreaFromView({
+    arenaLeft: ARENA_L,
+    arenaRight: ARENA_R,
+    arenaTop,
+    arenaBottom,
+    spawnLeft: laneLeft,
+    spawnRight: laneRight,
+  });
   const spawnMin = laneLeft + 34;
   const spawnMax = Math.max(spawnMin + 1, laneRight - 34);
   const entryY = Number.isFinite(spawnY) && inArena ? spawnY : arenaTop + 75;
@@ -109,6 +119,11 @@ export function spawnEnemyByIndex({
     spawnFrame: frame,
     fromWarmup: warmup,
   };
+  clampActorToSpawnArea(enemy, {
+    ...spawnArea,
+    topMargin: inArena ? 48 : 34,
+    bottomMargin: inArena ? 52 : 34,
+  });
 
   if (typeof applyWaveMechanic === 'function') applyWaveMechanic(enemy, template);
   applyEarlyRoundPressureTuning(enemy, template, { state, arenaState });
@@ -116,7 +131,7 @@ export function spawnEnemyByIndex({
 
   if (template.swarm && !inArena) {
     for (let i = 1; i < template.swarm; i++) {
-      enemies.push({
+      const swarmEnemy = {
         ...enemy,
         x: Math.max(spawnMin, Math.min(spawnMax, enemy.x + rnd(-22, 22))),
         y: enemy.y + rnd(-12, 12),
@@ -125,7 +140,9 @@ export function spawnEnemyByIndex({
         bobPhase: randomFloat() * Math.PI * 2,
         debuffs: {},
         fromWarmup: warmup,
-      });
+      };
+      clampActorToSpawnArea(swarmEnemy, spawnArea);
+      enemies.push(swarmEnemy);
     }
   }
   return enemy;

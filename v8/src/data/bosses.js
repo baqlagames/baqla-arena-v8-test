@@ -91,14 +91,14 @@ export const BOSSES=[
     // 3-phase mythic. Phase 1: caw + crows. Phase 2: + dive + feather. Phase 3: + storm + wind + lieutenants.
     // Spam tightened Ã¢â‚¬â€ cawCD 414Ã¢â€ â€™540 (~9s), stormCD 104Ã¢â€ â€™156 (~2.6s), so P3
     // doesn't completely lock the player out of healing/positioning windows.
-    spawnCD:828,spawnEnemy:16,spawnCount:2,spawnPhase:1,
-    cawCD:540,cawDmg:200,cawPhase:1,
-    diveCD:690,diveDmg:250,divePhase:2,
-    featherCD:621,featherCount:8,featherPhase:2,
-    stormCD:156,stormPhase:3,
-    windCD:621,windPhase:3,
+    spawnCD:900,spawnEnemy:16,spawnCount:2,spawnPhase:1,
+    cawCD:540,cawDmg:175,cawPhase:1,
+    diveCD:720,diveDmg:220,divePhase:2,
+    featherCD:621,featherCount:7,featherPhase:2,
+    stormCD:240,stormPhase:3,
+    windCD:840,windPhase:3,
     lieutenantPhase:3,lieutenantSpawned:false,
-    timeEnrageAt:18000},
+    timeEnrageAt:19200},
   {id:10,name:'Veiled Stalker',tier:'mini',act:2,color:'#3a1a3a',accent:'#1a0a1a',hp:29500,dmg:150,speed:0.30,atkSpd:54,range:50,size:46,armor:3,magicRes:5,points:600,raidAoeDmg:48,
     // arena stage 8 elite: vanishes for 1s every 5s, reappears with a heavy 3Ãƒâ€” strike on its current target.
     // No fog, no mark Ã¢â‚¬â€ distilled from Veiled Assassin to test tank HP buffer + healing.
@@ -126,11 +126,11 @@ export const BOSSES=[
   // Phase 1: AERIAL Ã¢â‚¬â€ patrols overhead, untargetable. Drops bombs / strafes / storms.
   // 3 lieutenants spawn at wave start; main boss lands when all 3 are defeated.
   {id:12,name:'Storm Roc',tier:'mini',act:3,color:'#a08a5a',accent:'#5a4a2a',hp:8200,dmg:86,speed:0.28,atkSpd:60,range:55,size:54,armor:5,magicRes:4,points:900,
-    isAerial:true,lieutenantSpawn:true,landingHpCap:0.7,
+    isAerial:true,lieutenantSpawn:true,lieutenantHpPct:0.22,lieutenantDmgPct:0.50,landingHpCap:0.64,
     // Phase 1 aerial abilities (use new handlers)
-    bombDropCD:300,bombDropDmg:105,bombDropRadius:80,bombDropPhase:1,
-    skyStrafeCD:420,skyStrafeDmg:72,skyStrafePhase:1,
-    sandStormCD:720,sandStormDmg:60,sandStormPhase:1,
+    bombDropCD:360,bombDropDmg:90,bombDropRadius:78,bombDropPhase:1,
+    skyStrafeCD:480,skyStrafeDmg:62,skyStrafePhase:1,
+    sandStormCD:840,sandStormDmg:48,sandStormPhase:1,
     // Phase 2 ground kit (after landing Ã¢â‚¬â€ phaseMin 1 so they fire immediately
     // post-landing; aerial gating in updateBoss prevents these from firing while flying).
     aoeCD:540,aoeRadius:100,aoeDmg:90,aoePhase:1,aoeColor:'#a08a5a',

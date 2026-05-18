@@ -1,6 +1,7 @@
 import { clamp, rnd } from '../core/math.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { ARENA_L, ARENA_R } from '../data/tuning.js';
+import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
 
 function royalCarapaceShieldHp(boss) {
   const raw = (boss.maxHp || 1) * (boss.royalCarapaceShieldPct || 0.04);
@@ -8,7 +9,16 @@ function royalCarapaceShieldHp(boss) {
 }
 
 function spawnRoyalHatchlings(boss, count, ctx) {
-  const { enemies, beamFx, frame, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, addParticle: addP, addDamageText: addDmg } = ctx;
+  const { enemies, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, spawnLeft, spawnRight, addParticle: addP, addDamageText: addDmg } = ctx;
+  const spawnArea = spawnAreaFromView({
+    arenaLeft: ARENA_L,
+    arenaRight: ARENA_R,
+    arenaTop: ARENA_TOP,
+    arenaBottom: ARENA_BOT,
+    spawnLeft,
+    spawnRight,
+    fallbackWidth: W,
+  });
   count = Math.max(0, Math.round(count || 0));
   for (let i = 0; i < count; i++) {
     const side = i % 2 === 0 ? -1 : 1;
@@ -42,6 +52,11 @@ function spawnRoyalHatchlings(boss, count, ctx) {
       debuffs: {},
       spawnFrame: frame
     };
+    clampActorToSpawnArea(hatchling, {
+      ...spawnArea,
+      topMargin: 52,
+      bottomMargin: 64,
+    });
     enemies.push(hatchling);
     addP(hatchling.x, hatchling.y, '#ffdd44', 16, 4);
     beamFx.push({ x1: boss.x, y1: boss.y, x2: hatchling.x, y2: hatchling.y, life: 0.22, maxLife: 0.22, color: '#ffdd44', width: 2, straight: false });

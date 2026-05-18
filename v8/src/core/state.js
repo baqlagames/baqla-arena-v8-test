@@ -11,6 +11,44 @@ export const STAGE_TRANSIENT_BATTLE_ARRAYS = [
   'healFx',
 ];
 
+export function createArenaState(){
+  return {
+    phase: 'build',
+    round: 1,
+    buildTimer: 0,
+    buildTimerMax: 0,
+    cells: {},
+    king: null,
+    pickerOpen: false,
+    pickerCell: null,
+    pickerScroll: 0,
+    managePanelCell: null,
+    waveSpawnQueue: [],
+    waveSpawnTimer: 0,
+    waveSpawnBatchMode: false,
+    waveSpawnBatchIndex: 0,
+    wavePreview: '',
+    waveThreats: null,
+    waveMechanic: null,
+    waveMechanicAssigned: false,
+    bloodlustUsed: false,
+    tranquilityUsed: false,
+    bloodlustTimer: 0,
+    tranquilityTimer: 0,
+    tranquilityTickAcc: 0,
+    spellUsed: [],
+    _bloodlustRect: null,
+    _tranquilityRect: null,
+    rift: null,
+    scheduledRiftRound: null,
+    riftFiredThisRound: false,
+    waveElapsed: 0,
+    beacons: [],
+    pauseMenu: false,
+    _pauseBtnRect: null,
+  };
+}
+
 export function createGameState(){
   return {
     screen: 'menu',
@@ -43,6 +81,25 @@ export function createGameState(){
     combatRuntime: {
       frame: 0,
       crystalRegenTimer: 0,
+      combatStats: null,
+    },
+    environment: {
+      weatherParticles: { raindrops: [], snowflakes: [], fogParticles: [], sandParticles: [] },
+    },
+    arena: createArenaState(),
+    layout: {
+      canvasDpr: 1,
+      width: 500,
+      height: 1000,
+      arenaTop: 0,
+      arenaBottom: 820,
+      deployTop: 710,
+      heroButton: { x: 456, y: 954, r: 30 },
+      gridX: 0,
+      gridW: 0,
+      cellW: 0,
+      gridY: 200,
+      cellH: 70,
     },
     campaign: {
       currentStage: null,
@@ -93,6 +150,8 @@ export function createGameState(){
       flashTimer: 0,
       flashColor: '#fff',
       signatureBanner: null,
+      touchStartY: 0,
+      touchAccumY: 0,
     },
   };
 }

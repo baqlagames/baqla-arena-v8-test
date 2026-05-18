@@ -1,3 +1,5 @@
+import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
+
 export function createStageFlowRuntime(ctx) {
   function spawnEnemyByIdx(typeIdx) {
     const v = ctx.view();
@@ -11,6 +13,7 @@ export function createStageFlowRuntime(ctx) {
       waveIdx: v.waveIdx,
       frame: v.frame,
       arenaTop: v.arenaTop,
+      arenaBottom: v.arenaBottom,
       spawnY: v.spawnY,
       spawnLeft: v.spawnLeft,
       spawnRight: v.spawnRight,
@@ -68,19 +71,32 @@ export function createStageFlowRuntime(ctx) {
     const stageDmgM = ctx.stageDmgMult[v.currentStageIdx] || 1;
     const inArena = v.state === 'battle' && v.arena && v.arena.phase;
     const sizeScale = inArena ? ctx.arenaUnitSizeScale : ctx.unitVisualScale;
+    const isRangedChampion = tmpl.arch === 'ranged' || tmpl.arch === 'caster' || (tmpl.range || 0) > 90;
+    const isTankChampion = tmpl.arch === 'tank' || tmpl.taunt || tmpl.armorType === 'heavy';
+    const championHpMult = isTankChampion ? 3.15 : 3.35;
+    const championDmgMult = isRangedChampion ? 1.85 : 1.78;
     const e = {
       ...tmpl,
       name: 'Champion ' + tmpl.name,
       x: v.width / 2,
       y: Number.isFinite(v.spawnY) ? v.spawnY + 28 : v.arenaTop + 30,
-      maxHp: Math.round(tmpl.hp * stageHpM * 2.5),
-      hp: Math.round(tmpl.hp * stageHpM * 2.5),
-      dmg: Math.round(tmpl.dmg * stageDmgM * 1.5),
+      maxHp: Math.round(tmpl.hp * stageHpM * championHpMult),
+      hp: Math.round(tmpl.hp * stageHpM * championHpMult),
+      dmg: Math.round(tmpl.dmg * stageDmgM * championDmgMult),
       size: Math.round((tmpl.size || 22) * 1.4 * sizeScale),
       armor: (tmpl.armor || 0) + 2,
       magicRes: (tmpl.magicRes || 0) + 1,
       range: Math.max(tmpl.range || 40, 180),
       projType: tmpl.projType || 'fire',
+      splashOnHit: true,
+      splashRadius: isRangedChampion ? 72 : 58,
+      aoeRadius: isRangedChampion ? 62 : 0,
+      aoeMult: isRangedChampion ? 0.32 : 0,
+      meteorCD: isRangedChampion ? 6 * ctx.tickHz : 0,
+      meteorDmgMult: isRangedChampion ? 0.48 : 0,
+      meteorRadius: isRangedChampion ? 64 : 0,
+      chainBoltCD: tmpl.arch === 'caster' ? 7 * ctx.tickHz : tmpl.chainBoltCD,
+      chainBoltDmgMult: tmpl.arch === 'caster' ? 0.45 : tmpl.chainBoltDmgMult,
       spawnFrame: v.frame,
       isEnemy: true,
       isElite: true,
@@ -91,6 +107,17 @@ export function createStageFlowRuntime(ctx) {
       debuffs: {},
       points: Math.round((tmpl.points || 25) * 5)
     };
+    clampActorToSpawnArea(e, {
+      ...spawnAreaFromView({
+        arenaTop: v.arenaTop,
+        arenaBottom: v.arenaBottom,
+        spawnLeft: v.spawnLeft,
+        spawnRight: v.spawnRight,
+        fallbackWidth: v.width
+      }),
+      topMargin: 50,
+      bottomMargin: 58
+    });
     v.enemies.push(e);
     ctx.showFlash('CHAMPION INCOMING!', '#ff8c00', 100);
     ctx.shake(12);

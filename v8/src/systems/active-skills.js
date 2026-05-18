@@ -73,7 +73,7 @@ export function activateTranquility({ arena, gold, units, gameTickHz, emitPartic
   };
 }
 
-export function tickActiveSkills({ arena, units, emitHeal, emitParticle, random }) {
+export function tickActiveSkills({ arena, units, emitHeal, emitParticle, random, applyHeal, source }) {
   if (arena.bloodlustTimer > 0) arena.bloodlustTimer--;
   if (arena.tranquilityTimer <= 0) return;
 
@@ -85,8 +85,13 @@ export function tickActiveSkills({ arena, units, emitHeal, emitParticle, random 
   for (const u of units) {
     if (!u.isPlayer || u.hp <= 0) continue;
     const heal = Math.max(1, Math.round(u.maxHp * TRANQUILITY_HEAL_PCT));
-    u.hp = Math.min(u.maxHp, u.hp + heal);
-    emitHeal(u.x, u.y, heal);
+    const actual = typeof applyHeal === 'function'
+      ? applyHeal(u, heal, source, false)
+      : Math.max(0, Math.min(u.maxHp, u.hp + heal) - u.hp);
+    if (typeof applyHeal !== 'function') {
+      u.hp = Math.min(u.maxHp, u.hp + heal);
+      if (actual > 0) emitHeal(u.x, u.y, actual);
+    }
     for (let i = 0; i < 2; i++) {
       emitParticle(u.x + random(-u.size * 0.6, u.size * 0.6), u.y - u.size - 6, '#3aff66', 1, 3);
     }

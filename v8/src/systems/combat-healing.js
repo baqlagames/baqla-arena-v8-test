@@ -22,9 +22,18 @@ export function applyTrackedHeal(target, amount, {
   const before = target.hp;
   const after = Math.min(target.maxHp, before + heal);
   const actual = Math.max(0, Math.round(after - before));
-  if (actual <= 0) return 0;
+  if (actual <= 0) {
+    emitHealFx(target.x, target.y, 0, big, source, target, {
+      attempted: heal,
+      overheal: heal,
+    });
+    return 0;
+  }
   target.hp = after;
-  emitHealFx(target.x, target.y, actual, big, source, target);
+  emitHealFx(target.x, target.y, actual, big, source, target, {
+    attempted: heal,
+    overheal: Math.max(0, heal - actual),
+  });
   return actual;
 }
 

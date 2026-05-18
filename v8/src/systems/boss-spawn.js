@@ -1,5 +1,6 @@
 import { BOSSES } from '../data/bosses.js';
 import { UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
+import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 
 export function bossVisibleTop({ state, arenaState, arenaTop }) {
   return (state === 'battle' && arenaState && arenaState.phase) ? ARENA_TOP_BASE + 46 : arenaTop;
@@ -29,15 +30,25 @@ export function clampTopSpawnBossToVisibleArena(boss, {
 export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
   width,
   arenaTop,
+  arenaBottom,
   spawnY,
   frame,
   spawnLeft,
   spawnRight,
 }) {
-  const baseHp = Math.round(template.hp * 0.30 * stageHpM);
-  const baseDmg = Math.round(template.dmg * 0.65 * stageDmgM);
+  const lieutenantHpPct = Number.isFinite(template.lieutenantHpPct) ? template.lieutenantHpPct : 0.28;
+  const lieutenantDmgPct = Number.isFinite(template.lieutenantDmgPct) ? template.lieutenantDmgPct : 0.60;
+  const baseHp = Math.round(template.hp * lieutenantHpPct * stageHpM);
+  const baseDmg = Math.round(template.dmg * lieutenantDmgPct * stageDmgM);
   const left = Number.isFinite(spawnLeft) ? spawnLeft : width * 0.18;
   const right = Number.isFinite(spawnRight) ? spawnRight : width * 0.82;
+  const spawnArea = spawnAreaFromView({
+    arenaTop,
+    arenaBottom,
+    spawnLeft: left,
+    spawnRight: right,
+    fallbackWidth: width,
+  });
   const xs = [left + (right - left) * 0.22, left + (right - left) * 0.5, left + (right - left) * 0.78];
   const signatures = [
     {
@@ -85,7 +96,7 @@ export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
   const lieutenants = [];
   for (let i = 0; i < 3; i++) {
     const signature = signatures[i];
-    lieutenants.push({
+    const lieutenant = {
       ...signature,
       x: xs[i],
       y: Number.isFinite(spawnY) ? spawnY + 58 : arenaTop + 90,
@@ -110,7 +121,13 @@ export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
       spawnFrame: frame,
       timeEnrageAt: 14000,
       mainBossRef: mainBoss,
+    };
+    clampActorToSpawnArea(lieutenant, {
+      ...spawnArea,
+      topMargin: 58,
+      bottomMargin: 82,
     });
+    lieutenants.push(lieutenant);
   }
   return lieutenants;
 }
@@ -145,6 +162,13 @@ export function spawnBossById({
   const sizeScale = inArena ? ARENA_UNIT_SIZE_SCALE : UNIT_VISUAL_SCALE;
   const laneLeft = Number.isFinite(spawnLeft) ? spawnLeft : ARENA_L;
   const laneRight = Number.isFinite(spawnRight) ? spawnRight : ARENA_R;
+  const spawnArea = spawnAreaFromView({
+    arenaTop,
+    arenaBottom,
+    spawnLeft: laneLeft,
+    spawnRight: laneRight,
+    fallbackWidth: width,
+  });
   const spawnMin = laneLeft + 55;
   const spawnMax = Math.max(spawnMin + 1, laneRight - 55);
   const spawnX = template.spawnFromTop
@@ -186,12 +210,23 @@ export function spawnBossById({
       spawnRight,
       clampValue,
     });
+  } else {
+    clampActorToSpawnArea(boss, {
+      ...spawnArea,
+      topMargin: 58,
+      bottomMargin: 82,
+    });
   }
 
   if (template.hasBarrier) {
     boss.untargetable = true;
     boss.lockedAtTop = true;
     boss.y = paintedSpawnY != null ? paintedSpawnY + 58 : arenaTop + 90;
+    clampActorToSpawnArea(boss, {
+      ...spawnArea,
+      topMargin: 58,
+      bottomMargin: 82,
+    });
     const barrier = {
       isBarrier: true,
       name: 'Cursed Barrier',
@@ -220,7 +255,10 @@ export function spawnBossById({
     boss.untargetable = true;
     boss.aerial = true;
     boss.aerialPatrolT = 0;
-    boss.aerialAnchor = { x: width / 2, y: paintedSpawnY != null ? paintedSpawnY + 40 : arenaTop + 65 };
+    boss.aerialAnchor = {
+      x: clampSpawnValue(width / 2, spawnArea.left + 45, spawnArea.right - 45),
+      y: clampSpawnValue(paintedSpawnY != null ? paintedSpawnY + 40 : arenaTop + 65, spawnArea.top + 58, spawnArea.bottom - 82),
+    };
   }
 
   if (template.lieutenantSpawn) {
@@ -228,6 +266,7 @@ export function spawnBossById({
     const lieutenants = buildLieutenantsFor(template, stageHpM, stageDmgM, boss, {
       width,
       arenaTop,
+      arenaBottom,
       spawnY,
       frame,
       spawnLeft,

@@ -29,6 +29,8 @@ export function createArenaSignatures(deps = {}) {
     jazarSignatureSurge: arena_jazarSignatureSurge = () => {},
     moonkinControlBurst: arena_moonkinControlBurst = () => {},
     spawnTreant: arena_spawnTreant = () => {},
+    nerfMinion = () => {},
+    unitVisualScale = 1,
     updateUnit: arena_updateUnit = () => {},
     shake: shakeScreen = () => {},
   } = deps;
@@ -1071,7 +1073,7 @@ return {
     groundFx.push({x:tx,y:ty,r:0,maxR:82,life:0.55,color:'#33ff66'});
     groundFx.push({x:tx,y:ty,r:0,maxR:110,life:1,infernalCrater:true,craterTimer:4*GAME_TICK_HZ,craterMax:4*GAME_TICK_HZ,color:'#ff6600'});
     const hp=Math.round(600+(u.level||1)*80);
-    const inf={x:tx,y:ty,maxHp:hp,hp:hp,dmg:Math.round(u.dmg*0.8),speed:0.25,atkSpd:72,range:36,size:26*UNIT_VISUAL_SCALE,armor:4,magicRes:3,
+    const inf={x:tx,y:ty,maxHp:hp,hp:hp,dmg:Math.round(u.dmg*0.8),speed:0.25,atkSpd:72,range:36,size:26*unitVisualScale,armor:4,magicRes:3,
       isPlayer:true,isMinion:true,parent:u,kind:'infernal',cd:0,color:'#ff4400',accent:'#881100',facing:1,arch:'tank',
       bobPhase:Math.random()*Math.PI*2,lifeTicks:15*GAME_TICK_HZ,
       _fireStompCD:0,_fireStompEvery:5*GAME_TICK_HZ,_fireStompDmg:Math.round(u.dmg*1.5),_fireStompRadius:80};

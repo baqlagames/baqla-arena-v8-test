@@ -6,6 +6,10 @@ function statValueText(item,field,formatValue){
   const fmt=typeof formatValue==='function'?formatValue:(v=>String(Math.max(0,Math.round(v||0))));
   if(!item)return '0';
   if(field==='damageDone')return fmt(item.amount||0)+'  '+fmt(item.dps||0)+'/s';
+  if(field==='healingDone'){
+    const over=item.overheal>0?'  oH '+fmt(item.overheal):'';
+    return fmt(item.amount||0)+'  '+fmt(item.hps||0)+'/s'+over;
+  }
   return fmt(item.amount||0);
 }
 
@@ -22,7 +26,7 @@ export function drawStatsColumn(ctx,view){
     ctx.fillText('--',x,y+rowH+1);
     return;
   }
-  const valueW=field==='damageDone'?66:48;
+  const valueW=field==='damageDone'?66:(field==='healingDone'?74:48);
   for(let i=0;i<rows;i++){
     const e=list[i],ry=y+rowH*(i+1)+1;
     if(i%2===0){

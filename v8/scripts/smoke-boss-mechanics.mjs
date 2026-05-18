@@ -7,6 +7,8 @@ import { drainHealToBarrier, tickAerialBombs, updateBoss } from '../src/systems/
 const WIDTH = 500;
 const ARENA_TOP = 42;
 const ARENA_BOT = 932;
+const SPAWN_LEFT = ARENA_L + 40;
+const SPAWN_RIGHT = ARENA_R - 40;
 
 function makeUnit(id, arch, x, y, opts = {}) {
   return {
@@ -57,6 +59,8 @@ function makeContext() {
     width: WIDTH,
     arenaTop: ARENA_TOP,
     arenaBottom: ARENA_BOT,
+    spawnLeft: SPAWN_LEFT,
+    spawnRight: SPAWN_RIGHT,
     dealDamage(target, amount) {
       if (!target || !Number.isFinite(target.hp)) return;
       target.hp = Math.max(0, target.hp - Math.max(0, Math.round(amount || 0)));
@@ -120,8 +124,8 @@ function spawnBossForSmoke(bossId, ctx) {
     width: WIDTH,
     arenaTop: ARENA_TOP,
     arenaBottom: ARENA_BOT,
-    spawnLeft: ARENA_L,
-    spawnRight: ARENA_R,
+    spawnLeft: SPAWN_LEFT,
+    spawnRight: SPAWN_RIGHT,
     enemies: ctx.enemies,
     randomFloat: () => 0.5,
     clampValue: (value, min, max) => Math.max(min, Math.min(max, value)),
@@ -129,6 +133,33 @@ function spawnBossForSmoke(bossId, ctx) {
     emitParticle: ctx.addParticle,
     shake: ctx.shake,
   });
+}
+
+function assertInsideArenaPoint(x, y, label) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error(`${label} became non-finite`);
+  if (x < SPAWN_LEFT || x > SPAWN_RIGHT || y < ARENA_TOP || y > ARENA_BOT) {
+    throw new Error(`${label} outside arena at ${x},${y}`);
+  }
+}
+
+function assertBossMechanicBounds(ctx, boss) {
+  assertInsideArenaPoint(boss.x, boss.y, `${boss.name} boss`);
+  for (const enemy of ctx.enemies) {
+    if (!enemy || enemy.isBarrier || enemy.hp <= 0) continue;
+    assertInsideArenaPoint(enemy.x, enemy.y, `${boss.name} spawned ${enemy.name || enemy.id || 'enemy'}`);
+  }
+  for (const bomb of ctx.bombs) {
+    if (!bomb) continue;
+    if (Number.isFinite(bomb.tx) || Number.isFinite(bomb.ty)) assertInsideArenaPoint(bomb.tx, bomb.ty, `${boss.name} bomb target`);
+  }
+  for (const fx of ctx.groundFx) {
+    if (!fx || !Number.isFinite(fx.x) || !Number.isFinite(fx.y)) continue;
+    assertInsideArenaPoint(fx.x, fx.y, `${boss.name} ground effect`);
+  }
+  for (const bomb of ctx.arena.aerialBombs || []) {
+    if (!bomb) continue;
+    assertInsideArenaPoint(bomb.x, bomb.y, `${boss.name} aerial bomb`);
+  }
 }
 
 function tickBoss(ctx, boss, frames = 1) {
@@ -165,6 +196,7 @@ function smokeAerialBoss(ctx, boss) {
   if (!boss.aerial && !boss.isAerial) return null;
   tickBoss(ctx, boss, 3);
   if (!ctx.arena.aerialBombs || !ctx.arena.aerialBombs.length) throw new Error('aerial boss did not schedule aerial bombs');
+  for (const bomb of ctx.arena.aerialBombs) assertInsideArenaPoint(bomb.x, bomb.y, `${boss.name} aerial bomb`);
   tickAerialBombsToCompletion(ctx);
   for (const lieutenant of ctx.arena.lieutenants || []) lieutenant.hp = 0;
   tickBoss(ctx, boss, 2);
@@ -204,6 +236,7 @@ function smokeBoss(bossTemplate) {
 
   if (!Number.isFinite(boss.x) || !Number.isFinite(boss.y)) throw new Error(`${boss.name} position became non-finite`);
   if (!Array.isArray(ctx.enemies) || !Array.isArray(ctx.groundFx) || !Array.isArray(ctx.bombs)) throw new Error('context arrays corrupted');
+  assertBossMechanicBounds(ctx, boss);
 
   return {
     id: boss.id,

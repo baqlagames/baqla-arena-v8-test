@@ -70,6 +70,7 @@ export function combatStatsEntry(stats, bucket, actor) {
       accent: a.accent || '#ffffff',
       damageDone: 0,
       healingDone: 0,
+      healingWasted: 0,
       damageTaken: 0,
     };
   } else {
@@ -91,6 +92,22 @@ export function addCombatStat(stats, actor, field, amount) {
   }
 }
 
+export function addCombatStatBundle(stats, actor, values) {
+  if (!stats || !actor || !values) return;
+  const fields = Object.entries(values).filter(([, amount]) => amount > 0);
+  if (!fields.length) return;
+  const st = combatStatsEntry(stats, stats.entries, actor);
+  if (st) {
+    for (const [field, amount] of fields) st[field] = (st[field] || 0) + amount;
+  }
+  if (stats.roundActive && stats.round) {
+    const rt = combatStatsEntry(stats, stats.round.entries, actor);
+    if (rt) {
+      for (const [field, amount] of fields) rt[field] = (rt[field] || 0) + amount;
+    }
+  }
+}
+
 export function recordCombatDamage(stats, target, attacker, amount) {
   amount = Math.max(0, Math.round(amount || 0));
   if (amount <= 0 || !stats) return;
@@ -102,13 +119,17 @@ export function recordCombatDamage(stats, target, attacker, amount) {
   }
 }
 
-export function recordCombatHeal(stats, source, target, amount) {
+export function recordCombatHeal(stats, source, target, amount, overheal = 0) {
   amount = Math.max(0, Math.round(amount || 0));
-  if (amount <= 0 || !stats || !source) return;
+  overheal = Math.max(0, Math.round(overheal || 0));
+  if ((amount <= 0 && overheal <= 0) || !stats || !source) return;
   const root = actorStatsRoot(source);
   if (!root || !root.isPlayer || root.isKing) return;
   if (target && (!target.isPlayer || target.isKing)) return;
-  addCombatStat(stats, root, 'healingDone', amount);
+  addCombatStatBundle(stats, root, {
+    healingDone: amount,
+    healingWasted: overheal,
+  });
 }
 
 export function combatStatsMini(entry, field, durSec) {
@@ -121,6 +142,10 @@ export function combatStatsMini(entry, field, durSec) {
     amount: Math.round(entry[field] || 0),
   };
   if (field === 'damageDone') out.dps = Math.round(out.amount / Math.max(1, durSec || 1));
+  if (field === 'healingDone') {
+    out.hps = Math.round(out.amount / Math.max(1, durSec || 1));
+    out.overheal = Math.round(entry.healingWasted || 0);
+  }
   return out;
 }
 

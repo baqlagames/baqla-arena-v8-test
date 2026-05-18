@@ -1,6 +1,7 @@
 import { dist, rnd } from '../core/math.js';
 import { ARENA_L, ARENA_R } from '../data/tuning.js';
 import { ENEMIES } from '../data/enemies.js';
+import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 import { bossPhase, fireBossAbility as fireBossAbil, pickBossTarget } from './boss-mechanics-helpers.js';
 import { tryRoyalCarapace, updateRoyalCarapace } from './boss-royal-carapace.js';
 
@@ -9,6 +10,7 @@ export { bossPhase };
 const NOOP = () => {};
 
 function normalizeBossContext(ctx = {}) {
+  ctx.arena = ctx.arena && typeof ctx.arena === 'object' ? ctx.arena : {};
   ctx.units = Array.isArray(ctx.units) ? ctx.units : [];
   ctx.enemies = Array.isArray(ctx.enemies) ? ctx.enemies : [];
   ctx.bombs = Array.isArray(ctx.bombs) ? ctx.bombs : [];
@@ -30,6 +32,36 @@ function normalizeBossContext(ctx = {}) {
   ctx.SFX = ctx.SFX || {};
   ctx.SFX.bossSlam = typeof ctx.SFX.bossSlam === 'function' ? ctx.SFX.bossSlam : NOOP;
   return ctx;
+}
+
+function bossSpawnArea(ctx) {
+  return spawnAreaFromView({
+    arenaLeft: ARENA_L,
+    arenaRight: ARENA_R,
+    arenaTop: ctx && ctx.arenaTop,
+    arenaBottom: ctx && ctx.arenaBottom,
+    spawnLeft: ctx && ctx.spawnLeft,
+    spawnRight: ctx && ctx.spawnRight,
+    fallbackWidth: ctx && ctx.width,
+  });
+}
+
+function clampBossActor(actor, ctx, opts = {}) {
+  return clampActorToSpawnArea(actor, {
+    ...bossSpawnArea(ctx),
+    ...opts,
+  });
+}
+
+function clampBossPoint(x, y, ctx, opts = {}) {
+  const area = bossSpawnArea(ctx);
+  const sideMargin = Number.isFinite(opts.sideMargin) ? opts.sideMargin : 42;
+  const topMargin = Number.isFinite(opts.topMargin) ? opts.topMargin : 44;
+  const bottomMargin = Number.isFinite(opts.bottomMargin) ? opts.bottomMargin : 54;
+  return {
+    x: clampSpawnValue(x, area.left + sideMargin, area.right - sideMargin),
+    y: clampSpawnValue(y, area.top + topMargin, area.bottom - bottomMargin),
+  };
 }
 
 function normalizeBossActor(b, ctx) {
@@ -200,8 +232,10 @@ function arena_landSkyTyrant(b,ctx){
   b.aerial=false;
   b.untargetable=false;
   // Drop to mid-arena with a dust cloud + screenshake
-  const tx=W/2,ty=ARENA_TOP+220;
+  const drop=clampBossPoint(W/2,ARENA_TOP+220,ctx,{sideMargin:60,topMargin:90,bottomMargin:120});
+  const tx=drop.x,ty=drop.y;
   b.x=tx;b.y=ty;
+  clampBossActor(b,ctx,{topMargin:58,bottomMargin:82});
   for(let i=0;i<40;i++)addP(tx+rnd(-60,60),ty+rnd(-20,20),'#a08a5a',2,5);
   groundFx.push({x:tx,y:ty,r:0,maxR:240,life:0.6,color:'#a08a5a'});
   shake(22);
@@ -225,8 +259,13 @@ function bossBombDrop(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   // Drop a bomb at a random spot near a player unit; 1.5s telegraph then explode.
   const t=pickBossTarget(b,'random',ctx);
-  const tx=t?t.x+rnd(-30,30):rnd(ARENA_L+40,ARENA_R-40);
-  const ty=t?t.y+rnd(-20,20):rnd(ARENA_TOP+200,ARENA_BOT-100);
+  const target=clampBossPoint(
+    t?t.x+rnd(-30,30):rnd(ARENA_L+40,ARENA_R-40),
+    t?t.y+rnd(-20,20):rnd(ARENA_TOP+200,ARENA_BOT-100),
+    ctx,
+    {sideMargin:50,topMargin:70,bottomMargin:80}
+  );
+  const tx=target.x,ty=target.y;
   // Telegraph ring (groundFx pre-warns the player)
   groundFx.push({x:tx,y:ty,r:0,maxR:b.bombDropRadius||80,life:1.5,color:'rgba(200,80,40,0.55)'});
   // Schedule explosion
@@ -237,10 +276,12 @@ function bossBombDrop(b,ctx){
 function bossSkyStrafe(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   // 3 falling projectiles in a vertical line on a random arena column.
-  const cx=rnd(ARENA_L+60,ARENA_R-60);
+  const column=clampBossPoint(rnd(ARENA_L+60,ARENA_R-60),ARENA_TOP+220,ctx,{sideMargin:60,topMargin:80,bottomMargin:80});
+  const cx=column.x;
   const dmg=b.skyStrafeDmg||60;
   for(let i=0;i<3;i++){
-    const ty=ARENA_TOP+220+i*70;
+    const point=clampBossPoint(cx,ARENA_TOP+220+i*70,ctx,{sideMargin:60,topMargin:80,bottomMargin:80});
+    const ty=point.y;
     // Schedule frame-delay strikes via the aerialBombs list (faster fuse than bomb drop)
     arena.aerialBombs=arena.aerialBombs||[];
     arena.aerialBombs.push({x:cx,y:ty,t:30+i*18,dmg:dmg,radius:55,from:b,strafe:true});
@@ -262,9 +303,11 @@ function bossSandStorm(b,ctx){
   }
   // Visual sand sweep Ã¢â‚¬â€ sand particles streaming across arena
   for(let i=0;i<30;i++){
-    addP(ARENA_L+rnd(0,ARENA_R-ARENA_L),ARENA_TOP+rnd(120,ARENA_BOT-ARENA_TOP-120),'#c8a05a',1,3);
+    const point=clampBossPoint(ARENA_L+rnd(0,ARENA_R-ARENA_L),ARENA_TOP+rnd(120,ARENA_BOT-ARENA_TOP-120),ctx,{sideMargin:24,topMargin:40,bottomMargin:40});
+    addP(point.x,point.y,'#c8a05a',1,3);
   }
-  groundFx.push({x:W/2,y:ARENA_TOP+(ARENA_BOT-ARENA_TOP)/2,r:0,maxR:380,life:0.6,color:'rgba(200,160,80,0.35)'});
+  const center=clampBossPoint(W/2,ARENA_TOP+(ARENA_BOT-ARENA_TOP)/2,ctx,{sideMargin:24,topMargin:40,bottomMargin:40});
+  groundFx.push({x:center.x,y:center.y,r:0,maxR:380,life:0.6,color:'rgba(200,160,80,0.35)'});
   showFlash('SAND STORM!','#c8a05a',80);
   shake(8);
 }
@@ -343,6 +386,7 @@ function bossSpawn(b,ctx){
         const summonY=bar.y+(bar.ry||70)+30;   // ~30 px below the orb's bottom edge
         spawned.x=W/2+rnd(-70,70);
         spawned.y=summonY+rnd(-8,8);
+        clampBossActor(spawned,ctx,{topMargin:52,bottomMargin:64});
         // Summoning swirl + ground glyph so the appearance reads as "emerged
         // from the gate" not "fell from the sky"
         addP(spawned.x,spawned.y,'#a855f7',16,4);
@@ -350,6 +394,7 @@ function bossSpawn(b,ctx){
         groundFx.push({x:spawned.x,y:spawned.y,r:0,maxR:38,life:0.45,color:'#a855f7'});
       }
     }
+    clampBossActor(spawned,ctx,{topMargin:52,bottomMargin:64});
   }
   addP(b.x,b.y,'#aa3333',16,4);
   showFlash('REINFORCEMENTS!','#aa3333',30);
@@ -357,7 +402,8 @@ function bossSpawn(b,ctx){
 function bossMeteor(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   const t=pickBossTarget(b,'random',ctx);
-  const tx=t?t.x:W/2,ty=t?t.y:ARENA_BOT-100;
+  const target=clampBossPoint(t?t.x:W/2,t?t.y:ARENA_BOT-100,ctx,{sideMargin:50,topMargin:70,bottomMargin:80});
+  const tx=target.x,ty=target.y;
   bombs.push({x:tx,y:ARENA_TOP-60,fromX:tx,fromY:ARENA_TOP-60,tx,ty,t:0,dur:55,
     dmg:b.meteorDmg||120,radius:b.meteorRadius||80,attacker:b,isPlayer:false,color:'#ff4400',meteor:true});
   showFlash('METEOR!','#ff4400',30);
@@ -383,14 +429,16 @@ function bossVanish(b,ctx){
 function bossPoisonCloud(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   const t=pickBossTarget(b,'nearest',ctx);
-  const tx=t?t.x:b.x,ty=t?t.y:b.y+60;
+  const target=clampBossPoint(t?t.x:b.x,t?t.y:b.y+60,ctx,{sideMargin:46,topMargin:58,bottomMargin:70});
+  const tx=target.x,ty=target.y;
   groundFx.push({x:tx,y:ty,r:0,maxR:80,life:1,color:'#88aa44',poisonCloud:true,pcTimer:300,pcDmg:8,pcFrom:b});
   showFlash('POISON CLOUD!','#88aa44',30);
 }
 function bossBlizzard(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   const t=pickBossTarget(b,'random',ctx);
-  const tx=t?t.x:b.x,ty=t?t.y:b.y+60;
+  const target=clampBossPoint(t?t.x:b.x,t?t.y:b.y+60,ctx,{sideMargin:46,topMargin:58,bottomMargin:70});
+  const tx=target.x,ty=target.y;
   groundFx.push({x:tx,y:ty,r:0,maxR:60,life:1,color:'#88ddff',blizzard:true,blizTimer:300,blizDmg:5,blizFrom:b});
   showFlash('BLIZZARD ZONE!','#88ddff',30);
 }
@@ -417,7 +465,8 @@ function bossCaw(b,ctx){
 }
 function bossDive(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
-  bombs.push({x:b.x,y:ARENA_TOP-60,fromX:b.x,fromY:ARENA_TOP-60,tx:W/2,ty:ARENA_BOT-100,t:0,dur:55,
+  const target=clampBossPoint(W/2,ARENA_BOT-100,ctx,{sideMargin:60,topMargin:70,bottomMargin:80});
+  bombs.push({x:b.x,y:ARENA_TOP-60,fromX:b.x,fromY:ARENA_TOP-60,tx:target.x,ty:target.y,t:0,dur:55,
     dmg:b.diveDmg||250,radius:130,attacker:b,isPlayer:false,color:'#440044',meteor:true});
   showFlash('AERIAL DIVE!','#aa66cc',60);
 }
@@ -487,7 +536,7 @@ function bossRoyalDive(b,ctx){
   const ox=b.x,oy=b.y;
   b.x=t.x+rnd(-18,18);
   b.y=Math.max(ARENA_TOP+40,t.y-22);
-  clampToArena(b);
+  clampBossActor(b,ctx,{topMargin:58,bottomMargin:82});
   const radius=b.royalDiveRadius||58;
   const dmg=b.royalDiveDmg||120;
   const stun=b.royalDiveStun||36;
@@ -506,8 +555,13 @@ function bossRoyalDive(b,ctx){
 }
 function bossPlagueStorm(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
-  const tx=ARENA_L+Math.random()*(ARENA_R-ARENA_L);
-  const ty=ARENA_TOP+Math.random()*(ARENA_BOT-ARENA_TOP);
+  const target=clampBossPoint(
+    ARENA_L+Math.random()*(ARENA_R-ARENA_L),
+    ARENA_TOP+Math.random()*(ARENA_BOT-ARENA_TOP),
+    ctx,
+    {sideMargin:50,topMargin:60,bottomMargin:70}
+  );
+  const tx=target.x,ty=target.y;
   groundFx.push({x:tx,y:ty,r:0,maxR:55,life:1,color:'#660066',stormTile:true,stormTimer:30,stormDmg:b.dmg*0.5,stormFrom:b});
   addP(tx,ty,'#660066',8,3);
 }
@@ -544,16 +598,21 @@ export function updateBoss(b,ctx){
     const _t=b.aerialPatrolT/120; // ~2s phase
     b.x=W/2+Math.sin(_t)*(W*0.32);
     b.y=ARENA_TOP+65+Math.cos(_t*0.6)*22;
+    clampBossActor(b,ctx,{topMargin:46,bottomMargin:120});
     // Shadow on the ground beneath
     if(frame%6===0)groundFx.push({x:b.x,y:ARENA_BOT-90,r:0,maxR:b.size*0.8,life:0.2,color:'rgba(0,0,0,0.35)',flatten:true});
     // Check lieutenant alive count Ã¢â‚¬â€ land when zero remain.
-    if(arena.lieutenants&&arena.lieutenants.length){
-      const aliveLt=arena.lieutenants.filter(l=>l.hp>0).length;
+    const lieutenantList=Array.isArray(arena.lieutenants)?arena.lieutenants.filter(Boolean):[];
+    if(lieutenantList.length!==(arena.lieutenants&&arena.lieutenants.length))arena.lieutenants=lieutenantList;
+    if(lieutenantList.length){
+      const aliveLt=lieutenantList.filter(l=>l.hp>0).length;
       if(aliveLt!==b._lastLtCount){
         b._lastLtCount=aliveLt;
         if(aliveLt>0)showFlash('LIEUTENANTS REMAINING: '+aliveLt,'#ffaa44',60);
       }
       if(aliveLt===0&&!b._landed){arena_landSkyTyrant(b,ctx)}
+    } else if(b.lieutenantsTotal&&!b._landed){
+      arena_landSkyTyrant(b,ctx);
     }
   }
   // Lieutenant deaths flow up to the main boss. Lieutenant uses standard updateBoss
@@ -563,7 +622,9 @@ export function updateBoss(b,ctx){
     b.escortsSpawned=true;
     for(let i=0;i<b.escortSpawn;i++){
       spawnEnemyByIdx(b.escortEnemy||0);
-      arena_tuneBossSupportMinion(enemies[enemies.length-1],b,ENEMIES[b.escortEnemy||0],i,b.escortSpawn);
+      const escort=enemies[enemies.length-1];
+      arena_tuneBossSupportMinion(escort,b,ENEMIES[b.escortEnemy||0],i,b.escortSpawn);
+      clampBossActor(escort,ctx,{topMargin:52,bottomMargin:64});
     }
     addP(b.x,b.y,'#ffaa00',32,6);
     showFlash('ESCORTS!','#ffaa00',60);
@@ -724,6 +785,7 @@ export function updateBoss(b,ctx){
         isEnemy:true,cd:0,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},spawnFrame:frame,
         entryHold:b.chickEntryHold||45
       };
+      clampBossActor(chick,ctx,{topMargin:52,bottomMargin:64});
       enemies.push(chick);
       addP(chick.x,chick.y,'#ff8c22',18,4);
     }
@@ -753,6 +815,7 @@ export function updateBoss(b,ctx){
         spawnFrame:frame,
         timeEnrageAt:9999999, // sons are short-lived Ã¢â‚¬â€ no time-enrage
       };
+      clampBossActor(s,ctx,{topMargin:58,bottomMargin:82});
       enemies.push(s);
     }
     showFlash('SONS OF EMBERS!','#ff4400',120);shake(16);
@@ -802,6 +865,7 @@ export function updateBoss(b,ctx){
         spawnFrame:frame,
         timeEnrageAt:9999999,
       };
+      clampBossActor(lt,ctx,{topMargin:58,bottomMargin:82});
       enemies.push(lt);
     }
     showFlash('PLAGUE LIEUTENANTS!','#660066',120);

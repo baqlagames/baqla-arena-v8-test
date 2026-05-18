@@ -118,7 +118,7 @@ async function connectToPage(port, url) {
   const cdp = new CdpSession(ws);
   const errors = [];
   cdp.on('Runtime.exceptionThrown', params => {
-    errors.push(`Exception: ${params.exceptionDetails?.text || params.exceptionDetails?.exception?.description || 'unknown'}`);
+    errors.push(`Exception: ${params.exceptionDetails?.exception?.description || params.exceptionDetails?.text || JSON.stringify(params.exceptionDetails || {})}`);
   });
   cdp.on('Runtime.consoleAPICalled', params => {
     if (params.type !== 'error') return;
@@ -132,7 +132,12 @@ async function connectToPage(port, url) {
   await cdp.send('Runtime.enable');
   await cdp.send('Page.enable');
   await cdp.send('Log.enable');
-  await waitForPlaytestHook(cdp);
+  try {
+    await waitForPlaytestHook(cdp);
+  } catch (error) {
+    if (errors.length) console.error(errors.join('\n'));
+    throw error;
+  }
   return { cdp, errors };
 }
 
