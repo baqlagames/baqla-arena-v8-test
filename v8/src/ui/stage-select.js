@@ -1,5 +1,7 @@
 // Campaign stage select screen drawing.
 
+import { fitCanvasText } from '../render/primitives.js';
+
 export function drawStageSelectScreen(ctx,view){
   const W=view.width,H=view.height;
   const maxStage=view.maxStage||1;
@@ -31,8 +33,7 @@ export function drawStageSelectScreen(ctx,view){
 
   ctx.fillStyle='#888';ctx.font='9px Arial';ctx.textAlign='center';
   ctx.fillText('GAME MODE',W/2,hY+18);
-  ctx.fillStyle='#fff';ctx.font='bold 20px Arial';
-  ctx.fillText('CAMPAIGN',W/2,hY+42);
+  fitCanvasText(ctx,'CAMPAIGN',W/2,hY+42,Math.max(80,W-210),20,14,'bold','#fff','center');
 
   ctx.fillStyle='#888';ctx.font='9px Arial';ctx.textAlign='right';
   ctx.fillText('CLEARED',W-24,hY+18);
@@ -58,8 +59,7 @@ export function drawStageSelectScreen(ctx,view){
       ctx.fillStyle=actColors[act];ctx.beginPath();ctx.roundRect(startX,y,4,32,2);ctx.fill();
       ctx.fillStyle=actColors[act];ctx.font='bold 9px Arial';ctx.textAlign='left';
       ctx.fillText('ACT '+act,startX+14,y+13);
-      ctx.fillStyle='#fff';ctx.font='bold 12px Arial';
-      ctx.fillText(actNames[act],startX+14,y+26);
+      fitCanvasText(ctx,actNames[act],startX+14,y+26,totalW-70,12,9,'bold','#fff','left');
       let actCleared=0;
       for(let i=0;i<5;i++){if((act-1)*5+i+1<maxStage)actCleared++}
       ctx.fillStyle='#aaa';ctx.font='10px Arial';ctx.textAlign='right';
@@ -119,13 +119,13 @@ export function drawStageSelectScreen(ctx,view){
       if(name.length>maxChars){
         const split=name.lastIndexOf(' ',maxChars);
         if(split>0){
-          ctx.fillText(name.substring(0,split),sx+stageW/2,sy+74);
-          ctx.fillText(name.substring(split+1),sx+stageW/2,sy+86);
+          fitCanvasText(ctx,name.substring(0,split),sx+stageW/2,sy+74,stageW-10,10,8,'bold',unlocked?'#fff':'#444','center');
+          fitCanvasText(ctx,name.substring(split+1),sx+stageW/2,sy+86,stageW-10,10,8,'bold',unlocked?'#fff':'#444','center');
         }else{
-          ctx.fillText(name.substring(0,maxChars-1)+labels.ellipsis,sx+stageW/2,sy+80);
+          fitCanvasText(ctx,name.substring(0,maxChars-1)+labels.ellipsis,sx+stageW/2,sy+80,stageW-10,10,8,'bold',unlocked?'#fff':'#444','center');
         }
       }else{
-        ctx.fillText(name,sx+stageW/2,sy+80);
+        fitCanvasText(ctx,name,sx+stageW/2,sy+80,stageW-10,10,8,'bold',unlocked?'#fff':'#444','center');
       }
 
       const wText=s.weather||'clear';

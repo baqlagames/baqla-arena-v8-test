@@ -5,6 +5,7 @@ import { drawLoseResultScreen, drawWinResultScreen } from './results.js';
 import { drawStageBriefScreen } from './stage-brief.js';
 import { drawStageSelectScreen } from './stage-select.js';
 import { drawAnimatedStarResult as drawAnimatedStarResultBase, drawStageStarPanel as drawStageStarPanelBase } from './stars.js';
+import { ARENA_VERSION_LABEL } from '../data/version.js';
 
 export function createScreenFlowRenderer(deps) {
   const ctx = deps.ctx;
@@ -53,7 +54,7 @@ export function createScreenFlowRenderer(deps) {
       frame,
       maxStage,
       beans,
-      versionLabel: 'LEGION TD - v8',
+      versionLabel: ARENA_VERSION_LABEL,
       progressSeparator: '-',
       campaignSubtitle: 'Continue Stage ' + maxStage,
       drawVodka: deps.drawVodka,

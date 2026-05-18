@@ -1,5 +1,7 @@
 // Main menu screen drawing. Runtime passes callbacks for game-specific art.
 
+import { fitCanvasText } from '../render/primitives.js';
+
 export function drawMenuScreen(ctx,view){
   const W=view.width,H=view.height;
   const maxStage=view.maxStage||1;
@@ -17,8 +19,7 @@ export function drawMenuScreen(ctx,view){
   aur.addColorStop(0,'rgba(155,89,182,0.30)');aur.addColorStop(1,'rgba(155,89,182,0)');
   ctx.fillStyle=aur;ctx.fillRect(0,0,W,H*0.6);
 
-  ctx.fillStyle='#ffd700';ctx.font='bold 44px Arial';ctx.textAlign='center';
-  ctx.fillText('BAQLA ARENA',W/2,150);
+  fitCanvasText(ctx,'BAQLA ARENA',W/2,150,W-44,44,34,'bold','#ffd700','center');
 
   ctx.font='bold 11px Arial';
   const versionW=ctx.measureText(versionLabel).width+18;
@@ -38,10 +39,9 @@ export function drawMenuScreen(ctx,view){
   ctx.beginPath();ctx.roundRect(20,pgY,W-40,28,14);ctx.fill();
   ctx.fillStyle='#ffd700';ctx.font='bold 11px Arial';ctx.textAlign='left';
   ctx.fillText('PROGRESS',32,pgY+18);
-  ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.textAlign='right';
-  ctx.fillText((maxStage-1)+' / 25  '+progressSeparator+'  '+pct+'%',W-32,pgY+18);
+  fitCanvasText(ctx,(maxStage-1)+' / 25  '+progressSeparator+'  '+pct+'%',W-32,pgY+18,128,12,9,'bold','#fff','right');
   ctx.fillStyle='#ffd166';ctx.font='bold 10px Arial';ctx.textAlign='center';
-  ctx.fillText('BEANS '+beans,W/2,pgY+18);
+  fitCanvasText(ctx,'BEANS '+beans,W/2,pgY+18,112,10,8,'bold','#ffd166','center');
 
   const pbw=W-64,pbx=32,pby=pgY+24;
   ctx.fillStyle='rgba(40,40,56,0.9)';ctx.beginPath();ctx.roundRect(pbx,pby,pbw,2,1);ctx.fill();

@@ -4,9 +4,9 @@
 export const BOSSES=[
   {id:0,name:'Brood Mother',tier:'mini',act:1,color:'#aa4444',accent:'#5a1818',hp:11200,dmg:105,speed:0.30,atkSpd:60,range:40,size:42,armor:5,magicRes:5,points:300,raidAoeDmg:33,
     // arena stage 3 elite: spawns 2 caterpillar adds every 8s, basic attacks apply 3s poison DoT.
-    spawnCD:450,spawnEnemy:0,spawnCount:2,spawnPhase:1,
+    spawnCD:720,spawnEnemy:0,spawnCount:2,spawnPhase:1,
     debuffCD:480,debuffType:'poison',debuffDmg:9,debuffDur:300,debuffPhase:1,
-    timeEnrageAt:9000},
+    timeEnrageAt:12600},
   {id:1,name:'Hornet Sovereign',tier:'strong',act:1,color:'#c08820',accent:'#7a4a0a',hp:21500,dmg:108,speed:0.42,atkSpd:52,range:60,size:48,armor:7,magicRes:4,points:700,raidAoeDmg:32,
     // arena stage 5 boss (retuned 2026-04-30 Ã¢â‚¬â€ was a wall at L2 cap; HP -20%,
     // dmg -12%, atkSpd 48Ã¢â€ â€™54 (slower), lungeDmg -39%, lungeCD +50%, escorts 2Ã¢â€ â€™1,
