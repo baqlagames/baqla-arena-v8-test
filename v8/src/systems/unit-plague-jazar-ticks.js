@@ -10,6 +10,7 @@ export function tickUnitPlagueAndJazarPassives(unit, {
   randomRange,
   dealDamage,
   clampToArena,
+  clampToLeash,
   grantJazarGuard,
   triggerJazarSignatureSurge,
   addHealFx,
@@ -22,10 +23,10 @@ export function tickUnitPlagueAndJazarPassives(unit, {
   tickPlagueDot(unit, { frame, units, enemies, dealDamage, emitParticle });
   tickRaiseGhoulCount(unit, { units });
   tickBladeGuard(unit, { frame, randomRange, groundEffects, emitParticle });
-  tickBladeRush(unit, { enemies, beamEffects, groundEffects, randomRange, dealDamage, clampToArena, grantJazarGuard, emitParticle, addDamageText, playHeavySlash, shake });
+  tickBladeRush(unit, { enemies, beamEffects, groundEffects, randomRange, dealDamage, clampToArena, clampToLeash, grantJazarGuard, emitParticle, addDamageText, playHeavySlash, shake });
   tickBladeStormChannel(unit, { enemies, beamEffects, groundEffects, dealDamage, emitParticle, addDamageText });
   tickShadowClone(unit, { emitParticle });
-  tickOmnislash(unit, { beamEffects, groundEffects, randomRange, dealDamage, clampToArena, triggerJazarSignatureSurge, emitParticle, addDamageText, shake });
+  tickOmnislash(unit, { beamEffects, groundEffects, randomRange, dealDamage, clampToArena, clampToLeash, triggerJazarSignatureSurge, emitParticle, addDamageText, shake });
   tickBladeDance(unit, { enemies, groundEffects, dealDamage, emitParticle, addDamageText });
   tickEnrageBlade(unit, { addHealFx, grantJazarGuard, emitParticle, addDamageText, showFlash, shake });
   tickThousandCuts(unit);
@@ -93,6 +94,7 @@ function tickBladeRush(unit, {
   randomRange,
   dealDamage,
   clampToArena,
+  clampToLeash,
   grantJazarGuard,
   emitParticle,
   addDamageText,
@@ -142,7 +144,8 @@ function tickBladeRush(unit, {
   }
   unit.x = best.x;
   unit.y = best.y + 15;
-  clampToArena(unit);
+  if (typeof clampToLeash === 'function') clampToLeash(unit);
+  else clampToArena(unit);
   grantJazarGuard(unit, Math.round(3 * GAME_TICK_HZ), unit.bladeGuard && unit.bladeGuard.dr || 0.32);
   beamEffects.push({ x1: fromX, y1: fromY, x2: unit.x, y2: unit.y, color: '#ff880088', width: 4, life: 0.2, maxLife: 0.2, straight: true });
   beamEffects.push({ x1: fromX, y1: fromY, x2: unit.x, y2: unit.y, color: '#ffcc4444', width: 2, life: 0.15, maxLife: 0.15, straight: true });
@@ -211,6 +214,7 @@ function tickOmnislash(unit, {
   randomRange,
   dealDamage,
   clampToArena,
+  clampToLeash,
   triggerJazarSignatureSurge,
   emitParticle,
   addDamageText,
@@ -228,6 +232,7 @@ function tickOmnislash(unit, {
     const fromY = unit.y;
     unit.x = target.x;
     unit.y = target.y;
+    if (typeof clampToLeash === 'function') clampToLeash(unit);
     dealDamage(target, Math.round(unit.dmg * 2.0), unit, 'normal');
     const angle = Math.atan2(target.y - fromY, target.x - fromX);
     beamEffects.push({ x1: fromX, y1: fromY, x2: target.x, y2: target.y, color: '#ffaa0088', width: 3, life: 0.15, maxLife: 0.15, straight: true });
@@ -249,7 +254,8 @@ function tickOmnislash(unit, {
   unit._omnislashActive = false;
   unit._omnislashImmune = false;
   unit.untargetable = false;
-  clampToArena(unit);
+  if (typeof clampToLeash === 'function') clampToLeash(unit);
+  else clampToArena(unit);
   for (let i = 0; i < 4; i++) groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: 55 + i * 22, life: 0.35 + i * 0.08, color: i % 2 ? '#ffffff' : '#ffcc00' });
   addDamageText(unit.x, unit.y - unit.size, 'OMNISLASH!', '#ffcc00');
   shake(10);

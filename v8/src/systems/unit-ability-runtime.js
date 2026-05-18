@@ -552,7 +552,7 @@ const ABILITIES={
       }
     }}
     u.x=_wsTarget.x;u.y=_wsTarget.y+10;
-    clampToArena(u);
+    arena_clampToLeash(u);
     arena_jazarGuard(u,Math.round(3*GAME_TICK_HZ),0.35);
     for(let i=0;i<8;i++){const px=startX+(u.x-startX)*(i/8),py=startY+(u.y-startY)*(i/8);addP(px,py,'#44ccff',2,3);addP(px+rnd(-8,8),py+rnd(-8,8),'#88eeff',1,2)}
     groundFx.push({x:(startX+u.x)/2,y:(startY+u.y)/2,r:0,maxR:Math.max(30,dist({x:startX,y:startY},u)/2),life:0.4,swipeArc:true,swipeAngle:ang,color:'#44ccff'});

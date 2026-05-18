@@ -1,6 +1,7 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { clamp, dist } from '../core/math.js';
 import { tickEnemyActionStatusEffects } from './combat-status-effects.js';
+import { arenaEngagementBands } from './combat-targeting.js';
 
 export function updateArenaEnemyAi(enemy, {
   frame,
@@ -73,6 +74,7 @@ export function updateArenaEnemyAi(enemy, {
     width,
     height,
     arenaTop,
+    arenaBottom,
     playerCastle,
     randomRange,
     groundEffects,
@@ -86,6 +88,7 @@ export function updateArenaEnemyAi(enemy, {
     arenaLeft,
     arenaRight,
     arenaTop,
+    arenaBottom,
     units,
     randomRange,
     emitParticle,
@@ -147,7 +150,10 @@ export function updateArenaEnemyAi(enemy, {
     enemyAttackCooldown,
   })) return;
 
-  if (bestDistance > enemy.range && !enemy._snipeReady) moveToward(enemy, bestTarget.x, bestTarget.y, enemy.speed);
+  if (bestDistance > enemy.range && !enemy._snipeReady) {
+    const approach = enemyApproachPoint(enemy, bestTarget, { arenaTop, arenaBottom, arenaPhase });
+    moveToward(enemy, approach.x, approach.y, enemy.speed);
+  }
   if ((bestDistance <= enemy.range || enemy._snipeReady) && enemy.cd <= 0) {
     performEnemyBasicAttack(enemy, bestTarget, {
       units,
@@ -186,11 +192,20 @@ export function updateArenaEnemyAi(enemy, {
   enemy.bobPhase += 0.08;
 }
 
+function enemyApproachPoint(enemy, target, { arenaTop, arenaBottom, arenaPhase }) {
+  if (!arenaPhase || !target || !target.isPlayer) return { x: target.x, y: target.y };
+  const ranged = enemy.range > 80 || enemy.arch === 'ranged' || enemy.arch === 'caster';
+  if (ranged || enemy.prefersBackline || enemy._snipeReady) return { x: target.x, y: target.y };
+  const bands = arenaEngagementBands({ arenaTop, arenaBot: arenaBottom });
+  return { x: target.x, y: Math.min(target.y, bands.enemyDiveY) };
+}
+
 function tickBurrowMovement(enemy, {
   frame,
   width,
   height,
   arenaTop,
+  arenaBottom,
   playerCastle,
   randomRange,
   groundEffects,
@@ -209,7 +224,8 @@ function tickBurrowMovement(enemy, {
 
   enemy.burrowT--;
   const targetX = playerCastle ? playerCastle.x : width / 2;
-  const targetY = playerCastle ? playerCastle.y - 30 : height - 100;
+  const bands = arenaEngagementBands({ arenaTop, arenaBot: arenaBottom });
+  const targetY = playerCastle ? Math.min(playerCastle.y - 30, bands.enemyDiveY) : Math.min(height - 100, bands.enemyDiveY);
   const dx = targetX - enemy.x;
   const dy = targetY - enemy.y;
   const distance = Math.hypot(dx, dy) || 1;
@@ -232,6 +248,7 @@ function tickEliteCharge(enemy, {
   arenaLeft,
   arenaRight,
   arenaTop,
+  arenaBottom,
   units,
   randomRange,
   emitParticle,
@@ -254,9 +271,10 @@ function tickEliteCharge(enemy, {
     }
   }
   if (target && bestDistance > 120) {
+    const bands = arenaEngagementBands({ arenaTop, arenaBot: arenaBottom });
     emitParticle(enemy.x, enemy.y, '#ff8c00', 24, 5);
     enemy.x = clamp(target.x + randomRange(-20, 20), arenaLeft + enemy.size, arenaRight - enemy.size);
-    enemy.y = Math.max(arenaTop + 40, target.y - 50);
+    enemy.y = clamp(target.y - 50, arenaTop + 40, bands.enemyDiveY);
     emitParticle(enemy.x, enemy.y, '#ff8c00', 24, 5);
     shake(8);
     showFlash('CHAMPION CHARGE!', '#ff8c00', 30);

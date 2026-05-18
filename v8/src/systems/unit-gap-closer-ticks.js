@@ -113,6 +113,7 @@ function tickShieldChargeLeap(unit, {
   groundEffects,
   randomRange,
   dealDamage,
+  clampToLeash,
   showFlash,
   emitParticle,
   sound,
@@ -134,6 +135,7 @@ function tickShieldChargeLeap(unit, {
 
   if (unit.chargeLeapT >= unit.chargeLeapDur) {
     unit.chargeLeapActive = false;
+    if (typeof clampToLeash === 'function') clampToLeash(unit);
     const target = unit.chargeLeapTarget;
     if (target && target.hp > 0) {
       const mult = unit.chargeFirstHitMult || 1.6;
@@ -306,6 +308,7 @@ function tickMaulLeap(unit, {
   randomRange,
   dealDamage,
   clampToArena,
+  clampToLeash,
   isGripReserved,
   isGapCloserReserved,
   reserveGapCloserTarget,
@@ -331,7 +334,8 @@ function tickMaulLeap(unit, {
     }
     if (t >= 1) {
       unit._maulLeapAnim = null;
-      clampToArena(unit);
+      if (typeof clampToLeash === 'function') clampToLeash(unit);
+      else clampToArena(unit);
       const target = leap.target;
       if (target && target.hp > 0) {
         dealDamage(target, Math.round(unit.dmg * 1.5), unit, 'normal');

@@ -29,7 +29,7 @@ export function tickUnitActionTimers(unit, {
 }) {
   tickBarrage(unit, { enemies, fireProjectile });
   tickPlayerBurn(unit, { frame, dealDamage, emitParticle });
-  tickFelfelTimers(unit, { frame, enemies, beamEffects, groundEffects, randomRange, dealDamage, clampToArena, addHealFx, emitParticle, addDamageText, showFlash, playStealth, playHeavySlash, playBackstab, shake });
+  tickFelfelTimers(unit, { frame, enemies, beamEffects, groundEffects, randomRange, dealDamage, clampToArena, clampToLeash, addHealFx, emitParticle, addDamageText, showFlash, playStealth, playHeavySlash, playBackstab, shake });
   tickShieldCharge(unit, { enemies, groundEffects, dealDamage, clampToLeash, isGripReserved, isGapCloserReserved, emitParticle, addDamageText, shake });
   tickDeathGrip(unit, { enemies, beamEffects, groundEffects, isGapCloserReserved, isTaoonPriorityEnemy, reserveGripTarget, grantGapInvulnerability, clampToArena, emitParticle, addDamageText, showFlash, shake });
   tickBoneShield(unit, { emitParticle });
@@ -87,6 +87,7 @@ function tickFelfelTimers(unit, {
   randomRange,
   dealDamage,
   clampToArena,
+  clampToLeash,
   addHealFx,
   emitParticle,
   addDamageText,
@@ -101,8 +102,8 @@ function tickFelfelTimers(unit, {
   tickShadowDance(unit, { groundEffects, emitParticle, addDamageText, showFlash, playStealth });
   tickCrimsonVial(unit, { frame, addHealFx, emitParticle, addDamageText });
   tickCheatDeathAndCloak(unit);
-  tickDeathFromAbove(unit, { frame, enemies, beamEffects, groundEffects, randomRange, dealDamage, clampToArena, emitParticle, addDamageText, playHeavySlash, shake });
-  tickKillingSpree(unit, { beamEffects, groundEffects, randomRange, dealDamage, clampToArena, emitParticle, addDamageText, playBackstab, shake });
+  tickDeathFromAbove(unit, { frame, enemies, beamEffects, groundEffects, randomRange, dealDamage, clampToArena, clampToLeash, emitParticle, addDamageText, playHeavySlash, shake });
+  tickKillingSpree(unit, { beamEffects, groundEffects, randomRange, dealDamage, clampToArena, clampToLeash, emitParticle, addDamageText, playBackstab, shake });
 }
 
 function tickFelfelRestealth(unit, {
@@ -213,6 +214,7 @@ function tickDeathFromAbove(unit, {
   randomRange,
   dealDamage,
   clampToArena,
+  clampToLeash,
   emitParticle,
   addDamageText,
   playHeavySlash,
@@ -256,7 +258,8 @@ function tickDeathFromAbove(unit, {
   unit.untargetable = false;
   unit.x = unit.dfaX;
   unit.y = unit.dfaY;
-  clampToArena(unit);
+  if (typeof clampToLeash === 'function') clampToLeash(unit);
+  else clampToArena(unit);
   const damage = Math.round(unit.dmg * 4);
   for (const enemy of enemies) {
     if (enemy.hp <= 0) continue;
@@ -289,6 +292,7 @@ function tickKillingSpree(unit, {
   randomRange,
   dealDamage,
   clampToArena,
+  clampToLeash,
   emitParticle,
   addDamageText,
   playBackstab,
@@ -306,7 +310,8 @@ function tickKillingSpree(unit, {
     const fromY = unit.y;
     unit.x = target.x + randomRange(-15, 15);
     unit.y = target.y + randomRange(-10, 10);
-    clampToArena(unit);
+    if (typeof clampToLeash === 'function') clampToLeash(unit);
+    else clampToArena(unit);
     beamEffects.push({ x1: fromX, y1: fromY, x2: unit.x, y2: unit.y, color: '#ff224488', width: 3, life: 0.15, maxLife: 0.15, straight: true });
     for (let i = 0; i < 5; i++) {
       const fraction = i / 5;

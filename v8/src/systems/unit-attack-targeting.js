@@ -1,11 +1,13 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
+import { arenaEngagementBands, isArenaRangedActor } from './combat-targeting.js';
 
 export function prepareUnitAttackTarget(unit, {
   arena,
   enemies,
   frame,
   arenaTop,
+  arenaBottom,
   randomRange,
   findRangedEnemyForUnit,
   findEnemyForUnit,
@@ -13,6 +15,7 @@ export function prepareUnitAttackTarget(unit, {
   isReachable,
   moveToward,
   clampToArena,
+  clampToLeash,
   beamFx,
   groundEffects,
   emitParticle,
@@ -30,9 +33,10 @@ export function prepareUnitAttackTarget(unit, {
     }
     if (unit.kind === 'mechTurret') return { canAttack: false };
 
-    const isMelee = !unit.prefersRanged && (unit.range || 0) <= 80;
+    const isMelee = !isArenaRangedActor(unit);
     const marchSpeed = unit.speed * ((unit._bullCharging > 0 || unit._dgCharging > 0) ? 3 : 1);
     if (arena && arena.phase === 'wave') {
+      const bands = arenaEngagementBands({ arenaTop, arenaBot: arenaBottom });
       const targetableEnemies = enemies.filter(enemy => enemy.hp > 0 && !enemy.charmed && !enemy.burrowing && !enemy.untargetable && !enemy.isBarrier);
       if (targetableEnemies.length === 0) {
         if (unit.homeX != null && Math.hypot(unit.x - unit.homeX, unit.y - unit.homeY) > 4) moveToward(unit, unit.homeX, unit.homeY, unit.speed * 0.45);
@@ -45,9 +49,9 @@ export function prepareUnitAttackTarget(unit, {
         return { canAttack: false };
       }
       if (isMelee) {
-        moveToward(unit, unit.x, arenaTop + 80, marchSpeed);
+        moveToward(unit, unit.homeX || unit.x, bands.playerMeleeY, marchSpeed);
       } else {
-        const advanceY = Math.max(arenaTop + 60, unit.homeY - 60);
+        const advanceY = Math.max(bands.playerRangedY, unit.homeY - 70);
         moveToward(unit, unit.homeX, advanceY, unit.speed * 0.6);
       }
     } else if (unit.homeX != null) {
@@ -72,7 +76,8 @@ export function prepareUnitAttackTarget(unit, {
     const offset = unit.shadowStep.landOffset || 25;
     unit.x = target.x;
     unit.y = target.y + offset;
-    clampToArena(unit);
+    if (typeof clampToLeash === 'function') clampToLeash(unit);
+    else clampToArena(unit);
     emitParticle(fromX, fromY, '#5e1218', 16, 4);
     emitParticle(unit.x, unit.y, '#7a1a3a', 24, 5);
     for (let i = 0; i < 5; i++) {

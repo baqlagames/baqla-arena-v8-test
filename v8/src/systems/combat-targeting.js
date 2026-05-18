@@ -5,6 +5,33 @@ const ENEMY_SPEED_SCALE = 0.85;
 const MAX_BOSS_ENGAGE = 3;
 const BOSS_ENGAGE_DIST = 110;
 
+export function arenaEngagementBands(bounds = {}) {
+  const top = Number.isFinite(bounds.arenaTop) ? bounds.arenaTop : 80;
+  const bot = Number.isFinite(bounds.arenaBot) ? bounds.arenaBot : Number.isFinite(bounds.arenaBottom) ? bounds.arenaBottom : 820;
+  const h = Math.max(360, bot - top);
+  return {
+    centerY: top + h * 0.54,
+    playerDiverY: top + h * 0.48,
+    playerMeleeY: top + h * 0.56,
+    playerRangedY: top + h * 0.66,
+    enemyDiveY: top + h * 0.60,
+  };
+}
+
+export function isArenaRangedActor(actor) {
+  return !!actor && (actor.prefersRanged || actor.arch === 'ranged' || actor.arch === 'caster' || actor.arch === 'healer' || (actor.range || 0) > 90);
+}
+
+export function playerForwardLimitY(actor, bounds = {}) {
+  if (!actor || !actor.isPlayer || actor.homeY == null) return Number.NEGATIVE_INFINITY;
+  const bands = arenaEngagementBands(bounds);
+  const leashLimit = actor.homeY - (bounds.leashForward || 0);
+  let bandLimit = bands.playerMeleeY;
+  if (actor.paladinHybrid || actor.shadowStep || actor.maulLeap || actor.hallowedLeap) bandLimit = bands.playerDiverY;
+  else if (isArenaRangedActor(actor)) bandLimit = bands.playerRangedY;
+  return Math.max(leashLimit, bandLimit);
+}
+
 export function clampActorToArena(actor, bounds) {
   const m = (actor.size || 16) * 0.5 + 2;
   if (actor.x < bounds.arenaLeft + m) actor.x = bounds.arenaLeft + m;
@@ -27,9 +54,10 @@ export function moveActorToward(actor, tx, ty, speed, bounds) {
     const scaledSpeed = speed * MOVE_SPEED_SCALE * slowFactor;
     const candX = actor.x + (stepDx / stepD) * scaledSpeed;
     const candY = actor.y + (stepDy / stepD) * scaledSpeed;
+    const forwardLimitY = playerForwardLimitY(actor, bounds);
     const dyFromHome = candY - actor.homeY;
     const dxFromHome = Math.abs(candX - actor.homeX);
-    const yOk = dyFromHome >= -bounds.leashForward && dyFromHome <= bounds.leashBack;
+    const yOk = candY >= forwardLimitY && dyFromHome <= bounds.leashBack;
     const xOk = dxFromHome <= bounds.leashSide;
 
     if (yOk && xOk) {
@@ -39,13 +67,15 @@ export function moveActorToward(actor, tx, ty, speed, bounds) {
       const curDxH = Math.abs(actor.x - actor.homeX);
       const curDyHsigned = actor.y - actor.homeY;
       const curOutsideX = curDxH > bounds.leashSide;
-      const curOutsideY = curDyHsigned < -bounds.leashForward || curDyHsigned > bounds.leashBack;
+      const curOutsideY = actor.y < forwardLimitY || curDyHsigned > bounds.leashBack;
       if (curOutsideX && dxFromHome <= curDxH + 0.01) actor.x = candX;
       if (curOutsideY) {
         const newDyHsigned = candY - actor.homeY;
-        const curOver = curDyHsigned < -bounds.leashForward ? (-bounds.leashForward - curDyHsigned) : (curDyHsigned - bounds.leashBack);
-        const newOver = newDyHsigned < -bounds.leashForward
-          ? (-bounds.leashForward - newDyHsigned)
+        const curForwardOver = actor.y < forwardLimitY ? (forwardLimitY - actor.y) : 0;
+        const newForwardOver = candY < forwardLimitY ? (forwardLimitY - candY) : 0;
+        const curOver = curForwardOver || (curDyHsigned - bounds.leashBack);
+        const newOver = newForwardOver
+          ? newForwardOver
           : (newDyHsigned > bounds.leashBack ? (newDyHsigned - bounds.leashBack) : 0);
         if (newOver <= curOver + 0.01) actor.y = candY;
       }
@@ -73,7 +103,7 @@ export function clampActorToLeash(actor, bounds) {
   if (!actor || !actor.isPlayer || actor.homeX == null || actor.homeY == null) return;
   const xLo = actor.homeX - bounds.leashSide + 8;
   const xHi = actor.homeX + bounds.leashSide - 8;
-  const yLo = actor.homeY - bounds.leashForward + 12;
+  const yLo = Math.max(actor.homeY - bounds.leashForward + 12, playerForwardLimitY(actor, bounds));
   const yHi = actor.homeY + bounds.leashBack - 12;
   if (actor.x < xLo) actor.x = xLo;
   else if (actor.x > xHi) actor.x = xHi;
@@ -122,7 +152,7 @@ export function isReachableFromLeash(unit, target, bounds) {
   }
 
   const range = unit.range || 40;
-  const minY = unit.homeY - bounds.leashForward - range;
+  const minY = playerForwardLimitY(unit, bounds) - range;
   const maxY = unit.homeY + bounds.leashBack + range;
   const minX = unit.homeX - bounds.leashSide - range;
   const maxX = unit.homeX + bounds.leashSide + range;
