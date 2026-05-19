@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260517-nogrid-6x3';
+import { startArena } from './systems/arena-runtime.js?v=5d94d7b-early-pressure';
 
 startArena();

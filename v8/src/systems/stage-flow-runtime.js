@@ -1,4 +1,5 @@
 import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
+import { earlyStageNonBossEnemyTuning } from './enemy-spawn.js?v=5d94d7b-early-pressure';
 
 export function createStageFlowRuntime(ctx) {
   function spawnEnemyByIdx(typeIdx) {
@@ -67,8 +68,10 @@ export function createStageFlowRuntime(ctx) {
     const v = ctx.view();
     const tmpl = ctx.enemyTemplates[idx];
     if (!tmpl) return;
-    const stageHpM = (ctx.stageHpMult[v.currentStageIdx] || 1) * ctx.enemyHpMultiplier;
-    const stageDmgM = ctx.stageDmgMult[v.currentStageIdx] || 1;
+    const stageN = (v.currentStage && v.currentStage.n) || 1;
+    const earlyTuning = earlyStageNonBossEnemyTuning(stageN, false);
+    const stageHpM = (ctx.stageHpMult[v.currentStageIdx] || 1) * ctx.enemyHpMultiplier * earlyTuning.hp;
+    const stageDmgM = (ctx.stageDmgMult[v.currentStageIdx] || 1) * earlyTuning.dmg;
     const inArena = v.state === 'battle' && v.arena && v.arena.phase;
     const sizeScale = inArena ? ctx.arenaUnitSizeScale : ctx.unitVisualScale;
     const isRangedChampion = tmpl.arch === 'ranged' || tmpl.arch === 'caster' || (tmpl.range || 0) > 90;

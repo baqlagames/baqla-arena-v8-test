@@ -9,6 +9,18 @@ export const WARMUP_HP_MULT = 0.60;
 export const WARMUP_DMG_MULT = 0.70;
 export const WARMUP_GOLD_BONUS = 1.4;
 
+export function earlyStageNonBossEnemyTuning(stageN, isBossRound = false) {
+  if (isBossRound) return { hp: 1, dmg: 1 };
+  switch (stageN || 1) {
+    case 1: return { hp: 1.18, dmg: 1.10 };
+    case 2: return { hp: 1.22, dmg: 1.12 };
+    case 3: return { hp: 1.26, dmg: 1.14 };
+    case 4: return { hp: 1.30, dmg: 1.16 };
+    case 5: return { hp: 1.34, dmg: 1.18 };
+    default: return { hp: 1, dmg: 1 };
+  }
+}
+
 export function isEnemyWarmup({ state, arenaState, stageTime }) {
   if (state === 'battle' && arenaState && arenaState.phase) {
     return (arenaState.round || 1) <= 2;
@@ -66,6 +78,7 @@ export function spawnEnemyByIndex({
   const inArena = state === 'battle' && arenaState && arenaState.phase;
   let stageHpM = (STAGE_HP_MULT[currentStageIdx] || 1) * HP_MULT_ENEMY * tankBuff;
   let stageDmgM = STAGE_DMG_MULT[currentStageIdx] || 1;
+  const campaignBossRound = typeof isCampaignBossRound === 'function' && isCampaignBossRound();
   const warmup = isEnemyWarmup({ state, arenaState, stageTime });
   if (warmup) {
     stageHpM *= WARMUP_HP_MULT;
@@ -74,6 +87,9 @@ export function spawnEnemyByIndex({
 
   const roundN = inArena ? (arenaState.round || 1) : waveIdx;
   const stageN = (currentStage && currentStage.n) || 1;
+  const earlyTuning = earlyStageNonBossEnemyTuning(stageN, campaignBossRound);
+  stageHpM *= earlyTuning.hp;
+  stageDmgM *= earlyTuning.dmg;
   const waveGrowth = stageN <= 5 ? 1.10 : stageN <= 10 ? 1.08 : 1.09;
   const waveScale = Math.pow(waveGrowth, Math.max(0, roundN - 1));
   const dmgWaveScale = inArena ? 1 : waveScale;
@@ -82,7 +98,7 @@ export function spawnEnemyByIndex({
     stageHpM *= late.hp;
     stageDmgM *= late.dmg;
     stageHpM *= lateStageRoleHpMult(template, stageN, roundN);
-    if (!isCampaignBossRound()) {
+    if (!campaignBossRound) {
       stageHpM *= lateStageNormalDurabilityMult(template, stageN, roundN);
       stageDmgM *= lateStageNormalDamageMult(template, stageN, roundN);
     }

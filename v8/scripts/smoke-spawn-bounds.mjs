@@ -1,5 +1,5 @@
 import { spawnBossById } from '../src/systems/boss-spawn.js';
-import { spawnEnemyByIndex } from '../src/systems/enemy-spawn.js';
+import { earlyStageNonBossEnemyTuning, spawnEnemyByIndex } from '../src/systems/enemy-spawn.js';
 import { createRiftRuntime } from '../src/systems/rift-runtime.js';
 import { ENEMIES } from '../src/data/enemies.js';
 import { STAGE_DMG_MULT, STAGE_HP_MULT } from '../src/data/stages.js';
@@ -17,6 +17,13 @@ function assertInside(actor, label) {
   if (actor.x < area.spawnLeft || actor.x > area.spawnRight || actor.y < area.arenaTop || actor.y > area.arenaBottom) {
     throw new Error(`${label}: outside arena at ${actor.x},${actor.y}`);
   }
+}
+
+{
+  const tuning = earlyStageNonBossEnemyTuning(5, false);
+  if (tuning.hp < 1.30 || tuning.dmg < 1.15) throw new Error('stage 1-5 non-boss tuning is too low');
+  const bossRoundTuning = earlyStageNonBossEnemyTuning(5, true);
+  if (bossRoundTuning.hp !== 1 || bossRoundTuning.dmg !== 1) throw new Error('early-stage tuning leaked into boss rounds');
 }
 
 {
