@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=d728d36-buzz-damage';
+import { startArena } from './systems/arena-runtime.js?v=f9681f2-hornet-melee';
 
 startArena();
