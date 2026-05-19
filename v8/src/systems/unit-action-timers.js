@@ -1,6 +1,7 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
 import { ARENA_LEASH_BACK, ARENA_LEASH_FWD, ARENA_LEASH_SIDE } from '../data/tuning.js';
+import { limitBurstLanding } from './combat-targeting.js';
 
 export function tickUnitActionTimers(unit, {
   frame,
@@ -234,15 +235,16 @@ function tickDeathFromAbove(unit, {
     for (const enemy of enemies) {
       if (enemy.hp > 0) {
         const distance = dist(unit, enemy);
-        if (distance < 200 && distance < bestDistance) {
+        if (distance < 155 && distance < bestDistance) {
           bestDistance = distance;
           best = enemy;
         }
       }
     }
     if (best) {
-      unit.dfaX = best.x;
-      unit.dfaY = best.y;
+      const landing = limitBurstLanding(unit, best.x, best.y, 140);
+      unit.dfaX = landing.x;
+      unit.dfaY = landing.y;
     }
     emitParticle(unit.x, unit.y, '#ff4466', 16, 4);
   }
@@ -308,8 +310,9 @@ function tickKillingSpree(unit, {
   if (target && target.hp > 0) {
     const fromX = unit.x;
     const fromY = unit.y;
-    unit.x = target.x + randomRange(-15, 15);
-    unit.y = target.y + randomRange(-10, 10);
+    const landing = limitBurstLanding(unit, target.x + randomRange(-15, 15), target.y + randomRange(-10, 10), unit.killingSpree.maxStep || 140);
+    unit.x = landing.x;
+    unit.y = landing.y;
     if (typeof clampToLeash === 'function') clampToLeash(unit);
     else clampToArena(unit);
     beamEffects.push({ x1: fromX, y1: fromY, x2: unit.x, y2: unit.y, color: '#ff224488', width: 3, life: 0.15, maxLife: 0.15, straight: true });

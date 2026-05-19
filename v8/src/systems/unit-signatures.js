@@ -1,3 +1,5 @@
+import { limitBurstLanding } from './combat-targeting.js';
+
 export function createArenaSignatures(deps = {}) {
   const {
     gameTickHz: GAME_TICK_HZ,
@@ -422,7 +424,7 @@ return {
     shake(4);
   }},
   death_from_above:{name:'Death from Above',cd:25,fire(u){
-    if(!enemies.some(e=>e.hp>0&&dist(u,e)<200))return false;
+    if(!enemies.some(e=>e.hp>0&&dist(u,e)<155))return false;
     u.dfaTimer=60;u.dfaX=u.x;u.dfaY=u.y;u.untargetable=true;u.dfaPhase='rising';
     u._dfaOrigY=u.y;
     addP(u.x,u.y,'#440044',24,5);addDmg(u.x,u.y-u.size-4,'DEATH FROM ABOVE!','#ff4466');
@@ -432,13 +434,14 @@ return {
     const _meleeR=(u.range||36)+30;
     if(!enemies.some(e=>e.hp>0&&dist(u,e)<=_meleeR))return false;
     const targets=[];
-    for(const e of enemies){if(e.hp>0&&dist(u,e)<200)targets.push(e)}
+    for(const e of enemies){if(e.hp>0&&dist(u,e)<135)targets.push(e)}
     targets.sort((a,b)=>dist(u,a)-dist(u,b));
     const hits=Math.min(6,targets.length);
     if(!hits)return false;
     u._omnislashTargets=targets.slice(0,hits);u._omnislashIdx=0;u._omnislashTimer=0;
     u._omnislashDur=6;u._omnislashActive=true;u.untargetable=true;
     u._omnislashImmune=true;
+    u._omnislashMaxStep=135;
     u._omniFromX=u.x;u._omniFromY=u.y;
     for(let i=0;i<3;i++)groundFx.push({x:u.x,y:u.y,r:0,maxR:55+i*18,life:0.35+i*0.12,color:i===1?'#ffffff':'#ffcc00'});
     arena_jazarGuard(u,Math.round(3*GAME_TICK_HZ),0.35);
@@ -575,12 +578,13 @@ return {
     // Bug fix: was teleporting Vodka to FARTHEST enemy which broke his leash
     // hard. Now leap to NEAREST enemy within 250 px (cap), bounded by leash.
     let best=null,bestD=Infinity;
-    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d<=220&&d<bestD){bestD=d;best=e}}
+    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d<=160&&d<bestD){bestD=d;best=e}}
     if(!best)return;
     const fromX=u.x,fromY=u.y;
     // Leap to target Ã¢â‚¬â€ arena_clampToLeash keeps the unit inside its leash box
     // on BOTH axes so it can't get stranded sideways past LEASH_SIDE.
-    u.x=best.x;u.y=best.y;arena_clampToLeash(u);
+    const land=limitBurstLanding(u,best.x,best.y,140);
+    u.x=land.x;u.y=land.y;arena_clampToLeash(u);
     for(const e of enemies){if(e.hp<=0)continue;if(dist(u,e)<=120)dealDamage(e,Math.round(u.dmg*2),u,'normal')}
     if(u.champion){u._origChampionMult=u._origChampionMult||u.champion.mult;u.champion.mult=u._origChampionMult*1.5;u.championBoostTimer=240}
     addP(fromX,fromY,'#ffd700',16,4);addP(u.x,u.y,'#ffd700',32,6);
@@ -598,16 +602,17 @@ return {
     // Otherwise the unit jumps to wherever and gets stuck (leash breaks).
     // Also: leap target must be IN FRONT (toward enemies, not behind).
     let best=null,bestD=Infinity;
-    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d>200||d<bestD)continue;if(d<bestD){bestD=d;best=e}}
+    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d>165||d<bestD)continue;if(d<bestD){bestD=d;best=e}}
     // Re-find: scan within 200 px only
     best=null;bestD=Infinity;
-    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d<=200&&d<bestD){bestD=d;best=e}}
+    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d<=165&&d<bestD){bestD=d;best=e}}
     if(!best)return false;
     const fromX=u.x,fromY=u.y;
     // Leap to target Ã¢â‚¬â€ arena_clampToLeash keeps both axes inside the leash box.
     // (Previous bespoke clamp had an X-axis bug Ã¢â‚¬â€ used homeY for the X cap Ã¢â‚¬â€
     // which let Malfof teleport sideways outside leash and freeze.)
-    u.x=best.x;u.y=best.y+12;arena_clampToLeash(u);
+    const land=limitBurstLanding(u,best.x,best.y+12,140);
+    u.x=land.x;u.y=land.y;arena_clampToLeash(u);
     for(const e of enemies){if(e.hp<=0)continue;if(dist(u,e)<=100){dealDamage(e,Math.round(u.dmg*2.5),u,'normal');if(!e.isBoss)e.stunned=Math.max(e.stunned||0,30)}}
     if(u.frenzy){u.frenzyForceActiveTimer=300}
     addP(fromX,fromY,'#ff3a3a',16,4);addP(u.x,u.y,'#ff3a3a',32,6);
@@ -849,10 +854,10 @@ return {
   }},
   killing_spree:{name:'Killing Spree',cd:30,fire(u){
     const _targets=[];
-    for(const e of enemies){if(e.hp>0&&dist(u,e)<220)_targets.push(e)}
+    for(const e of enemies){if(e.hp>0&&dist(u,e)<160)_targets.push(e)}
     if(_targets.length===0)return false;
     _targets.sort(()=>Math.random()-0.5);
-    u.killingSpree={targets:_targets.slice(0,5),idx:0,timer:0,interval:18,origX:u.x,origY:u.y};
+    u.killingSpree={targets:_targets.slice(0,5),idx:0,timer:0,interval:18,origX:u.x,origY:u.y,maxStep:140};
     u.untargetable=true;
     addDmg(u.x,u.y-u.size-4,'KILLING SPREE!','#ff2244');showFlash('KILLING SPREE','#ff2244',60);shake(6);
   }},
@@ -867,13 +872,14 @@ return {
   }},
   final_strike:{name:'Final Strike',cd:25,fire(u){
     let best=null,bestD=Infinity;
-    for(const e of enemies){if(e.hp>0){const d=dist(u,e);if(d<240&&d<bestD){bestD=d;best=e}}}
+    for(const e of enemies){if(e.hp>0){const d=dist(u,e);if(d<165&&d<bestD){bestD=d;best=e}}}
     if(!best)return false;
     const fromX=u.x,fromY=u.y;
     const ang=Math.atan2(best.y-u.y,best.x-u.x);
     if(bestD>(u.range||40)+18){
-      u.x=best.x-Math.cos(ang)*18;
-      u.y=best.y-Math.sin(ang)*18;
+      const land=limitBurstLanding(u,best.x-Math.cos(ang)*18,best.y-Math.sin(ang)*18,140);
+      u.x=land.x;
+      u.y=land.y;
       clampToArena(u);
       beamFx.push({x1:fromX,y1:fromY,x2:u.x,y2:u.y,color:'#ff6600cc',width:6,life:0.24,maxLife:0.24,straight:true});
       beamFx.push({x1:fromX,y1:fromY,x2:u.x,y2:u.y,color:'#ffdd66aa',width:2.5,life:0.20,maxLife:0.20,straight:true});

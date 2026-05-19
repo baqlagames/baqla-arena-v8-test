@@ -1,5 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
+import { limitBurstLanding } from './combat-targeting.js';
 
 export function tickUnitPlagueAndJazarPassives(unit, {
   frame,
@@ -122,9 +123,9 @@ function tickBladeRush(unit, {
   const fromX = unit.x;
   const fromY = unit.y;
   const angle = Math.atan2(best.y - unit.y, best.x - unit.x);
-  const dashLength = bestDistance;
-  const toX = unit.x + Math.cos(angle) * dashLength;
-  const toY = unit.y + Math.sin(angle) * dashLength;
+  const landing = limitBurstLanding(unit, best.x, best.y + 15, unit.bladeRush.maxDash || 135);
+  const toX = landing.x;
+  const toY = landing.y;
   let hit = 0;
   for (const enemy of enemies) {
     if (enemy.hp <= 0) continue;
@@ -142,8 +143,8 @@ function tickBladeRush(unit, {
       hit++;
     }
   }
-  unit.x = best.x;
-  unit.y = best.y + 15;
+  unit.x = toX;
+  unit.y = toY;
   if (typeof clampToLeash === 'function') clampToLeash(unit);
   else clampToArena(unit);
   grantJazarGuard(unit, Math.round(3 * GAME_TICK_HZ), unit.bladeGuard && unit.bladeGuard.dr || 0.32);
@@ -230,8 +231,14 @@ function tickOmnislash(unit, {
   if (target && target.hp > 0) {
     const fromX = unit.x;
     const fromY = unit.y;
-    unit.x = target.x;
-    unit.y = target.y;
+    const maxStep = unit._omnislashMaxStep || 135;
+    if (Math.hypot(target.x - fromX, target.y - fromY) > maxStep) {
+      unit._omnislashIdx++;
+      return;
+    }
+    const landing = limitBurstLanding(unit, target.x, target.y, maxStep);
+    unit.x = landing.x;
+    unit.y = landing.y;
     if (typeof clampToLeash === 'function') clampToLeash(unit);
     dealDamage(target, Math.round(unit.dmg * 2.0), unit, 'normal');
     const angle = Math.atan2(target.y - fromY, target.x - fromX);

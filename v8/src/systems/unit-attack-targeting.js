@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor } from './combat-targeting.js';
+import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js';
 
 export function prepareUnitAttackTarget(unit, {
   arena,
@@ -76,8 +76,9 @@ export function prepareUnitAttackTarget(unit, {
     const fromX = unit.x;
     const fromY = unit.y;
     const offset = unit.shadowStep.landOffset || 25;
-    unit.x = target.x;
-    unit.y = target.y + offset;
+    const landing = limitBurstLanding(unit, target.x, target.y + offset, unit.shadowStep.maxJump || 115);
+    unit.x = landing.x;
+    unit.y = landing.y;
     if (typeof clampToLeash === 'function') clampToLeash(unit);
     else clampToArena(unit);
     emitParticle(fromX, fromY, '#5e1218', 16, 4);

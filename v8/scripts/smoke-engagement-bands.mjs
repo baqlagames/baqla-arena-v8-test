@@ -3,6 +3,7 @@ import {
   clampActorToLeash,
   effectiveArenaAttackRange,
   isReachableFromLeash,
+  limitBurstLanding,
   moveActorToward,
   playerForwardLimitY,
 } from '../src/systems/combat-targeting.js';
@@ -121,8 +122,18 @@ function moveMany(actor, tx, ty, ticks = 400) {
     shake: () => {},
   });
   assert(!result.canAttack, 'shadow step setup should spend this tick repositioning');
-  assert(unit.y < bands.playerMeleeY, 'shadow step should be able to land beyond the middle band');
+  assert(unit.y > bands.playerMeleeY, 'long shadow step should be capped instead of snapping past the middle');
+  assert(Math.hypot(unit.x - 250, unit.y - 720) <= 115.01, 'long shadow step should respect visual jump cap');
   assert(unit.y >= unit.homeY - bounds.leashForward + 12 - 0.01, `shadow step landed in spawn/leash-unsafe area (${unit.y})`);
+}
+
+{
+  const unit = { x: 250, y: 520, homeX: 250, homeY: 720, size: 24, isPlayer: true };
+  const far = limitBurstLanding(unit, 250, 190, 140);
+  assert(far.limited, 'far burst landing should be limited');
+  assert(Math.hypot(far.x - unit.x, far.y - unit.y) <= 140.01, 'burst landing should not exceed max visual jump');
+  const near = limitBurstLanding(unit, 250, 405, 140);
+  assert(!near.limited && near.y === 405, 'near burst landing should stay exact');
 }
 
 {

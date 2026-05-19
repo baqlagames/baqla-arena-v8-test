@@ -34,6 +34,18 @@ export function effectiveArenaAttackRange(actor, bounds = {}) {
   return Math.min(raw, 64);
 }
 
+export function limitBurstLanding(actor, tx, ty, maxDistance = 140) {
+  if (!actor || !Number.isFinite(tx) || !Number.isFinite(ty)) return { x: tx, y: ty, limited: false, distance: 0 };
+  const fromX = Number.isFinite(actor.x) ? actor.x : tx;
+  const fromY = Number.isFinite(actor.y) ? actor.y : ty;
+  const dx = tx - fromX;
+  const dy = ty - fromY;
+  const distance = Math.hypot(dx, dy);
+  if (!Number.isFinite(distance) || distance <= maxDistance || distance < 0.5) return { x: tx, y: ty, limited: false, distance };
+  const scale = maxDistance / distance;
+  return { x: fromX + dx * scale, y: fromY + dy * scale, limited: true, distance };
+}
+
 export function playerForwardLimitY(actor, bounds = {}) {
   if (!actor || !actor.isPlayer || actor.homeY == null) return Number.NEGATIVE_INFINITY;
   return actor.homeY - (bounds.leashForward || 0);

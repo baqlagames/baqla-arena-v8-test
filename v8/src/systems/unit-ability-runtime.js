@@ -1,3 +1,5 @@
+import { limitBurstLanding } from './combat-targeting.js';
+
 export function createUnitAbilityRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});
   const GAME_TICK_HZ = deps.gameTickHz || 60;
@@ -536,11 +538,11 @@ const ABILITIES={
   windSlash(u){ // Jazar Wind Dancer A3 Ã¢â‚¬â€ dash toward nearest enemy slashing
     if(!tryAbility(u,'windSlash','slash',12*GAME_TICK_HZ))return;
     let _wsTarget=null,_wsDist=Infinity;
-    for(const e of enemies){if(e.hp>0){const d=dist(u,e);if(d<210&&d<_wsDist){_wsDist=d;_wsTarget=e}}}
+    for(const e of enemies){if(e.hp>0){const d=dist(u,e);if(d<165&&d<_wsDist){_wsDist=d;_wsTarget=e}}}
     if(!_wsTarget)return;
     const startX=u.x,startY=u.y;
     const ang=Math.atan2(_wsTarget.y-u.y,_wsTarget.x-u.x);
-    const dashLen=Math.min(_wsDist+20,155);
+    const dashLen=Math.min(_wsDist+20,135);
     let _hit=0;
     for(const e of enemies){if(e.hp>0){
       const ex=e.x-startX,ey=e.y-startY;
@@ -551,7 +553,8 @@ const ABILITIES={
         dealDamage(e,Math.round(u.dmg*1.8),u,'normal');addP(e.x,e.y,'#44ccff',10,4);_hit++;
       }
     }}
-    u.x=_wsTarget.x;u.y=_wsTarget.y+10;
+    const _land=limitBurstLanding(u,_wsTarget.x,_wsTarget.y+10,135);
+    u.x=_land.x;u.y=_land.y;
     arena_clampToLeash(u);
     arena_jazarGuard(u,Math.round(3*GAME_TICK_HZ),0.35);
     for(let i=0;i<8;i++){const px=startX+(u.x-startX)*(i/8),py=startY+(u.y-startY)*(i/8);addP(px,py,'#44ccff',2,3);addP(px+rnd(-8,8),py+rnd(-8,8),'#88eeff',1,2)}
