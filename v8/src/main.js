@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=b75524b-icon-scale';
+import { startArena } from './systems/arena-runtime.js?v=28b4da3-boss-pressure';
 
 startArena();

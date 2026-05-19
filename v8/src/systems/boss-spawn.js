@@ -1,6 +1,32 @@
 import { BOSSES } from '../data/bosses.js';
-import { UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
+
+const ARENA_BOSS_SIZE_MULT = 1.20;
+const ARENA_BOSS_BASE_DAMAGE_MULT = 1.06;
+const ARENA_BOSS_SKILL_DAMAGE_MULT = 1.07;
+const ARENA_BOSS_LIEUTENANT_DAMAGE_MULT = 1.06;
+const ARENA_BOSS_LIEUTENANT_SIZE_MULT = 1.08;
+
+function scaleDamageValue(value, mult) {
+  if (!Number.isFinite(value)) return value;
+  return Math.max(1, Math.round(value * mult));
+}
+
+function tuneBossDamageFields(boss) {
+  if (!boss || boss._arenaBossPressureTuned) return boss;
+  boss.dmg = scaleDamageValue(boss.dmg || 0, ARENA_BOSS_BASE_DAMAGE_MULT);
+  for (const key of Object.keys(boss)) {
+    if (key === 'dmg' || !Number.isFinite(boss[key])) continue;
+    if (/(?:Dmg|Damage)$/.test(key)) {
+      boss[key] = scaleDamageValue(boss[key], ARENA_BOSS_SKILL_DAMAGE_MULT);
+    } else if (/DmgMult$/.test(key)) {
+      boss[key] = Math.max(0.01, Number((boss[key] * ARENA_BOSS_SKILL_DAMAGE_MULT).toFixed(3)));
+    }
+  }
+  boss._arenaBossPressureTuned = true;
+  return boss;
+}
 
 export function bossVisibleTop({ state, arenaState, arenaTop }) {
   return (state === 'battle' && arenaState && arenaState.phase) ? ARENA_TOP_BASE + 46 : arenaTop;
@@ -39,7 +65,7 @@ export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
   const lieutenantHpPct = Number.isFinite(template.lieutenantHpPct) ? template.lieutenantHpPct : 0.28;
   const lieutenantDmgPct = Number.isFinite(template.lieutenantDmgPct) ? template.lieutenantDmgPct : 0.60;
   const baseHp = Math.round(template.hp * lieutenantHpPct * stageHpM);
-  const baseDmg = Math.round(template.dmg * lieutenantDmgPct * stageDmgM);
+  const baseDmg = Math.round(template.dmg * lieutenantDmgPct * stageDmgM * ARENA_BOSS_LIEUTENANT_DAMAGE_MULT);
   const left = Number.isFinite(spawnLeft) ? spawnLeft : width * 0.18;
   const right = Number.isFinite(spawnRight) ? spawnRight : width * 0.82;
   const spawnArea = spawnAreaFromView({
@@ -103,7 +129,7 @@ export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
       maxHp: baseHp,
       hp: baseHp,
       dmg: baseDmg,
-      size: 42,
+      size: Math.round(42 * ARENA_BOSS_LIEUTENANT_SIZE_MULT),
       armor: signature.armorType === 'heavy' ? 6 : 3,
       magicRes: 3,
       speed: 0.30,
@@ -125,6 +151,7 @@ export function buildLieutenantsFor(template, stageHpM, stageDmgM, mainBoss, {
       timeEnrageAt: 14000,
       mainBossRef: mainBoss,
     };
+    tuneBossDamageFields(lieutenant);
     clampActorToSpawnArea(lieutenant, {
       ...spawnArea,
       topMargin: 58,
@@ -162,7 +189,7 @@ export function spawnBossById({
   const stageHpM = 1;
   const stageDmgM = 1;
   const inArena = state === 'battle' && arenaState && arenaState.phase;
-  const sizeScale = (inArena ? ARENA_UNIT_SIZE_SCALE : UNIT_VISUAL_SCALE) * (inArena ? 1.12 : 1);
+  const sizeScale = (inArena ? ARENA_UNIT_SIZE_SCALE : UNIT_VISUAL_SCALE) * (inArena ? ARENA_BOSS_SIZE_MULT : 1);
   const laneLeft = Number.isFinite(spawnLeft) ? spawnLeft : ARENA_L;
   const laneRight = Number.isFinite(spawnRight) ? spawnRight : ARENA_R;
   const spawnArea = spawnAreaFromView({
@@ -202,6 +229,7 @@ export function spawnBossById({
     mechCD: {},
     entryHold: template.entryHold || 0,
   };
+  tuneBossDamageFields(boss);
 
   if (template.spawnFromTop) {
     clampTopSpawnBossToVisibleArena(boss, {

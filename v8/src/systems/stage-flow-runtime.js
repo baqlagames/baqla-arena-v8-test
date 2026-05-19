@@ -1,5 +1,8 @@
 import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
-import { applyEnemyRoleDamageProfile, earlyStageNonBossEnemyTuning } from './enemy-spawn.js?v=9d6b186-combat-feedback';
+import { applyEnemyRoleDamageProfile, earlyStageNonBossEnemyTuning } from './enemy-spawn.js';
+
+const ARENA_ELITE_DAMAGE_MULT = 1.06;
+const ARENA_ELITE_SKILL_DAMAGE_MULT = 1.08;
 
 export function createStageFlowRuntime(ctx) {
   function spawnEnemyByIdx(typeIdx) {
@@ -77,7 +80,7 @@ export function createStageFlowRuntime(ctx) {
     const isRangedChampion = tmpl.arch === 'ranged' || tmpl.arch === 'caster' || (tmpl.range || 0) > 90;
     const isTankChampion = tmpl.arch === 'tank' || tmpl.taunt || tmpl.armorType === 'heavy';
     const championHpMult = isTankChampion ? 3.15 : 3.35;
-    const championDmgMult = isRangedChampion ? 1.85 : 1.78;
+    const championDmgMult = (isRangedChampion ? 1.85 : 1.78) * ARENA_ELITE_DAMAGE_MULT;
     const e = {
       ...tmpl,
       name: 'Champion ' + tmpl.name,
@@ -94,12 +97,13 @@ export function createStageFlowRuntime(ctx) {
       splashOnHit: true,
       splashRadius: isRangedChampion ? 72 : 58,
       aoeRadius: isRangedChampion ? 62 : 0,
-      aoeMult: isRangedChampion ? 0.32 : 0,
+      aoeMult: isRangedChampion ? 0.35 : 0,
       meteorCD: isRangedChampion ? 6 * ctx.tickHz : 0,
-      meteorDmgMult: isRangedChampion ? 0.48 : 0,
+      meteorDmgMult: isRangedChampion ? 0.52 : 0,
       meteorRadius: isRangedChampion ? 64 : 0,
       chainBoltCD: tmpl.arch === 'caster' ? 7 * ctx.tickHz : tmpl.chainBoltCD,
-      chainBoltDmgMult: tmpl.arch === 'caster' ? 0.45 : tmpl.chainBoltDmgMult,
+      chainBoltDmgMult: tmpl.arch === 'caster' ? 0.49 : (tmpl.chainBoltDmgMult ? Number((tmpl.chainBoltDmgMult * ARENA_ELITE_SKILL_DAMAGE_MULT).toFixed(3)) : tmpl.chainBoltDmgMult),
+      poisonDmg: tmpl.poisonDmg ? Math.max(1, Math.round(tmpl.poisonDmg * stageDmgM * ARENA_ELITE_SKILL_DAMAGE_MULT)) : tmpl.poisonDmg,
       spawnFrame: v.frame,
       isEnemy: true,
       isElite: true,
