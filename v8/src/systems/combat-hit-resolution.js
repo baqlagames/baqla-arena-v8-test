@@ -129,8 +129,11 @@ export function showDamageHitFeedback(target, dmg, {
   const hint = combatRatio <= 0.72 ? 'reduced' : combatRatio >= 1.25 ? 'vulnerable' : null;
   const canShowHint = hint && frame != null && frame - (target._lastDamageHintFrame || -999) > 45;
   if (canShowHint) target._lastDamageHintFrame = frame;
+  if (target._damageTextLane == null) target._damageTextLane = ((Math.abs(Math.round((target.x || 0) + (target.y || 0))) % 3) - 1) * 12;
+  const hitTextY = target.y - (target.size || 18) - (target.isBoss ? 22 : 13);
+  const hitTextDx = target._damageTextLane || 0;
   if (opts && opts.isCrit) {
-    addDamageText(target.x, target.y - target.size / 2, shownDamage, damageInfo.color || '#e066ff', {
+    addDamageText(target.x, hitTextY - 8, shownDamage, damageInfo.color || '#e066ff', {
       sz: 17,
       bold: true,
       outline: '#330055',
@@ -138,12 +141,17 @@ export function showDamageHitFeedback(target, dmg, {
       tagColor: damageInfo.tagColor,
       crit: true,
       hint: canShowHint ? hint : null,
+      group: target,
     });
   } else {
-    addDamageText(target.x, target.y - target.size / 2, shownDamage, damageInfo.color, {
+    addDamageText(target.x, hitTextY, shownDamage, damageInfo.color, {
+      dx: hitTextDx,
+      vy: -0.34,
       tag: damageInfo.tag,
       tagColor: damageInfo.tagColor,
       hint: canShowHint ? hint : null,
+      compact: true,
+      group: target,
     });
   }
 }

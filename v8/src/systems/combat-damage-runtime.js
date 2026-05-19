@@ -1,13 +1,13 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
-import { ARENA_CAMPAIGN_KILL_BOUNTY_MULT, RESPAWN_FRAMES } from '../data/tuning.js?v=9d6b186-combat-feedback';
-import { absorbEnemyShield, absorbEarthwardenShield, absorbGoldShield, absorbHiveShield, absorbObjectShield, absorbShieldHp, absorbShieldOfVengeance, absorbTimedNumericShield, stopInvalidDamageTarget } from './combat-absorbs.js?v=72b1f6b-damage-tags';
+import { ARENA_CAMPAIGN_KILL_BOUNTY_MULT, RESPAWN_FRAMES } from '../data/tuning.js?v=7861d9c-text-declutter';
+import { absorbEnemyShield, absorbEarthwardenShield, absorbGoldShield, absorbHiveShield, absorbObjectShield, absorbShieldHp, absorbShieldOfVengeance, absorbTimedNumericShield, stopInvalidDamageTarget } from './combat-absorbs.js?v=7861d9c-text-declutter';
 import { createEnemyKillRewardEvent, resolveDeathPresentation, startSummonerCooldownForDeadMinion } from './combat-death.js';
 import { applyArenaDeathReactionHooks, applyDeathBoom, tryAngelOfMercySave, tryArdentDefenderSave, tryArenaDeathBranchHooks, tryCheatDeathSave, tryGhostOnDeath } from './combat-death-hooks.js';
 import { applyPlayerSpecialDefenses, applyPreShieldPlayerReactions, applySoulLinkRedirect, triggerGalacticGuardian, triggerPrayerOfMending, tryGuardianSpiritSave } from './combat-defense-reactions.js';
 import { applyIronSkinReduction, applyPlayerProtectionReductions, stopPlayerDefenseGates } from './combat-defense-procs.js';
-import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=9f0ee05-icon-tags';
+import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=7861d9c-text-declutter';
 import { applyArenaIncomingScalarModifiers, applyPostDefenseDamageModifiers } from './combat-modifiers.js';
-import { WARMUP_GOLD_BONUS } from './enemy-spawn.js?v=9d6b186-combat-feedback';
+import { WARMUP_GOLD_BONUS } from './enemy-spawn.js?v=7861d9c-text-declutter';
 import { arena_campaignKillBountyStageMult, arena_lateStageNormalGoldMult, arena_roundGoldMult } from './stage-economy.js';
 
 function recordPrevented(ctx, target, attacker, before, after, kind) {

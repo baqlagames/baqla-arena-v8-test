@@ -46,7 +46,8 @@ export function createCombatFeedbackRuntime(deps) {
 
   function addDamageText(x, y, value, color, opts) {
     const damageNumbers = deps.damageNumbers();
-    if (damageNumbers.length > 32) return;
+    const isTaggedHit = !!(opts && opts.tag);
+    if (damageNumbers.length > (isTaggedHit ? 24 : 32)) return;
     let display = value;
     if (typeof value === 'number') {
       if (!Number.isFinite(value)) return;
@@ -58,22 +59,41 @@ export function createCombatFeedbackRuntime(deps) {
       display = value;
     }
     const isNumber = typeof display === 'number';
+    if (isTaggedHit && isNumber && !(opts && opts.crit)) {
+      const group = opts && opts.group;
+      for (let i = damageNumbers.length - 1; i >= 0; i--) {
+        const d = damageNumbers[i];
+        if (!d || d.crit || d.tag !== opts.tag) continue;
+        const sameGroup = group ? d.group === group : (Math.abs(d.x - x) < 28 && Math.abs(d.y - y) < 26);
+        if (!sameGroup) continue;
+        d.val = Math.round((Number(d.val) || 0) + display);
+        d.life = Math.max(d.life || 0, opts.life != null ? opts.life : 0.92);
+        d.decay = Math.min(d.decay || 0.03, opts.decay || 0.024);
+        d.x = d.x * 0.78 + x * 0.22;
+        d.y = Math.min(d.y, y);
+        d.color = color || d.color || '#fff';
+        d.tagColor = opts.tagColor || d.tagColor || null;
+        return;
+      }
+    }
     damageNumbers.push({
       x: x + (opts && opts.dx != null ? opts.dx : randomRange(-3, 3)),
       y: y + (opts && opts.dy != null ? opts.dy : 0),
       val: display,
       color: color || '#fff',
-      life: opts && opts.life != null ? opts.life : (opts && opts.tag ? 1.22 : 1),
+      life: opts && opts.life != null ? opts.life : (isTaggedHit ? 0.92 : 1),
       vy: opts && opts.vy != null ? opts.vy : -0.45,
       vx: opts && opts.vx != null ? opts.vx : randomRange(-0.08, 0.08),
-      sz: opts && opts.sz || (opts && opts.tag ? 13 : (isNumber ? 12 : 11)),
-      decay: opts && opts.decay || (opts && opts.tag ? 0.021 : 0.026),
+      sz: opts && opts.sz || (isTaggedHit ? 11 : (isNumber ? 12 : 11)),
+      decay: opts && opts.decay || (isTaggedHit ? 0.024 : 0.026),
       bold: opts && opts.bold || false,
       outline: opts && opts.outline || null,
       tag: opts && opts.tag || null,
       tagColor: opts && opts.tagColor || null,
       crit: opts && opts.crit || false,
       hint: opts && opts.hint || null,
+      compact: opts && opts.compact || false,
+      group: opts && opts.group || null,
     });
   }
 

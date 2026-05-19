@@ -44,7 +44,7 @@ export function drawFloatingNumbers(ctx,view){
       x:d.x,y:d.y,text:item.text,color:d.color||item.color||'#ffffff',
       alpha:d.life,size:d.sz||item.size||12,bold:d.bold||item.bold,
       numeric:item.numeric,outline:d.outline,tag:d.tag,tagColor:d.tagColor,
-      crit:d.crit,hint:d.hint
+      crit:d.crit,hint:d.hint,compact:d.compact
     });
   }
   for(const h of healingNumbers){
@@ -69,12 +69,39 @@ function drawFloatingBadge(ctx,view){
   if(!text){ctx.restore();return}
   const pad=view.numeric?7:8;
   const tagText=view.tag?Array.from(String(view.tag))[0] || '':'';
-  const tagW=tagText?18:0;
+  const compact=!!view.compact&&view.numeric&&!view.bold&&!view.crit&&!view.heal&&!view.hint;
+  const tagW=tagText?(compact?13:18):0;
   const hintText=view.hint==='vulnerable'?'VULN':view.hint==='reduced'?'RED':'';
   const hintW=hintText?24:0;
   const w=Math.min(132,Math.max(22,ctx.measureText(text).width+pad*2+tagW+hintW));
   const h=size+8;
   const x=view.x,y=view.y;
+  if(compact){
+    let textX=x;
+    ctx.shadowColor='rgba(0,0,0,0.9)';
+    ctx.shadowBlur=3;
+    if(tagText){
+      const tx=x-w/2+pad+5;
+      ctx.fillStyle=view.tagColor||view.color;
+      ctx.globalAlpha=alpha*0.88;
+      ctx.beginPath();ctx.arc(tx,y,5.8,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,0.78)';
+      ctx.lineWidth=2;
+      ctx.font='900 8px "Segoe UI Symbol", Arial';
+      ctx.strokeText(tagText,tx,y+0.4);
+      ctx.fillStyle='#fffdf2';
+      ctx.fillText(tagText,tx,y+0.4);
+      textX+=tagW*0.32;
+    }
+    ctx.font='900 '+size+'px Arial';
+    ctx.lineWidth=3;
+    ctx.strokeStyle='rgba(0,0,0,0.82)';
+    ctx.strokeText(text,textX,y+0.5);
+    ctx.fillStyle=view.color;
+    ctx.fillText(text,textX,y+0.5);
+    ctx.restore();
+    return;
+  }
   ctx.shadowColor=view.color;
   ctx.shadowBlur=view.bold?8:4;
   ctx.fillStyle=view.heal?'rgba(5,35,18,0.78)':'rgba(8,10,18,0.78)';
