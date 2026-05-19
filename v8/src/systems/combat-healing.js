@@ -50,6 +50,8 @@ export function addGoldShield(target, amount, {
   noExpireHeal,
   tickHz,
   emitParticle,
+  color = '#ffd700',
+  type = 'gold',
 }) {
   if (!target || target.hp <= 0 || amount <= 0) return 0;
   const shieldDuration = Math.max(1, Math.round(duration || 8 * tickHz));
@@ -62,8 +64,10 @@ export function addGoldShield(target, amount, {
     timer: shieldDuration,
     maxTimer: shieldDuration,
     noExpireHeal: !!noExpireHeal,
+    color,
+    type,
   };
-  emitParticle(target.x, target.y, '#ffd700', 8, 3);
+  emitParticle(target.x, target.y, color, 8, 3);
   return added;
 }
 

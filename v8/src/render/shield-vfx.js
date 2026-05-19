@@ -13,6 +13,7 @@ const SHIELD_TYPES = {
   rapture: '#ffaadd',
   enemy: '#44aaff',
   hive: '#ffdd44',
+  spell: '#38bdf8',
 };
 
 function positive(value) {
@@ -29,18 +30,18 @@ export function shieldColorForType(type, fallback = '#ffd700') {
   return SHIELD_TYPES[type] || fallback || '#ffd700';
 }
 
-function pushActiveShield(shields, unit, type, value, maxValue, timerValue, timerMax) {
+function pushActiveShield(shields, unit, type, value, maxValue, timerValue, timerMax, color) {
   const amountPct = shieldRatio(value, maxValue);
   const timerPct = shieldRatio(timerValue, timerMax);
   const pct = Math.min(amountPct || 1, timerPct || 1);
-  if (pct > 0) shields.push({ type, pct });
+  if (pct > 0) shields.push({ type, pct, color });
 }
 
 function activeShieldsFor(unit) {
   const shields = [];
   if (!unit) return shields;
   if (unit._goldShield && positive(unit._goldShield.amt)) {
-    pushActiveShield(shields, unit, 'gold', unit._goldShield.amt, unit._goldShield.max, unit._goldShield.timer, unit._goldShield.maxTimer);
+    pushActiveShield(shields, unit, unit._goldShield.type || 'gold', unit._goldShield.amt, unit._goldShield.max, unit._goldShield.timer, unit._goldShield.maxTimer, unit._goldShield.color);
   }
   if (positive(unit.shieldHp)) pushActiveShield(shields, unit, 'naana', unit.shieldHp, Math.max(unit.maxHp * 0.22, unit.shieldHp));
   if (positive(unit.earthwardenShield)) pushActiveShield(shields, unit, 'earthwarden', unit.earthwardenShield, Math.max(unit.maxHp * 0.25, unit.earthwardenShield), unit.earthwardenTimer, unit.earthwardenTimer || 1);
@@ -179,17 +180,17 @@ export function drawActorShieldVfx(ctx, {
     const shield = shields[i];
     drawShieldBubble(ctx, {
       x,
-      y,
+      y: y - size * 0.12,
       size,
       frame,
       type: shield.type,
-      color: shieldColorForType(shield.type, unit._lastShieldColor),
+      color: shield.color || shieldColorForType(shield.type, unit._lastShieldColor),
       pct: shield.pct,
       index: i,
     });
   }
-  drawShieldHitFx(ctx, { unit, x, y, size, frame });
-  drawShieldBreakFx(ctx, { unit, x, y, size, frame });
+  drawShieldHitFx(ctx, { unit, x, y: y - size * 0.12, size, frame });
+  drawShieldBreakFx(ctx, { unit, x, y: y - size * 0.12, size, frame });
 }
 
 export const drawUnitShieldVfx = drawActorShieldVfx;

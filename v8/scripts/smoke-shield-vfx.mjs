@@ -57,7 +57,7 @@ emitShieldAbsorbFx(unit, {
 assert(unit._shieldHitFx && unit._shieldHitFx.timer > 0, 'shield hit fx should be marked');
 assert(unit._shieldBreakFx && unit._shieldBreakFx.timer > 0, 'shield break fx should be marked');
 assert(particles.length >= 1, 'shield hit should emit particles');
-assert(groundEffects.length === 1, 'shield break should emit ground effect');
+assert(groundEffects.length === 0, 'player shield break should not emit a misplaced ground pulse by default');
 assert(texts.some(entry => String(entry[2]).includes('BREAK')), 'shield break should emit break text');
 
 const ctx = createNoopCanvasContext();

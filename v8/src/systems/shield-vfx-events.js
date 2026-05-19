@@ -60,6 +60,7 @@ export function emitShieldAbsorbFx(target, {
   breakText = 'SHIELD BREAK',
   particleCount = 5,
   particleSize = 2.5,
+  groundPulse = false,
 } = {}) {
   if (!target) return;
   markShieldHit(target, { type, color, amount, frame });
@@ -68,7 +69,7 @@ export function emitShieldAbsorbFx(target, {
   if (!broken) return;
   markShieldBreak(target, { type, color, amount, frame });
   safeCall(addDamageText, target.x, target.y - (target.size || 16), breakText, color, { sz: 11, bold: true });
-  if (Array.isArray(groundEffects)) {
+  if (groundPulse && Array.isArray(groundEffects)) {
     groundEffects.push({
       x: target.x,
       y: target.y,

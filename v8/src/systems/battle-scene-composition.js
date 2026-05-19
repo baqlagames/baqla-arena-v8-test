@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=4bdd8c4-shield-vfx';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=880cef4-shield-visuals';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

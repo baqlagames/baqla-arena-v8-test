@@ -35,9 +35,9 @@ const state = {
 const runtime = createArenaSpellRuntime({
   view: () => state,
   setGold: value => { state.gold = value; },
-  addGoldShield: (unit, amount, duration, cap, noExpireHeal) => {
+  addGoldShield: (unit, amount, duration, cap, noExpireHeal, visual = {}) => {
     const current = unit._goldShield && unit._goldShield.amt > 0 ? unit._goldShield.amt : 0;
-    unit._goldShield = { amt: Math.min(cap, current + amount), timer: duration, maxTimer: duration, noExpireHeal };
+    unit._goldShield = { amt: Math.min(cap, current + amount), timer: duration, maxTimer: duration, noExpireHeal, color: visual.color, type: visual.type };
   },
   setAbilityTargeting: () => {},
   emitParticle: () => {},
@@ -51,6 +51,7 @@ const runtime = createArenaSpellRuntime({
 assert(runtime.castAbility(0, 250, 450), 'Bulwark Charm should cast');
 assert(state.units[0]._goldShield && state.units[0]._goldShield.amt === 18, 'Bulwark Charm should shield units for 18% max HP');
 assert(state.units[1]._goldShield && state.units[1]._goldShield.amt === 18, 'Bulwark Charm should shield every living unit');
+assert(state.units[0]._goldShield.color === '#38bdf8' && state.units[0]._goldShield.type === 'spell', 'Bulwark Charm should use blue spell shield visuals');
 
 assert(runtime.castAbility(1, 250, 450), 'Stasis Pulse should cast');
 assert(state.enemies[0].stunned === 120, 'Stasis Pulse should stun non-boss enemies for 2s');

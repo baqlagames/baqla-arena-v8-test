@@ -6,7 +6,7 @@ import {
   recordCombatHeal,
   startCombatRound,
 } from './combat-stats.js';
-import { applyTrackedHeal } from './combat-healing.js';
+import { applyTrackedHeal } from './combat-healing.js?v=880cef4-shield-visuals';
 
 export function createCombatFeedbackRuntime(deps) {
   let combatStats = deps.initialCombatStats || null;

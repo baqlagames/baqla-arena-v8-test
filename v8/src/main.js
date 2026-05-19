@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=905b2c3-thunder-shield';
+import { startArena } from './systems/arena-runtime.js?v=880cef4-shield-visuals';
 
 startArena();

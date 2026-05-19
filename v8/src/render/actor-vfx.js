@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js';
+import { drawActorShieldVfx } from './shield-vfx.js?v=880cef4-shield-visuals';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);

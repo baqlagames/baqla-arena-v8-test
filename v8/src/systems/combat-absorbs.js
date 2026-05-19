@@ -1,4 +1,4 @@
-import { emitShieldAbsorbFx } from './shield-vfx-events.js';
+import { emitShieldAbsorbFx } from './shield-vfx-events.js?v=880cef4-shield-visuals';
 
 export function stopInvalidDamageTarget(target, {
   frame,
@@ -47,7 +47,7 @@ export function absorbHiveShield(target, raw, attacker, {
   if (target.hiveShield.hp <= 0) {
     if (target.hiveShield.royalCarapace) target._royalCarapaceBroken = true;
     else showFlash('HIVE SHIELD BROKEN!', '#ffdd44', 40);
-    emitShieldAbsorbFx(target, { type: 'hive', color: '#ffdd44', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: 'HIVE BREAK' });
+    emitShieldAbsorbFx(target, { type: 'hive', color: '#ffdd44', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: 'HIVE BREAK', groundPulse: true });
     target.hiveShield = null;
   }
   return { raw: leftover, blocked: leftover <= 0 };
@@ -71,7 +71,7 @@ export function absorbEnemyShield(target, raw, {
   emitShieldAbsorbFx(target, { type: 'enemy', color: '#44aaff', amount: absorb, frame, emitParticle, groundEffects, particleCount: 5, particleSize: 2.5 });
   if (target._enemyShield <= 0) {
     target._enemyShield = 0;
-    emitShieldAbsorbFx(target, { type: 'enemy', color: '#44aaff', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText });
+    emitShieldAbsorbFx(target, { type: 'enemy', color: '#44aaff', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, groundPulse: true });
   }
   return { raw: leftover, blocked: leftover <= 0 };
 }

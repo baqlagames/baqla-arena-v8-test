@@ -2,7 +2,7 @@ import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
 import { createActorOverlayRenderer } from './actor-overlays.js';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=905b2c3-thunder-shield';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=880cef4-shield-visuals';
 import { createActorEnemyRenderer } from './actor-enemy-renderer.js';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';

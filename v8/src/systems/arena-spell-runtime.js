@@ -18,9 +18,9 @@ export function createArenaSpellRuntime(deps = {}) {
   const applyTrackedHeal = typeof deps.applyTrackedHeal === 'function' ? deps.applyTrackedHeal : () => 0;
   const addGoldShield = typeof deps.addGoldShield === 'function'
     ? deps.addGoldShield
-    : ((unit, amount, duration, cap) => {
+    : ((unit, amount, duration, cap, noExpireHeal, visual = {}) => {
       const current = unit._goldShield && unit._goldShield.amt > 0 ? unit._goldShield.amt : 0;
-      unit._goldShield = { amt: Math.min(cap || amount, current + amount), timer: duration, maxTimer: duration, noExpireHeal: true };
+      unit._goldShield = { amt: Math.min(cap || amount, current + amount), timer: duration, maxTimer: duration, noExpireHeal: true, color: visual.color, type: visual.type };
     });
 
   const spellStatSources = {};
@@ -159,7 +159,7 @@ export function createArenaSpellRuntime(deps = {}) {
           if (unit.hp <= 0) continue;
           const shield = Math.max(1, Math.round((unit.maxHp || unit.hp || 1) * ability.shieldPct));
           const cap = Math.max(shield, Math.round((unit.maxHp || unit.hp || 1) * 0.28));
-          addGoldShield(unit, shield, duration, cap, true);
+          addGoldShield(unit, shield, duration, cap, true, { color: ability.color, type: 'spell' });
           addParticle(unit.x, unit.y, ability.color, 8, 3);
         }
       }
