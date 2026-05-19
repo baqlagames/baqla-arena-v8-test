@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=880cef4-shield-visuals';
+import { drawActorShieldVfx } from './shield-vfx.js?v=ceeed23-enemy-vfx';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);
@@ -359,6 +359,68 @@ export function enemyVfxColor(enemy) {
   return enemy.accent || actCol;
 }
 
+function enemyRoleInfo(enemy) {
+  if (enemy.isBoss) return { key: 'boss', color: enemy.color || '#ff8844', label: 'B' };
+  if (enemy.isLieutenant) return { key: 'lieutenant', color: '#ffaa44', label: 'L' };
+  if (enemy.bossSupport) return { key: 'support', color: enemy.bossSupportColor || enemy.color || '#ffaa44', label: '+' };
+  if (enemy.waveMechanic === 'shield' || enemy.armorType === 'heavy' || enemy.taunt || enemy.arch === 'tank') return { key: 'tank', color: '#d8a938', label: 'T' };
+  if (enemy.waveMechanic === 'medic' || enemy.waveMechanic === 'banner' || enemy.waveMechanic === 'ritual' || enemy.arch === 'support') return { key: 'support', color: enemyVfxColor(enemy), label: '+' };
+  if (enemy.arch === 'caster' || enemy.armorType === 'warded' || enemy.chainBoltCD || enemy.meteorCD) return { key: 'caster', color: enemyVfxColor(enemy), label: '*' };
+  if (enemy.arch === 'assassin' || enemy.prefersBackline || enemy.stealth || enemy.burrow) return { key: 'assassin', color: '#ff5a66', label: '!' };
+  if (enemy.flying) return { key: 'flying', color: enemyVfxColor(enemy), label: '^' };
+  if (enemy.arch === 'ranged' || enemy.range > 80 || enemy.projType) return { key: 'ranged', color: enemyVfxColor(enemy), label: 'R' };
+  if (enemy.arch === 'aoe' || enemy.splashOnHit) return { key: 'aoe', color: '#ff8c22', label: 'A' };
+  return { key: 'melee', color: enemyVfxColor(enemy), label: '' };
+}
+
+function drawEnemyRoleBadge(ctx, { x, y, size, frame, info, elite }) {
+  if (!info || !info.label) return;
+  const pulse = 0.72 + 0.18 * Math.sin(frame * 0.10);
+  const bx = x - size * 0.54;
+  const by = y - size * 0.86;
+  ctx.save();
+  ctx.globalAlpha = elite ? 0.90 : 0.72;
+  ctx.fillStyle = 'rgba(10,10,14,0.70)';
+  ctx.beginPath();
+  ctx.arc(bx, by, elite ? 6.5 : 5.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = info.color;
+  ctx.lineWidth = elite ? 1.6 : 1.1;
+  ctx.globalAlpha *= pulse;
+  ctx.beginPath();
+  ctx.arc(bx, by, elite ? 7.5 : 6.3, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 8px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(info.label, bx, by + 2.8);
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+function drawChampionCrown(ctx, { x, y, size, frame, color = '#ffd700' }) {
+  const pulse = 0.70 + 0.18 * Math.sin(frame * 0.12);
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = color;
+  const cy = y - size * 1.08;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.36, cy + size * 0.13);
+  ctx.lineTo(x - size * 0.25, cy - size * 0.05);
+  ctx.lineTo(x - size * 0.08, cy + size * 0.09);
+  ctx.lineTo(x, cy - size * 0.10);
+  ctx.lineTo(x + size * 0.08, cy + size * 0.09);
+  ctx.lineTo(x + size * 0.25, cy - size * 0.05);
+  ctx.lineTo(x + size * 0.36, cy + size * 0.13);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#fff6b0';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+}
+
 export function drawEnemyDashedEllipse(ctx, { x, y, rx, ry, color, alpha, rotation = 0, frame }) {
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -374,6 +436,7 @@ export function drawEnemyDashedEllipse(ctx, { x, y, rx, ry, color, alpha, rotati
 
 export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
   const col = enemyVfxColor(enemy);
+  const role = enemyRoleInfo(enemy);
   const t = frame * 0.055 + (enemy.id || 0) * 0.7 + (enemy.bobPhase || 0);
   ctx.save();
   if (enemy.spawnFrame != null) {
@@ -417,6 +480,36 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
     ctx.stroke();
     ctx.setLineDash([]);
   }
+  if (enemy.fromRift) {
+    ctx.globalAlpha = 0.20 + 0.08 * Math.sin(t * 1.6);
+    ctx.strokeStyle = '#c08aff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 5]);
+    ctx.lineDashOffset = frame * 0.55;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.78, size * 1.32, size * 0.34, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.10;
+    ctx.fillStyle = '#8a40ff';
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.75, size * 1.08, size * 0.25, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (enemy.bossSupport || enemy.isLieutenant) {
+    const supportCol = role.color || col;
+    ctx.globalAlpha = enemy.isLieutenant ? 0.30 : 0.20;
+    ctx.strokeStyle = supportCol;
+    ctx.lineWidth = enemy.isLieutenant ? 2.4 : 1.8;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.78, size * 1.48, size * 0.38, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = supportCol;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.73, size * 1.18, size * 0.26, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   if (enemy.armorType === 'warded' || enemy.arch === 'caster' || enemy.projType === 'curse') {
     drawEnemyDashedEllipse(ctx, { x, y: y + size * 0.50, rx: size * 0.98, ry: size * 0.25, color: col, alpha: 0.22 + 0.08 * Math.sin(t), frame });
     drawEnemyDashedEllipse(ctx, { x, y: y + size * 0.50, rx: size * 0.72, ry: size * 0.18, color: '#fff', alpha: 0.10, frame });
@@ -435,6 +528,11 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
     ctx.stroke();
   }
   if (enemy.flying) {
+    ctx.globalAlpha = 0.24;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 1.02, size * 1.18, size * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.globalAlpha = 0.14 + 0.05 * Math.sin(t);
     ctx.strokeStyle = col;
     ctx.lineWidth = 1.5;
@@ -452,6 +550,15 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.ellipse(x, y + size * 0.70, size * 1.03, size * 0.28, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  if (role.key === 'ranged') {
+    ctx.globalAlpha = 0.16 + 0.05 * Math.sin(t * 1.4);
+    ctx.strokeStyle = role.color;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.88, y + size * 0.68);
+    ctx.lineTo(x + size * 0.88, y + size * 0.68);
     ctx.stroke();
   }
   if (enemy.prefersBackline || enemy.stealth) {
@@ -505,8 +612,11 @@ export function drawEnemyVfxOver(ctx, {
   randomRange = fallbackRandomRange,
 }) {
   const col = enemyVfxColor(enemy);
+  const role = enemyRoleInfo(enemy);
   const t = frame * 0.075 + (enemy.id || 0) * 0.8 + (enemy.bobPhase || 0);
   ctx.save();
+  drawEnemyRoleBadge(ctx, { x, y, size, frame, info: role, elite: enemy.isElite || enemy.champion || enemy.isLieutenant });
+  if (enemy.isElite || enemy.champion || enemy.isLieutenant) drawChampionCrown(ctx, { x, y, size, frame, color: enemy.isLieutenant ? '#ffaa44' : '#ffd700' });
   if (enemy.armorType === 'warded' || enemy.arch === 'caster' || enemy.chainBoltCD) {
     for (let i = 0; i < 3; i++) {
       const a = t + i * Math.PI * 2 / 3;
@@ -564,6 +674,35 @@ export function drawEnemyVfxOver(ctx, {
     ctx.lineTo(x + size * 0.52, y - size * 0.12);
     ctx.stroke();
   }
+  if (role.key === 'ranged') {
+    const readyPulse = enemy.cd <= 10 ? 1 : 0.45 + 0.22 * Math.sin(t * 1.8);
+    ctx.globalAlpha = 0.32 + 0.28 * readyPulse;
+    ctx.fillStyle = role.color;
+    ctx.beginPath();
+    ctx.arc(x + size * 0.48, y - size * 0.16, 2.2 + readyPulse * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+    if (enemy.cd <= 4) {
+      ctx.globalAlpha = 0.38;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + size * 0.48, y - size * 0.16);
+      ctx.lineTo(x + size * 0.78, y - size * 0.20);
+      ctx.stroke();
+    }
+  }
+  if (enemy._aoeAttackWarn || enemy._meteorWarn || (enemy.chainBoltT != null && enemy.chainBoltT < 90)) {
+    const warnCol = enemy._meteorWarn ? '#ff8844' : (enemy.chainBoltT != null ? '#fff700' : '#ff8c00');
+    const pct = enemy._aoeAttackWarn ? 1 - enemy._aoeAttackWarn.timer / Math.max(1, enemy._aoeAttackWarn.maxTimer || 18)
+      : enemy._meteorWarn ? 1 - enemy._meteorWarn.timer / Math.max(1, enemy._meteorWarn.maxTimer || 36)
+      : 1 - Math.max(0, enemy.chainBoltT || 0) / 90;
+    ctx.globalAlpha = 0.30 + pct * 0.40;
+    ctx.strokeStyle = warnCol;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.18, size * (0.70 + pct * 0.30), -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct);
+    ctx.stroke();
+  }
   if (enemy.poisonOnHit) {
     ctx.globalAlpha = 0.45 + 0.20 * Math.sin(t);
     ctx.fillStyle = '#78d64b';
@@ -610,7 +749,12 @@ export function drawEnemyVfxOver(ctx, {
     ctx.fill();
     if (frame % 18 === 0) emitParticle(emitParticleFn, x + Math.cos(a) * size * 0.42, y - size * 0.44, '#ff8c22', 1, 2.5);
   }
-  if (enemy.flying && frame % 8 === 0) emitParticle(emitParticleFn, x - randomRange(-size * 0.6, size * 0.6), y + size * 0.18, col, 1, 1.8);
+  if (enemy.flying && frame % 8 === 0) {
+    emitParticle(emitParticleFn, x - randomRange(-size * 0.6, size * 0.6), y + size * 0.18, col, 1, 1.8);
+    emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y + size * 0.42, '#1a1a22', 1, 1.4);
+  }
+  if (enemy.bossSupport && frame % 16 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y - size * 0.10, role.color || col, 1, 2.1);
+  if (enemy.fromRift && frame % 12 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y + size * 0.28, '#c08aff', 1, 2.2);
   if (enemy.isElite) {
     ctx.globalAlpha = 0.55 + 0.20 * Math.sin(t);
     ctx.strokeStyle = '#ffd700';

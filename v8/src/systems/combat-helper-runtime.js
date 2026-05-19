@@ -1,5 +1,5 @@
 import { ARENA_RIFT_BONUS_GOLD } from './rift-runtime.js';
-import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived as applyHealingReceivedBase } from './combat-healing.js?v=880cef4-shield-visuals';
+import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived as applyHealingReceivedBase } from './combat-healing.js?v=ceeed23-enemy-vfx';
 import { createCombatFeedbackRuntime } from './combat-feedback-runtime.js';
 import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js';
 import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js';

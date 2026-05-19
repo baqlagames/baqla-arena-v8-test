@@ -481,7 +481,8 @@ function handleSniperWindup(enemy, bestTarget, bestDistance, {
   if (bestDistance <= enemy.range && enemy.cd <= 0) {
     windup.charge = windup.chargeMax || 70;
     addDamageText(enemy.x, enemy.y - enemy.size, 'AIMING', '#ff4444', { sz: 12, bold: true });
-    groundEffects.push({ x: bestTarget.x, y: bestTarget.y, r: 0, maxR: 32, life: 0.42, color: '#ff4444' });
+    groundEffects.push({ x: enemy.x, y: enemy.y - enemy.size * 0.25, x2: bestTarget.x, y2: bestTarget.y - bestTarget.size * 0.25, r: 0, maxR: 32, life: 0.72, color: '#ff4444', enemyWarn: true, warnTimer: windup.charge, warnMax: windup.charge, warnKind: 'line', width: 9 });
+    groundEffects.push({ x: bestTarget.x, y: bestTarget.y, r: 0, maxR: 32, life: 0.42, color: '#ff4444', enemyWarn: true, warnTimer: windup.charge, warnMax: windup.charge, warnKind: 'sniper' });
     return true;
   }
   return false;
@@ -504,7 +505,21 @@ function performEnemyBasicAttack(enemy, bestTarget, {
     if (!enemy._aoeAttackWarn) {
       const radius = enemy.splashRadius;
       enemy._aoeAttackWarn = { timer: 18, maxTimer: 18, target: bestTarget };
-      groundEffects.push({ x: bestTarget.x, y: bestTarget.y, r: 0, maxR: radius, life: 0.45, color: '#ff8c00', enemyWarn: true, warnTimer: 18, warnMax: 18, warnKind: 'cleave' });
+      const warnKind = enemy.range > 70 || enemy.arch === 'aoe' ? 'aoe' : 'cleave';
+      groundEffects.push({
+        x: bestTarget.x,
+        y: bestTarget.y,
+        r: 0,
+        maxR: radius,
+        life: 0.45,
+        color: '#ff8c00',
+        enemyWarn: true,
+        warnTimer: 18,
+        warnMax: 18,
+        warnKind,
+        warnAngle: Math.atan2(bestTarget.y - enemy.y, bestTarget.x - enemy.x),
+        warnSpread: 1.05,
+      });
       addDamageText(bestTarget.x, bestTarget.y - bestTarget.size - 6, enemy.arch === 'aoe' ? 'AOE!' : 'CLEAVE!', '#ff8c00', { sz: 11, bold: true });
       emitParticle(enemy.x, enemy.y, '#ff8c00', 5, 2);
       return;

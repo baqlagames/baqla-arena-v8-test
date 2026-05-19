@@ -1,4 +1,4 @@
-import { createArenaSignatures } from './unit-signatures.js?v=880cef4-shield-visuals';
+import { createArenaSignatures } from './unit-signatures.js?v=ceeed23-enemy-vfx';
 import { applyPassiveToUnit, applyUnitPassives } from './unit-passives.js';
 import {
   applyBeaconSplash,

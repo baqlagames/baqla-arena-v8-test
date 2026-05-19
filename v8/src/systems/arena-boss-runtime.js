@@ -4,7 +4,7 @@ import {
   drainHealToBarrier,
   tickAerialBombs,
   updateBoss,
-} from './boss-mechanics.js?v=880cef4-shield-visuals';
+} from './boss-mechanics.js';
 
 export function createArenaBossRuntime(deps) {
   const randomRange = typeof deps.randomRange === 'function'
@@ -44,6 +44,10 @@ export function createArenaBossRuntime(deps) {
     const dmgMult = (boss.bossMinionDmgMult || 0.48) * lateDmgRelief;
     const pointsMult = boss.bossMinionPointsMult || 0.45;
     enemy.bossSupport = true;
+    enemy.bossSupportColor = boss.color || template.color || '#ffaa00';
+    enemy.bossSupportIndex = index || 0;
+    enemy.bossSupportTotal = count || 1;
+    enemy._bossSupportBossName = boss.name || 'Boss';
     enemy.name = bossSupportName(boss, template);
     enemy.maxHp = Math.max(40, Math.round((enemy.maxHp || enemy.hp || 80) * hpMult));
     enemy.hp = enemy.maxHp;

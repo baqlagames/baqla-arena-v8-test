@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js?v=880cef4-shield-visuals';
+import { drawUnitShieldVfx } from './shield-vfx.js?v=ceeed23-enemy-vfx';
 
 export function createBattleSceneRuntime(deps) {
   function render(){
