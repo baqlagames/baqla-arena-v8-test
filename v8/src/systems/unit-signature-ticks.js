@@ -6,6 +6,7 @@ export function tickUnitMeteorAndSignature(unit, {
   enemies,
   bombs,
   arenaTop,
+  perkEffects,
   randomRange,
   groundEffects,
   emitParticle,
@@ -22,6 +23,7 @@ export function tickUnitMeteorAndSignature(unit, {
   const banner = tickUnitSignature(unit, {
     frame,
     enemies,
+    perkEffects,
     randomRange,
     groundEffects,
     emitParticle,
@@ -84,6 +86,7 @@ function tickUnitMeteor(unit, {
 function tickUnitSignature(unit, {
   frame,
   enemies,
+  perkEffects,
   randomRange,
   groundEffects,
   emitParticle,
@@ -106,7 +109,7 @@ function tickUnitSignature(unit, {
 
   if (unit.signature.t < unit.signature.cd) return null;
 
-  const sigRange = unit.signature.id === 'storm_anchor' ? 420 : (unit.arch === 'healer' ? 9999 : (unit.range || 60) + 250);
+  const sigRange = unit.signature.id === 'storm_anchor' ? 340 : (unit.arch === 'healer' ? 360 : Math.min(320, (unit.range || 60) + 160));
   const hasEnemy = enemies.some(enemy => enemy.hp > 0 && dist(unit, enemy) < sigRange);
   if (!hasEnemy) return null;
 
@@ -117,7 +120,8 @@ function tickUnitSignature(unit, {
   } catch (_) {}
   if (!fired) return null;
 
-  unit.signature.t = 0;
+  const sigReduce = Math.max(0, Math.min(0.75, (perkEffects && perkEffects.signatureRemainingReducePct) || 0));
+  unit.signature.t = sigReduce ? Math.min(unit.signature.cd - 1, Math.round(unit.signature.cd * sigReduce)) : 0;
   for (let i = 0; i < 14; i++) {
     const angle = Math.PI * 2 * i / 14;
     emitParticle(unit.x + Math.cos(angle) * unit.size * 1.2, unit.y + Math.sin(angle) * unit.size * 1.2, '#ffd700', 1, 3);

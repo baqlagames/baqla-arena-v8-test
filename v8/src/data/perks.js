@@ -40,6 +40,16 @@ export const ARENA_PERKS = [
     effects: { healerOutputMult: 0.08 },
   },
   {
+    id: 'stunSeed',
+    name: 'Stun Seed',
+    tag: 'Control',
+    unlockStage: 5,
+    cost: 65,
+    color: '#60a5fa',
+    desc: "Each unit's first basic hit every wave stuns a non-boss enemy for 2s.",
+    effects: { openingStunDur: 120 },
+  },
+  {
     id: 'beanMagnet',
     name: 'Bean Magnet',
     tag: 'Meta',
@@ -48,6 +58,16 @@ export const ARENA_PERKS = [
     color: '#a78bfa',
     desc: '+15% Beans from stage victories.',
     effects: { beansBonusPct: 0.15 },
+  },
+  {
+    id: 'sigFlow',
+    name: 'Signature Flow',
+    tag: 'Tempo',
+    unlockStage: 7,
+    cost: 90,
+    color: '#fbbf24',
+    desc: 'Signature cooldowns recover 30% of their remaining timer after setup and after each cast.',
+    effects: { signatureRemainingReducePct: 0.30 },
   },
 ];
 

@@ -1,7 +1,7 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { clamp, dist } from '../core/math.js';
 import { tickEnemyActionStatusEffects } from './combat-status-effects.js';
-import { arenaEngagementBands } from './combat-targeting.js';
+import { arenaEngagementBands, effectiveArenaAttackRange } from './combat-targeting.js';
 
 export function updateArenaEnemyAi(enemy, {
   frame,
@@ -138,6 +138,7 @@ export function updateArenaEnemyAi(enemy, {
     bestDistance = snipe.distance;
   }
   enemy.target = bestTarget;
+  const attackRange = effectiveArenaAttackRange(enemy, { arenaPhase });
 
   if (handleSniperWindup(enemy, bestTarget, bestDistance, {
     frame,
@@ -150,11 +151,11 @@ export function updateArenaEnemyAi(enemy, {
     enemyAttackCooldown,
   })) return;
 
-  if (bestDistance > enemy.range && !enemy._snipeReady) {
+  if (bestDistance > attackRange && !enemy._snipeReady) {
     const approach = enemyApproachPoint(enemy, bestTarget, { arenaTop, arenaBottom, arenaPhase });
     moveToward(enemy, approach.x, approach.y, enemy.speed);
   }
-  if ((bestDistance <= enemy.range || enemy._snipeReady) && enemy.cd <= 0) {
+  if ((bestDistance <= attackRange || enemy._snipeReady) && enemy.cd <= 0) {
     performEnemyBasicAttack(enemy, bestTarget, {
       units,
       groundEffects,
@@ -293,8 +294,9 @@ function handleForcedTarget(enemy, {
   if (enemy.forcedTarget && enemy.forcedTarget.hp > 0) {
     enemy.target = enemy.forcedTarget;
     const forcedDistance = dist(enemy, enemy.forcedTarget);
-    if (forcedDistance > enemy.range) moveToward(enemy, enemy.forcedTarget.x, enemy.forcedTarget.y, enemy.speed);
-    if (forcedDistance <= enemy.range && enemy.cd <= 0) {
+    const attackRange = effectiveArenaAttackRange(enemy, { arenaPhase: true });
+    if (forcedDistance > attackRange) moveToward(enemy, enemy.forcedTarget.x, enemy.forcedTarget.y, enemy.speed);
+    if (forcedDistance <= attackRange && enemy.cd <= 0) {
       enemy.cd = enemyAttackCooldown(enemy);
       applySearingBrandOnBasic(enemy, enemy.forcedTarget);
       applyRoyalStingOnBasic(enemy, enemy.forcedTarget);

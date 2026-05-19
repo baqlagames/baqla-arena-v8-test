@@ -536,11 +536,11 @@ const ABILITIES={
   windSlash(u){ // Jazar Wind Dancer A3 Ã¢â‚¬â€ dash toward nearest enemy slashing
     if(!tryAbility(u,'windSlash','slash',12*GAME_TICK_HZ))return;
     let _wsTarget=null,_wsDist=Infinity;
-    for(const e of enemies){if(e.hp>0){const d=dist(u,e);if(d<250&&d<_wsDist){_wsDist=d;_wsTarget=e}}}
+    for(const e of enemies){if(e.hp>0){const d=dist(u,e);if(d<210&&d<_wsDist){_wsDist=d;_wsTarget=e}}}
     if(!_wsTarget)return;
     const startX=u.x,startY=u.y;
     const ang=Math.atan2(_wsTarget.y-u.y,_wsTarget.x-u.x);
-    const dashLen=Math.min(_wsDist+20,180);
+    const dashLen=Math.min(_wsDist+20,155);
     let _hit=0;
     for(const e of enemies){if(e.hp>0){
       const ex=e.x-startX,ey=e.y-startY;

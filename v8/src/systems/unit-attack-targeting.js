@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { arenaEngagementBands, isArenaRangedActor } from './combat-targeting.js';
+import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor } from './combat-targeting.js';
 
 export function prepareUnitAttackTarget(unit, {
   arena,
@@ -69,8 +69,10 @@ export function prepareUnitAttackTarget(unit, {
 
   unit.target = target;
   let distance = dist(unit, target);
+  let attackRange = unit.range || 40;
+  if (arena && arena.phase === 'wave') attackRange = effectiveArenaAttackRange(unit, { inArena: true });
 
-  if (unit.shadowStep && unit.stealth && unit.stealthHits === 0 && !unit.firstHitDone && distance > unit.range && distance <= unit.shadowStep.range) {
+  if (unit.shadowStep && unit.stealth && unit.stealthHits === 0 && !unit.firstHitDone && distance > attackRange && distance <= unit.shadowStep.range) {
     const fromX = unit.x;
     const fromY = unit.y;
     const offset = unit.shadowStep.landOffset || 25;
@@ -113,8 +115,8 @@ export function prepareUnitAttackTarget(unit, {
   const paladinSpeed = unit.speed * ((unit.mountTimer > 0) ? (unit.mountSpeedMult || 2.8) : chargeSpeed);
   if (unit.paladinHybrid && distance > 50) {
     moveToward(unit, target.x, target.y, paladinSpeed);
-    if (distance > unit.range || unit.cd > 0) return { canAttack: false };
-  } else if (distance > unit.range) {
+    if (distance > attackRange || unit.cd > 0) return { canAttack: false };
+  } else if (distance > attackRange) {
     if (unit.familiar) {
       followFamiliarAnchor(unit);
       return { canAttack: false };
@@ -130,7 +132,7 @@ export function prepareUnitAttackTarget(unit, {
     for (const enemy of enemies) {
       if (enemy.hp > 0 && !enemy.charmed && !enemy.burrowing && !enemy.untargetable) {
         const enemyDistance = dist(unit, enemy);
-        if (enemyDistance <= unit.range && enemyDistance < inRangeDistance) {
+        if (enemyDistance <= attackRange && enemyDistance < inRangeDistance) {
           inRangeDistance = enemyDistance;
           inRangeTarget = enemy;
         }

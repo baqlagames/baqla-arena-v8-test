@@ -34,6 +34,8 @@ export function getPerkEffects(selectedPerks) {
     dpsDamageMult: 0,
     healerOutputMult: 0,
     beansBonusPct: 0,
+    openingStunDur: 0,
+    signatureRemainingReducePct: 0,
   };
   for (const id of selectedPerks || []) {
     const perk = perkById(id);

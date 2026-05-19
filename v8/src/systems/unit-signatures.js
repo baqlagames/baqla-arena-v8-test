@@ -575,7 +575,7 @@ return {
     // Bug fix: was teleporting Vodka to FARTHEST enemy which broke his leash
     // hard. Now leap to NEAREST enemy within 250 px (cap), bounded by leash.
     let best=null,bestD=Infinity;
-    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d<=250&&d<bestD){bestD=d;best=e}}
+    for(const e of enemies){if(e.hp<=0)continue;const d=dist(u,e);if(d<=220&&d<bestD){bestD=d;best=e}}
     if(!best)return;
     const fromX=u.x,fromY=u.y;
     // Leap to target Ã¢â‚¬â€ arena_clampToLeash keeps the unit inside its leash box
@@ -849,7 +849,7 @@ return {
   }},
   killing_spree:{name:'Killing Spree',cd:30,fire(u){
     const _targets=[];
-    for(const e of enemies){if(e.hp>0&&dist(u,e)<300)_targets.push(e)}
+    for(const e of enemies){if(e.hp>0&&dist(u,e)<220)_targets.push(e)}
     if(_targets.length===0)return false;
     _targets.sort(()=>Math.random()-0.5);
     u.killingSpree={targets:_targets.slice(0,5),idx:0,timer:0,interval:18,origX:u.x,origY:u.y};

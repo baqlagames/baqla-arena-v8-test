@@ -38,6 +38,7 @@ export function prepareWaveStartState(arena, units){
       u._hallowedLeapAnim=null;
       u.hallowedLeapShieldTimer=0;
     }
+    u._perkStunUsed=false;
     if(u.cheatDeath)u._cheatDeathUsed=false;
   }
 }

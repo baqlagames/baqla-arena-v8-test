@@ -98,7 +98,7 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
   if(lv>=1)arena_setPassive(u,def.p1,linear,boost);
   if(lv>=3)arena_setPassive(u,def.p2,linear,boost);
   if(unitIdx===3&&u.branch==='a'&&lv>=3){
-    u.hallowedLeap={cd:12*GAME_TICK_HZ,first:4*GAME_TICK_HZ,range:320,radius:90,dmgMult:0.45,tauntDur:2*GAME_TICK_HZ,shieldPct:0.10};
+    u.hallowedLeap={cd:12*GAME_TICK_HZ,first:4*GAME_TICK_HZ,range:240,radius:90,dmgMult:0.45,tauntDur:2*GAME_TICK_HZ,shieldPct:0.10};
     if(u._hallowedLeapT==null)u._hallowedLeapT=u.hallowedLeap.cd-u.hallowedLeap.first;
   }
   // Bakdounes L5: Purify Ã¢â‚¬â€ cleanse grants 4s debuff immunity (base path only)
@@ -391,7 +391,7 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
       break;
     case 'crimsonVial': u.crimsonVial={threshold:0.40,healPct:0.04,dur:4*GAME_TICK_HZ,cd:15*GAME_TICK_HZ,timer:0,active:false,activeTimer:0}; break;
     case 'bladeRush':
-      u.bladeRush={cd:6*GAME_TICK_HZ,every:8*GAME_TICK_HZ,radius:300,dmgMult:1.5*boost,width:35};
+      u.bladeRush={cd:6*GAME_TICK_HZ,every:8*GAME_TICK_HZ,radius:220,dmgMult:1.5*boost,width:35};
       u.bladeGuard={dur:Math.round(3*GAME_TICK_HZ),dr:0.32};
       u.rampageHealPct=0.035;
       u._ragingBlow={every:3,counter:0};
