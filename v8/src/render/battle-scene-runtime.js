@@ -1,3 +1,5 @@
+import { drawUnitShieldVfx } from './shield-vfx.js?v=4bdd8c4-shield-vfx';
+
 export function createBattleSceneRuntime(deps) {
   function render(){
     const view=deps.view();
@@ -404,17 +406,7 @@ export function createBattleSceneRuntime(deps) {
     // arena unit-state visual indicators (shield bubbles, last stand aura, etc.)
     for(const u of units){
       if(!u.isPlayer||u.hp<=0)continue;
-      // Shield bubble (Naana proc on tanks)
-      if(u.shieldHp>0){
-        ctx.save();
-        const sR=u.size+10;
-        ctx.strokeStyle='#ffd700';ctx.globalAlpha=0.6+Math.sin(frame*0.2)*0.2;
-        ctx.lineWidth=2;
-        ctx.beginPath();ctx.arc(u.x,u.y,sR,0,Math.PI*2);ctx.stroke();
-        ctx.fillStyle='#ffd70022';
-        ctx.beginPath();ctx.arc(u.x,u.y,sR,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-      }
+      drawUnitShieldVfx(ctx,{unit:u,x:u.x,y:u.y,size:u.size,frame});
       // Last Stand active aura (Batata)
       if(u.lastStandV6Timer>0){
         ctx.save();

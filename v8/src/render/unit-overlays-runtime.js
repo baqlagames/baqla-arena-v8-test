@@ -17,21 +17,6 @@ export function createUnitOverlaysRuntime(deps) {
       ctx.beginPath();ctx.ellipse(u.x,y-s*1.1,s*0.5,s*0.15,0,0,Math.PI*2);ctx.stroke();
       ctx.restore();
     }
-    if(u._raptureShield&&u._raptureShield.hp>0){
-      ctx.save();const pct=u._raptureShield.hp/u._raptureShield.max;
-      ctx.globalAlpha=0.15+pct*0.25;ctx.strokeStyle='#ffaadd';ctx.lineWidth=2;
-      const _sr=s*1.4;ctx.beginPath();
-      for(let i=0;i<6;i++){const a=Math.PI*2*i/6-Math.PI/6;ctx.lineTo(u.x+Math.cos(a)*_sr,y+Math.sin(a)*_sr)}
-      ctx.closePath();ctx.stroke();ctx.fillStyle='rgba(255,170,221,0.06)';ctx.fill();
-      ctx.restore();
-    }
-    if(u._pwBarrier&&u._pwBarrier.hp>0){
-      ctx.save();const pct=u._pwBarrier.hp/u._pwBarrier.max;
-      ctx.globalAlpha=0.12+pct*0.2;ctx.strokeStyle='#ffaadd';ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.arc(u.x,y,s*1.3,0,Math.PI*2);ctx.stroke();
-      ctx.fillStyle='rgba(255,170,221,0.08)';ctx.beginPath();ctx.arc(u.x,y,s*1.3,0,Math.PI*2);ctx.fill();
-      ctx.restore();
-    }
     if(u._voidform){
       ctx.save();ctx.strokeStyle='#aa66ff';ctx.lineWidth=1.5;ctx.globalAlpha=0.45;
       for(let i=0;i<3;i++){

@@ -2,7 +2,7 @@ import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
 import { createActorOverlayRenderer } from './actor-overlays.js';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=4bdd8c4-shield-vfx';
 import { createActorEnemyRenderer } from './actor-enemy-renderer.js';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
@@ -553,15 +553,6 @@ function drawUnitRaw(u){
   // Golden Shield (Prescient Barrier) Ã¢â‚¬â€ pulsing golden dome + timer
   if(u._goldShield){
     u._goldShield.timer--;
-    const _gsPct=u._goldShield.timer/u._goldShield.maxTimer;
-    ctx.save();
-    ctx.strokeStyle='#ffd700';ctx.lineWidth=2;ctx.globalAlpha=0.35+Math.sin(frame*0.12)*0.15;
-    ctx.beginPath();ctx.arc(u.x,y,u.size+6,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='#ffd700';ctx.globalAlpha=0.08*_gsPct;
-    ctx.beginPath();ctx.arc(u.x,y,u.size+6,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#ffe066';ctx.lineWidth=2;ctx.globalAlpha=0.5*_gsPct;
-    ctx.beginPath();ctx.arc(u.x,y,u.size+6,-Math.PI/2,-Math.PI/2+Math.PI*2*_gsPct);ctx.stroke();
-    ctx.restore();
     if(frame%10===0)addP(u.x+rnd(-u.size,u.size),y-u.size-rnd(2,8),'#ffd700',1,2);
     if(u._goldShield.timer<=0){
       const _rem=u._goldShield.amt;

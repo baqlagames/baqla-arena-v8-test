@@ -1,3 +1,5 @@
+import { drawActorShieldVfx } from './shield-vfx.js?v=4bdd8c4-shield-vfx';
+
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);
 }
@@ -21,8 +23,38 @@ export function playerVfxColor(unit) {
   return unit.accent || unit.color || '#88ddff';
 }
 
+export function unitAttackSpeedVfxState(unit) {
+  if (!unit) return { active: false, color: '#ffaa44', intensity: 0 };
+  const timerValues = [
+    unit.atkSpdBuffTimer,
+    unit._jazarSigHasteTimer,
+    unit._thousandCutsTimer,
+    unit._bladeStormTimer,
+    unit._trueshotAuraTimer,
+    unit.frenzyForceActiveTimer,
+    unit._frenzyBMTimer,
+    unit._enrageBladeTimer,
+    unit.overclock && unit.overclock.active,
+    unit._voidform && unit._voidform.timer,
+    unit._trueshot && Math.max(0, unit._trueshot.dur - unit._trueshot.t),
+  ];
+  const active = timerValues.some(value => Number.isFinite(value) && value > 0)
+    || !!unit.bloodfury
+    || !!unit.frenzyActive
+    || !!(unit.frenzy && unit.frenzy.active);
+  if (!active) return { active: false, color: '#ffaa44', intensity: 0 };
+  const hot = !!(unit.frenzyActive || unit.bloodfury || unit._bladeStormTimer > 0 || unit._thousandCutsTimer > 0);
+  const arcane = !!(unit._voidform || unit._trueshot || unit._trueshotAuraTimer > 0);
+  return {
+    active: true,
+    color: arcane ? '#aa66ff' : hot ? '#ff8844' : '#ffaa44',
+    intensity: hot ? 1 : 0.75,
+  };
+}
+
 export function drawPlayerAuraUnder(ctx, { unit, x, y, size, frame }) {
   const col = playerVfxColor(unit);
+  const haste = unitAttackSpeedVfxState(unit);
   const t = frame * 0.055 + (unit.unitIdx || 0) * 0.7 + (unit.bobPhase || 0);
   const isMinor = !!(unit.isMinion || unit.isMirror || unit.isGhost);
   ctx.save();
@@ -48,6 +80,22 @@ export function drawPlayerAuraUnder(ctx, { unit, x, y, size, frame }) {
     ctx.fillStyle = col;
     ctx.beginPath();
     ctx.ellipse(x, y + size * 0.70, size * 1.05, size * 0.26, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (haste.active) {
+    ctx.globalAlpha = 0.20 + 0.12 * Math.sin(t * 2.2);
+    ctx.strokeStyle = haste.color;
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([7, 5]);
+    ctx.lineDashOffset = -frame * (0.7 + haste.intensity * 0.35);
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.74, size * 1.22, size * 0.30, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.10 + 0.05 * haste.intensity;
+    ctx.fillStyle = haste.color;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.72, size * 1.18, size * 0.28, 0, 0, Math.PI * 2);
     ctx.fill();
   }
   if (unit.arch === 'tank' || unit.taunt) {
@@ -140,8 +188,24 @@ export function drawPlayerAuraOver(ctx, {
   randomRange = fallbackRandomRange,
 }) {
   const col = playerVfxColor(unit);
+  const haste = unitAttackSpeedVfxState(unit);
   const t = frame * 0.075 + (unit.unitIdx || 0) * 0.8 + (unit.bobPhase || 0);
   ctx.save();
+  if (haste.active) {
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = haste.color;
+    ctx.lineWidth = 1.4;
+    for (let i = 0; i < 4; i++) {
+      const a = t * 1.8 + i * Math.PI * 2 / 4;
+      const sx = x + Math.cos(a) * size * 0.78;
+      const sy = y - size * 0.10 + Math.sin(a) * size * 0.38;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx - Math.cos(a) * size * 0.34, sy - Math.sin(a) * size * 0.16);
+      ctx.stroke();
+    }
+    if (frame % 10 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y - randomRange(0, size * 0.75), haste.color, 1, 2);
+  }
   if (unit.arch === 'healer') {
     ctx.globalAlpha = 0.50 + 0.18 * Math.sin(t);
     ctx.strokeStyle = col;
@@ -324,6 +388,7 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
       ctx.stroke();
     }
   }
+  let drewWaveShield = false;
   if (enemy.waveMechanic) {
     const mc = { shield: '#44aaff', banner: '#ffcc44', medic: '#44ff88', ritual: '#aa66ff', exploding: '#ff8844', sniper: '#ff4444' }[enemy.waveMechanic] || '#ffd700';
     ctx.globalAlpha = 0.18 + 0.08 * Math.sin(t * 1.5);
@@ -453,13 +518,12 @@ export function drawEnemyVfxOver(ctx, {
     ctx.arc(x + size * 0.52, y - size * 0.72, 5.4, 0, Math.PI * 2);
     ctx.stroke();
     if (enemy._enemyShield > 0) {
-      ctx.globalAlpha = 0.34;
-      ctx.strokeStyle = '#44aaff';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(x, y - size * 0.05, size + 7, 0, Math.PI * 2);
-      ctx.stroke();
+      drawActorShieldVfx(ctx, { unit: enemy, x, y: y - size * 0.05, size, frame });
+      drewWaveShield = true;
     }
+  }
+  if ((!drewWaveShield && (enemy._shieldHitFx || enemy._shieldBreakFx)) || (!enemy.waveMechanic && (enemy._enemyShield > 0 || enemy.hiveShield))) {
+    drawActorShieldVfx(ctx, { unit: enemy, x, y: y - size * 0.05, size, frame });
   }
   ctx.restore();
 }

@@ -1,4 +1,4 @@
-import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js';
+import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js?v=4bdd8c4-shield-vfx';
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js';
 import { drawBombEffects } from '../render/bombs.js';

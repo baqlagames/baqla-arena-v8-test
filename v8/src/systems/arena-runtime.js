@@ -13,7 +13,7 @@ import { ARENA_UNIT_BRANCHES, ARENA_BASE_SIGNATURES, ARENA_BRANCH_SIGNATURES } f
 import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=20260517-zavs-sprite';
+import { createActorRenderer } from '../render/actor-renderer.js?v=4bdd8c4-shield-vfx';
 import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-nogrid-6x3';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';
@@ -39,7 +39,7 @@ import { createUnitMinionRuntime } from './unit-minion-runtime.js';
 import { createArenaAudio } from './arena-audio.js';
 import { createStageBattleRuntime } from './stage-battle-runtime.js';
 import { createArenaLayoutRuntime } from './arena-layout-runtime.js';
-import { createCombatHelperRuntime } from './combat-helper-runtime.js';
+import { createCombatHelperRuntime } from './combat-helper-runtime.js?v=4bdd8c4-shield-vfx';
 import { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST, createArenaSpellRuntime } from './arena-spell-runtime.js';
 import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js';
 import { createPlacementEconomyRuntime } from './placement-economy-runtime.js?v=77c3c71-upgrade-prices';
@@ -48,12 +48,12 @@ import { createBattleObjectiveRuntime } from './battle-objective-runtime.js';
 import { createArenaScreenUiComposition } from './arena-screen-ui-composition.js';
 import { createArenaGridRuntime } from './arena-grid-runtime.js';
 import { createUnitRuntimeComposition } from './unit-runtime-composition.js';
-import { createArenaCombatEffectsRuntime } from './arena-combat-effects-runtime.js';
+import { createArenaCombatEffectsRuntime } from './arena-combat-effects-runtime.js?v=4bdd8c4-shield-vfx';
 import { createArenaGameStateRuntime } from './arena-game-state-runtime.js';
 import { createArenaBattleArrayRuntime } from './arena-battle-array-runtime.js';
 import { createArenaCodexComposition } from './arena-codex-composition.js';
 import { createArenaInputComposition } from './arena-input-composition.js';
-import { createBattleSceneComposition } from './battle-scene-composition.js';
+import { createBattleSceneComposition } from './battle-scene-composition.js?v=4bdd8c4-shield-vfx';
 import { createArenaShellComposition } from './arena-shell-composition.js';
 
 export function startArena(){

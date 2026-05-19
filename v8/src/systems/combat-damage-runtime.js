@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { ARENA_CAMPAIGN_KILL_BOUNTY_MULT, RESPAWN_FRAMES } from '../data/tuning.js';
-import { absorbEnemyShield, absorbEarthwardenShield, absorbGoldShield, absorbHiveShield, absorbObjectShield, absorbShieldHp, absorbShieldOfVengeance, absorbTimedNumericShield, stopInvalidDamageTarget } from './combat-absorbs.js';
+import { absorbEnemyShield, absorbEarthwardenShield, absorbGoldShield, absorbHiveShield, absorbObjectShield, absorbShieldHp, absorbShieldOfVengeance, absorbTimedNumericShield, stopInvalidDamageTarget } from './combat-absorbs.js?v=4bdd8c4-shield-vfx';
 import { createEnemyKillRewardEvent, resolveDeathPresentation, startSummonerCooldownForDeadMinion } from './combat-death.js';
 import { applyArenaDeathReactionHooks, applyDeathBoom, tryAngelOfMercySave, tryArdentDefenderSave, tryArenaDeathBranchHooks, tryCheatDeathSave, tryGhostOnDeath } from './combat-death-hooks.js';
 import { applyPlayerSpecialDefenses, applyPreShieldPlayerReactions, applySoulLinkRedirect, triggerGalacticGuardian, triggerPrayerOfMending, tryGuardianSpiritSave } from './combat-defense-reactions.js';
@@ -20,6 +20,8 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
       emitParticle: ctx.emitParticle,
       addDamageText: ctx.addDamageText,
       showFlash: ctx.showFlash,
+      groundEffects: ctx.groundEffects,
+      frame: ctx.frame,
     });
     raw = absorb.raw;
     if (absorb.blocked) return;
@@ -28,6 +30,8 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
     const absorb = absorbEnemyShield(target, raw, {
       emitParticle: ctx.emitParticle,
       addDamageText: ctx.addDamageText,
+      groundEffects: ctx.groundEffects,
+      frame: ctx.frame,
     });
     raw = absorb.raw;
     if (absorb.blocked) return;
@@ -51,6 +55,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
           groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
         });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
@@ -75,6 +80,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
           groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
         });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
@@ -106,6 +112,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           frame: ctx.frame,
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
         });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
@@ -119,6 +126,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           frame: ctx.frame,
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
         });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
@@ -133,17 +141,28 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
           textColor: '#ff6688',
+          groundEffects: ctx.groundEffects,
         });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
       }
       {
-        const absorb = absorbShieldHp(target, dmg, { emitParticle: ctx.emitParticle });
+        const absorb = absorbShieldHp(target, dmg, {
+          emitParticle: ctx.emitParticle,
+          addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
+        });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
       }
       {
-        const absorb = absorbShieldOfVengeance(target, dmg, { emitParticle: ctx.emitParticle });
+        const absorb = absorbShieldOfVengeance(target, dmg, {
+          emitParticle: ctx.emitParticle,
+          addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
+        });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
       }
@@ -153,6 +172,9 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           color: '#88ddff',
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
+          type: 'ice',
           particleCount: 4,
           particleSize: 2,
         });
@@ -182,6 +204,9 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           color: '#9b59b6',
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
+          type: 'pact',
           text: 'PACT',
         });
         dmg = absorb.dmg;
@@ -193,6 +218,9 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           color: '#44aaff',
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
+          type: 'engineer',
         });
         dmg = absorb.dmg;
         if (absorb.blocked) return;
@@ -203,6 +231,9 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           color: '#ffaadd',
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
+          type: 'priest',
           particleCount: 6,
           particleSize: 3,
         });
@@ -215,6 +246,9 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           color: '#ffaadd',
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
+          groundEffects: ctx.groundEffects,
+          frame: ctx.frame,
+          type: 'rapture',
           particleCount: 4,
           particleSize: 2,
         });

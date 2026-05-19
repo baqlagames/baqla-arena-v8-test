@@ -1,3 +1,5 @@
+import { emitShieldAbsorbFx } from './shield-vfx-events.js?v=4bdd8c4-shield-vfx';
+
 export function stopInvalidDamageTarget(target, {
   frame,
   emitParticle,
@@ -22,6 +24,8 @@ export function absorbHiveShield(target, raw, attacker, {
   emitParticle,
   addDamageText,
   showFlash,
+  groundEffects,
+  frame,
 }) {
   if (!Number.isFinite(raw) || raw <= 0) return { raw: 0, blocked: true };
   if (!target.hiveShield || target.hiveShield.hp <= 0) return { raw, blocked: false };
@@ -39,10 +43,11 @@ export function absorbHiveShield(target, raw, attacker, {
       addDamageText(attacker.x, attacker.y - attacker.size, 'REFLECT -' + reflected, '#ffdd44');
     }
   }
-  emitParticle(target.x, target.y, '#ffdd44', 4, 3);
+  emitShieldAbsorbFx(target, { type: 'hive', color: '#ffdd44', amount: absorb, frame, emitParticle, groundEffects, particleCount: 4, particleSize: 3 });
   if (target.hiveShield.hp <= 0) {
     if (target.hiveShield.royalCarapace) target._royalCarapaceBroken = true;
     else showFlash('HIVE SHIELD BROKEN!', '#ffdd44', 40);
+    emitShieldAbsorbFx(target, { type: 'hive', color: '#ffdd44', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: 'HIVE BREAK' });
     target.hiveShield = null;
   }
   return { raw: leftover, blocked: leftover <= 0 };
@@ -51,6 +56,8 @@ export function absorbHiveShield(target, raw, attacker, {
 export function absorbEnemyShield(target, raw, {
   emitParticle,
   addDamageText,
+  groundEffects,
+  frame,
 }) {
   if (!Number.isFinite(raw) || raw <= 0) return { raw: 0, blocked: true };
   if (!target.isEnemy || target.isBoss || target.isBarrier || target._enemyShield <= 0) return { raw, blocked: false };
@@ -61,10 +68,10 @@ export function absorbEnemyShield(target, raw, {
   const absorb = Math.min(raw, target._enemyShield);
   target._enemyShield -= absorb;
   const leftover = raw - absorb;
-  emitParticle(target.x, target.y, '#44aaff', 5, 2.5);
+  emitShieldAbsorbFx(target, { type: 'enemy', color: '#44aaff', amount: absorb, frame, emitParticle, groundEffects, particleCount: 5, particleSize: 2.5 });
   if (target._enemyShield <= 0) {
     target._enemyShield = 0;
-    addDamageText(target.x, target.y - target.size, 'SHIELD BREAK', '#44aaff', { sz: 11, bold: true });
+    emitShieldAbsorbFx(target, { type: 'enemy', color: '#44aaff', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText });
   }
   return { raw: leftover, blocked: leftover <= 0 };
 }
@@ -83,11 +90,10 @@ export function absorbGoldShield(target, dmg, {
   const absorb = Math.min(dmg, target._goldShield.amt);
   target._goldShield.amt -= absorb;
   const nextDmg = dmg - absorb;
-  emitParticle(target.x, target.y, '#ffd700', 6, 3);
+  emitShieldAbsorbFx(target, { type: 'gold', color: '#ffd700', amount: absorb, frame, emitParticle, groundEffects, particleCount: 6, particleSize: 3 });
   if (target._goldShield.amt <= 0) {
     target._goldShield = null;
-    addDamageText(target.x, target.y - target.size, 'SHIELD BREAK', '#ffd700');
-    groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: target.size + 14, life: 0.3, color: '#ffd700' });
+    emitShieldAbsorbFx(target, { type: 'gold', color: '#ffd700', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText });
   }
   return { dmg: nextDmg, blocked: nextDmg <= 0 };
 }
@@ -106,9 +112,19 @@ export function absorbEarthwardenShield(target, dmg, {
   const absorb = Math.min(dmg, target.earthwardenShield);
   target.earthwardenShield -= absorb;
   const nextDmg = dmg - absorb;
-  emitParticle(target.x, target.y, '#6b8e23', 12, 4);
-  emitParticle(target.x, target.y, '#aaffaa', 6, 3);
-  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: target.size * 1.3, life: 0.3, color: '#6b8e23' });
+  emitShieldAbsorbFx(target, {
+    type: 'earthwarden',
+    color: '#6b8e23',
+    amount: absorb,
+    broken: target.earthwardenShield <= 0,
+    frame,
+    emitParticle,
+    groundEffects,
+    addDamageText,
+    particleCount: 12,
+    particleSize: 4,
+  });
+  if (emitParticle) emitParticle(target.x, target.y, '#aaffaa', 6, 3);
   return { dmg: nextDmg, blocked: nextDmg <= 0 };
 }
 
@@ -121,6 +137,7 @@ export function absorbTimedNumericShield(target, dmg, {
   emitParticle,
   addDamageText,
   textColor,
+  groundEffects,
 }) {
   if (!Number.isFinite(dmg) || dmg <= 0) return { dmg: 0, blocked: true };
   if (target[amountKey] <= 0 || target[timerKey] <= 0) return { dmg, blocked: false };
@@ -131,12 +148,26 @@ export function absorbTimedNumericShield(target, dmg, {
   const absorb = Math.min(dmg, target[amountKey]);
   target[amountKey] -= absorb;
   const nextDmg = dmg - absorb;
-  emitParticle(target.x, target.y, color, 5, 2);
+  emitShieldAbsorbFx(target, {
+    type: String(label || amountKey || 'shield').toLowerCase(),
+    color,
+    amount: absorb,
+    broken: target[amountKey] <= 0,
+    frame,
+    emitParticle,
+    groundEffects,
+    addDamageText,
+    breakText: (label || 'SHIELD') + ' BREAK',
+    text: textColor ? null : null,
+  });
   return { dmg: nextDmg, blocked: nextDmg <= 0 };
 }
 
 export function absorbShieldHp(target, dmg, {
   emitParticle,
+  addDamageText,
+  groundEffects,
+  frame,
 }) {
   if (!Number.isFinite(dmg) || dmg <= 0) return { dmg: 0, blocked: true };
   if (target.shieldHp <= 0) return { dmg, blocked: false };
@@ -147,12 +178,26 @@ export function absorbShieldHp(target, dmg, {
   const absorb = Math.min(dmg, target.shieldHp);
   target.shieldHp -= absorb;
   const nextDmg = dmg - absorb;
-  emitParticle(target.x, target.y, '#ffd700', 6, 3);
+  emitShieldAbsorbFx(target, {
+    type: 'naana',
+    color: '#ffd700',
+    amount: absorb,
+    broken: target.shieldHp <= 0,
+    frame,
+    emitParticle,
+    groundEffects,
+    addDamageText,
+    particleCount: 6,
+    particleSize: 3,
+  });
   return { dmg: nextDmg, blocked: nextDmg <= 0 };
 }
 
 export function absorbShieldOfVengeance(target, dmg, {
   emitParticle,
+  addDamageText,
+  groundEffects,
+  frame,
 }) {
   if (!Number.isFinite(dmg) || dmg <= 0) return { dmg: 0, blocked: true };
   if (!target.shieldOfVengeance || !target.shieldOfVengeance.active || target.shieldOfVengeanceHp <= 0) return { dmg, blocked: false };
@@ -164,7 +209,19 @@ export function absorbShieldOfVengeance(target, dmg, {
   target.shieldOfVengeanceHp -= absorb;
   target.shieldOfVengeance.absorbed += absorb;
   const nextDmg = dmg - absorb;
-  emitParticle(target.x, target.y, '#ffd700', 6, 3);
+  emitShieldAbsorbFx(target, {
+    type: 'vengeance',
+    color: '#ffe066',
+    amount: absorb,
+    broken: target.shieldOfVengeanceHp <= 0,
+    frame,
+    emitParticle,
+    groundEffects,
+    addDamageText,
+    breakText: 'VENGEANCE',
+    particleCount: 6,
+    particleSize: 3,
+  });
   return { dmg: nextDmg, blocked: nextDmg <= 0 };
 }
 
@@ -178,6 +235,9 @@ export function absorbObjectShield(target, dmg, {
   textYOffset = 0.5,
   particleCount = 8,
   particleSize = 3,
+  groundEffects,
+  frame,
+  type = shieldKey,
 }) {
   if (!Number.isFinite(dmg) || dmg <= 0) return { dmg: 0, blocked: true };
   const shield = target[shieldKey];
@@ -189,6 +249,18 @@ export function absorbObjectShield(target, dmg, {
   const absorb = Math.min(dmg, shield[hpKey]);
   shield[hpKey] -= absorb;
   const nextDmg = dmg - absorb;
-  emitParticle(target.x, target.y, color, particleCount, particleSize);
+  emitShieldAbsorbFx(target, {
+    type,
+    color,
+    amount: absorb,
+    broken: shield[hpKey] <= 0,
+    frame,
+    emitParticle,
+    groundEffects,
+    addDamageText,
+    breakText: text ? text + ' BREAK' : 'SHIELD BREAK',
+    particleCount,
+    particleSize,
+  });
   return { dmg: nextDmg, blocked: nextDmg <= 0 };
 }
