@@ -33,7 +33,6 @@ export function createUnitUpdateRuntime(deps) {
       arena_isBatataBacklineAlly,arena_isZavsMeleeAlly,lobBomb,arena_findEmergencyTarget,
       showFlash
     }=deps;
-    const activePerkEffects=typeof deps.perkEffects==='function'?deps.perkEffects()||{}:{};
 
   if(u.hp<=0)return;
   if(u.familiar&&(!u.parent||u.parent.hp<=0)){u.hp=0;u.removed=true;return}
@@ -90,7 +89,6 @@ export function createUnitUpdateRuntime(deps) {
     enemies,
     bombs,
     arenaTop:ARENA_TOP,
-    perkEffects: activePerkEffects,
     randomRange:rnd,
     groundEffects:groundFx,
     emitParticle:addP,
@@ -494,12 +492,6 @@ export function createUnitUpdateRuntime(deps) {
     addDamageText:addDmg,
     shake:value=>{deps.shake(value);}
   });
-  if(activePerkEffects.openingStunDur&&!u._perkStunUsed&&t&&t.hp>0&&!t.isBoss){
-    t.stunned=Math.max(t.stunned||0,Math.round(activePerkEffects.openingStunDur));
-    u._perkStunUsed=true;
-    addP(t.x,t.y,'#60a5fa',12,4);
-    addDmg(t.x,t.y-t.size-4,'STUN SEED','#60a5fa',{sz:12,bold:true});
-  }
   applyCoreFamilyOnHitProcs(u,t,{
     ohTier:_ohTier,
     damage:dmg,

@@ -62,10 +62,6 @@ export function createUnitPassiveRuntime(deps = {}) {
       if ((u.arch === 'melee' || u.arch === 'ranged' || u.arch === 'paladin' || u.arch === 'caster') && effects.dpsDamageMult) {
         u.dmg = Math.max(1, Math.round((u.dmg || 1) * (1 + effects.dpsDamageMult)));
       }
-      if (u.signature && effects.signatureRemainingReducePct) {
-        const remaining = Math.max(0, u.signature.cd - u.signature.t);
-        u.signature.t = Math.min(u.signature.cd - 1, u.signature.t + Math.round(remaining * effects.signatureRemainingReducePct));
-      }
       u._perkTuned = true;
     }
     return result;

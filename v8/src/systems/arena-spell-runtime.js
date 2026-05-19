@@ -135,6 +135,22 @@ export function createArenaSpellRuntime(deps = {}) {
         if (typeof deps.addCrystal === 'function') deps.addCrystal(ability.crystalGain);
         addParticle((v.width || 500) / 2, (v.height || 1000) / 2, '#9b59b6', 24, 5);
       }
+      if (ability.stunDur) {
+        for (const enemy of enemies) {
+          if (enemy.hp <= 0 || enemy.isBoss) continue;
+          enemy.stunned = Math.max(enemy.stunned || 0, ability.stunDur);
+          addParticle(enemy.x, enemy.y, ability.color, 8, 3);
+        }
+      }
+      if (ability.signatureReducePct) {
+        const pct = Math.max(0, Math.min(0.75, ability.signatureReducePct));
+        for (const unit of units) {
+          if (unit.hp <= 0 || !unit.signature) continue;
+          const remaining = Math.max(0, unit.signature.cd - unit.signature.t);
+          unit.signature.t = Math.min(unit.signature.cd - 1, unit.signature.t + Math.round(remaining * pct));
+          addParticle(unit.x, unit.y, ability.color, 6, 3);
+        }
+      }
     }
 
     showFlash(ability.name.toUpperCase() + '!', ability.color, 40);
