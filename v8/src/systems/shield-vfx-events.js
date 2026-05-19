@@ -72,7 +72,6 @@ export function emitShieldAbsorbFx(target, {
     safeCall(addDamageText, target.x, target.y - (target.size || 16), label + Math.round(amount), color, {
       sz: 10,
       bold: target.arch === 'tank' || target.taunt,
-      tag: 'S',
       tagColor: color,
     });
   }

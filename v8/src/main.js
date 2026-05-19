@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=9d6b186-combat-feedback';
+import { startArena } from './systems/arena-runtime.js?v=72b1f6b-damage-tags';
 
 startArena();

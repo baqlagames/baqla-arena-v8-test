@@ -4,9 +4,12 @@ import {
   ARENA_PLAYER_ARMOR_TYPE,
   ARENA_UNIT_SIZE_SCALE,
   HP_MULT_PLAYER,
-} from '../data/tuning.js?v=9d6b186-combat-feedback';
+} from '../data/tuning.js';
 import { ARENA_UNIT_BRANCHES } from '../data/passives.js';
 import { arena_isCapstoneLevel } from './squad-economy.js';
+
+const ARENA_PLAYER_UNIT_SIZE_MULT = 0.88;
+const ARENA_PLAYER_MINION_SIZE_MULT = 0.74;
 
 export function snapshotSquadCooldowns(cells) {
   const out = {};
@@ -77,7 +80,7 @@ export function createSquadUnitFromCell({
     ...stats,
     x,
     y,
-    size: (stats.size || 16) * ARENA_UNIT_SIZE_SCALE,
+    size: (stats.size || 16) * ARENA_UNIT_SIZE_SCALE * ARENA_PLAYER_UNIT_SIZE_MULT,
     maxHp: hp,
     hp,
     unitIdx: cell.unitIdx,
@@ -205,7 +208,7 @@ function existingMinionCount(units, parent, kind) {
 }
 
 function scaledMinionSize(size) {
-  return Math.max(7, Math.round((size || 12) * 0.84));
+  return Math.max(7, Math.round((size || 12) * ARENA_PLAYER_MINION_SIZE_MULT));
 }
 
 function createMechEscortTurret(parent, offset) {

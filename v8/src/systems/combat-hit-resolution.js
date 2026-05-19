@@ -152,22 +152,24 @@ function damageTypeVisual({ dmgType, attacker, attackTypeOverride, opts }) {
   const projType = (opts && opts.projType) || attackTypeOverride || (attacker && attacker.projType) || (attacker && attacker.attackType) || '';
   let key = dmgType === 'magic' ? 'magic' : 'physical';
   if (projType === 'pierce') key = 'pierce';
-  else if (projType === 'fire' || (attacker && attacker.unitIdx === 6 && (!attacker.branch || attacker.branch === 'base'))) key = 'fire';
-  else if (projType === 'frost' || projType === 'ice') key = 'frost';
-  else if (projType === 'lightning') key = 'lightning';
-  else if (projType === 'holy') key = 'holy';
-  else if (projType === 'poison' || (attacker && attacker.poisonOnHit)) key = 'poison';
-  else if (projType === 'curse' || projType === 'voidShard' || projType === 'voidOrb' || projType === 'voidBolt') key = 'shadow';
+  else if (projType === 'poison' || projType === 'toxic' || projType === 'curse' || (attacker && attacker.poisonOnHit)) key = 'dot';
+  else if (
+    projType === 'fire' ||
+    projType === 'frost' ||
+    projType === 'ice' ||
+    projType === 'lightning' ||
+    projType === 'holy' ||
+    projType === 'shadow' ||
+    projType === 'voidShard' ||
+    projType === 'voidOrb' ||
+    projType === 'voidBolt' ||
+    (attacker && attacker.unitIdx === 6 && (!attacker.branch || attacker.branch === 'base'))
+  ) key = 'magic';
   const table = {
     physical: { tag: 'P', color: '#ff4444', tagColor: '#ff4444' },
     pierce: { tag: 'R', color: '#ff6b4a', tagColor: '#f59e0b' },
     magic: { tag: 'M', color: '#aa66ff', tagColor: '#aa66ff' },
-    poison: { tag: 'T', color: '#78d64b', tagColor: '#78d64b' },
-    fire: { tag: 'F', color: '#ff6a22', tagColor: '#ff6a22' },
-    frost: { tag: 'I', color: '#66d9ff', tagColor: '#66d9ff' },
-    lightning: { tag: 'L', color: '#ffe85a', tagColor: '#ffe85a' },
-    holy: { tag: 'H', color: '#ffe066', tagColor: '#ffe066' },
-    shadow: { tag: 'S', color: '#b36bff', tagColor: '#b36bff' },
+    dot: { tag: 'D', color: '#78d64b', tagColor: '#78d64b' },
   };
   return table[key] || table.physical;
 }

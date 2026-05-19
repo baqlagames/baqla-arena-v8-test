@@ -90,9 +90,10 @@ export function combatStatsEntry(stats, bucket, actor) {
 
 function normalizeDamageType(type) {
   const value = String(type || '').toLowerCase();
-  if (value === 'fire' || value === 'frost' || value === 'ice' || value === 'lightning' || value === 'poison' || value === 'holy' || value === 'shadow') return value;
+  if (value === 'poison' || value === 'toxic' || value === 'curse') return 'dot';
+  if (value === 'fire' || value === 'frost' || value === 'ice' || value === 'lightning' || value === 'holy' || value === 'shadow') return 'magic';
   if (value === 'pierce' || value === 'physical' || value === 'magic') return value;
-  if (value === 'curse' || value === 'void' || value === 'voidbolt' || value === 'voidorb' || value === 'voidshard') return 'shadow';
+  if (value === 'void' || value === 'voidbolt' || value === 'voidorb' || value === 'voidshard') return 'magic';
   if (value === 'normal') return 'physical';
   return 'physical';
 }

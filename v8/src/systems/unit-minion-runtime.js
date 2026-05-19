@@ -1,5 +1,5 @@
-import { MINION_NERF, UNIT_VISUAL_SCALE } from '../data/tuning.js?v=9d6b186-combat-feedback';
-import { spawnSquadAttachedMinions } from './squad-lifecycle.js?v=9d6b186-combat-feedback';
+import { MINION_NERF, UNIT_VISUAL_SCALE } from '../data/tuning.js';
+import { spawnSquadAttachedMinions } from './squad-lifecycle.js?v=72b1f6b-damage-tags';
 
 export function createUnitMinionRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
@@ -42,7 +42,7 @@ export function createUnitMinionRuntime(deps = {}) {
 
   function softenMinionVisuals(minion) {
     if (!minion || minion._minionVisualReduced) return minion;
-    minion.size = Math.max(7, Math.round((minion.size || 12) * 0.84));
+    minion.size = Math.max(7, Math.round((minion.size || 12) * 0.74));
     minion._minionVisualReduced = true;
     return minion;
   }

@@ -2,7 +2,7 @@ import { PLAYER_UNITS, VODKA } from '../data/units.js';
 import { HP_MULT_PLAYER, UNIT_VISUAL_SCALE } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { arena_isCapstoneLevel, arena_pathUpgradeCost, arena_unitGoldCost, arena_upgradeCostFor, sellRefundForCell } from './squad-economy.js?v=77c3c71-upgrade-prices';
 import { canPlaceArenaSquadUnit, placeArenaSquadUnit, sellArenaSquadCell, upgradeArenaSquadCell } from './squad-runtime-actions.js';
-import { respawnSquadFromCells } from './squad-lifecycle.js?v=9d6b186-combat-feedback';
+import { respawnSquadFromCells } from './squad-lifecycle.js?v=72b1f6b-damage-tags';
 
 export function createPlacementEconomyRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

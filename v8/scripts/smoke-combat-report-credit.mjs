@@ -265,7 +265,7 @@ function testDamageTakenTypeShieldAndEnemyRoleReports() {
   recordCombatPrevented(stats, tank, casterEnemy, 80, { kind: 'guard' });
   const entry = entryFor(stats, tank);
   assert(entry.damageTaken === 140, 'player damage taken should be tracked');
-  assert(entry.damageTakenByType.fire === 140, 'damage taken should split by damage type');
+  assert(entry.damageTakenByType.magic === 140, 'elemental damage taken should group under magic');
   assert(entry.damageTakenByRole.caster === 140, 'damage taken should split by enemy role');
   assert(entry.shieldPrevented === 80, 'shield prevented value should be tracked');
   assert(entry.shieldPreventedByType.guard === 80, 'shield prevented should split by shield kind');

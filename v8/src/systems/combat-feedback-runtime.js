@@ -6,7 +6,7 @@ import {
   recordCombatHeal,
   recordCombatPrevented,
   startCombatRound,
-} from './combat-stats.js?v=9d6b186-combat-feedback';
+} from './combat-stats.js?v=72b1f6b-damage-tags';
 import { applyTrackedHeal } from './combat-healing.js';
 
 export function createCombatFeedbackRuntime(deps) {
