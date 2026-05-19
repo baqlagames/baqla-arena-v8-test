@@ -11,6 +11,9 @@ import {
   arena_lateStageNormalDurabilityMult,
   arena_lateStageRoleHpMult,
   arena_roundsForStage,
+  arena_stageIncome,
+  arena_stageStartGold,
+  arena_campaignKillBountyStageMult,
 } from '../src/systems/stage-economy.js';
 import { createStageFlowRuntime } from '../src/systems/stage-flow-runtime.js';
 import {
@@ -223,6 +226,22 @@ function assertLateBossPacing() {
   return lateBossStages.length;
 }
 
+function assertEarlyEconomyTuning() {
+  const startGold = [1, 2, 3, 4, 5].map(arena_stageStartGold);
+  const incomes = [1, 2, 3, 4, 5].map(arena_stageIncome);
+  const bounties = [1, 2, 3, 4, 5].map(arena_campaignKillBountyStageMult);
+  assert(startGold[0] <= 120 && startGold[4] <= 140, `early start gold still too high: ${startGold.join(',')}`);
+  assert(incomes[0] <= 13 && incomes[4] <= 26, `early income still too high: ${incomes.join(',')}`);
+  assert(bounties[0] < 0.85 && bounties[4] <= 0.91, `early kill bounties still too high: ${bounties.join(',')}`);
+  for (let i = 1; i < startGold.length; i++) {
+    assert(startGold[i] >= startGold[i - 1], 'early start gold should not go down between stages');
+    assert(incomes[i] >= incomes[i - 1], 'early income should not go down between stages');
+    assert(bounties[i] >= bounties[i - 1], 'early bounty multiplier should not go down between stages');
+  }
+  return { startGold, incomes, bounties };
+}
+
+const economySummary = assertEarlyEconomyTuning();
 const championSummary = assertChampionTuning();
 const lateBosses = assertLateBossPacing();
 let simulatedRounds = 0;
@@ -258,4 +277,5 @@ for (let seed = 1; seed <= 8; seed++) {
 
 console.log(`Long-run balance smoke passed: ${simulatedRounds} seeded rounds, ${simulatedActors} actors.`);
 console.log(`Champion checks: ${championSummary.champions} final-wave champions, ${championSummary.rangedChampions} ranged AoE champions; late boss pacing checks: ${lateBosses}.`);
+console.log(`Early economy: start ${economySummary.startGold.join('/')}, income ${economySummary.incomes.join('/')}, bounty x${economySummary.bounties.map(n => n.toFixed(2)).join('/')}.`);
 console.log(`Seeded budget totals: hp ${Math.round(totalHp)}, damage ${Math.round(totalDmg)}.`);

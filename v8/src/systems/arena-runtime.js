@@ -27,7 +27,7 @@ import { completeCombatStats, getRoundCombatReport, getStageCombatReport } from 
 import { tickEnemyPostUpdateStatusEffects } from './combat-status-effects.js';
 import { perkSlotCount, stageBeansReward } from './perks.js';
 import { createStageFlowRuntime } from './stage-flow-runtime.js?v=5d94d7b-early-pressure';
-import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js';
+import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js?v=6a2e89d-early-economy';
 import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260517-grid-calibration';
 import { createArenaBossRuntime } from './arena-boss-runtime.js';
 import { tickTimedFieldEffects } from './timed-field-effects.js';

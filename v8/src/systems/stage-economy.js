@@ -6,7 +6,7 @@ import {
 
 export function arena_stageStartGold(stageN) {
   stageN = stageN || 1;
-  if (stageN <= 5) return 150;
+  if (stageN <= 5) return 110 + stageN * 5;
   if (stageN <= 10) return 210;
   if (stageN <= 15) return 250;
   if (stageN <= 20) return 315;
@@ -15,7 +15,7 @@ export function arena_stageStartGold(stageN) {
 
 function arena_campaignIncomeCompression(stageN) {
   stageN = stageN || 1;
-  if (stageN <= 5) return 1.00;
+  if (stageN <= 5) return 0.84 + stageN * 0.02;
   if (stageN <= 10) return 1.14;
   if (stageN <= 15) return 1.08;
   if (stageN <= 20) return 1.14;
@@ -29,7 +29,7 @@ export function arena_stageIncome(stageN) {
 
 export function arena_campaignKillBountyStageMult(stageN) {
   stageN = stageN || 1;
-  if (stageN <= 5) return 1.00;
+  if (stageN <= 5) return 0.80 + stageN * 0.02;
   if (stageN <= 10) return 0.92 + Math.max(0, stageN - 6) * 0.018;
   if (stageN <= 15) return 0.86 + Math.max(0, stageN - 11) * 0.012;
   if (stageN <= 20) return 0.91 + Math.max(0, stageN - 16) * 0.010;

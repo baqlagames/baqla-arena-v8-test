@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=5d94d7b-early-pressure';
+import { startArena } from './systems/arena-runtime.js?v=6a2e89d-early-economy';
 
 startArena();
