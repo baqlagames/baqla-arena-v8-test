@@ -1,6 +1,6 @@
 import { clamp, rnd } from '../core/math.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
-import { ARENA_L, ARENA_R } from '../data/tuning.js';
+import { ARENA_L, ARENA_R } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
 
 function royalCarapaceShieldHp(boss) {

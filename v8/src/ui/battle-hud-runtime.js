@@ -195,18 +195,18 @@ function arena_drawCombatRoundChip(){
 function arena_resultButtonRects(){
   return getResultButtonRects(W,H);
 }
-function arena_drawCombatReportPanel(title,subtitle,damageList,healList,x,y,w,h,accent){
-  return drawResultCombatReportPanel(ctx,{title,subtitle,damageList,healList,x,y,w,h,accent,formatValue:arena_statsFormat});
+function arena_drawCombatReportPanel(report,x,y,w,h){
+  return drawResultCombatReportPanel(ctx,{...report,x,y,w,h,formatValue:arena_statsFormat});
 }
 function arena_drawRoundCombatReport(x,y,w,h){
   const report=getRoundCombatReport(v8CombatStats);
   if(!report)return false;
-  return arena_drawCombatReportPanel(report.title,report.subtitle,report.damageList,report.healList,x,y,w,h,report.accent);
+  return arena_drawCombatReportPanel(report,x,y,w,h);
 }
 function arena_drawStageCombatReport(x,y,w,h){
   const report=getStageCombatReport(v8CombatStats,GAME_TICK_HZ);
   if(!report)return false;
-  return arena_drawCombatReportPanel(report.title,report.subtitle,report.damageList,report.healList,x,y,w,h,report.accent);
+  return arena_drawCombatReportPanel(report,x,y,w,h);
 }
 function arena_activeSpellButtons(){
   return selectedSpells.map((abilityIdx,slotIdx)=>{

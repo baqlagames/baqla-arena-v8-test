@@ -66,6 +66,16 @@ export function emitShieldAbsorbFx(target, {
   markShieldHit(target, { type, color, amount, frame });
   safeCall(emitParticle, target.x, target.y, color, particleCount, particleSize);
   if (text) safeCall(addDamageText, target.x, target.y - (target.size || 16), text, color, { sz: 10, bold: true });
+  else if (!broken && target.isPlayer && amount >= 12 && frame - (target._lastAbsorbTextFrame || -999) > 24) {
+    target._lastAbsorbTextFrame = frame;
+    const label = target.arch === 'tank' || target.taunt ? 'BLOCK ' : 'ABSORB ';
+    safeCall(addDamageText, target.x, target.y - (target.size || 16), label + Math.round(amount), color, {
+      sz: 10,
+      bold: target.arch === 'tank' || target.taunt,
+      tag: 'S',
+      tagColor: color,
+    });
+  }
   if (!broken) return;
   markShieldBreak(target, { type, color, amount, frame });
   safeCall(addDamageText, target.x, target.y - (target.size || 16), breakText, color, { sz: 11, bold: true });

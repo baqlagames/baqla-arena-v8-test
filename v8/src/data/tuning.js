@@ -7,7 +7,7 @@ export const HP_MULT_ENEMY=1.10;
 
 export const MINION_NERF=0.70;
 
-export const UNIT_VISUAL_SCALE=1.20;
+export const UNIT_VISUAL_SCALE=1.10;
 
 export const ARENA_L=24,ARENA_R=476,ARENA_TOP_BASE=42;
 

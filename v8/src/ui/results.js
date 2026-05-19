@@ -1,6 +1,7 @@
 // Victory/defeat and combat report screen composition.
 
-import { drawStatsColumn } from './stats-column.js';
+import { drawStatsColumn } from './stats-column.js?v=9d6b186-combat-feedback';
+import { fitCanvasText } from '../render/primitives.js';
 
 export function resultButtonRects(width,height){
   const by=Math.max(500,height-128);
@@ -14,7 +15,9 @@ export function resultButtonRects(width,height){
 export function drawCombatReportPanel(ctx,view){
   const damageList=view.damageList||[];
   const healList=view.healList||[];
-  const hasRows=damageList.length||healList.length;
+  const damageTakenList=view.damageTakenList||[];
+  const shieldList=view.shieldList||[];
+  const hasRows=damageList.length||healList.length||damageTakenList.length||shieldList.length;
   if(!hasRows)return false;
 
   const { title, subtitle, x, y, w, h } = view;
@@ -29,13 +32,36 @@ export function drawCombatReportPanel(ctx,view){
   ctx.fillStyle='#ffffff';ctx.font='900 12px Segoe UI, Arial';ctx.fillText(title,x+14,y+19);
   ctx.fillStyle='rgba(200,206,220,0.72)';ctx.font='800 7.5px Segoe UI, Arial';
   ctx.fillText(subtitle,x+14,y+31);
+  if(view.enemyRoleDamageList&&view.enemyRoleDamageList.length){
+    const roles=view.enemyRoleDamageList.slice(0,3).map(r=>String(r.name||'role').toUpperCase()+': '+(view.formatValue?view.formatValue(r.amount||0):Math.round(r.amount||0))).join('   ');
+    ctx.fillStyle='rgba(255,184,107,0.78)';ctx.font='800 7px Segoe UI, Arial';
+    ctx.fillText(roles,x+14,y+41);
+  }
   const rowH=11;
-  const rows=Math.max(2,Math.min(6,Math.floor((h-54)/rowH)));
-  const colGap=12,colW=(w-34-colGap)/2,hy=y+48;
+  const rows=Math.max(2,Math.min(6,Math.floor((h-72)/rowH)));
+  const colGap=12,colW=(w-34-colGap)/2,hy=y+50;
   drawStatsColumn(ctx,{title:'DAMAGE',list:damageList,x:x+14,y:hy,w:colW,rowH,maxRows:rows,color:'#ff6b6b',field:'damageDone',formatValue:view.formatValue});
   drawStatsColumn(ctx,{title:'HEALING',list:healList,x:x+14+colW+colGap,y:hy,w:colW,rowH,maxRows:rows,color:'#66ffaa',field:'healingDone',formatValue:view.formatValue});
+  drawReportFooter(ctx,{x:x+14,y:y+h-18,w:w-28,taken:damageTakenList[0],shield:shieldList[0],formatValue:view.formatValue});
   ctx.restore();
   return true;
+}
+
+function drawReportFooter(ctx,{x,y,w,taken,shield,formatValue}){
+  const fmt=typeof formatValue==='function'?formatValue:(v=>String(Math.max(0,Math.round(v||0))));
+  const chips=[];
+  if(taken)chips.push({label:'TAKEN',text:(taken.name||'Unit')+' '+fmt(taken.amount||0),color:'#ffb86b'});
+  if(shield)chips.push({label:'SHIELD',text:(shield.name||'Unit')+' '+fmt(shield.amount||0),color:'#8bdfff'});
+  if(!chips.length)return;
+  const gap=8,cw=(w-gap*(chips.length-1))/chips.length;
+  for(let i=0;i<chips.length;i++){
+    const c=chips[i],cx=x+i*(cw+gap);
+    ctx.fillStyle='rgba(255,255,255,0.045)';
+    ctx.beginPath();ctx.roundRect(cx,y-10,cw,14,5);ctx.fill();
+    ctx.fillStyle=c.color;ctx.font='900 7px Segoe UI, Arial';ctx.textAlign='left';
+    ctx.fillText(c.label,cx+6,y);
+    fitCanvasText(ctx,c.text,cx+42,y,cw-48,7,5,'800','rgba(245,248,255,0.86)','left');
+  }
 }
 
 export function drawWinResultScreen(ctx,view){

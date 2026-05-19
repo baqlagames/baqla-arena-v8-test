@@ -1,4 +1,4 @@
-import { ARENA_ARMOR_MATRIX, ARENA_DEFENSE_MATRIX } from '../data/tuning.js';
+import { ARENA_ARMOR_MATRIX, ARENA_DEFENSE_MATRIX } from '../data/tuning.js?v=9d6b186-combat-feedback';
 
 export function armorMultiplier(attackType, armorType) {
   const at = attackType || 'physical';

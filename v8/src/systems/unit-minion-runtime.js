@@ -1,5 +1,5 @@
-import { MINION_NERF, UNIT_VISUAL_SCALE } from '../data/tuning.js';
-import { spawnSquadAttachedMinions } from './squad-lifecycle.js';
+import { MINION_NERF, UNIT_VISUAL_SCALE } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { spawnSquadAttachedMinions } from './squad-lifecycle.js?v=9d6b186-combat-feedback';
 
 export function createUnitMinionRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
@@ -36,6 +36,14 @@ export function createUnitMinionRuntime(deps = {}) {
     minion.maxHp = Math.round((minion.maxHp || minion.hp || 1) * minionNerf);
     minion.hp = minion.maxHp;
     minion.dmg = Math.round((minion.dmg || 0) * minionNerf);
+    softenMinionVisuals(minion);
+    return minion;
+  }
+
+  function softenMinionVisuals(minion) {
+    if (!minion || minion._minionVisualReduced) return minion;
+    minion.size = Math.max(7, Math.round((minion.size || 12) * 0.84));
+    minion._minionVisualReduced = true;
     return minion;
   }
 
@@ -202,6 +210,7 @@ export function createUnitMinionRuntime(deps = {}) {
       maxHp: hp, hp, dmg: 18, speed: 0.4, atkSpd: 60, range: 36, size: 18, armor: 2, magicRes: 0,
       isPlayer: true, isMinion: true, parent, kind: 'bear', cd: 0, color: '#8b4513', accent: '#5d2f0d', facing: 1,
       bobPhase: 0, spawnFrame: frame };
+    softenMinionVisuals(minion);
     units.push(minion);
     emitParticle(minion.x, minion.y, '#8b4513', 16, 4);
     showFlash('PET BEAR!', '#8b4513', 30);

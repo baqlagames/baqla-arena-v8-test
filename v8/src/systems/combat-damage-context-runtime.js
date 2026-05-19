@@ -9,7 +9,7 @@ export function createCombatDamageContextRuntime(deps) {
     const SFX=deps.sound;
     const {
       showFlash,arena_spawnPlayerImpactVfx,arena_statsRecordDamage,arena_applyHealingReceived,
-      arena_addGoldShield,arena_spawnGhost,arena_applyFelfelDeadlyPoison,arena_spawnGhoul,
+      arena_statsRecordPrevented,arena_addGoldShield,arena_spawnGhost,arena_applyFelfelDeadlyPoison,arena_spawnGhoul,
       setVodkaDead,setVodkaRespawn,setVodkaUnit,addGold,addStageGold
     }=deps;
 
@@ -31,6 +31,7 @@ export function createCombatDamageContextRuntime(deps) {
     groundEffects:groundFx,
     spawnImpactVfx:arena_spawnPlayerImpactVfx,
     recordDamage:arena_statsRecordDamage,
+    recordPrevented:arena_statsRecordPrevented,
     applyHealingReceived:arena_applyHealingReceived,
     addGoldShield:arena_addGoldShield,
     spawnGhost:arena_spawnGhost,

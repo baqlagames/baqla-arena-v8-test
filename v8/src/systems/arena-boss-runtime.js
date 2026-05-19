@@ -1,5 +1,5 @@
 import { clamp } from '../core/math.js';
-import { ARENA_L, ARENA_R } from '../data/tuning.js';
+import { ARENA_L, ARENA_R } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import {
   drainHealToBarrier,
   tickAerialBombs,

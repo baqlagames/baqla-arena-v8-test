@@ -43,7 +43,8 @@ export function drawFloatingNumbers(ctx,view){
     drawFloatingBadge(ctx,{
       x:d.x,y:d.y,text:item.text,color:d.color||item.color||'#ffffff',
       alpha:d.life,size:d.sz||item.size||12,bold:d.bold||item.bold,
-      numeric:item.numeric,outline:d.outline
+      numeric:item.numeric,outline:d.outline,tag:d.tag,tagColor:d.tagColor,
+      crit:d.crit,hint:d.hint
     });
   }
   for(const h of healingNumbers){
@@ -67,7 +68,11 @@ function drawFloatingBadge(ctx,view){
   const text=String(view.text||'');
   if(!text){ctx.restore();return}
   const pad=view.numeric?7:8;
-  const w=Math.min(118,Math.max(22,ctx.measureText(text).width+pad*2));
+  const tagText=view.tag?String(view.tag).slice(0,1).toUpperCase():'';
+  const tagW=tagText?13:0;
+  const hintText=view.hint==='vulnerable'?'VULN':view.hint==='reduced'?'RED':'';
+  const hintW=hintText?24:0;
+  const w=Math.min(132,Math.max(22,ctx.measureText(text).width+pad*2+tagW+hintW));
   const h=size+8;
   const x=view.x,y=view.y;
   ctx.shadowColor=view.color;
@@ -80,8 +85,38 @@ function drawFloatingBadge(ctx,view){
   ctx.globalAlpha=alpha*(view.bold?0.86:0.62);
   ctx.beginPath();ctx.roundRect(x-w/2+0.5,y-h/2+0.5,w-1,h-1,7);ctx.stroke();
   ctx.globalAlpha=alpha;
+  let textX=x;
+  if(tagText){
+    const tx=x-w/2+pad+5;
+    ctx.fillStyle=view.tagColor||view.color;
+    ctx.globalAlpha=alpha*0.92;
+    ctx.beginPath();ctx.arc(tx,y,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.72)';
+    ctx.font='900 7px Arial';
+    ctx.fillText(tagText,tx,y+0.5);
+    textX+=tagW*0.35;
+    ctx.font=(view.bold?'900':'800')+' '+size+'px Arial';
+    ctx.globalAlpha=alpha;
+  }
+  if(view.crit){
+    ctx.fillStyle='#ffffff';
+    ctx.font='900 6.5px Arial';
+    ctx.globalAlpha=alpha*0.90;
+    ctx.fillText('CRIT',x,y-h/2-3);
+    ctx.font=(view.bold?'900':'800')+' '+size+'px Arial';
+    ctx.globalAlpha=alpha;
+  }
+  if(hintText){
+    ctx.font='900 6.5px Arial';
+    ctx.fillStyle=view.hint==='vulnerable'?'#7aff7a':'#b8bdd0';
+    ctx.globalAlpha=alpha*0.88;
+    ctx.fillText(hintText,x+w/2-pad-10,y+0.5);
+    ctx.font=(view.bold?'900':'800')+' '+size+'px Arial';
+    ctx.globalAlpha=alpha;
+    textX-=hintW*0.25;
+  }
   ctx.fillStyle=view.color;
-  ctx.fillText(text,x,y+0.5);
+  ctx.fillText(text,textX,y+0.5);
   ctx.restore();
 }
 
@@ -97,6 +132,8 @@ function formatFloatingLabel(value){
   if(/^[-+]?\d+\s+(GUARD|BLOOD|ABSORBED|PACT|MUD|SHIELD)$/i.test(text))return {text:'',numeric:false,size:11};
   const gold=text.match(/^\+?(\d+)g$/i);
   if(gold)return {text:'+'+compactNumber(gold[1])+'g',numeric:true,color:'#ffd76a',size:12};
+  const absorb=text.match(/^(BLOCK|ABSORB)\s+(\d+)/i);
+  if(absorb)return {text:absorb[1].toUpperCase()+' '+compactNumber(absorb[2]),numeric:false,bold:true,size:10};
   const signed=text.match(/^([+-]?\d+)/);
   if(signed){
     const n=Math.abs(parseInt(signed[1],10)||0);

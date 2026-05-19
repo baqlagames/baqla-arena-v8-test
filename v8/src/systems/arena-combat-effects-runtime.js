@@ -2,7 +2,7 @@ import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js?v=
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js?v=ceeed23-enemy-vfx';
 import { drawBombEffects } from '../render/bombs.js';
-import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js';
+import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js?v=9d6b186-combat-feedback';
 import { fireArenaProjectile, lobArenaBomb, projectileColor, updateArenaBomb, updateArenaProjectile } from './combat-projectiles.js?v=ceeed23-enemy-vfx';
 
 export function createArenaCombatEffectsRuntime(deps = {}) {

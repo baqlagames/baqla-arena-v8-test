@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=ceeed23-enemy-vfx';
+import { drawActorShieldVfx } from './shield-vfx.js';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);
@@ -211,17 +211,63 @@ export function drawPlayerAuraOver(ctx, {
   const lowHp = unit.maxHp > 0 && unit.hp > 0 && unit.hp / unit.maxHp <= 0.28;
   ctx.save();
   if (lowHp) {
-    ctx.globalAlpha = 0.18 + 0.12 * Math.sin(t * 3.2);
+    const warnBoost = unit._lowHealthWarnFx > 0 ? 0.12 : 0;
+    ctx.globalAlpha = 0.18 + warnBoost + 0.12 * Math.sin(t * 3.2);
     ctx.fillStyle = '#ff2233';
     ctx.beginPath();
     ctx.arc(x, y, size + 6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = 0.52;
+    ctx.globalAlpha = 0.52 + warnBoost;
     ctx.strokeStyle = '#ff6677';
     ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.arc(x, y, size + 8 + Math.sin(t * 2.2) * 2, 0, Math.PI * 2);
     ctx.stroke();
+    if (unit._lowHealthWarnFx > 0) unit._lowHealthWarnFx--;
+  }
+  if (unit._burstHitFx > 0) {
+    const p = unit._burstHitFx / 22;
+    ctx.globalAlpha = 0.42 * p;
+    ctx.strokeStyle = '#ff3344';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.arc(x, y, size + 10 + (1 - p) * 18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 0.14 * p;
+    ctx.fillStyle = '#ff3344';
+    ctx.beginPath();
+    ctx.arc(x, y, size + 5, 0, Math.PI * 2);
+    ctx.fill();
+    unit._burstHitFx--;
+  }
+  if (unit._tankBlockFx > 0) {
+    const p = unit._tankBlockFx / 18;
+    ctx.globalAlpha = 0.52 * p;
+    ctx.strokeStyle = unit.arch === 'tank' || unit.taunt ? '#fff2bd' : '#a7d8ff';
+    ctx.lineWidth = 2.1;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.72, y - size * 0.22);
+    ctx.lineTo(x - size * 0.18, y - size * 0.52);
+    ctx.lineTo(x + size * 0.58, y - size * 0.18);
+    ctx.stroke();
+    unit._tankBlockFx--;
+  }
+  if (unit._targetedMarker > 0) {
+    const p = unit._targetedMarker / 28;
+    ctx.globalAlpha = 0.46 * p;
+    ctx.strokeStyle = '#ff4455';
+    ctx.lineWidth = 1.4;
+    const r = size + 9;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.18, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - r - 4, y - size * 0.18);
+    ctx.lineTo(x - r + 4, y - size * 0.18);
+    ctx.moveTo(x + r - 4, y - size * 0.18);
+    ctx.lineTo(x + r + 4, y - size * 0.18);
+    ctx.stroke();
+    unit._targetedMarker--;
   }
   if (haste.active) {
     ctx.globalAlpha = 0.42;

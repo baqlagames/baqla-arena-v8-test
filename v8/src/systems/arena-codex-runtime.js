@@ -1,4 +1,4 @@
-import { ARENA_ARMOR_MATRIX, ARENA_DEFENSE_MATRIX, ARENA_PLAYER_ARMOR_TYPE } from '../data/tuning.js';
+import { ARENA_ARMOR_MATRIX, ARENA_DEFENSE_MATRIX, ARENA_PLAYER_ARMOR_TYPE } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { ARENA_SPEC_HALO_COLORS } from '../data/roles.js';
 import { drawCodexScreen } from '../ui/codex-screen.js';
 import { createCodexDetailRuntime } from '../ui/codex-detail-runtime.js';

@@ -1,4 +1,4 @@
-import { ARENA_BUILD_NEXT } from '../data/tuning.js';
+import { ARENA_BUILD_NEXT } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { ARENA_PERKS } from '../data/perks.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
 import { STAGE_TRANSIENT_BATTLE_ARRAYS } from '../core/state.js';

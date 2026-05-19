@@ -83,7 +83,10 @@ export function applyDamageHit(target, dmg, {
   const hpBeforeDamage = target.hp;
   target.hp -= dmg;
   if (inArena && target.isKing && target.isPlayer && Math.round(dmg) > 0 && arenaState) arenaState._stageBaseDamaged = true;
-  recordDamage(target, attacker, Math.min(Math.max(0, hpBeforeDamage), Math.max(0, Math.round(dmg))));
+  recordDamage(target, attacker, Math.min(Math.max(0, hpBeforeDamage), Math.max(0, Math.round(dmg))), {
+    dmgType,
+    attackType: attackTypeOverride,
+  });
   if (target.polymorphTimer > 0 && dmg > 0) {
     target.polymorphTimer = 0;
     emitParticle(target.x, target.y, '#ffffff', 12, 4);
@@ -115,23 +118,58 @@ export function showDamageHitFeedback(target, dmg, {
   dmgType,
   attacker,
   attackTypeOverride,
+  frame,
+  combatRatio,
   addDamageText,
 }) {
   const shownDamage = Math.round(Number(dmg) || 0);
   if (shownDamage <= 0) return;
   target.hitFlash = Math.max(target.hitFlash || 0, 6);
+  const damageInfo = damageTypeVisual({ dmgType, attacker, attackTypeOverride, opts });
+  const hint = combatRatio <= 0.72 ? 'reduced' : combatRatio >= 1.25 ? 'vulnerable' : null;
+  const canShowHint = hint && frame != null && frame - (target._lastDamageHintFrame || -999) > 45;
+  if (canShowHint) target._lastDamageHintFrame = frame;
   if (opts && opts.isCrit) {
-    addDamageText(target.x, target.y - target.size / 2, shownDamage, '#e066ff', { sz: 17, bold: true, outline: '#330055' });
+    addDamageText(target.x, target.y - target.size / 2, shownDamage, damageInfo.color || '#e066ff', {
+      sz: 17,
+      bold: true,
+      outline: '#330055',
+      tag: damageInfo.tag,
+      tagColor: damageInfo.tagColor,
+      crit: true,
+      hint: canShowHint ? hint : null,
+    });
   } else {
-    const projType = (opts && opts.projType) || attackTypeOverride || (attacker && attacker.projType) || (attacker && attacker.attackType) || '';
-    let color = dmgType === 'magic' ? '#aa66ff' : '#ff4444';
-    if (projType === 'fire' || (attacker && attacker.unitIdx === 6 && (!attacker.branch || attacker.branch === 'base'))) color = '#ff6a22';
-    else if (projType === 'frost' || projType === 'ice') color = '#66d9ff';
-    else if (projType === 'lightning') color = '#ffe85a';
-    else if (projType === 'holy') color = '#ffe066';
-    else if (projType === 'poison' || (attacker && attacker.poisonOnHit)) color = '#78d64b';
-    addDamageText(target.x, target.y - target.size / 2, shownDamage, color);
+    addDamageText(target.x, target.y - target.size / 2, shownDamage, damageInfo.color, {
+      tag: damageInfo.tag,
+      tagColor: damageInfo.tagColor,
+      hint: canShowHint ? hint : null,
+    });
   }
+}
+
+function damageTypeVisual({ dmgType, attacker, attackTypeOverride, opts }) {
+  const projType = (opts && opts.projType) || attackTypeOverride || (attacker && attacker.projType) || (attacker && attacker.attackType) || '';
+  let key = dmgType === 'magic' ? 'magic' : 'physical';
+  if (projType === 'pierce') key = 'pierce';
+  else if (projType === 'fire' || (attacker && attacker.unitIdx === 6 && (!attacker.branch || attacker.branch === 'base'))) key = 'fire';
+  else if (projType === 'frost' || projType === 'ice') key = 'frost';
+  else if (projType === 'lightning') key = 'lightning';
+  else if (projType === 'holy') key = 'holy';
+  else if (projType === 'poison' || (attacker && attacker.poisonOnHit)) key = 'poison';
+  else if (projType === 'curse' || projType === 'voidShard' || projType === 'voidOrb' || projType === 'voidBolt') key = 'shadow';
+  const table = {
+    physical: { tag: 'P', color: '#ff4444', tagColor: '#ff4444' },
+    pierce: { tag: 'R', color: '#ff6b4a', tagColor: '#f59e0b' },
+    magic: { tag: 'M', color: '#aa66ff', tagColor: '#aa66ff' },
+    poison: { tag: 'T', color: '#78d64b', tagColor: '#78d64b' },
+    fire: { tag: 'F', color: '#ff6a22', tagColor: '#ff6a22' },
+    frost: { tag: 'I', color: '#66d9ff', tagColor: '#66d9ff' },
+    lightning: { tag: 'L', color: '#ffe85a', tagColor: '#ffe85a' },
+    holy: { tag: 'H', color: '#ffe066', tagColor: '#ffe066' },
+    shadow: { tag: 'S', color: '#b36bff', tagColor: '#b36bff' },
+  };
+  return table[key] || table.physical;
 }
 
 export function applyLegacyPostDamageHooks(dmg, {

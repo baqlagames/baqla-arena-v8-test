@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=ceeed23-enemy-vfx';
+import { startArena } from './systems/arena-runtime.js?v=9d6b186-combat-feedback';
 
 startArena();

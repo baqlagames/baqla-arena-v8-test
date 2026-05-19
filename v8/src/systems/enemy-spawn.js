@@ -1,4 +1,4 @@
-import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
+import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { STAGE_HP_MULT, STAGE_DMG_MULT } from '../data/stages.js';
 import { ENEMIES } from '../data/enemies.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
@@ -43,6 +43,38 @@ export function applyEarlyRoundPressureTuning(enemy, template, { state, arenaSta
   if (enemy.poisonDmg) enemy.poisonDmg = Math.max(1, Math.round(enemy.poisonDmg * 0.85));
   if (enemy.chainBoltDmgMult) enemy.chainBoltDmgMult = Math.max(0.25, enemy.chainBoltDmgMult * 0.85);
   enemy._earlyRoundPressureTuned = true;
+}
+
+export function applyEnemyRoleDamageProfile(enemy, template, stageN = 1) {
+  if (!enemy || !template || enemy.isBoss || enemy.isElite) return enemy;
+  const arch = template.arch || enemy.arch || '';
+  const late = (stageN || 1) >= 15;
+  if (arch === 'tank' || template.taunt || template.armorType === 'heavy') {
+    enemy.dmg = Math.max(1, Math.round(enemy.dmg * (late ? 0.82 : 0.86)));
+    enemy.atkSpd = Math.round((enemy.atkSpd || template.atkSpd || 60) + 8);
+    enemy._roleDamageProfile = 'tank';
+  } else if (arch === 'assassin' || template.prefersBackline || template.stealth || template.burrow) {
+    enemy.dmg = Math.max(1, Math.round(enemy.dmg * (late ? 1.07 : 1.12)));
+    enemy.atkSpd = Math.round((enemy.atkSpd || template.atkSpd || 60) + 4);
+    enemy._roleDamageProfile = 'assassin';
+  } else if (arch === 'caster' || template.meteorCD || template.chainBoltCD || template.armorType === 'warded') {
+    enemy.dmg = Math.max(1, Math.round(enemy.dmg * (late ? 0.88 : 0.92)));
+    enemy._telegraphHarder = true;
+    enemy._roleDamageProfile = 'caster';
+  } else if (arch === 'ranged' || template.range > 80 || template.projType) {
+    enemy.dmg = Math.max(1, Math.round(enemy.dmg * (late ? 0.87 : 0.90)));
+    enemy.atkSpd = Math.max(28, Math.round((enemy.atkSpd || template.atkSpd || 60) * 0.90));
+    enemy._roleDamageProfile = 'ranged';
+  } else if (arch === 'aoe' || template.splashOnHit) {
+    enemy.dmg = Math.max(1, Math.round(enemy.dmg * 0.94));
+    enemy._telegraphHarder = true;
+    enemy._roleDamageProfile = 'cleave';
+  }
+  if (late && !enemy.isElite && !enemy.bossSupport) {
+    if (enemy.chainBoltDmgMult) enemy.chainBoltDmgMult = Math.max(enemy.chainBoltDmgMult, 0.46);
+    if (enemy.meteorDmgMult) enemy.meteorDmgMult = Math.max(enemy.meteorDmgMult, 0.50);
+  }
+  return enemy;
 }
 
 export function spawnEnemyByIndex({
@@ -143,6 +175,7 @@ export function spawnEnemyByIndex({
 
   if (typeof applyWaveMechanic === 'function') applyWaveMechanic(enemy, template);
   applyEarlyRoundPressureTuning(enemy, template, { state, arenaState });
+  applyEnemyRoleDamageProfile(enemy, template, stageN);
   enemies.push(enemy);
 
   if (template.swarm && !inArena) {

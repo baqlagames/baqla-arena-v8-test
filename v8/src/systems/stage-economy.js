@@ -2,7 +2,7 @@ import {
   ARENA_BASE_INCOME,
   ARENA_INCOME_PER_STAGE,
   ARENA_ROUNDS_PER_STAGE,
-} from '../data/tuning.js';
+} from '../data/tuning.js?v=9d6b186-combat-feedback';
 
 export function arena_stageStartGold(stageN) {
   stageN = stageN || 1;

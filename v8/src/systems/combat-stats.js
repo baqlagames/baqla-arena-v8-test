@@ -9,6 +9,7 @@ export function createCombatStats(stage, frame) {
     roundActive: false,
     round: null,
     entries: {},
+    enemyDamageByRole: {},
     roundSummaries: [],
     lastRound: null,
     completed: false,
@@ -20,7 +21,7 @@ export function startCombatRound(stats, { stage, frame, round, tickHz = DEFAULT_
   const tracker = stats || createCombatStats(stage, frame);
   if (tracker.roundActive) finishCombatRound(tracker, { frame, result: 'ended', tickHz });
   tracker.roundActive = true;
-  tracker.round = { round: round || 1, startFrame: frame, entries: {} };
+  tracker.round = { round: round || 1, startFrame: frame, entries: {}, enemyDamageByRole: {} };
   return tracker;
 }
 
@@ -72,6 +73,11 @@ export function combatStatsEntry(stats, bucket, actor) {
       healingDone: 0,
       healingWasted: 0,
       damageTaken: 0,
+      damagePrevented: 0,
+      shieldPrevented: 0,
+      damageDoneByType: {},
+      damageTakenByType: {},
+      damageTakenByRole: {},
     };
   } else {
     bucket[key].name = actorStatsName(a);
@@ -80,6 +86,53 @@ export function combatStatsEntry(stats, bucket, actor) {
     bucket[key].accent = a.accent || bucket[key].accent;
   }
   return bucket[key];
+}
+
+function normalizeDamageType(type) {
+  const value = String(type || '').toLowerCase();
+  if (value === 'fire' || value === 'frost' || value === 'ice' || value === 'lightning' || value === 'poison' || value === 'holy' || value === 'shadow') return value;
+  if (value === 'pierce' || value === 'physical' || value === 'magic') return value;
+  if (value === 'curse' || value === 'void' || value === 'voidbolt' || value === 'voidorb' || value === 'voidshard') return 'shadow';
+  if (value === 'normal') return 'physical';
+  return 'physical';
+}
+
+function enemyDamageRole(actor) {
+  if (!actor) return 'unknown';
+  if (actor.isBoss) return actor.isLieutenant ? 'lieutenant' : 'boss';
+  if (actor.bossSupport) return 'support';
+  if (actor.arch === 'tank' || actor.taunt || actor.armorType === 'heavy') return 'tank';
+  if (actor.arch === 'caster' || actor.meteorCD || actor.chainBoltCD || actor.armorType === 'warded') return 'caster';
+  if (actor.arch === 'assassin' || actor.prefersBackline || actor.stealth || actor.burrow) return 'assassin';
+  if (actor.arch === 'ranged' || actor.range > 80 || actor.projType) return 'ranged';
+  if (actor.arch === 'aoe' || actor.splashOnHit) return 'cleave';
+  return 'melee';
+}
+
+function addNestedAmount(obj, field, key, amount) {
+  if (!obj || !key || amount <= 0) return;
+  if (!obj[field]) obj[field] = {};
+  obj[field][key] = (obj[field][key] || 0) + amount;
+}
+
+function mutateCombatStat(stats, actor, mutator) {
+  if (!stats || typeof mutator !== 'function') return;
+  const st = combatStatsEntry(stats, stats.entries, actor);
+  if (st) mutator(st);
+  if (stats.roundActive && stats.round) {
+    const rt = combatStatsEntry(stats, stats.round.entries, actor);
+    if (rt) mutator(rt);
+  }
+}
+
+function addEnemyRoleDamage(stats, role, amount) {
+  if (!stats || amount <= 0) return;
+  stats.enemyDamageByRole = stats.enemyDamageByRole || {};
+  stats.enemyDamageByRole[role] = (stats.enemyDamageByRole[role] || 0) + amount;
+  if (stats.roundActive && stats.round) {
+    stats.round.enemyDamageByRole = stats.round.enemyDamageByRole || {};
+    stats.round.enemyDamageByRole[role] = (stats.round.enemyDamageByRole[role] || 0) + amount;
+  }
 }
 
 export function addCombatStat(stats, actor, field, amount) {
@@ -108,15 +161,38 @@ export function addCombatStatBundle(stats, actor, values) {
   }
 }
 
-export function recordCombatDamage(stats, target, attacker, amount) {
+export function recordCombatDamage(stats, target, attacker, amount, meta = {}) {
   amount = Math.max(0, Math.round(amount || 0));
   if (amount <= 0 || !stats) return;
+  const type = normalizeDamageType(meta.attackType || meta.damageType || meta.dmgType || (attacker && (attacker.projType || attacker.attackType)));
   if (attacker && attacker.isPlayer && !attacker.isKing && target && !target.isPlayer) {
-    addCombatStat(stats, attacker, 'damageDone', amount);
+    mutateCombatStat(stats, attacker, entry => {
+      entry.damageDone = (entry.damageDone || 0) + amount;
+      addNestedAmount(entry, 'damageDoneByType', type, amount);
+    });
   }
   if (target && target.isPlayer && !target.isKing && !target.isMinion && !target.isMirror && !target.isGhost && attacker && !attacker.isPlayer) {
-    addCombatStat(stats, target, 'damageTaken', amount);
+    const role = enemyDamageRole(attacker);
+    mutateCombatStat(stats, target, entry => {
+      entry.damageTaken = (entry.damageTaken || 0) + amount;
+      addNestedAmount(entry, 'damageTakenByType', type, amount);
+      addNestedAmount(entry, 'damageTakenByRole', role, amount);
+    });
+    addEnemyRoleDamage(stats, role, amount);
   }
+}
+
+export function recordCombatPrevented(stats, target, source, amount, meta = {}) {
+  amount = Math.max(0, Math.round(amount || 0));
+  if (amount <= 0 || !stats || !target) return;
+  const actor = source && source.isPlayer && !source.isKing ? actorStatsRoot(source) : actorStatsRoot(target);
+  if (!actor || !actor.isPlayer || actor.isKing || actor.isMinion || actor.isMirror || actor.isGhost) return;
+  const type = String(meta.kind || meta.shieldType || 'shield').toLowerCase();
+  mutateCombatStat(stats, actor, entry => {
+    entry.damagePrevented = (entry.damagePrevented || 0) + amount;
+    entry.shieldPrevented = (entry.shieldPrevented || 0) + amount;
+    addNestedAmount(entry, 'shieldPreventedByType', type, amount);
+  });
 }
 
 export function recordCombatHeal(stats, source, target, amount, overheal = 0) {
@@ -146,7 +222,24 @@ export function combatStatsMini(entry, field, durSec) {
     out.hps = Math.round(out.amount / Math.max(1, durSec || 1));
     out.overheal = Math.round(entry.healingWasted || 0);
   }
+  if (field === 'damageTaken') out.byType = topBreakdown(entry.damageTakenByType);
+  if (field === 'shieldPrevented') out.byType = topBreakdown(entry.shieldPreventedByType);
+  if (field === 'damageDone') out.byType = topBreakdown(entry.damageDoneByType);
   return out;
+}
+
+function topBreakdown(map) {
+  const rows = Object.entries(map || {}).filter(([, amount]) => amount > 0);
+  rows.sort((a, b) => b[1] - a[1]);
+  return rows.slice(0, 2).map(([key, amount]) => ({ key, amount: Math.round(amount) }));
+}
+
+function enemyRoleList(map, limit = 5) {
+  return Object.entries(map || {})
+    .filter(([, amount]) => amount > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name, amount]) => ({ name, role: name, color: '#ffb86b', accent: '#ffffff', amount: Math.round(amount) }));
 }
 
 export function combatStatsList(entries, field, durSec, limit) {
@@ -176,6 +269,9 @@ export function finishCombatRound(stats, { frame, result, tickHz = DEFAULT_TICK_
     durSec,
     damageList: combatStatsList(r.entries, 'damageDone', durSec, 10),
     healList: combatStatsList(r.entries, 'healingDone', durSec, 10),
+    damageTakenList: combatStatsList(r.entries, 'damageTaken', durSec, 6),
+    shieldList: combatStatsList(r.entries, 'shieldPrevented', durSec, 6),
+    enemyRoleDamageList: enemyRoleList(r.enemyDamageByRole, 5),
     topDps: combatStatsTop(r.entries, 'damageDone', durSec),
     topHeal: combatStatsTop(r.entries, 'healingDone', durSec),
   };
@@ -205,13 +301,16 @@ export function getRoundCombatReport(stats) {
     subtitle: 'Round ' + r.round + ' results - ' + formatCombatStatValue(Math.round(r.durSec || 0)) + 's combat',
     damageList: r.damageList || (r.topDps ? [r.topDps] : []),
     healList: r.healList || (r.topHeal ? [r.topHeal] : []),
+    damageTakenList: r.damageTakenList || [],
+    shieldList: r.shieldList || [],
+    enemyRoleDamageList: r.enemyRoleDamageList || [],
     accent: '#fbbf24',
   };
 }
 
 export function getStageCombatReport(stats, tickHz = DEFAULT_TICK_HZ) {
   if (!stats) return null;
-  const entries = Object.values(stats.entries || {}).filter(entry => (entry.damageDone || entry.healingDone) > 0);
+  const entries = Object.values(stats.entries || {}).filter(entry => (entry.damageDone || entry.healingDone || entry.damageTaken || entry.shieldPrevented) > 0);
   if (!entries.length) return null;
   const durSec = Math.max(1, (stats.combatFrames || 1) / tickHz);
   return {
@@ -219,6 +318,9 @@ export function getStageCombatReport(stats, tickHz = DEFAULT_TICK_HZ) {
     subtitle: 'Total damage and healing - ' + formatCombatStatValue(Math.round(durSec)) + 's combat',
     damageList: combatStatsList(stats.entries, 'damageDone', durSec, 10),
     healList: combatStatsList(stats.entries, 'healingDone', durSec, 10),
+    damageTakenList: combatStatsList(stats.entries, 'damageTaken', durSec, 6),
+    shieldList: combatStatsList(stats.entries, 'shieldPrevented', durSec, 6),
+    enemyRoleDamageList: enemyRoleList(stats.enemyDamageByRole, 5),
     accent: '#60a5fa',
   };
 }

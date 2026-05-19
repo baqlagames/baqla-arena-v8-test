@@ -1,6 +1,6 @@
 // In-battle round report chip shown during the next build phase.
 
-import { drawStatsColumn } from './stats-column.js';
+import { drawStatsColumn } from './stats-column.js?v=9d6b186-combat-feedback';
 
 export function drawCombatRoundChip(ctx,view){
   const combatStats=view.combatStats;

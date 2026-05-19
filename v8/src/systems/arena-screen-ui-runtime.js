@@ -5,7 +5,7 @@ import { drawBattleTopChrome } from '../ui/battle-topbar.js';
 import { drawBossCastBar as drawEncounterBossCastBar, drawBossHpBar as drawEncounterBossHpBar, drawLieutenantsBar as drawEncounterLieutenantsBar, drawPurifyBar as drawEncounterPurifyBar } from '../ui/encounter-bars.js';
 import { drawPauseMenu } from '../ui/pause-menu.js';
 import { drawCombatRoundChip as drawRoundReportChip } from '../ui/round-report.js';
-import { drawCombatReportPanel as drawResultCombatReportPanel, resultButtonRects as getResultButtonRects } from '../ui/results.js';
+import { drawCombatReportPanel as drawResultCombatReportPanel, resultButtonRects as getResultButtonRects } from '../ui/results.js?v=9d6b186-combat-feedback';
 import { drawBuildGrid, drawProjectedBuildGrid as renderProjectedBuildGrid } from '../render/grid.js';
 import { drawHudIcon as renderDrawHudIcon, drawHudMeter as renderDrawHudMeter, drawHudPanel as renderDrawHudPanel, fitCanvasText as renderFitCanvasText, parseHudColor as renderHudRgb, shadeHudColor as renderHudShade } from '../render/primitives.js';
 import { createArenaUiRuntime } from './arena-ui-runtime.js';

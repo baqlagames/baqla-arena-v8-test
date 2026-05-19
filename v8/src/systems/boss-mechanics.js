@@ -1,5 +1,5 @@
 import { dist, rnd } from '../core/math.js';
-import { ARENA_L, ARENA_R } from '../data/tuning.js';
+import { ARENA_L, ARENA_R } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { ENEMIES } from '../data/enemies.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 import { bossPhase, fireBossAbility as fireBossAbil, pickBossTarget } from './boss-mechanics-helpers.js';

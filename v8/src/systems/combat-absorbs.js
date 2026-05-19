@@ -1,4 +1,4 @@
-import { emitShieldAbsorbFx } from './shield-vfx-events.js?v=ceeed23-enemy-vfx';
+import { emitShieldAbsorbFx } from './shield-vfx-events.js?v=9d6b186-combat-feedback';
 
 export function stopInvalidDamageTarget(target, {
   frame,

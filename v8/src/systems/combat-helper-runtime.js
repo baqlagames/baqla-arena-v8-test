@@ -1,8 +1,8 @@
 import { ARENA_RIFT_BONUS_GOLD } from './rift-runtime.js';
-import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived as applyHealingReceivedBase } from './combat-healing.js?v=ceeed23-enemy-vfx';
-import { createCombatFeedbackRuntime } from './combat-feedback-runtime.js';
-import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js';
-import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js';
+import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived as applyHealingReceivedBase } from './combat-healing.js';
+import { createCombatFeedbackRuntime } from './combat-feedback-runtime.js?v=9d6b186-combat-feedback';
+import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js?v=9d6b186-combat-feedback';
+import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js?v=9d6b186-combat-feedback';
 import { clampCombatActorToArena, clampCombatActorToLeash, createCombatBounds, createTargetingView, moveCombatActorToward, resolvePlayerUnitOverlaps } from './combat-positioning.js';
 import { batataCovers, batataHealingReceivedMultiplier, isBatataBacklineAlly, isZavsMeleeAlly, zavsAllyAttackSpeedFactor, zavsAllyDamageMultiplier, zavsBodyguardCovers } from './combat-protection.js';
 import { findEnemyTargetForUnit, findNearestTarget, findRangedEnemyTargetForUnit, isReachableFromLeash, isSaturatedCombatTarget, updateBossEngagementCounts } from './combat-targeting.js';
@@ -58,8 +58,12 @@ export function createCombatHelperRuntime(deps = {}) {
     feedbackRuntime.startRound({ stage: v.currentStage, round: (v.arena && v.arena.round) || 1, tickHz });
   }
 
-  function recordDamage(target, attacker, amount) {
-    feedbackRuntime.recordDamage(target, attacker, amount);
+  function recordDamage(target, attacker, amount, meta) {
+    feedbackRuntime.recordDamage(target, attacker, amount, meta);
+  }
+
+  function recordPrevented(target, source, amount, meta) {
+    feedbackRuntime.recordPrevented(target, source, amount, meta);
   }
 
   function recordHeal(source, target, amount, overheal) {
@@ -490,6 +494,7 @@ export function createCombatHelperRuntime(deps = {}) {
     showFlash,
     arena_spawnPlayerImpactVfx: spawnImpactVfx,
     arena_statsRecordDamage: recordDamage,
+    arena_statsRecordPrevented: recordPrevented,
     arena_applyHealingReceived: applyHealingReceivedRuntime,
     arena_addGoldShield: addGoldShieldRuntime,
     arena_spawnGhost: (...args) => (typeof deps.spawnGhost === 'function' ? deps.spawnGhost(...args) : null),
@@ -524,6 +529,7 @@ export function createCombatHelperRuntime(deps = {}) {
     resetStageStats,
     startRoundStats,
     recordDamage,
+    recordPrevented,
     recordHeal,
     trackedHeal,
     finishRoundStats,

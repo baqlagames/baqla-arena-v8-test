@@ -1,5 +1,5 @@
 import { BOSSES } from '../data/bosses.js';
-import { UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
+import { UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 
 export function bossVisibleTop({ state, arenaState, arenaTop }) {
@@ -162,7 +162,7 @@ export function spawnBossById({
   const stageHpM = 1;
   const stageDmgM = 1;
   const inArena = state === 'battle' && arenaState && arenaState.phase;
-  const sizeScale = inArena ? ARENA_UNIT_SIZE_SCALE : UNIT_VISUAL_SCALE;
+  const sizeScale = (inArena ? ARENA_UNIT_SIZE_SCALE : UNIT_VISUAL_SCALE) * (inArena ? 1.12 : 1);
   const laneLeft = Number.isFinite(spawnLeft) ? spawnLeft : ARENA_L;
   const laneRight = Number.isFinite(spawnRight) ? spawnRight : ARENA_R;
   const spawnArea = spawnAreaFromView({

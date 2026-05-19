@@ -1,5 +1,5 @@
 import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
-import { earlyStageNonBossEnemyTuning } from './enemy-spawn.js?v=5d94d7b-early-pressure';
+import { applyEnemyRoleDamageProfile, earlyStageNonBossEnemyTuning } from './enemy-spawn.js?v=9d6b186-combat-feedback';
 
 export function createStageFlowRuntime(ctx) {
   function spawnEnemyByIdx(typeIdx) {
@@ -110,6 +110,7 @@ export function createStageFlowRuntime(ctx) {
       debuffs: {},
       points: Math.round((tmpl.points || 25) * 5)
     };
+    applyEnemyRoleDamageProfile(e, tmpl, stageN);
     clampActorToSpawnArea(e, {
       ...spawnAreaFromView({
         arenaTop: v.arenaTop,

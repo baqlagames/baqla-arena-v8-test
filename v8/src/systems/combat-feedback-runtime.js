@@ -4,9 +4,10 @@ import {
   formatCombatStatValue,
   recordCombatDamage,
   recordCombatHeal,
+  recordCombatPrevented,
   startCombatRound,
-} from './combat-stats.js';
-import { applyTrackedHeal } from './combat-healing.js?v=ceeed23-enemy-vfx';
+} from './combat-stats.js?v=9d6b186-combat-feedback';
+import { applyTrackedHeal } from './combat-healing.js';
 
 export function createCombatFeedbackRuntime(deps) {
   let combatStats = deps.initialCombatStats || null;
@@ -68,6 +69,10 @@ export function createCombatFeedbackRuntime(deps) {
       sz: opts && opts.sz || (isNumber ? 12 : 11),
       bold: opts && opts.bold || false,
       outline: opts && opts.outline || null,
+      tag: opts && opts.tag || null,
+      tagColor: opts && opts.tagColor || null,
+      crit: opts && opts.crit || false,
+      hint: opts && opts.hint || null,
     });
   }
 
@@ -112,8 +117,12 @@ export function createCombatFeedbackRuntime(deps) {
     }));
   }
 
-  function recordDamage(target, attacker, amount) {
-    recordCombatDamage(combatStats, target, attacker, amount);
+  function recordDamage(target, attacker, amount, meta) {
+    recordCombatDamage(combatStats, target, attacker, amount, meta);
+  }
+
+  function recordPrevented(target, source, amount, meta) {
+    recordCombatPrevented(combatStats, target, source, amount, meta);
   }
 
   function recordHeal(source, target, amount, overheal = 0) {
@@ -150,6 +159,7 @@ export function createCombatFeedbackRuntime(deps) {
     resetStage,
     startRound,
     recordDamage,
+    recordPrevented,
     recordHeal,
     trackedHeal,
     finishRound,

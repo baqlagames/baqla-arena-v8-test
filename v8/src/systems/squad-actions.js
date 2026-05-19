@@ -1,4 +1,4 @@
-import { ARENA_MAX_UNIT_LEVEL } from '../data/tuning.js';
+import { ARENA_MAX_UNIT_LEVEL } from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { ARENA_UNIT_BRANCHES } from '../data/passives.js';
 import {
   arena_upgradeCostFor,

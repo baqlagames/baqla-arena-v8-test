@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { clamp, dist } from '../core/math.js';
-import { tickEnemyActionStatusEffects } from './combat-status-effects.js';
+import { tickEnemyActionStatusEffects } from './combat-status-effects.js?v=9d6b186-combat-feedback';
 import { arenaEngagementBands, effectiveArenaAttackRange } from './combat-targeting.js';
 
 export function updateArenaEnemyAi(enemy, {
@@ -504,24 +504,26 @@ function performEnemyBasicAttack(enemy, bestTarget, {
   if (needsWarning) {
     if (!enemy._aoeAttackWarn) {
       const radius = enemy.splashRadius;
-      enemy._aoeAttackWarn = { timer: 18, maxTimer: 18, target: bestTarget };
+    const warnFrames = enemy._telegraphHarder ? 26 : 18;
+    enemy._aoeAttackWarn = { timer: warnFrames, maxTimer: warnFrames, target: bestTarget };
       const warnKind = enemy.range > 70 || enemy.arch === 'aoe' ? 'aoe' : 'cleave';
       groundEffects.push({
         x: bestTarget.x,
         y: bestTarget.y,
         r: 0,
         maxR: radius,
-        life: 0.45,
+        life: enemy._telegraphHarder ? 0.60 : 0.45,
         color: '#ff8c00',
         enemyWarn: true,
-        warnTimer: 18,
-        warnMax: 18,
+        warnTimer: warnFrames,
+        warnMax: warnFrames,
         warnKind,
         warnAngle: Math.atan2(bestTarget.y - enemy.y, bestTarget.x - enemy.x),
         warnSpread: 1.05,
       });
       addDamageText(bestTarget.x, bestTarget.y - bestTarget.size - 6, enemy.arch === 'aoe' ? 'AOE!' : 'CLEAVE!', '#ff8c00', { sz: 11, bold: true });
       emitParticle(enemy.x, enemy.y, '#ff8c00', 5, 2);
+      markFocusedPlayerTarget(enemy, bestTarget);
       return;
     }
     enemy._aoeAttackWarn.timer--;
@@ -536,6 +538,7 @@ function performEnemyBasicAttack(enemy, bestTarget, {
   applySearingBrandOnBasic(enemy, bestTarget);
   applyRoyalStingOnBasic(enemy, bestTarget);
   if (bestTarget.hp > 0) {
+    markFocusedPlayerTarget(enemy, bestTarget);
     if (enemy.projType) fireProjectile(enemy, bestTarget, enemy.dmg, { projType: enemy.projType });
     else dealDamage(bestTarget, enemy.dmg, enemy, enemy.projType === 'curse' ? 'magic' : 'normal');
   }
@@ -574,6 +577,14 @@ function performEnemyBasicAttack(enemy, bestTarget, {
     }
     groundEffects.push({ x: bestTarget.x, y: bestTarget.y, r: 0, maxR: radius, life: 0.35, color: '#ff8c00' });
   }
+}
+
+function markFocusedPlayerTarget(enemy, target) {
+  if (!enemy || !target || !target.isPlayer || target.isMinion || target.isGhost || target.hp <= 0) return;
+  const focusRole = target.arch === 'healer' || target.arch === 'caster' || target.arch === 'ranged';
+  const rangedEnemy = enemy.arch === 'ranged' || enemy.arch === 'caster' || enemy.range > 90 || enemy.projType;
+  const bypass = enemy._v8TargetClass === 'rangedBypass' || enemy._v8TargetClass === 'snipeBackline' || enemy.prefersBackline;
+  if (focusRole && (rangedEnemy || bypass)) target._targetedMarker = Math.max(target._targetedMarker || 0, bypass ? 28 : 18);
 }
 
 function tickChainBolt(enemy, {
@@ -681,8 +692,10 @@ function tickMeteor(enemy, {
   if (!target) return;
   const damage = Math.round(enemy.dmg * (enemy.meteorDmgMult || 0.6));
   const radius = enemy.meteorRadius || 55;
-  enemy._meteorWarn = { x: target.x, y: target.y, radius, damage, timer: 36, maxTimer: 36 };
-  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: radius, life: 0.75, color: '#ff4400', enemyWarn: true, warnTimer: 36, warnMax: 36, warnKind: 'meteor' });
+  const warnFrames = enemy._telegraphHarder ? 48 : 36;
+  markFocusedPlayerTarget(enemy, target);
+  enemy._meteorWarn = { x: target.x, y: target.y, radius, damage, timer: warnFrames, maxTimer: warnFrames };
+  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: radius, life: enemy._telegraphHarder ? 0.95 : 0.75, color: '#ff4400', enemyWarn: true, warnTimer: warnFrames, warnMax: warnFrames, warnKind: 'meteor' });
   addDamageText(target.x, target.y - 30, 'METEOR', '#ff8844', { sz: 13, bold: true });
   emitParticle(target.x, target.y, '#ff8844', 8, 3);
 }

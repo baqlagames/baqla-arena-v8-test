@@ -8,6 +8,7 @@ import {
   createCombatStats,
   recordCombatDamage,
   recordCombatHeal,
+  recordCombatPrevented,
   startCombatRound,
 } from '../src/systems/combat-stats.js';
 
@@ -256,9 +257,25 @@ function testSummonRootCreditAndSignatureMinionDeps() {
   assert(entryFor(stats, warlock).damageDone > 0, 'infernal damage should roll up to warlock');
 }
 
+function testDamageTakenTypeShieldAndEnemyRoleReports() {
+  const stats = makeStats();
+  const tank = unit(0, { arch: 'tank', hp: 700, maxHp: 1000 });
+  const casterEnemy = enemy(0, { arch: 'caster', projType: 'fire', isPlayer: false });
+  recordCombatDamage(stats, tank, casterEnemy, 140, { dmgType: 'magic', attackType: 'fire' });
+  recordCombatPrevented(stats, tank, casterEnemy, 80, { kind: 'guard' });
+  const entry = entryFor(stats, tank);
+  assert(entry.damageTaken === 140, 'player damage taken should be tracked');
+  assert(entry.damageTakenByType.fire === 140, 'damage taken should split by damage type');
+  assert(entry.damageTakenByRole.caster === 140, 'damage taken should split by enemy role');
+  assert(entry.shieldPrevented === 80, 'shield prevented value should be tracked');
+  assert(entry.shieldPreventedByType.guard === 80, 'shield prevented should split by shield kind');
+  assert(stats.enemyDamageByRole.caster === 140, 'stage report should track enemy damage by role');
+}
+
 testMovedActiveDamageAndHealCredit();
 testHolyPrismHealCredit();
 testPayoffDamageSources();
 testSummonRootCreditAndSignatureMinionDeps();
+testDamageTakenTypeShieldAndEnemyRoleReports();
 
 console.log('Combat report source-credit smoke passed for moved actives, payoffs, DOTs, zones, meteors, summons, and heals.');

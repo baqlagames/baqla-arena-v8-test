@@ -4,7 +4,7 @@ import {
   ARENA_PLAYER_ARMOR_TYPE,
   ARENA_UNIT_SIZE_SCALE,
   HP_MULT_PLAYER,
-} from '../data/tuning.js';
+} from '../data/tuning.js?v=9d6b186-combat-feedback';
 import { ARENA_UNIT_BRANCHES } from '../data/passives.js';
 import { arena_isCapstoneLevel } from './squad-economy.js';
 
@@ -204,6 +204,10 @@ function existingMinionCount(units, parent, kind) {
   return units.filter(unit => unit && unit.isMinion && unit.parent === parent && unit.kind === kind && unit.hp > 0).length;
 }
 
+function scaledMinionSize(size) {
+  return Math.max(7, Math.round((size || 12) * 0.84));
+}
+
 function createMechEscortTurret(parent, offset) {
   const level = parent.level || 1;
   const hp = 120 + level * 25;
@@ -216,7 +220,7 @@ function createMechEscortTurret(parent, offset) {
     speed: parent.speed || 0.18,
     atkSpd: 72,
     range: 220,
-    size: 12,
+    size: scaledMinionSize(12),
     armor: 1,
     magicRes: 0,
     isPlayer: true,
@@ -245,7 +249,7 @@ function createZaatarCompanion(parent, level, tickHz, randomFloat) {
       speed: 0.45,
       atkSpd: 54,
       range: 36,
-      size: 16,
+      size: scaledMinionSize(16),
       armor: 1,
       magicRes: 0,
       isPlayer: true,
@@ -270,7 +274,7 @@ function createZaatarCompanion(parent, level, tickHz, randomFloat) {
       speed: 0.35,
       atkSpd: 66,
       range: 36,
-      size: 20,
+      size: scaledMinionSize(20),
       armor: 3,
       magicRes: 2,
       isPlayer: true,
@@ -297,7 +301,7 @@ function createZaatarCompanion(parent, level, tickHz, randomFloat) {
     speed: 0.40,
     atkSpd: 60,
     range: 36,
-    size: 18,
+    size: scaledMinionSize(18),
     armor: 2,
     magicRes: 1,
     isPlayer: true,

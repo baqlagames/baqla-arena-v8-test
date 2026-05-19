@@ -1,4 +1,4 @@
-import { createBattleHudRuntime } from '../ui/battle-hud-runtime.js';
+import { createBattleHudRuntime } from '../ui/battle-hud-runtime.js?v=9d6b186-combat-feedback';
 import { createManagePanelInputHandler } from '../ui/manage-panel-input.js';
 import { createManagePanelRenderer } from '../ui/manage-panel-screen.js';
 import { createUnitPickerRuntime } from '../ui/unit-picker-runtime.js';

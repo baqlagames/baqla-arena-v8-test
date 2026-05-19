@@ -797,7 +797,7 @@ return {
       const _treant={
         x:_tx,y:_ty,hp:Math.round(u.maxHp*0.3),maxHp:Math.round(u.maxHp*0.3),
         dmg:Math.round(u.dmg*0.6),atkSpd:50,range:45,speed:0.2,
-        size:14,color:'#2a6e2a',accent:'#1a4a1a',armor:Math.round(u.armor*0.5),magicRes:0,
+        size:12,color:'#2a6e2a',accent:'#1a4a1a',armor:Math.round(u.armor*0.5),magicRes:0,
         isPlayer:true,isMinion:true,parent:u,cd:0,facing:1,bobPhase:Math.random()*Math.PI*2,
         treant:true,lifeTicks:12*GAME_TICK_HZ,
         drawFn:'drawTreant',debuffs:{},spawnFrame:getFrame()
@@ -1076,7 +1076,7 @@ return {
     groundFx.push({x:tx,y:ty,r:0,maxR:82,life:0.55,color:'#33ff66'});
     groundFx.push({x:tx,y:ty,r:0,maxR:110,life:1,infernalCrater:true,craterTimer:4*GAME_TICK_HZ,craterMax:4*GAME_TICK_HZ,color:'#ff6600'});
     const hp=Math.round(600+(u.level||1)*80);
-    const inf={x:tx,y:ty,maxHp:hp,hp:hp,dmg:Math.round(u.dmg*0.8),speed:0.25,atkSpd:72,range:36,size:26*unitVisualScale,armor:4,magicRes:3,
+    const inf={x:tx,y:ty,maxHp:hp,hp:hp,dmg:Math.round(u.dmg*0.8),speed:0.25,atkSpd:72,range:36,size:22*unitVisualScale,armor:4,magicRes:3,
       isPlayer:true,isMinion:true,parent:u,kind:'infernal',cd:0,color:'#ff4400',accent:'#881100',facing:1,arch:'tank',
       bobPhase:Math.random()*Math.PI*2,lifeTicks:15*GAME_TICK_HZ,
       _fireStompCD:0,_fireStompEvery:5*GAME_TICK_HZ,_fireStompDmg:Math.round(u.dmg*1.5),_fireStompRadius:80};
@@ -1197,7 +1197,7 @@ return {
       const ty=Math.max(getArenaBounds().top+30,cy+_offsets[i][1]);
       const _hp=340+_lv*60;
       const _t={x:tx,y:ty,maxHp:_hp,hp:_hp,dmg:Math.round(u.dmg*1.35),
-        speed:0,atkSpd:68,range:330,size:16,armor:3,magicRes:1,
+        speed:0,atkSpd:68,range:330,size:13,armor:3,magicRes:1,
         isPlayer:true,isMinion:true,parent:u,kind:'turret',cd:0,projType:'bolt',
         _turretArtillery:true,_turretAoe:72,
         color:'#8a7a3a',accent:'#5a4a1a',facing:1,bobPhase:0,

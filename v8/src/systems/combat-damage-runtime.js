@@ -1,21 +1,53 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
-import { ARENA_CAMPAIGN_KILL_BOUNTY_MULT, RESPAWN_FRAMES } from '../data/tuning.js';
-import { absorbEnemyShield, absorbEarthwardenShield, absorbGoldShield, absorbHiveShield, absorbObjectShield, absorbShieldHp, absorbShieldOfVengeance, absorbTimedNumericShield, stopInvalidDamageTarget } from './combat-absorbs.js?v=ceeed23-enemy-vfx';
-import { createEnemyKillRewardEvent, resolveDeathPresentation, startSummonerCooldownForDeadMinion } from './combat-death.js?v=ceeed23-enemy-vfx';
+import { ARENA_CAMPAIGN_KILL_BOUNTY_MULT, RESPAWN_FRAMES } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { absorbEnemyShield, absorbEarthwardenShield, absorbGoldShield, absorbHiveShield, absorbObjectShield, absorbShieldHp, absorbShieldOfVengeance, absorbTimedNumericShield, stopInvalidDamageTarget } from './combat-absorbs.js';
+import { createEnemyKillRewardEvent, resolveDeathPresentation, startSummonerCooldownForDeadMinion } from './combat-death.js';
 import { applyArenaDeathReactionHooks, applyDeathBoom, tryAngelOfMercySave, tryArdentDefenderSave, tryArenaDeathBranchHooks, tryCheatDeathSave, tryGhostOnDeath } from './combat-death-hooks.js';
 import { applyPlayerSpecialDefenses, applyPreShieldPlayerReactions, applySoulLinkRedirect, triggerGalacticGuardian, triggerPrayerOfMending, tryGuardianSpiritSave } from './combat-defense-reactions.js';
 import { applyIronSkinReduction, applyPlayerProtectionReductions, stopPlayerDefenseGates } from './combat-defense-procs.js';
-import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=ceeed23-enemy-vfx';
+import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=9d6b186-combat-feedback';
 import { applyArenaIncomingScalarModifiers, applyPostDefenseDamageModifiers } from './combat-modifiers.js';
-import { WARMUP_GOLD_BONUS } from './enemy-spawn.js';
+import { WARMUP_GOLD_BONUS } from './enemy-spawn.js?v=9d6b186-combat-feedback';
 import { arena_campaignKillBountyStageMult, arena_lateStageNormalGoldMult, arena_roundGoldMult } from './stage-economy.js';
+
+function recordPrevented(ctx, target, attacker, before, after, kind) {
+  const prevented = Math.max(0, Math.round((before || 0) - (after || 0)));
+  if (prevented <= 0 || typeof ctx.recordPrevented !== 'function') return;
+  ctx.recordPrevented(target, attacker, prevented, { kind });
+  if (target && target.isPlayer) {
+    target._tankBlockFx = Math.max(target._tankBlockFx || 0, target.arch === 'tank' || target.taunt ? 18 : 12);
+  }
+}
+
+function applyEarlyOneShotCap(ctx, target, attacker, dmg) {
+  if (!target || !target.isPlayer || !Number.isFinite(dmg) || dmg <= 0) return dmg;
+  const stageN = (ctx.currentStage && ctx.currentStage.n) || 1;
+  if (stageN >= 10 || target.isKing || target.isMinion || target.isMirror || target.isGhost) return dmg;
+  const maxHp = Math.max(1, target.maxHp || target.hp || 1);
+  const bossHit = !!(attacker && attacker.isBoss);
+  const capPct = stageN <= 4 ? (bossHit ? 0.38 : 0.28) : (bossHit ? 0.45 : 0.34);
+  const cap = Math.max(8, Math.round(maxHp * capPct));
+  if (dmg <= cap) return dmg;
+  recordPrevented(ctx, target, attacker, dmg, cap, 'safety');
+  target._burstHitFx = Math.max(target._burstHitFx || 0, 16);
+  return cap;
+}
+
+function markDamageTakenReaction(target, dmg) {
+  if (!target || !target.isPlayer || !Number.isFinite(dmg) || dmg <= 0 || target.maxHp <= 0) return;
+  const pct = dmg / target.maxHp;
+  if (pct >= 0.20) target._burstHitFx = Math.max(target._burstHitFx || 0, 22);
+  if (target.hp > 0 && target.hp / target.maxHp <= 0.28) target._lowHealthWarnFx = Math.max(target._lowHealthWarnFx || 0, 36);
+}
 
 export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTypeOverride, opts) {
   const dealDamage = (...args) => dealDamageRuntime(ctx, ...args);
   if (stopInvalidDamageTarget(target, { frame: ctx.frame, emitParticle: ctx.emitParticle, addDamageText: ctx.addDamageText })) return;
   raw = Number(raw);
   if (!Number.isFinite(raw) || raw <= 0) return;
+  const startingRaw = raw;
   {
+    const before = raw;
     const absorb = absorbHiveShield(target, raw, attacker, {
       emitParticle: ctx.emitParticle,
       addDamageText: ctx.addDamageText,
@@ -24,9 +56,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
       frame: ctx.frame,
     });
     raw = absorb.raw;
+    recordPrevented(ctx, target, attacker, before, raw, 'hive');
     if (absorb.blocked) return;
   }
   {
+    const before = raw;
     const absorb = absorbEnemyShield(target, raw, {
       emitParticle: ctx.emitParticle,
       addDamageText: ctx.addDamageText,
@@ -34,6 +68,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
       frame: ctx.frame,
     });
     raw = absorb.raw;
+    recordPrevented(ctx, target, attacker, before, raw, 'enemy');
     if (absorb.blocked) return;
   }
 
@@ -51,6 +86,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
       })) return;
 
       {
+        const before = dmg;
         const absorb = absorbGoldShield(target, dmg, {
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
@@ -58,13 +94,17 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           frame: ctx.frame,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'gold');
         if (absorb.blocked) return;
       }
+      const beforeIron = dmg;
       dmg = applyIronSkinReduction(target, dmg, {
         frame: ctx.frame,
         emitParticle: ctx.emitParticle,
         addDamageText: ctx.addDamageText,
       });
+      recordPrevented(ctx, target, attacker, beforeIron, dmg, 'armor');
+      const beforeProtection = dmg;
       dmg = applyPlayerProtectionReductions(dmg, {
         target,
         attacker,
@@ -75,7 +115,9 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
         groundEffects: ctx.groundEffects,
         addDamageText: ctx.addDamageText,
       });
+      recordPrevented(ctx, target, attacker, beforeProtection, dmg, 'guard');
       {
+        const before = dmg;
         const absorb = absorbEarthwardenShield(target, dmg, {
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
@@ -83,6 +125,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           frame: ctx.frame,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'earthwarden');
         if (absorb.blocked) return;
       }
       triggerGalacticGuardian(target, {
@@ -104,6 +147,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
         showFlash: ctx.showFlash,
       });
       {
+        const before = dmg;
         const absorb = absorbTimedNumericShield(target, dmg, {
           amountKey: '_zavsLineShield',
           timerKey: '_zavsLineShieldTimer',
@@ -115,9 +159,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           groundEffects: ctx.groundEffects,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'guard');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbTimedNumericShield(target, dmg, {
           amountKey: '_batataMudShield',
           timerKey: '_batataMudShieldTimer',
@@ -129,9 +175,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           groundEffects: ctx.groundEffects,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'mud');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbTimedNumericShield(target, dmg, {
           amountKey: '_taoonBloodShield',
           timerKey: '_taoonBloodShieldTimer',
@@ -144,9 +192,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           groundEffects: ctx.groundEffects,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'blood');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbShieldHp(target, dmg, {
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
@@ -154,9 +204,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           frame: ctx.frame,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'shield');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbShieldOfVengeance(target, dmg, {
           emitParticle: ctx.emitParticle,
           addDamageText: ctx.addDamageText,
@@ -164,9 +216,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           frame: ctx.frame,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'vengeance');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbObjectShield(target, dmg, {
           shieldKey: '_iceBarrier',
           color: '#88ddff',
@@ -179,9 +233,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           particleSize: 2,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'ice');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const defense = applyPlayerSpecialDefenses(dmg, {
           target,
           attacker,
@@ -196,9 +252,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           addDamageText: ctx.addDamageText,
         });
         dmg = defense.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'defense');
         if (defense.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbObjectShield(target, dmg, {
           shieldKey: '_darkPactShield',
           color: '#9b59b6',
@@ -210,9 +268,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           text: 'PACT',
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'pact');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbObjectShield(target, dmg, {
           shieldKey: '_engShield',
           color: '#44aaff',
@@ -223,9 +283,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           type: 'engineer',
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'engineer');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbObjectShield(target, dmg, {
           shieldKey: '_pwBarrier',
           color: '#ffaadd',
@@ -238,9 +300,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           particleSize: 3,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'priest');
         if (absorb.blocked) return;
       }
       {
+        const before = dmg;
         const absorb = absorbObjectShield(target, dmg, {
           shieldKey: '_raptureShield',
           color: '#ffaadd',
@@ -253,6 +317,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
           particleSize: 2,
         });
         dmg = absorb.dmg;
+        recordPrevented(ctx, target, attacker, before, dmg, 'rapture');
         if (absorb.blocked) return;
       }
       triggerPrayerOfMending(target, dmg, {
@@ -308,6 +373,8 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
     if (legacy.blocked) return;
   }
   dmg = applyBossAndRecordModifiers(dmg, { target });
+  dmg = applyEarlyOneShotCap(ctx, target, attacker, dmg);
+  const combatRatio = startingRaw > 0 ? dmg / startingRaw : 1;
   applyDamageHit(target, dmg, {
     inArena,
     arenaState: ctx.arena,
@@ -330,8 +397,11 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
     dmgType,
     attacker,
     attackTypeOverride,
+    frame: ctx.frame,
+    combatRatio,
     addDamageText: ctx.addDamageText,
   });
+  markDamageTakenReaction(target, dmg);
   applyLegacyPostDamageHooks(dmg, {
     inArena,
     target,
