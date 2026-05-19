@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=9f0ee05-icon-tags';
+import { startArena } from './systems/arena-runtime.js?v=b75524b-icon-scale';
 
 startArena();

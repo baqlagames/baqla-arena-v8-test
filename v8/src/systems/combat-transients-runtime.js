@@ -35,7 +35,7 @@ export function createCombatTransientsRuntime(deps) {
     sync();
   // Particles + decay
   for(const p of particles){p.x+=p.vx;p.y+=p.vy;p.vx*=0.94;p.vy*=0.94;p.life-=0.025}
-  for(const d of dmgNums){d.x+=(d.vx||0);d.y+=(d.vy||-0.45);d.vy*=0.92;d.life-=0.026}
+  for(const d of dmgNums){d.x+=(d.vx||0);d.y+=(d.vy||-0.45);d.vy*=0.92;d.life-=(d.decay||0.026)}
   for(const h of healFx){h.x+=(h.vx||0);h.y+=(h.vy||-0.32);h.vy*=0.94;h.life-=0.026}
   for(const g of groundFx){
     const _gfSpeed=(g.solarFlareFx||g.lunarStrikeFx||g.celestialAuraFx||g.pandemicCloudFx)?10:(g.toxicStackFx?5:((g.swipeArc||g.swipeSlam)?5:2));

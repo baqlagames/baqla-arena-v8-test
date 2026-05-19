@@ -61,15 +61,15 @@ export function drawFloatingNumbers(ctx,view){
 function drawFloatingBadge(ctx,view){
   const alpha=Math.max(0,Math.min(1,view.alpha==null?1:view.alpha));
   if(alpha<=0)return;
-  const size=Math.max(10,Math.min(view.size||12,view.numeric?15:13));
+  const size=Math.max(10,Math.min(view.size||12,view.numeric?16:13));
   ctx.save();
   ctx.globalAlpha=alpha;
   ctx.font=(view.bold?'900':'800')+' '+size+'px Arial';
   const text=String(view.text||'');
   if(!text){ctx.restore();return}
   const pad=view.numeric?7:8;
-  const tagText=view.tag?String(view.tag).slice(0,1).toUpperCase():'';
-  const tagW=tagText?13:0;
+  const tagText=view.tag?Array.from(String(view.tag))[0] || '':'';
+  const tagW=tagText?18:0;
   const hintText=view.hint==='vulnerable'?'VULN':view.hint==='reduced'?'RED':'';
   const hintW=hintText?24:0;
   const w=Math.min(132,Math.max(22,ctx.measureText(text).width+pad*2+tagW+hintW));
@@ -87,14 +87,20 @@ function drawFloatingBadge(ctx,view){
   ctx.globalAlpha=alpha;
   let textX=x;
   if(tagText){
-    const tx=x-w/2+pad+5;
+    const tx=x-w/2+pad+7;
     ctx.fillStyle=view.tagColor||view.color;
     ctx.globalAlpha=alpha*0.92;
-    ctx.beginPath();ctx.arc(tx,y,5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='rgba(0,0,0,0.72)';
-    ctx.font='900 7px Arial';
-    ctx.fillText(tagText,tx,y+0.5);
-    textX+=tagW*0.35;
+    ctx.beginPath();ctx.arc(tx,y,7,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.78)';
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(tx,y,7.5,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#fffdf2';
+    ctx.strokeStyle='rgba(0,0,0,0.75)';
+    ctx.lineWidth=2;
+    ctx.font='900 10px "Segoe UI Symbol", Arial';
+    ctx.strokeText(tagText,tx,y+0.4);
+    ctx.fillText(tagText,tx,y+0.4);
+    textX+=tagW*0.32;
     ctx.font=(view.bold?'900':'800')+' '+size+'px Arial';
     ctx.globalAlpha=alpha;
   }

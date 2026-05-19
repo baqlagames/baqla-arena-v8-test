@@ -6,7 +6,7 @@ import {
   recordCombatHeal,
   recordCombatPrevented,
   startCombatRound,
-} from './combat-stats.js?v=72b1f6b-damage-tags';
+} from './combat-stats.js';
 import { applyTrackedHeal } from './combat-healing.js';
 
 export function createCombatFeedbackRuntime(deps) {
@@ -63,10 +63,11 @@ export function createCombatFeedbackRuntime(deps) {
       y: y + (opts && opts.dy != null ? opts.dy : 0),
       val: display,
       color: color || '#fff',
-      life: 1,
+      life: opts && opts.life != null ? opts.life : (opts && opts.tag ? 1.22 : 1),
       vy: opts && opts.vy != null ? opts.vy : -0.45,
       vx: opts && opts.vx != null ? opts.vx : randomRange(-0.08, 0.08),
-      sz: opts && opts.sz || (isNumber ? 12 : 11),
+      sz: opts && opts.sz || (opts && opts.tag ? 13 : (isNumber ? 12 : 11)),
+      decay: opts && opts.decay || (opts && opts.tag ? 0.021 : 0.026),
       bold: opts && opts.bold || false,
       outline: opts && opts.outline || null,
       tag: opts && opts.tag || null,

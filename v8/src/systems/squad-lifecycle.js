@@ -8,8 +8,8 @@ import {
 import { ARENA_UNIT_BRANCHES } from '../data/passives.js';
 import { arena_isCapstoneLevel } from './squad-economy.js';
 
-const ARENA_PLAYER_UNIT_SIZE_MULT = 0.88;
-const ARENA_PLAYER_MINION_SIZE_MULT = 0.74;
+const ARENA_PLAYER_UNIT_SIZE_MULT = 0.84;
+const ARENA_PLAYER_MINION_SIZE_MULT = 0.68;
 
 export function snapshotSquadCooldowns(cells) {
   const out = {};

@@ -1,9 +1,9 @@
-import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js?v=4bdd8c4-shield-vfx';
+import { createUnitOverlaysRuntime } from '../render/unit-overlays-runtime.js?v=b75524b-icon-scale';
 import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
-import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js?v=ceeed23-enemy-vfx';
+import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js?v=b75524b-icon-scale';
 import { drawBombEffects } from '../render/bombs.js';
-import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js?v=9d6b186-combat-feedback';
-import { fireArenaProjectile, lobArenaBomb, projectileColor, updateArenaBomb, updateArenaProjectile } from './combat-projectiles.js?v=ceeed23-enemy-vfx';
+import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js?v=b75524b-icon-scale';
+import { fireArenaProjectile, lobArenaBomb, projectileColor, updateArenaBomb, updateArenaProjectile } from './combat-projectiles.js?v=b75524b-icon-scale';
 
 export function createArenaCombatEffectsRuntime(deps = {}) {
   const ctx = deps.ctx;
