@@ -1,6 +1,6 @@
 import { clamp, rnd } from '../core/math.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
-import { ARENA_L, ARENA_R } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { ARENA_L, ARENA_R } from '../data/tuning.js';
 import { clampActorToSpawnArea, spawnAreaFromView } from './arena-spawn-bounds.js';
 
 function royalCarapaceShieldHp(boss) {
@@ -23,6 +23,7 @@ function spawnRoyalHatchlings(boss, count, ctx) {
   for (let i = 0; i < count; i++) {
     const side = i % 2 === 0 ? -1 : 1;
     const row = Math.floor(i / 2);
+    const hatchlingHp = Math.max(220, Math.round((boss.maxHp || 10000) * (boss.royalHatchlingHpPct || 0.015)));
     const hatchling = {
       name: 'Royal Hatchling',
       act: 1,
@@ -31,8 +32,8 @@ function spawnRoyalHatchlings(boss, count, ctx) {
       y: clamp(boss.y + 36 + row * 18 + rnd(-8, 8), ARENA_TOP + 50, ARENA_BOT - 90),
       color: '#d4a417',
       accent: '#7a5e0d',
-      maxHp: Math.max(135, Math.round((boss.maxHp || 10000) * 0.011)),
-      hp: Math.max(135, Math.round((boss.maxHp || 10000) * 0.011)),
+      maxHp: hatchlingHp,
+      hp: hatchlingHp,
       dmg: Math.max(12, Math.round((boss.dmg || 80) * 0.24)),
       speed: 0.46,
       atkSpd: 82,

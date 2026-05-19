@@ -1,5 +1,5 @@
 import { dist, rnd } from '../core/math.js';
-import { ARENA_L, ARENA_R } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { ARENA_L, ARENA_R } from '../data/tuning.js';
 import { ENEMIES } from '../data/enemies.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 import { bossPhase, fireBossAbility as fireBossAbil, pickBossTarget } from './boss-mechanics-helpers.js';
@@ -336,6 +336,24 @@ function bossMagicBolt(b,ctx){
   addDmg(t.x,t.y-t.size-6,'BOLT!',_col);
   dealDamage(t,_dmg,b,'magic');
   showFlash('MAGIC BOLT','#aa66ff',24);
+}
+function bossBuzzShots(b,ctx){
+  const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
+  const backline=units.filter(u=>u&&u.hp>0&&u.isPlayer&&!u.isMinion&&!u.isGhost&&!u.untargetable&&(u.arch==='ranged'||u.arch==='caster'||u.arch==='healer'));
+  const fallback=units.filter(u=>u&&u.hp>0&&u.isPlayer&&!u.isGhost&&!u.untargetable);
+  const pool=(backline.length?backline:fallback).slice();
+  const count=Math.min(b.buzzShotCount||3,pool.length);
+  const dmg=b.buzzShotDmg||Math.round((b.dmg||100)*0.32);
+  for(let i=0;i<count;i++){
+    const idx=Math.floor(Math.random()*pool.length);
+    const t=pool.splice(idx,1)[0];
+    if(!t)continue;
+    fireProjectile(b,t,dmg,{projType:'normal',speed:7,color:'#ffd54a'});
+    beamFx.push({x1:b.x,y1:b.y-(b.size||32)*0.35,x2:t.x,y2:t.y-(t.size||18)*0.25,life:0.14,maxLife:0.14,color:'#ffd54a',width:1.5,straight:true});
+    addP(b.x,b.y,'#ffd54a',3,2);
+    addP(t.x,t.y,'#ffd54a',2,2);
+  }
+  if(count>0)addDmg(b.x,b.y-(b.size||32)-8,'BUZZ SHOTS','#ffd54a',{sz:11,bold:true});
 }
 function bossLunge(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
@@ -740,6 +758,7 @@ export function updateBoss(b,ctx){
   // (lunge, aoe, magicBolt) resume.
   if(!b.aerial){
     safeBossAbility(b,'aoe','aoeCD',b.aoePhase||1,bossAoEPulse,ctx);
+    safeBossAbility(b,'buzzShot','buzzShotCD',b.buzzShotPhase||1,bossBuzzShots,ctx);
     safeBossAbility(b,'lunge','lungeCD',b.lungePhase||1,bossLunge,ctx);
     safeBossAbility(b,'magicBolt','magicBoltCD',b.magicBoltPhase||1,bossMagicBolt,ctx);
     safeBossAbility(b,'emberVolley','emberVolleyCD',b.emberVolleyPhase||1,bossEmberVolley,ctx);

@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js?v=ceeed23-enemy-vfx';
+import { drawUnitShieldVfx } from './shield-vfx.js';
 
 export function createBattleSceneRuntime(deps) {
   function render(){
@@ -356,18 +356,7 @@ export function createBattleSceneRuntime(deps) {
       ctx.restore();
     }
     // Boss aura rings (Hornet Sovereign hornetAura) Ã¢â‚¬â€ yellow dashed ring + buff icons.
-    for(const e of enemies){
-      if(e.hp<=0||!e.hornetAura)continue;
-      ctx.save();
-      ctx.strokeStyle='#ffd54a';ctx.lineWidth=2;
-      ctx.globalAlpha=0.30+Math.sin(frame*0.10)*0.15;
-      ctx.setLineDash([8,5]);
-      ctx.beginPath();ctx.arc(e.x,e.y,e.hornetAura,0,Math.PI*2);ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle='#ffd54a';ctx.globalAlpha=0.08+Math.sin(frame*0.10)*0.04;
-      ctx.beginPath();ctx.arc(e.x,e.y,e.hornetAura,0,Math.PI*2);ctx.fill();
-      ctx.restore();
-    }
+    // Hidden mechanic only: Hornet aura buffs adds but no longer draws a ring.
     // Frenzied bosses (Hornet Sovereign post-50%) Ã¢â‚¬â€ pulsing red glow.
     for(const e of enemies){
       if(e.hp<=0||!e.frenzyApplied)continue;

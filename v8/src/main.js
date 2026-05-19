@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=aa518b6-hornet-fix';
+import { startArena } from './systems/arena-runtime.js?v=eec541f-hornet-buzz';
 
 startArena();

@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=ceeed23-enemy-vfx';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=eec541f-hornet-buzz';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

@@ -15,13 +15,14 @@ export const BOSSES=[
     // Boss-round support uses weak themed minions, not full normal-wave enemies.
     // Wing-buzz AoE every 8s. Frenzy at 50% HP Ã¢â‚¬â€ +20% atkSpd self (one-shot).
     aoeCD:480,aoeRadius:72,aoeDmg:68,aoePhase:1,aoeColor:'#ffaa00',
+    buzzShotCD:300,buzzShotCount:3,buzzShotDmg:38,buzzShotPhase:1,
     hornetAura:76,hornetAuraMult:1.12,
     escortSpawn:1,escortEnemy:2,
     // Recurring hive support: 1 light skirmisher every 12s.
     spawnCD:720,spawnEnemy:2,spawnCount:1,spawnPhase:1,
     bossMinionName:'Hive Skirmisher',bossMinionHpMult:0.42,bossMinionDmgMult:0.50,bossMinionPointsMult:0.35,
     frenzyAt:0.5,frenzyAtkSpdMult:0.90,
-    royalStingEvery:4,royalStingHpPct:0.032,royalStingPoisonDmg:4,royalStingDur:360,royalStingAmp:1.12,
+    royalStingEvery:4,royalStingHpPct:0.032,royalStingPoisonDmg:4,royalStingDur:360,royalStingAmp:1.12,royalHatchlingHpPct:0.024,
     royalCarapaceAt:[0.70,0.35],royalCarapaceCast:720,royalCarapaceShieldPct:0.11,royalCarapaceShieldMin:1500,royalCarapaceShieldMax:2000,royalCarapaceFailDmg:150,royalCarapaceTickDmg:26,royalCarapaceAdds:2,
     projType:'normal',timeEnrageAt:9000},
   {id:2,name:'Spice Lord',tier:'mini',act:2,color:'#aa4a8e',accent:'#5e224a',hp:3200,dmg:40,speed:0.30,atkSpd:60,range:50,size:44,armor:3,magicRes:5,points:400,
