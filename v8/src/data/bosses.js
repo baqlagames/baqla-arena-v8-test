@@ -7,16 +7,15 @@ export const BOSSES=[
     spawnCD:720,spawnEnemy:0,spawnCount:2,spawnPhase:1,
     debuffCD:480,debuffType:'poison',debuffDmg:9,debuffDur:300,debuffPhase:1,
     timeEnrageAt:12600},
-  {id:1,name:'Hornet Sovereign',tier:'strong',act:1,color:'#c08820',accent:'#7a4a0a',hp:21500,dmg:108,speed:0.42,atkSpd:52,range:60,size:48,armor:7,magicRes:4,points:700,raidAoeDmg:32,
+  {id:1,name:'Hornet Sovereign',tier:'strong',act:1,color:'#c08820',accent:'#7a4a0a',hp:21500,dmg:108,speed:0.42,atkSpd:52,range:60,size:48,armor:7,magicRes:4,points:700,raidAoeDmg:32,spawnFromTop:true,spawnYOffset:52,entryHold:30,
     // arena stage 5 boss (retuned 2026-04-30 Ã¢â‚¬â€ was a wall at L2 cap; HP -20%,
     // dmg -12%, atkSpd 48Ã¢â€ â€™54 (slower), lungeDmg -39%, lungeCD +50%, escorts 2Ã¢â€ â€™1,
     // hornet aura mult 1.20Ã¢â€ â€™1.12, Wing-Buzz dmg -25%).
-    // 95 px buff aura grants nearby hornet enemies +12% atkSpd.
+    // 76 px buff aura grants nearby hornet enemies +12% atkSpd.
     // Boss-round support uses weak themed minions, not full normal-wave enemies.
     // Wing-buzz AoE every 8s. Frenzy at 50% HP Ã¢â‚¬â€ +20% atkSpd self (one-shot).
-    aoeCD:480,aoeRadius:95,aoeDmg:68,aoePhase:1,aoeColor:'#ffaa00',
-    lungeCD:900,lungeDist:135,lungeDmg:92,lungePhase:2,
-    hornetAura:95,hornetAuraMult:1.12,
+    aoeCD:480,aoeRadius:72,aoeDmg:68,aoePhase:1,aoeColor:'#ffaa00',
+    hornetAura:76,hornetAuraMult:1.12,
     escortSpawn:1,escortEnemy:2,
     // Recurring hive support: 1 light skirmisher every 12s.
     spawnCD:720,spawnEnemy:2,spawnCount:1,spawnPhase:1,

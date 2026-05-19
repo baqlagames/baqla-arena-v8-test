@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=7861d9c-text-declutter';
+import { startArena } from './systems/arena-runtime.js?v=aa518b6-hornet-fix';
 
 startArena();

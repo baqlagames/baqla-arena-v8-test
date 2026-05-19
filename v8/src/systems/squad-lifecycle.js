@@ -10,6 +10,7 @@ import { arena_isCapstoneLevel } from './squad-economy.js';
 
 const ARENA_PLAYER_UNIT_SIZE_MULT = 0.84;
 const ARENA_PLAYER_MINION_SIZE_MULT = 0.68;
+const ARENA_PLAYER_BACKLINE_RANGE_BONUS = 12;
 
 export function snapshotSquadCooldowns(cells) {
   const out = {};
@@ -138,6 +139,9 @@ export function createSquadUnitFromCell({
   if (unit.layOnHandsCD) unit.layOnHandsProc = { every: unit.layOnHandsCD * tickHz, counter: 0, threshold: 0.35 };
 
   applyPassives(unit, cell.unitIdx, level);
+  if (!unit.isMinion && (unit.arch === 'ranged' || unit.arch === 'caster' || unit.arch === 'healer') && Number.isFinite(unit.range)) {
+    unit.range += ARENA_PLAYER_BACKLINE_RANGE_BONUS;
+  }
   applyMoveSpeedTuning(unit);
   if (unit.paladinHybrid) unit.justiceReachCD = 3 * tickHz;
 
