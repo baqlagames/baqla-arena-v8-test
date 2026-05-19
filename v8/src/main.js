@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=72b1f6b-damage-tags';
+import { startArena } from './systems/arena-runtime.js?v=9f0ee05-icon-tags';
 
 startArena();

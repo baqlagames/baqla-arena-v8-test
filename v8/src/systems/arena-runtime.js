@@ -39,7 +39,7 @@ import { createUnitMinionRuntime } from './unit-minion-runtime.js?v=72b1f6b-dama
 import { createArenaAudio } from './arena-audio.js';
 import { createStageBattleRuntime } from './stage-battle-runtime.js';
 import { createArenaLayoutRuntime } from './arena-layout-runtime.js';
-import { createCombatHelperRuntime } from './combat-helper-runtime.js?v=72b1f6b-damage-tags';
+import { createCombatHelperRuntime } from './combat-helper-runtime.js?v=9f0ee05-icon-tags';
 import { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST, createArenaSpellRuntime } from './arena-spell-runtime.js?v=ceeed23-enemy-vfx';
 import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js';
 import { createPlacementEconomyRuntime } from './placement-economy-runtime.js?v=72b1f6b-damage-tags';

@@ -166,10 +166,10 @@ function damageTypeVisual({ dmgType, attacker, attackTypeOverride, opts }) {
     (attacker && attacker.unitIdx === 6 && (!attacker.branch || attacker.branch === 'base'))
   ) key = 'magic';
   const table = {
-    physical: { tag: 'P', color: '#ff4444', tagColor: '#ff4444' },
-    pierce: { tag: 'R', color: '#ff6b4a', tagColor: '#f59e0b' },
-    magic: { tag: 'M', color: '#aa66ff', tagColor: '#aa66ff' },
-    dot: { tag: 'D', color: '#78d64b', tagColor: '#78d64b' },
+    physical: { tag: '⚔', color: '#ff4444', tagColor: '#ff4444' },
+    pierce: { tag: '➶', color: '#ff6b4a', tagColor: '#f59e0b' },
+    magic: { tag: '✦', color: '#aa66ff', tagColor: '#aa66ff' },
+    dot: { tag: '☠', color: '#78d64b', tagColor: '#78d64b' },
   };
   return table[key] || table.physical;
 }
