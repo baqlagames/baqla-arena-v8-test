@@ -36,62 +36,64 @@ export const ARENA_GOLD_COSTS=[ // gold price by unit id 0-13 + Vodka (id:99 -> 
   150                // Vodka (Champion's Aura affects entire field)
 ];
 
-export const ARENA_UPGRADE_COSTS=[0, 28, 100, 150, 220];
+export const ARENA_UPGRADE_COSTS=[0, 45, 125, 190, 275];
 
 export const ARENA_UPGRADE_MULT_BY_UNIT={
-  // Floor (Ãƒâ€”1.00 = 100g L3): tanks. Utility duty, multiple placed per squad.
-  0:1.00, 1:1.00, 2:1.00,                // Malfof, Taoon, Batata
-  // Vanilla DPS (Ãƒâ€”1.05 = 105g): one passive + one branch fork, no class kit.
-  5:1.05,                                // Jazar (Blademaster)
-  // Sniper / focused DPS (Ãƒâ€”1.10 = 110g): more on-hit gear or unique kit.
-  8:1.10,                                // Zaatar (Sniper)
-  // Healers (Ãƒâ€”1.10 = 110g): aura-driven support.
-  10:1.10, 11:1.10,                      // Naana, Bakdounes
-  // CC priest (Ãƒâ€”1.15 = 115g): heavier toolkit (mind control, shields).
-  12:1.10,                               // Habaq
-  // Class-kit DPS (Ãƒâ€”1.15 = 115g): paladin with multi-passive stacking.
-  3:1.15,                                // Zayt Ã¢â‚¬â€ Justice's Reach + Divine Storm + Wings
-  // Specialists (Ãƒâ€”1.20 = 120g): unique mechanic (stealth opener, fire minions).
-  4:1.20, 6:1.20,                        // Felfel, Filfil Har
-  // Engineer / warlock (Ãƒâ€”1.25 = 125g): permanent summons or burst toolkit.
-  7:1.25, 9:1.25,                        // Jafaar (3 minions), Rumman (bombs + nuke)
-  // Hero (x1.60 = 160g): global champion aura, hero-class.
-  13:1.05,                                // Monk DPS - one-path melee specialist
-  99:1.60                                // Vodka
+  // Tanks. Utility duty, multiple placed per squad.
+  0:1.00, 1:1.04, 2:1.03,                // Malfof, Taoon, Batata
+  // Vanilla DPS: one passive + one branch fork, no class kit.
+  5:1.12,                                // Jazar (Blademaster)
+  // Sniper / focused DPS: more on-hit gear or unique kit.
+  8:1.14,                                // Zaatar (Sniper)
+  // Healers: aura-driven support.
+  10:1.12, 11:1.12,                      // Naana, Bakdounes
+  // CC priest: heavier toolkit (mind control, shields).
+  12:1.12,                               // Habaq
+  // Class-kit DPS: paladin with multi-passive stacking.
+  3:1.20,                                // Zayt - Justice's Reach + Divine Storm + Wings
+  // Specialists: unique mechanic (stealth opener, fire minions).
+  4:1.24, 6:1.22,                        // Felfel, Filfil Har
+  // Engineer / warlock: permanent summons or burst toolkit.
+  7:1.32, 9:1.30,                        // Jafaar (3 minions), Rumman (bombs + nuke)
+  // Hero: global champion aura, hero-class.
+  13:1.12,                               // Monk DPS - one-path melee specialist
+  99:1.70                                // Vodka
 };
 
 export const ARENA_UPGRADE_MULT_BY_BRANCH={
-  // ===== TANKS (base 1.00 = 100g) =====
-  '0_a':1.10,   // Zavs Citadel - melee-protection tank + Citadel Wall sig
-  '0_b':1.15,   // Zavs Vanguard - physical/pierce enabler + Bannerfall Crash sig
-  '1_a':1.15,   // Taoon Bloodwarden - ally shields, Death Strike, Crimson Covenant
-  '1_b':1.20,   // Taoon Gravebinder - Death Grip control, Soul Chains, Maw of the Grave
-  '2_a':1.10,   // Batata Mudroot Warden - healer/ranged shelter + Living Bulwark sig
-  '2_b':1.15,   // Batata Stonehide Mauler - anti-swarm mud disruption + Quakebreak sig
+  // ===== TANKS =====
+  '0_a':1.12,   // Zavs Citadel - melee-protection tank + Citadel Wall sig
+  '0_b':1.16,   // Zavs Vanguard - physical/pierce enabler + Bannerfall Crash sig
+  '1_a':1.18,   // Taoon Bloodwarden - ally shields, Death Strike, Crimson Covenant
+  '1_b':1.22,   // Taoon Gravebinder - Death Grip control, Soul Chains, Maw of the Grave
+  '2_a':1.13,   // Batata Mudroot Warden - healer/ranged shelter + Living Bulwark sig
+  '2_b':1.17,   // Batata Stonehide Mauler - anti-swarm mud disruption + Quakebreak sig
   // ===== MELEE DPS =====
-  '3_a':1.30,   // Zayt Muqaddas (Protection) Ã¢â‚¬â€ tank conversion + Ashen Hallow sig
-  '3_b':1.25,   // Zayt Mubarak (Holy) Ã¢â‚¬â€ healer conversion + Beacon of Virtue sig
-  '4_b':1.30,   // Felfel Samm (Poison Assassin) Ã¢â‚¬â€ Blade Flurry + Sepsis + Deathmark sig
-  '5_a':1.10,   // Jazar Romi (Sword Saint) Ã¢â‚¬â€ mortal strike + execute + Final Strike sig
-  '5_b':1.15,   // Jazar Azraq (Storm Binder) Ã¢â‚¬â€ wind step + blade dance + Storm Anchor sig
+  '3_a':1.22,   // Zayt Muqaddas (Protection) - tank conversion + Ashen Hallow sig
+  '3_b':1.24,   // Zayt Mubarak (Holy) - healer conversion + Beacon of Virtue sig
+  '4_a':1.34,   // Felfel Shadow - restealth, burst openers, Killing Spree
+  '4_b':1.36,   // Felfel Samm (Poison Assassin) - Blade Flurry + Sepsis + Deathmark sig
+  '5_a':1.16,   // Jazar Romi (Sword Saint) - mortal strike + execute + Final Strike sig
+  '5_b':1.20,   // Jazar Azraq (Storm Binder) - wind step + blade dance + Storm Anchor sig
   // ===== RANGED / CASTER =====
-  '6_a':1.15,   // Alibaba Barid (Frost) Ã¢â‚¬â€ frostbolt + shatter + Frozen Orb sig
-  '6_b':1.20,   // Alibaba Barqi (Storm) Ã¢â‚¬â€ overload + stormkeeper + Thunderstorm sig
-  '7_a':1.35,   // Jafaar Akhdar (Demonology) Ã¢â‚¬â€ Demonic Empowerment + Soul Link + Summon Infernal sig
-  '7_b':1.40,   // Jafaar Mudammas (Destruction) Ã¢â‚¬â€ Immolate + Havoc + Chaos Bolt sig
-  '8_a':1.15,   // Zaatar Bary (Trapper) Ã¢â‚¬â€ Explosive Trap + Lock and Load + Black Arrow sig
-  '8_b':1.20,   // Zaatar Akhdar (Beast Mastery) Ã¢â‚¬â€ Kill Command + Bestial Wrath + Stampede sig
-  '9_b':1.40,   // Rumman Murr (Flying Cannon) Ã¢â‚¬â€ cannon form + rocket punch + Overdrive sig + Self-Destruct on death
+  '6_a':1.20,   // Alibaba Barid (Frost) - frostbolt + shatter + Frozen Orb sig
+  '6_b':1.24,   // Alibaba Barqi (Storm) - overload + stormkeeper + Thunderstorm sig
+  '7_a':1.38,   // Jafaar Akhdar (Demonology) - Demonic Empowerment + Soul Link + Summon Infernal sig
+  '7_b':1.42,   // Jafaar Mudammas (Destruction) - Immolate + Havoc + Chaos Bolt sig
+  '8_a':1.20,   // Zaatar Bary (Trapper) - Explosive Trap + Lock and Load + Black Arrow sig
+  '8_b':1.24,   // Zaatar Akhdar (Beast Mastery) - Kill Command + Bestial Wrath + Stampede sig
+  '9_a':1.36,   // Rumman Siege - artillery turrets, rockets, napalm
+  '9_b':1.42,   // Rumman Murr (Flying Cannon) - cannon form + rocket punch + Overdrive sig + Self-Destruct on death
   // ===== HEALERS / SUPPORT =====
-  '10_a':1.15,  // Naana Hamra (Discipline) Ã¢â‚¬â€ penance + barrier + Rapture sig
-  '10_b':1.35,  // Naana Bayda (Shadow) Ã¢â‚¬â€ Void DPS: SW:P DoTs + Shadow Apparitions + Void Eruption + Void Torrent sig
-  '11_a':1.30,  // Bakdounes Qamari (Moonkin) Ã¢â‚¬â€ eclipse DPS + Celestial Alignment sig
-  '11_b':1.25,  // Bakdounes Mujaffaf (Witch Doctor) Ã¢â‚¬â€ totem healer + Ancestral Awakening sig
-  '12_a':1.10,  // Habaq Dhahabi (Essence Oracle) Ã¢â‚¬â€ bond healing + Elixir of Life sig
-  '12_b':1.30,  // Habaq Barri (Toxin Brewer) Ã¢â‚¬â€ poison DPS + Pandemic sig
+  '10_a':1.18,  // Naana Hamra (Discipline) - penance + barrier + Rapture sig
+  '10_b':1.36,  // Naana Bayda (Shadow) - Void DPS: SW:P DoTs + Shadow Apparitions + Void Torrent sig
+  '11_a':1.34,  // Bakdounes Qamari (Moonkin) - eclipse DPS + Celestial Alignment sig
+  '11_b':1.24,  // Bakdounes Mujaffaf (Witch Doctor) - totem healer + Ancestral Awakening sig
+  '12_a':1.14,  // Habaq Dhahabi (Essence Oracle) - bond healing + Elixir of Life sig
+  '12_b':1.34,  // Habaq Barri (Toxin Brewer) - poison DPS + Pandemic sig
   // ===== HERO =====
-  '99_a':1.65,  // Vodka Warbringer Ã¢â‚¬â€ 2.0Ãƒâ€” dmg + whirlwind + Champion's Wrath sig
-  '99_b':1.70   // Vodka Guardian Ã¢â‚¬â€ champion aura + battle standard + Last Stand sig (team-wide value)
+  '99_a':1.70,  // Vodka Warbringer - 2.0x dmg + whirlwind + Champion's Wrath sig
+  '99_b':1.75   // Vodka Guardian - champion aura + battle standard + Last Stand sig
 };
 
 export const ARENA_ARMOR_MATRIX={

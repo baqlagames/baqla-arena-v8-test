@@ -2,6 +2,10 @@
 
 const noop = () => {};
 
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
 class FakeImage {
   constructor() {
     this.complete = false;
@@ -148,6 +152,8 @@ const [
   { createSquadUnitFromCell },
   { spawnSquadAttachedMinions },
   { upgradeSquadCell },
+  { arena_stageStartGold },
+  { arena_upgradeCostFor },
   { createActorRenderer },
   { createSpecAccessoryRenderer },
 ] = await Promise.all([
@@ -159,11 +165,20 @@ const [
   import('../src/systems/squad-lifecycle.js'),
   import('../src/systems/squad-lifecycle.js'),
   import('../src/systems/squad-actions.js'),
+  import('../src/systems/stage-economy.js'),
+  import('../src/systems/squad-economy.js'),
   import('../src/render/actor-renderer.js'),
   import('../src/render/spec-accessories.js'),
 ]);
 
-const { ARENA_MAX_UNIT_LEVEL, ARENA_UNIT_SIZE_SCALE } = tuning;
+const {
+  ARENA_GOLD_COSTS,
+  ARENA_MAX_UNIT_LEVEL,
+  ARENA_UNIT_SIZE_SCALE,
+  ARENA_UPGRADE_COSTS,
+  ARENA_UPGRADE_MULT_BY_BRANCH,
+  ARENA_UPGRADE_MULT_BY_UNIT,
+} = tuning;
 const signatureIds = [
   ...Object.values(ARENA_BASE_SIGNATURES),
   ...Object.values(ARENA_BRANCH_SIGNATURES),
@@ -200,6 +215,47 @@ const actorRenderer = createActorRenderer({
   overlayOffsetFor: () => ({ x: 0, y: 0 }),
   randomRange: (min, max) => min + (max - min) * 0.5,
 });
+
+function unitGoldCost(unitIdx) {
+  return unitIdx === 99 ? ARENA_GOLD_COSTS[14] : ARENA_GOLD_COSTS[unitIdx];
+}
+
+function assertUpgradeEconomyTuning() {
+  assert(JSON.stringify(ARENA_UPGRADE_COSTS) === JSON.stringify([0, 45, 125, 190, 275]), 'upgrade tier costs drifted from rebalance');
+  assert(ARENA_UPGRADE_COSTS[1] >= 45, 'L2 base upgrade is still too cheap');
+  for (let level = 2; level < ARENA_UPGRADE_COSTS.length; level++) {
+    assert(ARENA_UPGRADE_COSTS[level] > ARENA_UPGRADE_COSTS[level - 1], 'upgrade tiers must increase each level');
+  }
+
+  const cheapestRoot = Math.min(...Object.values(ARENA_ROLE_ROOTS).map(root => root.cost));
+  const cheapestTwoRoots = cheapestRoot * 2;
+  let minNormalL2 = Infinity;
+  for (let unitIdx = 0; unitIdx < PLAYER_UNITS.length; unitIdx++) {
+    const l2Cost = arena_upgradeCostFor({ unitIdx, level: 1, branch: null });
+    minNormalL2 = Math.min(minNormalL2, l2Cost);
+    assert(l2Cost >= 45, `unit ${unitIdx} L2 cost ${l2Cost} below 45g floor`);
+    assert(l2Cost >= cheapestRoot, `unit ${unitIdx} L2 cost ${l2Cost} below cheapest root placement ${cheapestRoot}`);
+
+    const totalToL5 = unitGoldCost(unitIdx) + [1, 2, 3, 4].reduce((sum, level) => {
+      return sum + arena_upgradeCostFor({ unitIdx, level, branch: null });
+    }, 0);
+    const oldMult = unitIdx === 7 || unitIdx === 9 ? 1.25
+      : unitIdx === 4 || unitIdx === 6 ? 1.20
+      : unitIdx === 3 ? 1.15
+      : unitIdx === 5 || unitIdx === 13 ? 1.05
+      : (unitIdx === 8 || unitIdx === 10 || unitIdx === 11 || unitIdx === 12 ? 1.10 : 1.00);
+    const oldTotalToL5 = unitGoldCost(unitIdx) + [28, 100, 150, 220].reduce((sum, cost) => sum + Math.round(cost * oldMult), 0);
+    assert(totalToL5 > oldTotalToL5, `unit ${unitIdx} L5 total did not increase`);
+  }
+
+  assert(arena_stageStartGold(1) < cheapestTwoRoots + minNormalL2, 'stage 1 can still buy two cheap roots plus immediate L2');
+  assert(arena_stageStartGold(5) >= cheapestTwoRoots + minNormalL2, 'stage 5 cannot afford a mixed two-root plus L2 opener');
+  assert(ARENA_UPGRADE_MULT_BY_BRANCH['4_a'] >= 1.30, 'Felfel Shadow branch needs explicit high-output multiplier');
+  assert(ARENA_UPGRADE_MULT_BY_BRANCH['9_a'] >= 1.30, 'Rumman Siege branch needs explicit high-output multiplier');
+  assert(ARENA_UPGRADE_MULT_BY_UNIT[99] === 1.70, 'Vodka base multiplier should match hero rebalance');
+  assert(ARENA_UPGRADE_MULT_BY_BRANCH['99_b'] === 1.75, 'Vodka Guardian multiplier should match hero rebalance');
+  return { cheapestRoot, minNormalL2 };
+}
 
 function applyPassives(unit, unitIdx, level) {
   applyUnitPassives(unit, unitIdx, level, {
@@ -333,6 +389,7 @@ function simulateRolePath(rootId, path) {
   }
 }
 
+const economySummary = assertUpgradeEconomyTuning();
 const results = [];
 
 for (let unitIdx = 0; unitIdx < PLAYER_UNITS.length; unitIdx++) {
@@ -378,3 +435,4 @@ for (const specId of uniqueSpecs) {
 
 console.log(`Smoke-tested ${results.length} direct render cases plus role-root upgrade paths.`);
 console.log(`Covered ${PLAYER_UNITS.length} units, ${Object.values(ARENA_UNIT_BRANCHES).reduce((sum, branches) => sum + Object.keys(branches).length, 0)} branches, and ${Object.values(ARENA_ROLE_PATHS).reduce((sum, paths) => sum + paths.length, 0)} role paths.`);
+console.log(`Upgrade economy checks: cheapest root ${economySummary.cheapestRoot}g, cheapest normal L2 ${economySummary.minNormalL2}g.`);

@@ -5,7 +5,7 @@ import {
   ARENA_UPGRADE_COSTS,
   ARENA_UPGRADE_MULT_BY_BRANCH,
   ARENA_UPGRADE_MULT_BY_UNIT,
-} from '../data/tuning.js';
+} from '../data/tuning.js?v=77c3c71-upgrade-prices';
 
 export function arena_isCapstoneLevel(level) {
   return (level || 1) >= ARENA_MAX_UNIT_LEVEL;
