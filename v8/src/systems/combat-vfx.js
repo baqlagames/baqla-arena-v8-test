@@ -6,8 +6,10 @@ export function playerCombatColor(attacker, dmgType, attackTypeOverride, opts) {
   if (projectileType === 'frost' || projectileType === 'ice') return '#8bdfff';
   if (projectileType === 'lightning') return '#fff15a';
   if (projectileType === 'holy') return '#ffe066';
+  if (projectileType === 'poison' || (attacker && attacker.poisonOnHit)) return '#78d64b';
   if (projectileType === 'curse' || projectileType === 'voidShard' || projectileType === 'voidOrb' || projectileType === 'voidBolt') return '#a855f7';
   if (projectileType === 'pierce') return '#44ddff';
+  if (projectileType === 'bolt') return attacker && attacker.unitIdx === 6 ? '#ff7a22' : '#44ccff';
   if (projectileType === 'magic') return '#aa66ff';
   if (projectileType === 'physical') return '#ff8844';
   return attacker && attacker.arch === 'healer' ? '#66ffaa' : '#ff8844';
@@ -98,8 +100,15 @@ export function spawnPlayerImpactVfx({
   } else if (projectileType === 'holy' || attacker.arch === 'paladin') {
     beamEffects.push({ x1: target.x, y1: target.y - size * 1.9, x2: target.x, y2: target.y + size * 0.25, life: 0.22, maxLife: 0.22, color: '#ffe066', width: isBig ? 4 : 2.5, straight: true });
     groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: size * (isBig ? 1.7 : 1.25), life: 0.28, color: '#ffd700', flatten: true });
+  } else if (projectileType === 'poison' || attacker.poisonOnHit) {
+    groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: size * (isBig ? 1.55 : 1.12), life: 0.32, color: '#55aa33' });
+    for (let i = 0; i < 6; i++) {
+      const a = frame * 0.08 + i * Math.PI * 2 / 6;
+      emitParticle(target.x + Math.cos(a) * size * 0.5, target.y + Math.sin(a) * size * 0.35, i % 2 ? '#bbff55' : '#55aa33', 1, 2.4);
+    }
   } else if (projectileType === 'curse' || projectileType === 'voidShard' || projectileType === 'voidOrb' || projectileType === 'voidBolt' || projectileType === 'magic' || dmgType === 'magic') {
     groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: size * (isBig ? 1.55 : 1.15), life: 0.26, color });
+    groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: size * 0.58, life: 0.18, color: '#1a0020' });
     for (let i = 0; i < 4; i++) {
       const a = frame * 0.08 + i * Math.PI / 2;
       emitParticle(target.x + Math.cos(a) * size * 0.55, target.y + Math.sin(a) * size * 0.35, color, 1, 2);

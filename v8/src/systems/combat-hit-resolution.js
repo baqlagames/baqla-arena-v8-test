@@ -113,6 +113,8 @@ export function applyJudgmentOfLightHit(target, attacker, {
 export function showDamageHitFeedback(target, dmg, {
   opts,
   dmgType,
+  attacker,
+  attackTypeOverride,
   addDamageText,
 }) {
   const shownDamage = Math.round(Number(dmg) || 0);
@@ -121,7 +123,14 @@ export function showDamageHitFeedback(target, dmg, {
   if (opts && opts.isCrit) {
     addDamageText(target.x, target.y - target.size / 2, shownDamage, '#e066ff', { sz: 17, bold: true, outline: '#330055' });
   } else {
-    addDamageText(target.x, target.y - target.size / 2, shownDamage, dmgType === 'magic' ? '#aa66ff' : '#ff4444');
+    const projType = (opts && opts.projType) || attackTypeOverride || (attacker && attacker.projType) || (attacker && attacker.attackType) || '';
+    let color = dmgType === 'magic' ? '#aa66ff' : '#ff4444';
+    if (projType === 'fire' || (attacker && attacker.unitIdx === 6 && (!attacker.branch || attacker.branch === 'base'))) color = '#ff6a22';
+    else if (projType === 'frost' || projType === 'ice') color = '#66d9ff';
+    else if (projType === 'lightning') color = '#ffe85a';
+    else if (projType === 'holy') color = '#ffe066';
+    else if (projType === 'poison' || (attacker && attacker.poisonOnHit)) color = '#78d64b';
+    addDamageText(target.x, target.y - target.size / 2, shownDamage, color);
   }
 }
 

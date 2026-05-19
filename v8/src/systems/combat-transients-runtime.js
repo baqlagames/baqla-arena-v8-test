@@ -46,6 +46,7 @@ export function createCombatTransientsRuntime(deps) {
     else if(g.wildfirePatch){g.wfT++;if(frame%GAME_TICK_HZ===0){for(const e of enemies){if(e.hp>0&&dist(g,e)<=g.wfRadius){dealDamage(e,g.wfDmg,g.wfFrom,'physical');addP(e.x,e.y,'#ff6600',3,2)}}}if(g.wfT>=g.wfDur)g.life=0;if(frame%6===0)addP(g.x+rnd(-g.wfRadius*0.5,g.wfRadius*0.5),g.y+rnd(-g.wfRadius*0.3,g.wfRadius*0.3),'#ff6600',1,3)}
     else if(g.vineLash){g.vineTimer--;if(g.vineTimer<=0)g.life=0}
     else if(g.stormTile){g.stormTimer--;if(g.stormTimer===15){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR)dealDamage(u,g.stormDmg,g.stormFrom,'magic')}if(g.stormTimer<=0)g.life=0}
+    else if(g.enemyWarn){g.warnTimer--;g.life=Math.max(0,g.warnTimer/Math.max(1,g.warnMax||1));if(g.warnTimer<=0)g.life=0}
     else if(g.bossTel){g.telTimer--;
       if(g.telTimer===5){
         // Detonate

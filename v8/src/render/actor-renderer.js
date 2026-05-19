@@ -2,7 +2,7 @@ import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
 import { createActorOverlayRenderer } from './actor-overlays.js';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=4bdd8c4-shield-vfx';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=fefecd8-combat-vfx';
 import { createActorEnemyRenderer } from './actor-enemy-renderer.js';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
@@ -89,6 +89,22 @@ function drawUnitRaw(u){
   if(!Number.isFinite(u.size)||u.size<=0)u.size=16;
   const bob=Math.sin(u.bobPhase)*1.2;
   const y=u.y+bob;
+  const _prevX=u._vfxPrevX,_prevY=u._vfxPrevY;
+  if(Number.isFinite(_prevX)&&Number.isFinite(_prevY)&&arena&&arena.phase==='wave'){
+    const _dx=u.x-_prevX,_dy=u.y-_prevY;
+    const _travel=Math.hypot(_dx,_dy);
+    if(_travel>18){
+      const _cap=Math.min(_travel,46);
+      const _ux=_dx/(_travel||1),_uy=_dy/(_travel||1);
+      u._shortBurstTrail={fromX:u.x-_ux*_cap,fromY:u.y-_uy*_cap,toX:u.x,toY:u.y,timer:10,maxTimer:10,color:u.accent||u.color||'#ffffff'};
+      if(_travel>70&&frame!==(u._lastBurstLandingFrame||-999)){
+        u._lastBurstLandingFrame=frame;
+        groundFx.push({x:u.x,y:u.y,r:0,maxR:u.size+20,life:0.28,color:u.accent||'#ffffff',flatten:true});
+        addP(u.x,u.y,u.accent||u.color||'#ffffff',8,3);
+      }
+    }
+  }
+  u._vfxPrevX=u.x;u._vfxPrevY=u.y;
   // Universal hit flash Ã¢â‚¬â€ same as enemies. Bright white ellipse fades over ~6 frames.
   // Render at the END of this fn so it sits on top; for now stash a flag.
   const _hitF=u.hitFlash||0;
@@ -122,6 +138,21 @@ function drawUnitRaw(u){
     return;
   }
   arena_drawPlayerAuraUnder(u,u.x,y,u.size);
+  if(u._shortBurstTrail&&u._shortBurstTrail.timer>0){
+    const _tr=u._shortBurstTrail;
+    const _p=_tr.timer/(_tr.maxTimer||10);
+    ctx.save();
+    ctx.globalAlpha=0.24*_p;
+    ctx.strokeStyle=_tr.color;
+    ctx.lineWidth=Math.max(2,u.size*0.16);
+    ctx.beginPath();ctx.moveTo(_tr.fromX,_tr.fromY);ctx.lineTo(_tr.toX,_tr.toY);ctx.stroke();
+    ctx.globalAlpha=0.12*_p;
+    ctx.fillStyle=_tr.color;
+    ctx.beginPath();ctx.ellipse(_tr.fromX,_tr.fromY,u.size*0.72,u.size*0.30,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    _tr.timer--;
+    if(_tr.timer<=0)u._shortBurstTrail=null;
+  }
   if(u.stealth&&u.stealthHits===0&&!u.vanishActive){
     ctx.globalAlpha=0.35;
   }
@@ -592,6 +623,19 @@ function drawUnitRaw(u){
   // The bar fills left-to-right in gold as the signature charges.
   if(u.signature&&!u.isMinion&&!u.isGhost&&!u.isMirror){
     const _sigPct=Math.min(1,u.signature.t/u.signature.cd);
+    if(_sigPct>=0.90){
+      const _wind=Math.min(1,(_sigPct-0.90)/0.10);
+      const _sigCol=u.accent||arena_playerVfxColor(u);
+      ctx.save();
+      ctx.globalAlpha=(0.18+0.22*Math.sin(frame*0.22))*_wind;
+      ctx.strokeStyle=_sigCol;ctx.lineWidth=2.2;
+      ctx.setLineDash([6,4]);ctx.lineDashOffset=-frame*0.75;
+      ctx.beginPath();ctx.arc(u.x,y,u.size+12+_wind*8,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha=0.10*_wind;ctx.fillStyle=_sigCol;
+      ctx.beginPath();ctx.arc(u.x,y,u.size+10+_wind*6,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
     if(_sigPct>=0.85){
       const _alpha=Math.min(1,(_sigPct-0.85)/0.15);
       ctx.save();

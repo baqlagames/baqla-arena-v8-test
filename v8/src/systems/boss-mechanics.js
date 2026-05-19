@@ -704,9 +704,12 @@ export function updateBoss(b,ctx){
       const phaseNames=['','','PHASE 2','PHASE 3'];
       const phaseColors=['','','#ff8c00','#ff0040'];
       const phaseIdx=Math.max(2,Math.min(phase,phaseNames.length-1));
-      showFlash(phaseNames[phaseIdx]+'!  NEW ABILITIES UNLOCKED','#ff8c00',100);
+      b._phaseFlashTimer=60;
+      showFlash(phaseNames[phaseIdx]+'!  NEW ABILITIES UNLOCKED',phaseColors[phaseIdx],100);
       shake(16);
       for(let i=0;i<60;i++)addP(b.x,b.y,phaseColors[phaseIdx],1,6);
+      groundFx.push({x:b.x,y:b.y,r:0,maxR:b.size+48,life:0.55,color:phaseColors[phaseIdx]});
+      groundFx.push({x:b.x,y:b.y,r:0,maxR:b.size+88,life:0.36,color:'#ffffff'});
     }
   }
   // Time-based enrage Ã¢â‚¬â€ measured from when THIS boss spawned, not from stage start.
@@ -723,6 +726,7 @@ export function updateBoss(b,ctx){
   // 20% HP desperation Ã¢â‚¬â€ small final boost
   if(!b.desperate && b.hp/b.maxHp<0.2){
     b.desperate=true;
+    b._phaseFlashTimer=60;
     b.dmg=Math.round(b.dmg*1.10);
     b.atkSpd=Math.max(18,Math.round(b.atkSpd*0.9));
     showFlash('FINAL STAND!','#ff8c00',100);

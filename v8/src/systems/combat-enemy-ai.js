@@ -157,6 +157,7 @@ export function updateArenaEnemyAi(enemy, {
   }
   if ((bestDistance <= attackRange || enemy._snipeReady) && enemy.cd <= 0) {
     performEnemyBasicAttack(enemy, bestTarget, {
+      frame,
       units,
       groundEffects,
       enemyAttackCooldown,
@@ -487,6 +488,7 @@ function handleSniperWindup(enemy, bestTarget, bestDistance, {
 }
 
 function performEnemyBasicAttack(enemy, bestTarget, {
+  frame,
   units,
   groundEffects,
   enemyAttackCooldown,
@@ -497,6 +499,24 @@ function performEnemyBasicAttack(enemy, bestTarget, {
   emitParticle,
   addDamageText,
 }) {
+  const needsWarning = !!(enemy.splashOnHit && enemy.splashRadius);
+  if (needsWarning) {
+    if (!enemy._aoeAttackWarn) {
+      const radius = enemy.splashRadius;
+      enemy._aoeAttackWarn = { timer: 18, maxTimer: 18, target: bestTarget };
+      groundEffects.push({ x: bestTarget.x, y: bestTarget.y, r: 0, maxR: radius, life: 0.45, color: '#ff8c00', enemyWarn: true, warnTimer: 18, warnMax: 18, warnKind: 'cleave' });
+      addDamageText(bestTarget.x, bestTarget.y - bestTarget.size - 6, enemy.arch === 'aoe' ? 'AOE!' : 'CLEAVE!', '#ff8c00', { sz: 11, bold: true });
+      emitParticle(enemy.x, enemy.y, '#ff8c00', 5, 2);
+      return;
+    }
+    enemy._aoeAttackWarn.timer--;
+    if (!bestTarget || bestTarget.hp <= 0 || enemy._aoeAttackWarn.timer > 0) {
+      if (frame % 5 === 0 && bestTarget && bestTarget.hp > 0) emitParticle(bestTarget.x, bestTarget.y, '#ff8c00', 1, 2);
+      if (!bestTarget || bestTarget.hp <= 0) enemy._aoeAttackWarn = null;
+      return;
+    }
+    enemy._aoeAttackWarn = null;
+  }
   enemy.cd = enemyAttackCooldown(enemy);
   applySearingBrandOnBasic(enemy, bestTarget);
   applyRoyalStingOnBasic(enemy, bestTarget);
@@ -606,6 +626,31 @@ function tickMeteor(enemy, {
   sound,
 }) {
   if (!(enemy.meteorCD && arenaPhase)) return;
+  if (enemy._meteorWarn) {
+    const warn = enemy._meteorWarn;
+    warn.timer--;
+    if (warn.timer > 0) {
+      if (warn.timer % 5 === 0) emitParticle(warn.x + randomRange(-warn.radius * 0.35, warn.radius * 0.35), warn.y + randomRange(-warn.radius * 0.25, warn.radius * 0.25), '#ff6622', 1, 2.5);
+      return;
+    }
+    for (const unit of units) {
+      if (unit.hp <= 0 || unit.divineShield || unit.untargetable || unit.isGhost) continue;
+      if (Math.hypot(unit.x - warn.x, unit.y - warn.y) <= warn.radius) dealDamage(unit, warn.damage, enemy, 'magic');
+    }
+    groundEffects.push({ x: warn.x, y: warn.y, r: 0, maxR: warn.radius, life: 0.6, color: '#ff4400' });
+    groundEffects.push({ x: warn.x, y: warn.y, r: 0, maxR: warn.radius * 0.5, life: 0.3, color: '#ffcc0066' });
+    for (let i = 0; i < 12; i++) {
+      const angle = Math.PI * 2 * i / 12;
+      emitParticle(warn.x + Math.cos(angle) * warn.radius * 0.4, warn.y + Math.sin(angle) * warn.radius * 0.4, '#ff6622', 2, 4);
+    }
+    emitParticle(warn.x, warn.y, '#ffaa44', 8, 3);
+    emitParticle(warn.x, warn.y, '#ffffff', 4, 2);
+    addDamageText(warn.x, warn.y - 30, 'METEOR!', '#ff4400', { sz: 15, bold: true });
+    shake(5);
+    sound.meteor();
+    enemy._meteorWarn = null;
+    return;
+  }
   if (enemy._meteorT == null) enemy._meteorT = Math.floor(enemy.meteorCD * 0.6) + Math.floor(randomRange(0, 120));
   enemy._meteorT--;
   if (enemy._meteorT > 0) return;
@@ -621,19 +666,8 @@ function tickMeteor(enemy, {
   if (!target) return;
   const damage = Math.round(enemy.dmg * (enemy.meteorDmgMult || 0.6));
   const radius = enemy.meteorRadius || 55;
-  for (const unit of units) {
-    if (unit.hp <= 0 || unit.divineShield || unit.untargetable || unit.isGhost) continue;
-    if (Math.hypot(unit.x - target.x, unit.y - target.y) <= radius) dealDamage(unit, damage, enemy, 'magic');
-  }
-  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: radius, life: 0.6, color: '#ff4400' });
-  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: radius * 0.5, life: 0.3, color: '#ffcc0066' });
-  for (let i = 0; i < 12; i++) {
-    const angle = Math.PI * 2 * i / 12;
-    emitParticle(target.x + Math.cos(angle) * radius * 0.4, target.y + Math.sin(angle) * radius * 0.4, '#ff6622', 2, 4);
-  }
-  emitParticle(target.x, target.y, '#ffaa44', 8, 3);
-  emitParticle(target.x, target.y, '#ffffff', 4, 2);
-  addDamageText(target.x, target.y - 30, 'METEOR!', '#ff4400', { sz: 15, bold: true });
-  shake(5);
-  sound.meteor();
+  enemy._meteorWarn = { x: target.x, y: target.y, radius, damage, timer: 36, maxTimer: 36 };
+  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: radius, life: 0.75, color: '#ff4400', enemyWarn: true, warnTimer: 36, warnMax: 36, warnKind: 'meteor' });
+  addDamageText(target.x, target.y - 30, 'METEOR', '#ff8844', { sz: 13, bold: true });
+  emitParticle(target.x, target.y, '#ff8844', 8, 3);
 }

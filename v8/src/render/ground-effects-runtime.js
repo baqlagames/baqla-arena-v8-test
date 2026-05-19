@@ -149,6 +149,24 @@ export function createGroundEffectsRuntime(deps) {
         ctx.fillText('!',g.x,g.y+5);
         ctx.textAlign='left';
       }
+    }else if(g.enemyWarn){
+      const p=clamp(1-(g.warnTimer/Math.max(1,g.warnMax||24)),0,1);
+      const c=g.color||'#ff8c00';
+      ctx.save();
+      ctx.globalAlpha=Math.max(0.15,g.life||0.35);
+      ctx.fillStyle=c+'24';
+      ctx.beginPath();ctx.arc(g.x,g.y,g.maxR,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=c;ctx.lineWidth=g.warnKind==='meteor'?3:2.2;
+      ctx.setLineDash(g.warnKind==='meteor'?[10,5]:[6,4]);ctx.lineDashOffset=-frame*0.9;
+      ctx.beginPath();ctx.arc(g.x,g.y,g.maxR,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha=0.45+0.25*Math.sin(frame*0.35);
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.arc(g.x,g.y,Math.max(4,g.maxR*p),0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.textAlign='center';
+      ctx.fillText(g.warnKind==='meteor'?'METEOR':'!',g.x,g.y+4);
+      ctx.textAlign='left';
+      ctx.restore();
     }else if(g.poisonCloud){
       ctx.fillStyle='rgba(140,200,80,'+(0.25+Math.sin(frame*0.1)*0.08)+')';
       ctx.beginPath();ctx.arc(g.x,g.y,g.maxR,0,Math.PI*2);ctx.fill();

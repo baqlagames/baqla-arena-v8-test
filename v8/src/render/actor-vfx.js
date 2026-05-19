@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=4bdd8c4-shield-vfx';
+import { drawActorShieldVfx } from './shield-vfx.js';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);
@@ -57,6 +57,7 @@ export function drawPlayerAuraUnder(ctx, { unit, x, y, size, frame }) {
   const haste = unitAttackSpeedVfxState(unit);
   const t = frame * 0.055 + (unit.unitIdx || 0) * 0.7 + (unit.bobPhase || 0);
   const isMinor = !!(unit.isMinion || unit.isMirror || unit.isGhost);
+  const level = unit.cellLevel || unit.level || 1;
   ctx.save();
   if (unit.spawnFrame != null) {
     const age = frame - unit.spawnFrame;
@@ -81,6 +82,18 @@ export function drawPlayerAuraUnder(ctx, { unit, x, y, size, frame }) {
     ctx.beginPath();
     ctx.ellipse(x, y + size * 0.70, size * 1.05, size * 0.26, 0, 0, Math.PI * 2);
     ctx.fill();
+  }
+  if (!isMinor && level >= 3) {
+    const lvCol = level >= 5 ? '#ffd700' : level >= 4 ? '#a855f7' : '#3aa0ff';
+    ctx.globalAlpha = level >= 5 ? 0.32 + 0.10 * Math.sin(t * 1.4) : 0.20;
+    ctx.strokeStyle = lvCol;
+    ctx.lineWidth = level >= 5 ? 2.2 : 1.4;
+    ctx.setLineDash(level >= 5 ? [8, 5] : [4, 6]);
+    ctx.lineDashOffset = -frame * (level >= 5 ? 0.55 : 0.25);
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.78, size * (level >= 5 ? 1.36 : 1.18), size * (level >= 5 ? 0.34 : 0.28), 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
   if (haste.active) {
     ctx.globalAlpha = 0.20 + 0.12 * Math.sin(t * 2.2);
@@ -112,6 +125,11 @@ export function drawPlayerAuraUnder(ctx, { unit, x, y, size, frame }) {
       ctx.lineTo(x + i * size * 0.20, y + size * 0.88);
       ctx.stroke();
     }
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = '#fff2bd';
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.76, size * 0.52, size * 0.14, 0, 0, Math.PI * 2);
+    ctx.fill();
   } else if (unit.arch === 'healer') {
     ctx.globalAlpha = 0.20 + 0.08 * Math.sin(t);
     ctx.strokeStyle = col;
@@ -190,7 +208,21 @@ export function drawPlayerAuraOver(ctx, {
   const col = playerVfxColor(unit);
   const haste = unitAttackSpeedVfxState(unit);
   const t = frame * 0.075 + (unit.unitIdx || 0) * 0.8 + (unit.bobPhase || 0);
+  const lowHp = unit.maxHp > 0 && unit.hp > 0 && unit.hp / unit.maxHp <= 0.28;
   ctx.save();
+  if (lowHp) {
+    ctx.globalAlpha = 0.18 + 0.12 * Math.sin(t * 3.2);
+    ctx.fillStyle = '#ff2233';
+    ctx.beginPath();
+    ctx.arc(x, y, size + 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.52;
+    ctx.strokeStyle = '#ff6677';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(x, y, size + 8 + Math.sin(t * 2.2) * 2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   if (haste.active) {
     ctx.globalAlpha = 0.42;
     ctx.strokeStyle = haste.color;
@@ -219,6 +251,18 @@ export function drawPlayerAuraOver(ctx, {
     ctx.lineTo(px, py + 3);
     ctx.stroke();
     if (frame % 12 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.45, size * 0.45), y - randomRange(2, size * 0.8), col, 1, 2);
+    if (unit._lastHealTarget && unit._lastHealTarget.hp > 0 && unit._lastHealTarget !== unit) {
+      ctx.globalAlpha = 0.22 + 0.08 * Math.sin(t);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([5, 5]);
+      ctx.lineDashOffset = -frame * 0.35;
+      ctx.beginPath();
+      ctx.moveTo(x, y - size * 0.30);
+      ctx.lineTo(unit._lastHealTarget.x, unit._lastHealTarget.y - (unit._lastHealTarget.size || size) * 0.25);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
   }
   if (unit.arch === 'tank' || unit.taunt) {
     ctx.globalAlpha = 0.42 + 0.16 * Math.sin(t * 1.3);
@@ -245,6 +289,28 @@ export function drawPlayerAuraOver(ctx, {
     ctx.moveTo(x + size * 0.18, yy);
     ctx.lineTo(x + size * 0.34, yy);
     ctx.stroke();
+  }
+  if (unit.arch === 'caster' || unit.attackType === 'magic' || unit.projType === 'fire' || unit.projType === 'frost' || unit.projType === 'lightning') {
+    ctx.globalAlpha = 0.30;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([3, 4]);
+    ctx.lineDashOffset = frame * 0.32;
+    ctx.beginPath();
+    ctx.ellipse(x, y - size * 0.12, size * 0.90, size * 0.30, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (unit.arch === 'melee' || unit.stealth) {
+    ctx.globalAlpha = 0.34;
+    ctx.strokeStyle = unit.stealth ? '#ff4d88' : col;
+    ctx.lineWidth = 1.3;
+    for (let i = 0; i < 2; i++) {
+      const a = t * 1.4 + i * Math.PI;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(a) * size * 0.12, y - size * 0.12, size * (0.70 + i * 0.18), a - 0.62, a + 0.18);
+      ctx.stroke();
+    }
   }
   if (unit.arch === 'paladin' || unit.projType === 'holy' || unit.attackType === 'holy') {
     ctx.globalAlpha = 0.34 + 0.12 * Math.sin(t);
@@ -340,6 +406,17 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
     ctx.ellipse(x, y + size * 0.75, size * 1.60, size * 0.38, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
+  if (enemy.isElite || enemy.champion) {
+    ctx.globalAlpha = 0.28 + 0.10 * Math.sin(t * 1.5);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = enemy.isBoss ? 3 : 2;
+    ctx.setLineDash([7, 5]);
+    ctx.lineDashOffset = -frame * 0.45;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.82, size * 1.42, size * 0.35, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
   if (enemy.armorType === 'warded' || enemy.arch === 'caster' || enemy.projType === 'curse') {
     drawEnemyDashedEllipse(ctx, { x, y: y + size * 0.50, rx: size * 0.98, ry: size * 0.25, color: col, alpha: 0.22 + 0.08 * Math.sin(t), frame });
     drawEnemyDashedEllipse(ctx, { x, y: y + size * 0.50, rx: size * 0.72, ry: size * 0.18, color: '#fff', alpha: 0.10, frame });
@@ -385,6 +462,18 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
       ctx.beginPath();
       ctx.moveTo(x - size * (0.85 + i * 0.20), y + size * (0.35 + i * 0.12));
       ctx.lineTo(x - size * (1.20 + i * 0.22), y + size * (0.42 + i * 0.12));
+      ctx.stroke();
+    }
+  }
+  if (enemy.arch === 'assassin' || enemy.prefersBackline) {
+    ctx.globalAlpha = 0.20;
+    ctx.strokeStyle = '#ff5a66';
+    ctx.lineWidth = 1.4;
+    for (let i = 0; i < 2; i++) {
+      const yy = y + size * (0.52 + i * 0.14);
+      ctx.beginPath();
+      ctx.moveTo(x - size * 1.20, yy);
+      ctx.lineTo(x - size * 0.48, yy - size * 0.08);
       ctx.stroke();
     }
   }
@@ -435,6 +524,31 @@ export function drawEnemyVfxOver(ctx, {
     ctx.lineTo(x, y - size * 0.92);
     ctx.lineTo(x + size * 0.24, y - size * 0.78);
     ctx.stroke();
+  }
+  if (enemy.isBoss && enemy.maxHp > 0) {
+    const hpPct = enemy.hp / enemy.maxHp;
+    if (hpPct <= 0.66) {
+      ctx.globalAlpha = hpPct <= 0.33 ? 0.72 : 0.48;
+      ctx.strokeStyle = hpPct <= 0.33 ? '#ff8844' : '#ffd166';
+      ctx.lineWidth = hpPct <= 0.33 ? 2.2 : 1.6;
+      for (let i = 0; i < (hpPct <= 0.33 ? 5 : 3); i++) {
+        const a = -0.8 + i * 0.42 + Math.sin(t + i) * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * size * 0.25, y - size * 0.30 + i * 2);
+        ctx.lineTo(x + Math.cos(a) * size * 0.95, y - size * 0.55 + i * 4);
+        ctx.stroke();
+      }
+    }
+    if (enemy._phaseFlashTimer > 0) {
+      const p = enemy._phaseFlashTimer / 60;
+      ctx.globalAlpha = 0.50 * p;
+      ctx.strokeStyle = enemy.color || '#ff8844';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 16 + (1 - p) * 28, 0, Math.PI * 2);
+      ctx.stroke();
+      enemy._phaseFlashTimer--;
+    }
   }
   if (enemy.armorType === 'heavy' || enemy.taunt) {
     const glint = 0.45 + 0.35 * Math.sin(t * 1.8);
@@ -505,6 +619,7 @@ export function drawEnemyVfxOver(ctx, {
     ctx.arc(x, y - size * 0.20, size + 7, 0, Math.PI * 2);
     ctx.stroke();
   }
+  let drewWaveShield = false;
   if (enemy.waveMechanic) {
     const mc = { shield: '#44aaff', banner: '#ffcc44', medic: '#44ff88', ritual: '#aa66ff', exploding: '#ff8844', sniper: '#ff4444' }[enemy.waveMechanic] || '#ffd700';
     ctx.globalAlpha = 0.78;

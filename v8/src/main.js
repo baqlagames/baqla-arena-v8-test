@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=4bdd8c4-shield-vfx';
+import { startArena } from './systems/arena-runtime.js?v=fefecd8-combat-vfx';
 
 startArena();

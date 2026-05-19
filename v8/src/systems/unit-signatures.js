@@ -1017,24 +1017,21 @@ return {
   }},
   thunderstorm:{name:'Thunderstorm',cd:30,fire(u){
     const targets=[];
-    for(const e of enemies){if(e.hp>0&&dist(u,e)<280)targets.push(e)}
+    for(const e of enemies){if(e.hp>0&&dist(u,e)<340)targets.push(e)}
     if(!targets.length)return false;
-    const boltDmg=Math.round(u.dmg*2.5);
-    const bolts=Math.min(6,targets.length+2);
-    for(let i=0;i<bolts;i++){
-      const t=targets[i%targets.length];
-      dealDamage(t,boltDmg,u,'magic');
-      if(!t.isBoss){
-        t.stunned=Math.max(t.stunned||0,48);
-        addDmg(t.x,t.y-t.size-8,'STUN','#ffee66',{sz:11,bold:true});
-      }
-      const bx=t.x+rnd(-15,15),by=t.y-120;
-      groundFx.push({x:bx,y:by,r:0,maxR:0,life:0.4,lightningBolt:true,lbX2:t.x,lbY2:t.y,color:'#ffee66'});
-      addP(t.x,t.y,'#ffee66',14,5);addP(t.x,t.y,'#aa88ff',10,4);
-    }
-    groundFx.push({x:u.x,y:u.y,r:0,maxR:280,life:0.6,color:'#aa88ff'});
-    addDmg(u.x,u.y-u.size-10,'THUNDERSTORM!','#ffee66');showFlash('THUNDERSTORM!','#aa88ff',70);
-    shake(14);
+    const duration=Math.round(2.5*GAME_TICK_HZ);
+    u._thunderstorm={
+      timer:duration,maxTimer:duration,
+      tickCD:0,tickEvery:Math.max(6,Math.round(0.25*GAME_TICK_HZ)),
+      dmg:Math.max(1,Math.round(u.dmg*0.62)),
+      radius:360,maxTargets:Math.min(10,Math.max(6,targets.length)),
+      stun:Math.round(0.5*GAME_TICK_HZ),
+      from:u
+    };
+    groundFx.push({x:u.x,y:u.y,r:0,maxR:310,life:0.8,color:'#ffee66'});
+    groundFx.push({x:u.x,y:u.y,r:0,maxR:190,life:0.55,color:'#ff9f2e'});
+    addDmg(u.x,u.y-u.size-10,'THUNDERSTORM!','#ffee66',{sz:15,bold:true});showFlash('THUNDERSTORM!','#ffee66',70);
+    shake(10);
   }},
   soul_harvest:{name:'Soul Harvest',cd:28,fire(u){
     const best=arena_findBestEnemyClusterPoint(u,340,120);

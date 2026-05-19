@@ -8,6 +8,8 @@ export function projectileColor(type) {
   if (type === 'holy') return '#ffe066';
   if (type === 'frost' || type === 'ice') return '#88ddff';
   if (type === 'voidShard' || type === 'voidOrb' || type === 'voidBolt') return '#aa66ff';
+  if (type === 'poison') return '#78d64b';
+  if (type === 'bolt') return '#44ccff';
   return '#88ddff';
 }
 

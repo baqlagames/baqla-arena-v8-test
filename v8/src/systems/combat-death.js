@@ -4,23 +4,38 @@ export function emitUnitDeathBurst(unit, {
   shake,
 }) {
   if (unit.isEnemy) {
+    const deathColor = enemyDeathColor(unit);
     if (unit.isBoss) {
       emitParticle(unit.x, unit.y, unit.color || '#fff', 60, 9);
       emitParticle(unit.x, unit.y, '#ffffff', 28, 7);
       groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: 90, life: 0.7, color: unit.color || '#fff' });
       shake(18);
     } else if (unit.isElite) {
-      emitParticle(unit.x, unit.y, unit.color || '#fff', 32, 6);
+      emitParticle(unit.x, unit.y, deathColor, 32, 6);
       emitParticle(unit.x, unit.y, '#ffffff', 12, 4);
-      groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: 50, life: 0.45, color: unit.color || '#fff' });
+      groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: 50, life: 0.45, color: deathColor });
       shake(8);
     } else {
-      emitParticle(unit.x, unit.y, unit.color || '#fff', 16, 4);
+      emitParticle(unit.x, unit.y, deathColor, 16, 4);
       emitParticle(unit.x, unit.y, '#ffffff', 5, 3);
+      groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: Math.max(18, (unit.size || 18) * 1.25), life: 0.24, color: deathColor, flatten: true });
+      if (unit.poisonOnHit) emitParticle(unit.x, unit.y, '#bbff55', 8, 3);
+      if (unit.projType === 'frost' || unit.slowOnHit) emitParticle(unit.x, unit.y, '#d8f8ff', 8, 2);
+      if (unit.projType === 'curse' || unit.armorType === 'warded') emitParticle(unit.x, unit.y, '#3a0a5a', 6, 3);
+      if (unit.act === 3 || unit.burrow) emitParticle(unit.x, unit.y, '#c8a05a', 10, 3);
     }
   } else {
     emitParticle(unit.x, unit.y, unit.color || '#fff', 12, 3);
   }
+}
+
+function enemyDeathColor(unit) {
+  if (unit.projType === 'frost' || unit.slowOnHit) return '#88ddff';
+  if (unit.poisonOnHit) return '#78d64b';
+  if (unit.projType === 'curse' || unit.armorType === 'warded') return '#a855f7';
+  if (unit.projType === 'fire' || unit.meteorCD || unit.splashOnHit) return '#ff8844';
+  if (unit.act === 3 || unit.burrow) return '#c8a05a';
+  return unit.color || '#fff';
 }
 
 export function calculateEnemyKillReward(unit, killer, {

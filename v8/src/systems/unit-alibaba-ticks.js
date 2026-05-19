@@ -21,6 +21,7 @@ export function tickUnitAlibabaPassives(unit, {
   tickBlizzard(unit, { frame, enemies, randomRange, dealDamage, emitParticle });
   tickIceBarrier(unit, { enemies, emitParticle, addDamageText, shake });
   tickFrozenOrb(unit, { frame, enemies, arenaBounds, groundEffects, randomRange, dealDamage, findBestEnemyClusterPoint, emitParticle });
+  tickThunderstorm(unit, { frame, enemies, groundEffects, randomRange, dealDamage, emitParticle, addDamageText, shake });
 }
 
 function tickCombustion(unit, {
@@ -272,4 +273,70 @@ function tickFrozenOrb(unit, {
     emitParticle(orb.x + randomRange(-10, 10), orb.y + randomRange(-10, 10), '#ffffff', 1, 2);
   }
   if (orb.timer <= 0 || orb.x < arenaBounds.left - 20 || orb.x > arenaBounds.right + 20 || orb.y < arenaBounds.top - 20 || orb.y > arenaBounds.bottom + 20) unit._frozenOrb = null;
+}
+
+function tickThunderstorm(unit, {
+  frame,
+  enemies,
+  groundEffects,
+  randomRange,
+  dealDamage,
+  emitParticle,
+  addDamageText,
+  shake,
+}) {
+  if (!unit._thunderstorm) return;
+
+  const storm = unit._thunderstorm;
+  storm.timer--;
+  storm.tickCD--;
+
+  if (frame % 4 === 0) {
+    emitParticle(unit.x + randomRange(-unit.size * 0.7, unit.size * 0.7), unit.y + randomRange(-unit.size * 0.45, unit.size * 0.2), '#ffee66', 1, 3);
+    emitParticle(unit.x + randomRange(-unit.size * 0.55, unit.size * 0.55), unit.y + randomRange(-unit.size * 0.6, unit.size * 0.1), '#ff9f2e', 1, 2);
+  }
+
+  if (frame % 10 === 0) {
+    const pulse = 0.55 + 0.35 * (storm.timer / Math.max(1, storm.maxTimer || storm.timer));
+    groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: storm.radius * pulse, life: 0.22, color: '#ffee66' });
+  }
+
+  if (storm.tickCD <= 0) {
+    storm.tickCD = storm.tickEvery || 15;
+    const targets = enemies
+      .filter(enemy => enemy.hp > 0 && dist(unit, enemy) <= storm.radius)
+      .sort((a, b) => {
+        const bossBiasA = a.isBoss ? 120 : 0;
+        const bossBiasB = b.isBoss ? 120 : 0;
+        return (dist(unit, a) + bossBiasA) - (dist(unit, b) + bossBiasB);
+      })
+      .slice(0, storm.maxTargets || 8);
+
+    const leftSource = { x: unit.x - unit.size * 1.45, y: unit.y - unit.size * 1.9 };
+    const rightSource = { x: unit.x + unit.size * 1.45, y: unit.y - unit.size * 1.9 };
+    groundEffects.push({ x: leftSource.x, y: leftSource.y, r: 0, maxR: 32, life: 0.18, color: '#ffee66' });
+    groundEffects.push({ x: rightSource.x, y: rightSource.y, r: 0, maxR: 32, life: 0.18, color: '#ff9f2e' });
+
+    let hit = 0;
+    for (const target of targets) {
+      const source = hit % 2 === 0 ? leftSource : rightSource;
+      const tx = target.x + randomRange(-8, 8);
+      const ty = target.y - (target.size || 18) * 0.25 + randomRange(-5, 5);
+      dealDamage(target, storm.dmg, storm.from || unit, 'magic', 'lightning');
+      if (!target.isBoss) {
+        target.stunned = Math.max(target.stunned || 0, storm.stun || Math.round(0.5 * GAME_TICK_HZ));
+        if (storm.timer > (storm.maxTimer || 0) - (storm.tickEvery || 15) - 2) addDamageText(target.x, target.y - (target.size || 18) - 8, 'STUN', '#ffee66', { sz: 11, bold: true });
+      }
+      groundEffects.push({ x: source.x, y: source.y, r: 0, maxR: 0, life: 0.22, lightningBolt: true, lbX2: tx, lbY2: ty, color: hit % 2 === 0 ? '#ffee66' : '#ff9f2e' });
+      emitParticle(target.x, target.y, '#ffee66', 6, 4);
+      emitParticle(target.x + randomRange(-7, 7), target.y + randomRange(-8, 5), '#ffffff', 2, 3);
+      hit++;
+    }
+    if (hit) shake(4);
+  }
+
+  if (storm.timer <= 0) {
+    unit._thunderstorm = null;
+    addDamageText(unit.x, unit.y - unit.size, 'STORM ENDS', '#b8860b', { sz: 11, bold: true });
+  }
 }
