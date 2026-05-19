@@ -4,7 +4,7 @@ import {
   drainHealToBarrier,
   tickAerialBombs,
   updateBoss,
-} from './boss-mechanics.js?v=fefecd8-combat-vfx';
+} from './boss-mechanics.js?v=905b2c3-thunder-shield';
 
 export function createArenaBossRuntime(deps) {
   const randomRange = typeof deps.randomRange === 'function'

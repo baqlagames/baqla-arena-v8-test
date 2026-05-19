@@ -1,4 +1,4 @@
-import { emitShieldAbsorbFx } from './shield-vfx-events.js?v=4bdd8c4-shield-vfx';
+import { emitShieldAbsorbFx } from './shield-vfx-events.js';
 
 export function stopInvalidDamageTarget(target, {
   frame,
@@ -80,6 +80,7 @@ export function absorbGoldShield(target, dmg, {
   emitParticle,
   addDamageText,
   groundEffects,
+  frame,
 }) {
   if (!Number.isFinite(dmg) || dmg <= 0) return { dmg: 0, blocked: true };
   if (!target._goldShield || target._goldShield.amt <= 0) return { dmg, blocked: false };
@@ -102,6 +103,7 @@ export function absorbEarthwardenShield(target, dmg, {
   emitParticle,
   addDamageText,
   groundEffects,
+  frame,
 }) {
   if (!Number.isFinite(dmg) || dmg <= 0) return { dmg: 0, blocked: true };
   if (target.earthwardenShield <= 0) return { dmg, blocked: false };

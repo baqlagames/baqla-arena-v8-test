@@ -9,8 +9,8 @@ import {
   drawPlayerAuraOver as renderDrawPlayerAuraOver,
   drawPlayerAuraUnder as renderDrawPlayerAuraUnder,
   playerVfxColor as renderPlayerVfxColor,
-} from './actor-vfx.js?v=fefecd8-combat-vfx';
-import { projectileColor } from '../systems/combat-projectiles.js?v=fefecd8-combat-vfx';
+} from './actor-vfx.js?v=905b2c3-thunder-shield';
+import { projectileColor } from '../systems/combat-projectiles.js?v=905b2c3-thunder-shield';
 
 export function createActorSpriteHelpers({
   ctx,

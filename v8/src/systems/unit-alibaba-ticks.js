@@ -21,7 +21,7 @@ export function tickUnitAlibabaPassives(unit, {
   tickBlizzard(unit, { frame, enemies, randomRange, dealDamage, emitParticle });
   tickIceBarrier(unit, { enemies, emitParticle, addDamageText, shake });
   tickFrozenOrb(unit, { frame, enemies, arenaBounds, groundEffects, randomRange, dealDamage, findBestEnemyClusterPoint, emitParticle });
-  tickThunderstorm(unit, { frame, enemies, groundEffects, randomRange, dealDamage, emitParticle, addDamageText, shake });
+  tickThunderstorm(unit, { frame, enemies, arenaBounds, groundEffects, randomRange, dealDamage, emitParticle, addDamageText, shake });
 }
 
 function tickCombustion(unit, {
@@ -278,6 +278,7 @@ function tickFrozenOrb(unit, {
 function tickThunderstorm(unit, {
   frame,
   enemies,
+  arenaBounds,
   groundEffects,
   randomRange,
   dealDamage,
@@ -318,16 +319,21 @@ function tickThunderstorm(unit, {
     groundEffects.push({ x: rightSource.x, y: rightSource.y, r: 0, maxR: 32, life: 0.18, color: '#ff9f2e' });
 
     let hit = 0;
+    const skyTop = Math.max(18, (arenaBounds && arenaBounds.top || 70) + 10);
     for (const target of targets) {
       const source = hit % 2 === 0 ? leftSource : rightSource;
       const tx = target.x + randomRange(-8, 8);
       const ty = target.y - (target.size || 18) * 0.25 + randomRange(-5, 5);
+      const skyX = target.x + randomRange(-28, 28);
+      const skyY = Math.max(skyTop, target.y - 330 + randomRange(-28, 18));
       dealDamage(target, storm.dmg, storm.from || unit, 'magic', 'lightning');
       if (!target.isBoss) {
         target.stunned = Math.max(target.stunned || 0, storm.stun || Math.round(0.5 * GAME_TICK_HZ));
         if (storm.timer > (storm.maxTimer || 0) - (storm.tickEvery || 15) - 2) addDamageText(target.x, target.y - (target.size || 18) - 8, 'STUN', '#ffee66', { sz: 11, bold: true });
       }
-      groundEffects.push({ x: source.x, y: source.y, r: 0, maxR: 0, life: 0.22, lightningBolt: true, lbX2: tx, lbY2: ty, color: hit % 2 === 0 ? '#ffee66' : '#ff9f2e' });
+      groundEffects.push({ x: skyX, y: skyY, r: 0, maxR: 0, life: 0.36, lightningBolt: true, lbX2: tx, lbY2: ty, color: hit % 2 === 0 ? '#ffee66' : '#ff9f2e', width: 5, segments: 8 });
+      groundEffects.push({ x: source.x, y: source.y, r: 0, maxR: 0, life: 0.16, lightningBolt: true, lbX2: tx, lbY2: ty, color: hit % 2 === 0 ? '#fff3a0' : '#ffc15a', width: 2.2, segments: 4 });
+      groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: (target.size || 18) + 22, life: 0.24, color: hit % 2 === 0 ? '#ffee66' : '#ff9f2e' });
       emitParticle(target.x, target.y, '#ffee66', 6, 4);
       emitParticle(target.x + randomRange(-7, 7), target.y + randomRange(-8, 5), '#ffffff', 2, 3);
       hit++;

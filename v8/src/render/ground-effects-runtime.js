@@ -359,10 +359,10 @@ export function createGroundEffectsRuntime(deps) {
       ctx.beginPath();ctx.moveTo(g.x-6,g.y);ctx.lineTo(g.x+6,g.y);ctx.moveTo(g.x,g.y-6);ctx.lineTo(g.x,g.y+6);ctx.stroke();
     }else if(g.lightningBolt){
       const _lc=g.color||'#ffee66';
-      ctx.save();ctx.strokeStyle=_lc;ctx.lineWidth=3;ctx.globalAlpha=Math.min(1,g.life*3);
+      ctx.save();ctx.strokeStyle=_lc;ctx.lineWidth=g.width||3;ctx.globalAlpha=Math.min(1,g.life*3);
       ctx.shadowColor=_lc;ctx.shadowBlur=12;
       ctx.beginPath();ctx.moveTo(g.x,g.y);
-      const dx=g.lbX2-g.x,dy=g.lbY2-g.y;const segs=5;
+      const dx=g.lbX2-g.x,dy=g.lbY2-g.y;const segs=g.segments||5;
       for(let i=1;i<segs;i++){
         const t=i/segs;ctx.lineTo(g.x+dx*t+rnd(-8,8),g.y+dy*t+rnd(-6,6));
       }

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { emitShieldAbsorbFx } from '../src/systems/shield-vfx-events.js';
+import { absorbEarthwardenShield, absorbGoldShield } from '../src/systems/combat-absorbs.js';
 import { drawActorShieldVfx, drawUnitShieldVfx } from '../src/render/shield-vfx.js';
 import { unitAttackSpeedVfxState as auraHasteState } from '../src/render/actor-vfx.js';
 
@@ -75,5 +76,27 @@ const enemy = {
 drawActorShieldVfx(ctx, { unit: enemy, x: enemy.x, y: enemy.y, size: enemy.size, frame: 30 });
 assert(enemy._shieldHitFx.timer === 3, 'enemy shield hit fx should tick once');
 assert(auraHasteState(unit).active, 'haste aura state should detect jazar haste');
+
+const goldShieldTarget = { x: 120, y: 120, size: 16, hp: 100, maxHp: 100, _goldShield: { amt: 20, max: 30, timer: 100, maxTimer: 120 } };
+const goldResult = absorbGoldShield(goldShieldTarget, 25, {
+  frame: 42,
+  emitParticle: (...args) => particles.push(args),
+  addDamageText: (...args) => texts.push(args),
+  groundEffects,
+});
+assert(goldResult.dmg === 5 && goldResult.blocked === false, 'gold shield should absorb then pass leftover damage');
+assert(goldShieldTarget._goldShield === null, 'gold shield should clear when broken');
+assert(goldShieldTarget._shieldBreakFx && goldShieldTarget._shieldBreakFx.type === 'gold', 'gold shield break fx should be marked by absorb path');
+
+const earthTarget = { x: 160, y: 120, size: 16, hp: 100, maxHp: 100, earthwardenShield: 14, earthwardenTimer: 90 };
+const earthResult = absorbEarthwardenShield(earthTarget, 14, {
+  frame: 43,
+  emitParticle: (...args) => particles.push(args),
+  addDamageText: (...args) => texts.push(args),
+  groundEffects,
+});
+assert(earthResult.dmg === 0 && earthResult.blocked === true, 'earthwarden shield should fully block exact shield hit');
+assert(earthTarget.earthwardenShield === 0, 'earthwarden shield should drop to zero when broken');
+assert(earthTarget._shieldBreakFx && earthTarget._shieldBreakFx.type === 'earthwarden', 'earthwarden shield break fx should be marked by absorb path');
 
 console.log('smoke-shield-vfx: ok');
