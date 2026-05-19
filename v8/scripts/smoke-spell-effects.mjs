@@ -5,21 +5,21 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-const crystalSurgeIdx = ARENA_ABILITIES.findIndex(ability => ability.name === 'Crystal Surge');
-const stasisIdx = ARENA_ABILITIES.findIndex(ability => ability.name === 'Crystal Stasis');
+const bulwarkIdx = ARENA_ABILITIES.findIndex(ability => ability.name === 'Bulwark Charm');
+const stasisIdx = ARENA_ABILITIES.findIndex(ability => ability.name === 'Stasis Pulse');
 const flowIdx = ARENA_ABILITIES.findIndex(ability => ability.name === 'Signature Flow');
-assert(crystalSurgeIdx >= 0, 'Crystal Surge spell should exist');
-assert(stasisIdx >= 0, 'Crystal Stasis spell should exist');
+assert(bulwarkIdx >= 0, 'Bulwark Charm spell should exist');
+assert(stasisIdx >= 0, 'Stasis Pulse spell should exist');
 assert(flowIdx >= 0, 'Signature Flow spell should exist');
+assert(!ARENA_ABILITIES.some(ability => /crystal/i.test(ability.name) || /crystal/i.test(ability.desc || '')), 'spell list should not include crystal-resource spells');
 
 const state = {
   width: 500,
   height: 900,
   arenaTop: 100,
   gold: 999,
-  crystal: 0,
   arena: { spellUsed: [] },
-  selectedSpells: [crystalSurgeIdx, stasisIdx, flowIdx],
+  selectedSpells: [bulwarkIdx, stasisIdx, flowIdx],
   abilityUsed: [false, false, false],
   units: [
     { x: 200, y: 650, hp: 100, signature: { cd: 100, t: 40 } },
@@ -35,7 +35,10 @@ const state = {
 const runtime = createArenaSpellRuntime({
   view: () => state,
   setGold: value => { state.gold = value; },
-  addCrystal: value => { state.crystal += value; },
+  addGoldShield: (unit, amount, duration, cap, noExpireHeal) => {
+    const current = unit._goldShield && unit._goldShield.amt > 0 ? unit._goldShield.amt : 0;
+    unit._goldShield = { amt: Math.min(cap, current + amount), timer: duration, maxTimer: duration, noExpireHeal };
+  },
   setAbilityTargeting: () => {},
   emitParticle: () => {},
   addHealEffect: () => {},
@@ -45,15 +48,16 @@ const runtime = createArenaSpellRuntime({
   shake: () => {},
 });
 
-assert(runtime.castAbility(0, 250, 450), 'Crystal Surge should cast');
-assert(state.crystal === 3, `Crystal Surge should grant +3 crystals, got ${state.crystal}`);
+assert(runtime.castAbility(0, 250, 450), 'Bulwark Charm should cast');
+assert(state.units[0]._goldShield && state.units[0]._goldShield.amt === 18, 'Bulwark Charm should shield units for 18% max HP');
+assert(state.units[1]._goldShield && state.units[1]._goldShield.amt === 18, 'Bulwark Charm should shield every living unit');
 
-assert(runtime.castAbility(1, 250, 450), 'Crystal Stasis should cast');
-assert(state.enemies[0].stunned === 120, 'Crystal Stasis should stun non-boss enemies for 2s');
-assert(state.enemies[1].stunned === 0, 'Crystal Stasis should not stun bosses');
+assert(runtime.castAbility(1, 250, 450), 'Stasis Pulse should cast');
+assert(state.enemies[0].stunned === 120, 'Stasis Pulse should stun non-boss enemies for 2s');
+assert(state.enemies[1].stunned === 0, 'Stasis Pulse should not stun bosses');
 
 assert(runtime.castAbility(2, 250, 450), 'Signature Flow should cast');
 assert(state.units[0].signature.t === 58, `Signature Flow should recover 30% remaining cooldown, got ${state.units[0].signature.t}`);
 assert(state.units[1].signature.t === 24, `Signature Flow should work from empty cooldown, got ${state.units[1].signature.t}`);
 
-console.log('Spell effects smoke passed for Crystal Surge, Crystal Stasis, and Signature Flow.');
+console.log('Spell effects smoke passed for Bulwark Charm, Stasis Pulse, and Signature Flow.');

@@ -16,6 +16,12 @@ export function createArenaSpellRuntime(deps = {}) {
   const addParticle = typeof deps.emitParticle === 'function' ? deps.emitParticle : () => {};
   const dealDamage = typeof deps.dealDamage === 'function' ? deps.dealDamage : () => 0;
   const applyTrackedHeal = typeof deps.applyTrackedHeal === 'function' ? deps.applyTrackedHeal : () => 0;
+  const addGoldShield = typeof deps.addGoldShield === 'function'
+    ? deps.addGoldShield
+    : ((unit, amount, duration, cap) => {
+      const current = unit._goldShield && unit._goldShield.amt > 0 ? unit._goldShield.amt : 0;
+      unit._goldShield = { amt: Math.min(cap || amount, current + amount), timer: duration, maxTimer: duration, noExpireHeal: true };
+    });
 
   const spellStatSources = {};
 
@@ -131,10 +137,6 @@ export function createArenaSpellRuntime(deps = {}) {
           }
         }
       }
-      if (ability.crystalGain) {
-        if (typeof deps.addCrystal === 'function') deps.addCrystal(ability.crystalGain);
-        addParticle((v.width || 500) / 2, (v.height || 1000) / 2, '#9b59b6', 24, 5);
-      }
       if (ability.stunDur) {
         for (const enemy of enemies) {
           if (enemy.hp <= 0 || enemy.isBoss) continue;
@@ -149,6 +151,16 @@ export function createArenaSpellRuntime(deps = {}) {
           const remaining = Math.max(0, unit.signature.cd - unit.signature.t);
           unit.signature.t = Math.min(unit.signature.cd - 1, unit.signature.t + Math.round(remaining * pct));
           addParticle(unit.x, unit.y, ability.color, 6, 3);
+        }
+      }
+      if (ability.shieldPct) {
+        const duration = ability.shieldDur || Math.round(6 * tickHz);
+        for (const unit of units) {
+          if (unit.hp <= 0) continue;
+          const shield = Math.max(1, Math.round((unit.maxHp || unit.hp || 1) * ability.shieldPct));
+          const cap = Math.max(shield, Math.round((unit.maxHp || unit.hp || 1) * 0.28));
+          addGoldShield(unit, shield, duration, cap, true);
+          addParticle(unit.x, unit.y, ability.color, 8, 3);
         }
       }
     }
