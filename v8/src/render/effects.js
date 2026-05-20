@@ -82,14 +82,11 @@ function drawFloatingBadge(ctx,view){
     ctx.shadowBlur=3;
     if(tagText){
       const tx=x-w/2+pad+5;
-      ctx.fillStyle=view.tagColor||view.color;
-      ctx.globalAlpha=alpha*0.88;
-      ctx.beginPath();ctx.arc(tx,y,5.8,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='rgba(0,0,0,0.78)';
-      ctx.lineWidth=2;
       ctx.font='900 8px "Segoe UI Symbol", Arial';
+      ctx.strokeStyle='rgba(0,0,0,0.82)';
+      ctx.lineWidth=3;
       ctx.strokeText(tagText,tx,y+0.4);
-      ctx.fillStyle='#fffdf2';
+      ctx.fillStyle=view.tagColor||view.color;
       ctx.fillText(tagText,tx,y+0.4);
       textX+=tagW*0.32;
     }
@@ -104,28 +101,14 @@ function drawFloatingBadge(ctx,view){
   }
   ctx.shadowColor=view.color;
   ctx.shadowBlur=view.bold?8:4;
-  ctx.fillStyle=view.heal?'rgba(5,35,18,0.78)':'rgba(8,10,18,0.78)';
-  ctx.beginPath();ctx.roundRect(x-w/2,y-h/2,w,h,7);ctx.fill();
-  ctx.shadowBlur=0;
-  ctx.strokeStyle=view.outline||view.color;
-  ctx.lineWidth=view.bold?1.4:1;
-  ctx.globalAlpha=alpha*(view.bold?0.86:0.62);
-  ctx.beginPath();ctx.roundRect(x-w/2+0.5,y-h/2+0.5,w-1,h-1,7);ctx.stroke();
-  ctx.globalAlpha=alpha;
   let textX=x;
   if(tagText){
     const tx=x-w/2+pad+7;
-    ctx.fillStyle=view.tagColor||view.color;
-    ctx.globalAlpha=alpha*0.92;
-    ctx.beginPath();ctx.arc(tx,y,7,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,0.78)';
-    ctx.lineWidth=1;
-    ctx.beginPath();ctx.arc(tx,y,7.5,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='#fffdf2';
-    ctx.strokeStyle='rgba(0,0,0,0.75)';
-    ctx.lineWidth=2;
     ctx.font='900 10px "Segoe UI Symbol", Arial';
+    ctx.strokeStyle='rgba(0,0,0,0.82)';
+    ctx.lineWidth=3;
     ctx.strokeText(tagText,tx,y+0.4);
+    ctx.fillStyle=view.tagColor||view.color;
     ctx.fillText(tagText,tx,y+0.4);
     textX+=tagW*0.32;
     ctx.font=(view.bold?'900':'800')+' '+size+'px Arial';
