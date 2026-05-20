@@ -447,8 +447,8 @@ function arena_passiveShort(id){
     bestialWrath:'Every 18s: all pets enrage +50% dmg, +30% atk speed for 6s',
     autoTurret:'Every 10s: deploys a lighter utility turret (max 2)', overclock:'Every 7th attack: +30% attack speed for 3s',
     smiteHeal:'Each attack heals the lowest-HP ally', shield:'Shield bubble every few attacks',
-    prayerOfMending:'Every 8s: attach bouncing heal to lowest ally (heals 25% HP on damage, jumps 4Ãƒâ€”)',
-    angelOfMercy:'On first death: become invulnerable healing spirit for 6s',
+    prayerOfMending:'Every 7s: attach a bouncing heal to a low ally (18% HP on damage, 5 jumps; 7 at L5)',
+    angelOfMercy:'On first death: become an invulnerable healing spirit for 8s; 10s at L5',
     penance:'Every 5th attack: fires 5 rapid holy bolts + heals lowest ally',
     powerWordBarrier:'Every 14s: absorb shield on lowest ally (200+40/lvl)',
     shadowWordPain:'Attacks apply stronger shadow DoT (36%/s, 5s, stacks to 3). At 3 stacks: +7% dmg taken. Shadow Crash every 5th hit. Void Tentacles every 10th hit. Void Eruption auto-casts every 10s (200% AoE + Voidform)',
@@ -571,7 +571,7 @@ function arena_l5BonusBrief(unitIdx){
     3:"King Protection: Avenger's Shield hits 5 targets, deals 1.65x damage, and shield cap rises to 16%",
     4:'Felfel: Fan of Knives AoE + all passives at max potency',
     7:'Jafaar: Summon Felhound (melee + spell-lock) + Agony/UA at max potency',
-    10:'Naana: Prayer of Mending (bouncing heal) + Angel of Mercy (spirit on death). A3: Holy Word Serenity (full heal+cleanse). A5: Guardian Spirit (prevent death).',
+    10:'Naana: Prayer of Mending, Renew, and Sanctify sustain the team. Angel of Mercy becomes a healing spirit on death. A3: Holy Word Serenity. A5: Guardian Spirit.',
     11:'Bakdounes: Purify (base), Moonkin: Eclipse at 4 hits + Astral Power 4 stacks (+40% dmg), Grove Keeper: +50% potency',
     12:'Habaq: Essence Mastery (+1 statue, stronger infusions, +2 poison stacks)',
     // Kharroob L5 bonus removed
@@ -765,7 +765,7 @@ function passiveLabel(u){
     Jafaar:'Built-in: Split Curse basic attacks hit a second enemy and spread Agony, Soul Siphon heals from DoT damage, and Imp Familiar joins each wave. P1 Agony: attacks apply stacking DoT. P2 (L3) unlocks curse payoffs: 3 Agony stacks create Curse Bloom, and 5 curse applications call Fel Meteor. Unstable Affliction makes enemies dying with Jafaar Agony burst and seed Agony to a few nearby enemies. SIGNATURE Soul Harvest opens a curse rift that ticks, refreshes Agony, then bursts cursed enemies.',
     Zaatar:'Built-in: Twin Shot basic attacks hit a second enemy, plus Wolf companion per wave. P1 Aimed Shot Mark: every 3rd attack deals 250% damage and applies Hunter\'s Mark (+20% damage from all sources, 4s). P2 (L3) Steady Focus: standing still for 2s grants +25% attack speed. A3 Rapid Fire: channel 8 fast shots (14s CD). SIGNATURE Trueshot (8s: +100% dmg, +50% range, Aimed Shots every hit).',
     Rommana:'Base Field Engineer. Team value: flexible control, emergency repair shields, and a turret damage mark. P1 Utility Turret: fast setup, max 2, lighter damage. P2 Overclock: every 7th attack gains +30% attack speed for 3s. A3 EMP Grenade: 80px AoE, silence/slow, marks enemies to take +10% Rommana/turret damage. A5 Repair Bot: healing drone with emergency shield. Sig: Omega Cannon burst plus control splash.',
-    Naana:'P1 Smite + Heal: each attack damages the enemy AND heals the lowest-HP ally. P2 (L3) Shield: every few attacks, shields the nearest tank. L5 Ã¢â‚¬â€ Beacon: smites also heal a second ally. L5 Ã¢â‚¬â€ Lay on Hands: full-heal a critical ally periodically.',
+    Naana:'Holy priest raid healer. Prayer of Mending jumps between damaged allies, Renew keeps the lowest ally stable, Sanctify bursts healing on hit cadence, Serenity is the big cleanse heal, and Guardian Spirit prevents a lethal hit.',
     Bakdounes:'P1 Healing Tonic: throws heal potion to lowest ally every 8s (25% HP + HoT). P2 (L3) Purifying Brew: cleansing potion every 12s (removes debuffs + 3s immunity).',
     Habaq:'P1 Soothing Aroma: plants healing basil statues that send slow bolts to injured allies. P2 (L3) Essence Infusion: every 5th heal buffs target with a healing-over-time effect. A3 Aromatic Burst: 12s green rain zone healing allies inside. A5 Transcendence: statues heal faster + mist zones. SIGNATURE Herbal Tempest: explodes all statues + spawns 4 empowered statues with rapid bolts. Branch A (Dhahabi): Essence Bond + Prescient Mist healer, Golden Cascade chain heal, Prescient Barrier golden shields. Branch B (Barri): Toxic Brew DPS, Volatile Mixture AoE, Pandemic poison spread.',
     // Kharroob codex entry removed

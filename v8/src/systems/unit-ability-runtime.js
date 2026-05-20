@@ -787,13 +787,25 @@ const ABILITIES={
     let lowest=null,lowPct=Infinity;
     for(const a of units){if(a.isPlayer&&a.hp>0&&a!==u){const p=a.hp/a.maxHp;if(p<lowPct){lowPct=p;lowest=a}}}
     if(!lowest)return;
-    const heal=arena_applyTrackedHeal(lowest,Math.round(lowest.maxHp*0.45),u,true);
+    const healPct=(u.unitIdx===10&&!u.branch)?0.55:0.45;
+    const heal=arena_applyTrackedHeal(lowest,Math.round(lowest.maxHp*healPct),u,true);
     // Cleanse debuffs
     if(lowest.bleedTimer>0){lowest.bleedTimer=0;lowest.bleedDmg=0}
     if(lowest.slowTimer>0){lowest.slowTimer=0;lowest.slowMult=1}
     if(lowest.stunned>0)lowest.stunned=0;
     projectiles.push({x:u.x,y:u.y,target:lowest,tx:lowest.x,ty:lowest.y,speed:3,projType:'serenityOrb',visualOnly:true,color:'#66ffaa',_arrN:24,_arrSz:5,_arrGnd:50,isPlayer:true,dmg:0});
     beamFx.push({x1:u.x,y1:u.y,x2:lowest.x,y2:lowest.y,life:25,maxLife:25,color:'#66ffaa',width:3,straight:true});
+    if(u.unitIdx===10&&!u.branch){
+      lowest._holyRenew={timer:7*GAME_TICK_HZ,healPct:0.03,from:u,tick:0};
+      const allies=units.filter(a=>a.isPlayer&&a.hp>0&&!a.isGhost&&a!==lowest).sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp)).slice(0,2);
+      for(const a of allies){
+        const splash=arena_applyTrackedHeal(a,Math.round(a.maxHp*0.10),u,false);
+        if(splash>0){
+          projectiles.push({x:u.x,y:u.y,target:a,tx:a.x,ty:a.y,speed:3,projType:'serenityOrb',visualOnly:true,color:'#fff5b0',_arrN:8,_arrSz:3,isPlayer:true,dmg:0});
+          beamFx.push({x1:lowest.x,y1:lowest.y,x2:a.x,y2:a.y,life:18,maxLife:18,color:'#fff5b0',width:2,straight:true});
+        }
+      }
+    }
     addP(lowest.x,lowest.y,'#66ffaa',20,5);
     groundFx.push({x:lowest.x,y:lowest.y,r:0,maxR:50,life:0.5,color:'#66ffaa'});
     u._healCast=20;
@@ -804,7 +816,8 @@ const ABILITIES={
     let lowest=null,lowPct=Infinity;
     for(const a of units){if(a.isPlayer&&a.hp>0&&a!==u&&!a.isMinion&&!a.isGhost){const p=a.hp/a.maxHp;if(p<lowPct){lowPct=p;lowest=a}}}
     if(!lowest)return;
-    lowest._guardianSpirit={timer:10*GAME_TICK_HZ,healPct:0.45,from:u};
+    lowest._guardianSpirit={timer:10*GAME_TICK_HZ,healPct:(u.unitIdx===10&&!u.branch)?0.55:0.45,from:u};
+    if(u.unitIdx===10&&!u.branch)lowest._holyRenew={timer:7*GAME_TICK_HZ,healPct:0.03,from:u,tick:0};
     projectiles.push({x:u.x,y:u.y,target:lowest,tx:lowest.x,ty:lowest.y,speed:3,projType:'serenityOrb',visualOnly:true,color:'#ffd700',_arrN:20,_arrSz:5,_arrGnd:40,isPlayer:true,dmg:0});
     beamFx.push({x1:u.x,y1:u.y,x2:lowest.x,y2:lowest.y,life:30,maxLife:30,color:'#ffd700',width:3,straight:true});
     addDmg(lowest.x,lowest.y-lowest.size,'GUARDIAN SPIRIT!','#ffd700');showFlash('GUARDIAN SPIRIT','#ffd700',45);

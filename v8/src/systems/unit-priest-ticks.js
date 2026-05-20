@@ -20,6 +20,7 @@ export function tickUnitPriestPassives(unit, {
 }) {
   if (tickAngelForm(unit, { frame, units, projectiles, randomRange, applyHealingReceived, addHealFx, emitParticle, addDamageText })) return true;
   tickPrayerOfMending(unit, { frame, units, projectiles, emitParticle, addDamageText });
+  tickHolyRenew(unit, { frame, units, projectiles, applyHealingReceived, addHealFx, emitParticle, addDamageText });
   tickPowerWordBarrier(unit, { frame, units, projectiles, beamEffects, randomRange, emitParticle, addDamageText });
   tickDivineHymn(unit, { frame, units, enemies, projectiles, randomRange, groundEffects, applyHealingReceived, addHealFx, emitParticle });
   tickRapture(unit, { units, projectiles, emitParticle });
@@ -84,7 +85,7 @@ function tickPrayerOfMending(unit, {
       let lowest = null;
       let lowestPct = Infinity;
       for (const ally of units) {
-        if (ally.isPlayer && ally.hp > 0 && !ally.isGhost) {
+        if (ally.isPlayer && ally.hp > 0 && !ally.isGhost && !ally._pom) {
           const pct = ally.hp / ally.maxHp;
           if (pct < lowestPct) {
             lowestPct = pct;
@@ -102,6 +103,50 @@ function tickPrayerOfMending(unit, {
   if (unit._pom && unit._pom.bounces > 0 && unit.hp > 0 && frame % 8 === 0) {
     const angle = frame * 0.08;
     emitParticle(unit.x + Math.cos(angle) * unit.size * 0.6, unit.y + Math.sin(angle) * unit.size * 0.3, '#66ffaa', 1, 2);
+  }
+}
+
+function tickHolyRenew(unit, {
+  frame,
+  units,
+  projectiles,
+  applyHealingReceived,
+  addHealFx,
+  emitParticle,
+  addDamageText,
+}) {
+  if (unit.holyRenew) {
+    unit.holyRenew.cd++;
+    if (unit.holyRenew.cd >= unit.holyRenew.every) {
+      unit.holyRenew.cd = 0;
+      const candidates = units
+        .filter(ally => ally && ally.isPlayer && ally.hp > 0 && !ally.isGhost)
+        .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+      const target = candidates.find(ally => !ally._holyRenew) || candidates[0];
+      if (target) {
+        target._holyRenew = { timer: unit.holyRenew.dur, healPct: unit.holyRenew.healPct, from: unit, tick: 0 };
+        projectiles.push({ x: unit.x, y: unit.y, target, tx: target.x, ty: target.y, speed: 3, projType: 'pomOrb', visualOnly: true, color: '#fff5b0', _arrN: 10, _arrSz: 3, _arrGnd: 28, isPlayer: true, dmg: 0 });
+        addDamageText(target.x, target.y - target.size - 8, 'RENEW', '#fff5b0', { sz: 11, bold: true });
+      }
+    }
+  }
+  for (const ally of units) {
+    if (!ally || !ally._holyRenew) continue;
+    ally._holyRenew.timer--;
+    ally._holyRenew.tick = (ally._holyRenew.tick || 0) + 1;
+    if (ally._holyRenew.timer <= 0 || ally.hp <= 0 || ally.isGhost) {
+      ally._holyRenew = null;
+      continue;
+    }
+    if (ally._holyRenew.tick >= GAME_TICK_HZ) {
+      ally._holyRenew.tick = 0;
+      const heal = applyHealingReceived(ally, Math.round(ally.maxHp * ally._holyRenew.healPct));
+      ally.hp = Math.min(ally.maxHp, ally.hp + heal);
+      addHealFx(ally.x, ally.y, heal);
+      emitParticle(ally.x, ally.y - ally.size * 0.25, '#fff5b0', 5, 2);
+    } else if (frame % 12 === 0) {
+      emitParticle(ally.x, ally.y - ally.size * 0.35, '#fff5b0', 1, 2);
+    }
   }
 }
 
@@ -179,6 +224,7 @@ function tickDivineHymn(unit, {
       const heal = applyHealingReceived(ally, Math.round(ally.maxHp * unit._divineHymn.healPct));
       ally.hp = Math.min(ally.maxHp, ally.hp + heal);
       addHealFx(ally.x, ally.y, heal, true);
+      if (unit._divineHymn.renew) ally._holyRenew = { timer: 6 * GAME_TICK_HZ, healPct: 0.025, from: unit, tick: 0 };
       if (ally !== unit) projectiles.push({ x: unit.x, y: unit.y, target: ally, tx: ally.x, ty: ally.y, speed: 3, projType: 'pomOrb', visualOnly: true, color: '#66ffaa', _arrN: 6, _arrSz: 3, isPlayer: true, dmg: 0 });
     }
   }

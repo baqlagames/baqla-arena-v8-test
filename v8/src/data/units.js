@@ -84,7 +84,7 @@ export const PLAYER_UNITS=[
   {id:10,name:'Naana',ar:'Ã™â€ Ã˜Â¹Ã™â€ Ã˜Â§Ã˜Â¹',role:'Priest',arch:'healer',color:'#4cd97a',accent:'#1f8a3d',cost:40,
     hp:200,dmg:6,armor:0,magicRes:1,speed:0.20,atkSpd:108,range:170,size:22,healAmt:65,healCD:84,
     drawFn:'drawNaana',a3:'holyWordSerenity',a5:'guardianSpirit',
-    desc:'Mint priest. Holy healer with Prayer of Mending bounces, branches to Discipline (shields+penance) or Shadow (DoTs+void).',
+    desc:'Mint priest. Holy raid healer with Prayer, Renew, Sanctify, and emergency saves; branches to Discipline shields or Shadow void damage.',
     src:'WoW Priest reimagined (Holy / Disc / Shadow)',
     up:[{hp:240,dmg:7,healAmt:78,speed:0.22,atkSpd:102},{hp:280,dmg:8,healAmt:88,magicRes:2,speed:0.24,atkSpd:96},{hp:350,dmg:10,healAmt:101,speed:0.26,atkSpd:90},{hp:455,dmg:13,healAmt:120,magicRes:2,speed:0.30,atkSpd:84}]},
   {id:11,name:'Bakdounes',ar:'Ã˜Â¨Ã™â€šÃ˜Â¯Ã™Ë†Ã™â€ Ã˜Â³',role:'Resto Druid',arch:'healer',color:'#3aa84e',accent:'#1f6e2f',cost:40,

@@ -285,10 +285,10 @@ return {
   // ===== NAANA HOLY SIGNATURE =====
   divine_hymn:{name:'Divine Hymn',cd:30,fire(u){
     if(!units.some(a=>a.isPlayer&&a.hp>0&&a!==u))return false;
-    u._divineHymn={timer:6*GAME_TICK_HZ,healPct:0.08,slowPct:0.30,radius:200};
+    u._divineHymn={timer:7*GAME_TICK_HZ,healPct:0.09,slowPct:0.30,radius:220,renew:true};
     // Holy light pillar VFX
-    groundFx.push({x:u.x,y:u.y,r:0,maxR:200,life:1.2,color:'#66ffaa',flatten:true});
-    groundFx.push({x:u.x,y:u.y,r:0,maxR:160,life:1.0,color:'#ffffff',flatten:true});
+    groundFx.push({x:u.x,y:u.y,r:0,maxR:220,life:1.2,color:'#66ffaa',flatten:true});
+    groundFx.push({x:u.x,y:u.y,r:0,maxR:175,life:1.0,color:'#ffffff',flatten:true});
     for(let i=0;i<24;i++){const a=Math.PI*2*i/24;addP(u.x+Math.cos(a)*80,u.y+Math.sin(a)*80,'#66ffaa',1,5)}
     for(let i=0;i<16;i++)addP(u.x+rnd(-30,30),u.y+rnd(-40,10),'#ffffff',1,4);
     addDmg(u.x,u.y-u.size-4,'DIVINE HYMN!','#66ffaa');showFlash('DIVINE HYMN','#66ffaa',60);

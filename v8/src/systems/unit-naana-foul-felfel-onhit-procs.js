@@ -5,11 +5,14 @@ export function applyNaanaFoulFelfelOnHitProcs(unit, target, {
   frame,
   ohTier,
   damage,
+  units = [],
   enemies,
   beamFx,
   groundEffects,
   randomRange,
   dealDamage,
+  applyHealingReceived = (_target, amount) => amount,
+  addHealFx = () => {},
   applyFelfelDeadlyPoison,
   showFlash,
   emitParticle,
@@ -24,6 +27,28 @@ export function applyNaanaFoulFelfelOnHitProcs(unit, target, {
   const groundFx = groundEffects;
   const addP = emitParticle;
   const addDmg = addDamageText;
+
+  if (u.unitIdx === 10 && !u.branch && u.holySanctify && _ohTier === 5 && t.hp > 0) {
+    const targets = units
+      .filter(ally => ally && ally.isPlayer && ally.hp > 0 && !ally.isGhost)
+      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))
+      .slice(0, u.holySanctify.count || 4);
+    let healed = 0;
+    for (const ally of targets) {
+      const heal = applyHealingReceived(ally, Math.round(ally.maxHp * (u.holySanctify.healPct || 0.07)));
+      ally.hp = Math.min(ally.maxHp, ally.hp + heal);
+      addHealFx(ally.x, ally.y, heal, true);
+      addP(ally.x, ally.y, '#fff5b0', 8, 3);
+      if (ally !== u) beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.20, maxLife: 0.20, color: '#fff5b0aa', width: 2, straight: true });
+      healed++;
+    }
+    if (healed) {
+      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: u.holySanctify.radius || 150, life: 0.45, color: '#fff5b0', flatten: true });
+      addP(u.x, u.y, '#ffffff', 12, 4);
+      addDmg(u.x, u.y - u.size - 6, 'SANCTIFY!', '#fff5b0', { sz: 13, bold: true });
+      shake(3);
+    }
+  }
 
   if (u.holyStrike) {
     u.holyStrike.counter++;

@@ -195,6 +195,10 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
         if(arena_isCapstoneLevel(lv)&&u.deathGrip)u.deathGrip.count=2;
       }
     }
+    if(unitIdx===10&&!u.branch){ // Naana Holy - reactive raid healer identity
+      u.holyRenew={cd:0,every:Math.round(5*GAME_TICK_HZ),dur:Math.round(6*GAME_TICK_HZ),healPct:0.025};
+      u.holySanctify={healPct:0.07,radius:150,count:4};
+    }
   }
   // L5-only additions per unit (these layer on top of P1+P2 at max level).
   if(arena_isCapstoneLevel(lv)){
@@ -207,7 +211,9 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
       if(u._voidTentacles)u._voidTentacles.count=3;
     }
     if(unitIdx===10&&u.branch!=='b'){ // Naana non-Shadow L5: Prayer bounces +2, Spirit of Redemption duration +3s
-      if(u.prayerOfMending)u.prayerOfMending.maxBounces=6;
+      if(u.prayerOfMending)u.prayerOfMending.maxBounces=7;
+      if(!u.branch&&u.holyRenew){u.holyRenew.healPct=0.03;u.holyRenew.dur=7*GAME_TICK_HZ}
+      if(!u.branch&&u.holySanctify)u.holySanctify.healPct=0.09;
       if(u.angelOfMercy)u.angelOfMercy.dur=10*GAME_TICK_HZ;
     }
     // Alibaba L5 proc thresholds now handled by shared on-hit counter (boost>=1.5 Ã¢â€ â€™ 2/4/8)
@@ -236,7 +242,7 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
     case 'layOnHands': u.layOnHandsProc={every:45*GAME_TICK_HZ,counter:0,threshold:0.35}; break;
     // ===== PHASE 2 Ã¢â‚¬â€ WC3 spec passives =====
     // === NAANA PRIEST PASSIVES ===
-    case 'prayerOfMending': u.prayerOfMending={cd:0,every:Math.round(7.5*GAME_TICK_HZ),maxBounces:4,healPct:0.22*boost}; break;
+    case 'prayerOfMending': u.prayerOfMending={cd:0,every:Math.round(7*GAME_TICK_HZ),maxBounces:5,healPct:0.18*boost}; break;
     case 'angelOfMercy': u.angelOfMercy={used:false,dur:8*GAME_TICK_HZ}; break;
     case 'penance': u.penance={every:5,counter:0,bolts:5,dmgMult:0.80*boost}; break;
     case 'powerWordBarrier': u.powerWordBarrier={cd:0,every:12*GAME_TICK_HZ,radius:100,absorb:Math.round((230+46*(u.level||1))*boost)}; break;

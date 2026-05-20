@@ -152,7 +152,7 @@ export const ARENA_UNIT_BRANCHES={
        branchProps:{arch:'ranged',range:170,armorType:'heavy',_branchA3:'shieldGenerator'}}
   },
   10: { // Naana (Mint) Ã¢â‚¬â€ Priest class tree (full rework).
-        // Base = Holy (Prayer of Mending + Spirit of Redemption).
+        // Base = Holy (Prayer of Mending, Renew, Sanctify + Spirit of Redemption).
     a:{name:'Naana Hamra',ar:'Ã™â€ Ã˜Â¹Ã™â€ Ã˜Â§Ã˜Â¹ Ã˜Â£Ã˜Â­Ã™â€¦Ã˜Â±',role:'Discipline',
        color:'#e0c0d8',accent:'#a06070',
        p1:'penance',p2:'powerWordBarrier',
