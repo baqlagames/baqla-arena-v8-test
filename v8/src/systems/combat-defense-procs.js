@@ -77,6 +77,27 @@ export function applyPlayerProtectionReductions(dmg, {
   if (target.bloodOathTimer > 0 && target.bloodOathDR > 0) {
     next = Math.max(1, Math.round(next * (1 - target.bloodOathDR)));
   }
+  if (target.tankResolveDRTimer > 0 && target.tankResolveDR > 0) {
+    next = Math.max(1, Math.round(next * (1 - target.tankResolveDR)));
+  } else if (target.tankResolve && attacker && attacker.isBoss && (target.tankResolveCDTimer || 0) <= 0) {
+    const maxHp = Math.max(1, target.maxHp || target.hp || 1);
+    const threshold = maxHp * (target.tankResolve.threshold || 0.45);
+    if ((target.hp || 0) <= threshold || (target.hp || 0) - next <= threshold) {
+      const dur = Math.max(1, Math.round(target.tankResolve.dur || 240));
+      const shield = Math.max(1, Math.round(maxHp * (target.tankResolve.shieldPct || 0.12)));
+      const current = target._goldShield && target._goldShield.amt > 0 ? target._goldShield.amt : 0;
+      const cap = Math.max(shield, Math.round(maxHp * 0.22));
+      target._goldShield = { amt: Math.min(cap, current + shield), timer: dur, maxTimer: dur, noExpireHeal: true, color: '#9fb8ff', type: 'resolve' };
+      target.tankResolveDR = target.tankResolve.dr || 0.18;
+      target.tankResolveDRTimer = dur;
+      target.tankResolveCDTimer = Math.max(dur, Math.round(target.tankResolve.cd || 1800));
+      next = Math.max(1, Math.round(next * (1 - target.tankResolveDR)));
+      emitParticle(target.x, target.y, '#9fb8ff', 18, 4);
+      emitParticle(target.x, target.y, '#ffffff', 8, 3);
+      groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: target.size + 24, life: 0.45, color: '#9fb8ff' });
+      addDamageText(target.x, target.y - target.size - 6, 'TANK RESOLVE', '#9fb8ff', { sz: 12, bold: true });
+    }
+  }
   if (target.guardianOathTimer > 0 && target.guardianOathDR > 0) {
     next = Math.max(1, Math.round(next * (1 - target.guardianOathDR)));
   }

@@ -93,6 +93,12 @@ export function tickUnitUpkeep(unit, {
     if (frame % 8 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.45, unit.size * 0.45), unit.y - unit.size * 0.2, '#cc2244', 1, 2);
     if (unit._taoonBloodShieldTimer <= 0) unit._taoonBloodShield = 0;
   }
+  if (unit.tankResolveCDTimer > 0) unit.tankResolveCDTimer--;
+  if (unit.tankResolveDRTimer > 0) {
+    unit.tankResolveDRTimer--;
+    if (frame % 8 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.5, unit.size * 0.5), unit.y - unit.size * 0.25, '#9fb8ff', 1, 2);
+    if (unit.tankResolveDRTimer <= 0) unit.tankResolveDR = 0;
+  }
   if (unit.bloodOathTimer > 0) {
     unit.bloodOathTimer--;
     if (unit.bloodOathTimer <= 0) unit.bloodOathDR = 0;

@@ -74,6 +74,12 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
   // Malfof's old 'taunt' P1 was retired Ã¢â‚¬â€ he now charges instead. All tanks
   // share the same taunt baseline; Malfof keeps the range as everyone else.
   if(u.arch==='tank')u.taunt={range:120*linear*boost};
+  if(u.arch==='tank'&&unitIdx<=2&&lv>=3){
+    u.tankResolve={threshold:0.45,shieldPct:0.14,dr:0.20,dur:Math.round(4*GAME_TICK_HZ),cd:Math.round(30*GAME_TICK_HZ)};
+    u.tankResolveDR=u.tankResolveDR||0;
+    u.tankResolveDRTimer=u.tankResolveDRTimer||0;
+    u.tankResolveCDTimer=u.tankResolveCDTimer||0;
+  }
   // Melee Resilience: melee DPS get passive DR + bonus armor/MRes since they
   // must stand in boss AoE zones to deal damage. Scales with level.
   if(u.arch==='melee'||u.arch==='paladin'){
