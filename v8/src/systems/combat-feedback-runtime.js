@@ -100,6 +100,7 @@ export function createCombatFeedbackRuntime(deps) {
   function addHealFx(x, y, value, big, source, target, meta = {}) {
     const heal = Math.round(Number(value) || 0);
     if (source) recordHeal(source, target, heal, meta.overheal || 0);
+    if (meta.silent) return;
     if (!Number.isFinite(heal) || heal <= 0) return;
     if (heal <= 2) return;
     const healingNumbers = deps.healingNumbers();

@@ -28,6 +28,27 @@ export function applyNaanaFoulFelfelOnHitProcs(unit, target, {
   const addP = emitParticle;
   const addDmg = addDamageText;
 
+  if (u.unitIdx === 10 && !u.branch && u.holyFlashHeal && t.hp > 0) {
+    u.holyFlashHeal.counter = (u.holyFlashHeal.counter || 0) + 1;
+    if (u.holyFlashHeal.counter >= u.holyFlashHeal.every) {
+      u.holyFlashHeal.counter = 0;
+      const ally = units
+        .filter(candidate => candidate && candidate.isPlayer && candidate.hp > 0 && !candidate.isGhost && candidate.hp < candidate.maxHp)
+        .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
+      if (ally) {
+        const raw = Math.round(ally.maxHp * (u.holyFlashHeal.healPct || 0.08));
+        const heal = Math.min(ally.maxHp - ally.hp, applyHealingReceived(ally, raw));
+        if (heal > 0) {
+          ally.hp += heal;
+          addHealFx(ally.x, ally.y, heal, false, u, ally);
+          addP(ally.x, ally.y - ally.size * 0.2, '#ffffff', 6, 2);
+          addP(ally.x, ally.y, '#fff5b0', 6, 2);
+          if (ally !== u) beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.16, maxLife: 0.16, color: '#fff5b0aa', width: 2, straight: true });
+        }
+      }
+    }
+  }
+
   if (u.unitIdx === 10 && !u.branch && u.holySanctify && _ohTier === 5 && t.hp > 0) {
     const targets = units
       .filter(ally => ally && ally.isPlayer && ally.hp > 0 && !ally.isGhost && ally.hp < ally.maxHp)

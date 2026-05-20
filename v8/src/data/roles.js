@@ -113,7 +113,7 @@ export const ARENA_PATH_DETAIL_LINES={
   zaatar_beast:['Stats: -10% damage','Kill Command: pet lunges every 6th hit','Bestial Wrath: pets +50% damage, +30% attack speed'],
   rommana_siege:['Artillery turrets: max 3 long-range splash','Munitions Cache: turret damage stacks up to +100%','Napalm Grid: burning zone control'],
   rommana_cannon:['Flying cannon with 2 pearl escorts','Shield Generator protects frontline','Overdrive boosts self and drones, then vents AoE'],
-  naana_holy:['Prayer of Mending: 7s cooldown, 5 bounces, 18% max HP heal','Renew: periodic HoT on the lowest ally; L5 strengthens it','Sanctify: every 5th hit heals the lowest allies','Serenity and Guardian Spirit are stronger Holy emergency saves'],
+  naana_holy:['Prayer of Mending: 6s cooldown, 5 bounces, 18% max HP heal','Renew: every 3s on two wounded allies; L5 strengthens it','Flash Heal: every 3rd hit heals the lowest wounded ally','Sanctify: every 5th hit heals the lowest allies'],
   naana_discipline:['Penance: 5 bolts every 5th attack plus healing','Power Word Barrier: 12s cooldown absorb','Rapture: team shields for 8s'],
   habaq_base:['Soothing Aroma: healing statues every 5s, max 2','Essence Infusion: every 5th heal adds HoT','Herbal Tempest empowers 4 statues'],
   bakdounes_base:['Lifebloom: 3% max HP/sec stacks','At 3 stacks: 20% AoE Bloom heal','Efflorescence: healing mushroom circles'],

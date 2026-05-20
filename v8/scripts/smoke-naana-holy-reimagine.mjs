@@ -26,16 +26,20 @@ function makeNaana(level = 3) {
 }
 
 const naana = makeNaana(3);
-assert.equal(naana.prayerOfMending.every, 420, 'Holy Prayer of Mending should cast every 7s');
+assert.equal(naana.prayerOfMending.every, 360, 'Holy Prayer of Mending should cast every 6s');
 assert.equal(naana.prayerOfMending.maxBounces, 5, 'Holy Prayer of Mending should start at 5 bounces');
-assert.equal(naana.holyRenew.every, 240, 'Holy Renew should refresh every 4s');
+assert.equal(naana.holyRenew.every, 180, 'Holy Renew should refresh every 3s');
+assert.equal(naana.holyRenew.count, 2, 'Holy Renew should cover two wounded allies');
 assert.equal(naana.holyRenew.healPct, 0.025, 'Holy Renew should exist at L3');
+assert.equal(naana.holyFlashHeal.healPct, 0.08, 'Holy Flash Heal should exist at L3');
 assert.equal(naana.holySanctify.healPct, 0.07, 'Holy Sanctify should exist at L3');
+assert.equal(naana.holyComfortAura.healPct, 0.01, 'Holy Comfort Aura should heal 1% max HP');
 assert.equal(naana.tankResolve, undefined, 'Naana Holy should not use generic tank survival');
 
 const l5 = makeNaana(5);
 assert.equal(l5.prayerOfMending.maxBounces, 7, 'Holy L5 should increase Prayer bounces');
 assert.equal(l5.holyRenew.healPct, 0.03, 'Holy L5 should strengthen Renew');
+assert.equal(l5.holyFlashHeal.healPct, 0.10, 'Holy L5 should strengthen Flash Heal');
 assert.equal(l5.holySanctify.healPct, 0.09, 'Holy L5 should strengthen Sanctify');
 
 const ally = { isPlayer: true, hp: 300, maxHp: 1000, size: 24, x: 260, y: 500 };
@@ -60,6 +64,31 @@ applyNaanaFoulFelfelOnHitProcs(naana, target, {
   shake: noop,
 });
 assert.ok(heals.some(entry => entry.amount === 70), 'Sanctify should heal low allies for 7% max HP');
+
+const flashTarget = { isPlayer: true, hp: 400, maxHp: 1000, size: 24, x: 300, y: 510 };
+const flashHeals = [];
+naana.holyFlashHeal.counter = 0;
+for (let i = 0; i < 3; i++) {
+  applyNaanaFoulFelfelOnHitProcs(naana, target, {
+    frame: 10 + i,
+    ohTier: 0,
+    damage: 80,
+    units: [naana, ally, flashTarget],
+    enemies: [target],
+    beamFx: [],
+    groundEffects: [],
+    randomRange: () => 0,
+    dealDamage: noop,
+    applyHealingReceived: (_unit, amount) => amount,
+    addHealFx: (x, y, amount) => flashHeals.push({ x, y, amount }),
+    applyFelfelDeadlyPoison: noop,
+    showFlash: noop,
+    emitParticle: noop,
+    addDamageText: noop,
+    shake: noop,
+  });
+}
+assert.ok(flashHeals.some(entry => entry.amount === 80), 'Flash Heal should heal the lowest ally every 3 hits');
 
 const fullHeals = [];
 ally.hp = ally.maxHp;
@@ -86,10 +115,11 @@ assert.equal(fullHeals.length, 0, 'Sanctify should not fire healing VFX into a f
 ally.hp = 300;
 naana.hp = 900;
 
+const ally2 = { isPlayer: true, hp: 450, maxHp: 1000, size: 24, x: 280, y: 500 };
 naana.holyRenew.cd = naana.holyRenew.every - 1;
 tickUnitPriestPassives(naana, {
   frame: 60,
-  units: [naana, ally],
+  units: [naana, ally, ally2],
   enemies: [],
   projectiles: [],
   beamEffects: [],
@@ -105,6 +135,30 @@ tickUnitPriestPassives(naana, {
   shake: noop,
 });
 assert.ok(ally._holyRenew, 'Holy Renew should mark the lowest ally');
+assert.ok(ally2._holyRenew, 'Holy Renew should mark a second wounded ally');
+
+ally.hp = 500;
+ally2.hp = 700;
+naana.holyComfortAura.cd = naana.holyComfortAura.every - 1;
+tickUnitPriestPassives(naana, {
+  frame: 120,
+  units: [naana, ally, ally2],
+  enemies: [],
+  projectiles: [],
+  beamEffects: [],
+  arena: {},
+  randomRange: () => 0,
+  groundEffects: [],
+  dealDamage: noop,
+  applyHealingReceived: (_unit, amount) => amount,
+  addHealFx: noop,
+  findEnemyForUnit: () => null,
+  emitParticle: noop,
+  addDamageText: noop,
+  shake: noop,
+});
+assert.equal(ally.hp, 510, 'Holy Comfort Aura should heal 1% max HP');
+assert.equal(ally2.hp, 710, 'Holy Comfort Aura should affect wounded allies');
 
 const signatures = createArenaSignatures({
   gameTickHz: 60,
