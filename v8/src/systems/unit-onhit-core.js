@@ -172,6 +172,17 @@ function applyZavsOnHitProcs(unit, target, {
   }
 
   if (ohTier === 5 && target.hp > 0) {
+    if (unit.zavsShieldBrace) {
+      const brace = unit.zavsShieldBrace;
+      const dur = Math.max(1, Math.round(brace.dur || 3.5 * GAME_TICK_HZ));
+      const shield = Math.round(unit.maxHp * (brace.shieldPct || 0.10));
+      unit._zavsLineShield = Math.max(unit._zavsLineShield || 0, shield);
+      unit._zavsLineShieldTimer = Math.max(unit._zavsLineShieldTimer || 0, dur);
+      unit.zavsBraceDR = Math.max(unit.zavsBraceDR || 0, brace.dr || 0.10);
+      unit.zavsBraceTimer = Math.max(unit.zavsBraceTimer || 0, dur);
+      emitParticle(unit.x, unit.y, '#cfd6df', 12, 4);
+      addDamageText(unit.x, unit.y - unit.size - 8, 'SHIELD BRACE!', '#cfd6df', { sz: 12, bold: true });
+    }
     if (unit.zavsCitadel) {
       unit.zavsGuardPulseTimer = 3 * GAME_TICK_HZ;
       let pulses = 0;
@@ -365,6 +376,15 @@ function applyBatataOnHitProcs(unit, target, {
   }
 
   if (ohTier === 5 && target.hp > 0) {
+    if (unit.batataMudguard) {
+      const guard = unit.batataMudguard;
+      const dur = Math.max(1, Math.round(guard.dur || 3.5 * GAME_TICK_HZ));
+      addBatataShield(unit, Math.round(unit.maxHp * (guard.shieldPct || 0.12)), dur);
+      unit.batataMudguardDR = Math.max(unit.batataMudguardDR || 0, guard.dr || 0.10);
+      unit.batataMudguardTimer = Math.max(unit.batataMudguardTimer || 0, dur);
+      emitParticle(unit.x, unit.y, '#8a6a32', 12, 4);
+      addDamageText(unit.x, unit.y - unit.size - 8, 'MUDGUARD!', '#b0793a', { sz: 12, bold: true });
+    }
     if (unit.backlineGarden) {
       unit.shelterPulseTimer = Math.round(3.5 * GAME_TICK_HZ);
       for (const enemy of enemies) {

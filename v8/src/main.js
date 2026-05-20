@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=d0ca4e5-hornet-trim';
+import { startArena } from './systems/arena-runtime.js?v=3e29688-tank-identities';
 
 startArena();

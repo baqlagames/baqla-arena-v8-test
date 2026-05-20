@@ -74,12 +74,6 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
   // Malfof's old 'taunt' P1 was retired Ã¢â‚¬â€ he now charges instead. All tanks
   // share the same taunt baseline; Malfof keeps the range as everyone else.
   if(u.arch==='tank')u.taunt={range:120*linear*boost};
-  if(u.arch==='tank'&&unitIdx<=2&&lv>=3){
-    u.tankResolve={threshold:0.45,shieldPct:0.14,dr:0.20,dur:Math.round(4*GAME_TICK_HZ),cd:Math.round(30*GAME_TICK_HZ)};
-    u.tankResolveDR=u.tankResolveDR||0;
-    u.tankResolveDRTimer=u.tankResolveDRTimer||0;
-    u.tankResolveCDTimer=u.tankResolveCDTimer||0;
-  }
   // Melee Resilience: melee DPS get passive DR + bonus armor/MRes since they
   // must stand in boss AoE zones to deal damage. Scales with level.
   if(u.arch==='melee'||u.arch==='paladin'){
@@ -130,9 +124,11 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
   if(unitIdx===8){u._cleaveCounter=0;u._cleaveType='pierce'}   // Zaatar Ã¢â‚¬â€ Piercing Shot
   if(unitIdx===0){ // Zavs Ã¢â‚¬â€ Iron Brute on-hit procs
     u._zavsShieldBash=true;
+    if(lv>=3)u.zavsShieldBrace={shieldPct:u.branch==='a'?0.14:0.11,dr:u.branch==='a'?0.14:0.10,dur:Math.round(3.5*GAME_TICK_HZ)};
   }
   if(unitIdx===2){
     u.batataMudClap=true;
+    if(lv>=3)u.batataMudguard={shieldPct:u.branch==='b'?0.14:0.12,dr:u.branch==='b'?0.12:0.10,dur:Math.round(3.5*GAME_TICK_HZ)};
   }
   // L3+ unit-specific extras (alongside the P2 unlock).
   if(lv>=3){
@@ -343,12 +339,12 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
       break;
     }
     // ===== TAOON (Death Knight) branch passives =====
-    case 'runeWound': u.runeWound=true;u.necropolisGuard={threshold:0.40,dr:0.25,dur:4*GAME_TICK_HZ,cd:14*GAME_TICK_HZ,timer:0,cdTimer:0}; break;
+    case 'runeWound': u.runeWound=true;u.necropolisGuard={threshold:0.45,dr:0.30,dur:4*GAME_TICK_HZ,cd:16*GAME_TICK_HZ,shieldPct:0.10,timer:0,cdTimer:0}; break;
     case 'bloodTithe': u.bloodTithe={radius:190,shieldPct:0.25,capPct:0.07}; break;
     case 'graveMagnet': u.graveMagnet=true; break;
     case 'soulChains': u.soulChains={radius:80,slowDur:Math.round(2.5*GAME_TICK_HZ),slowMult:0.75,interruptDur:Math.round(0.35*GAME_TICK_HZ)}; break;
     case 'soulReaper': u.soulReaper={maxStacks:3,stackDur:5*GAME_TICK_HZ,burstMult:2.5*boost}; break;
-    case 'deathStrike': u.deathStrike={healPct:0.08,lowHealPct:0.12,lowThreshold:0.45,dmgMult:0.60};u.bloodTithe={radius:190,shieldPct:0.25,capPct:0.07}; break;
+    case 'deathStrike': u.deathStrike={healPct:0.10,lowHealPct:0.16,lowThreshold:0.50,dmgMult:0.60};u.bloodTithe={radius:190,shieldPct:0.25,capPct:0.08}; break;
     case 'boneShield': u.boneShield={charges:6,maxCharges:6,rechargeEvery:8*GAME_TICK_HZ,rechargeT:0,dr:0.10}; break;
     case 'plagueStrike': u.plagueStrike={dotDmg:Math.round(8*sc*boost),dotDur:4*GAME_TICK_HZ,spreadRadius:60}; break;
     case 'raiseGhoulPassive': {
