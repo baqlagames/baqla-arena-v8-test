@@ -315,8 +315,8 @@ function tickPaladinTimers(unit, {
   if (unit.ardentDefender && unit.ardentDefender.used) {
     unit.ardentDefender.resetT = (unit.ardentDefender.resetT || 0) + 1;
     if (unit.ardentDefender.resetT >= unit.ardentDefender.resetCD) {
-      unit.ardentDefenderDR = 0.20;
-      unit.ardentDefenderDRTimer = 5 * GAME_TICK_HZ;
+      unit.ardentDefenderDR = 0.15;
+      unit.ardentDefenderDRTimer = 4 * GAME_TICK_HZ;
       unit.ardentDefender.resetT = 0;
       for (let i = 0; i < 8; i++) {
         const angle = i / 8 * Math.PI * 2;

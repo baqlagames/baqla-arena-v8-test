@@ -88,7 +88,7 @@ export function applyPlayerProtectionReductions(dmg, {
   }
   if (target.crimsonCovenantTimer > 0) next = Math.max(1, Math.round(next * 0.65));
   if (target.mawOfGrave && target.mawOfGrave.t > 0) next = Math.max(1, Math.round(next * 0.75));
-  if (target.ashenGuardianTimer > 0) next = Math.max(1, Math.round(next * 0.65));
+  if (target.ashenGuardianTimer > 0) next = Math.max(1, Math.round(next * 0.70));
 
   const ashenProt = ashenHallowAllyProtectionMultiplier(target, { units });
   if (ashenProt !== 1) next = Math.max(1, Math.round(next * ashenProt));

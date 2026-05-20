@@ -181,7 +181,7 @@ export function applyZaytOnHitProcs(unit, target, {
   }
 
   if (u.unitIdx === 3 && u.branch === 'a' && _ohTier === 5 && t.hp > 0) {
-    const shieldAmount = Math.round(u.maxHp * 0.06);
+    const shieldAmount = Math.round(u.maxHp * 0.045);
     addGoldShield(u, shieldAmount, Math.round(4 * GAME_TICK_HZ), Math.round(u.maxHp * 0.18), true);
     u.sacredBulwarkTimer = Math.max(u.sacredBulwarkTimer || 0, Math.round(4 * GAME_TICK_HZ));
     groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 65, life: 0.45, color: '#ffd700' });
@@ -192,7 +192,7 @@ export function applyZaytOnHitProcs(unit, target, {
   }
 
   if (u.unitIdx === 3 && u.branch === 'a' && _ohTier === 10 && t.hp > 0) {
-    const shieldAmount = Math.round(u.maxHp * 0.08);
+    const shieldAmount = Math.round(u.maxHp * 0.06);
     const duration = Math.round(4 * GAME_TICK_HZ);
     const targets = [u];
     const allies = units
@@ -203,7 +203,7 @@ export function applyZaytOnHitProcs(unit, target, {
     for (const ally of targets) {
       addGoldShield(ally, shieldAmount, duration, Math.round((ally.maxHp || u.maxHp) * 0.20), true);
       ally.guardianOathTimer = Math.max(ally.guardianOathTimer || 0, duration);
-      ally.guardianOathDR = Math.max(ally.guardianOathDR || 0, 0.08);
+      ally.guardianOathDR = Math.max(ally.guardianOathDR || 0, 0.06);
       if (ally !== u) beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.24, maxLife: 0.24, color: '#ffe066aa', width: 2, straight: true });
     }
     groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 170, life: 0.55, color: '#ffd700' });

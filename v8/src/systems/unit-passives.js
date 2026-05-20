@@ -484,7 +484,7 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
       break;
     // Ardent Defender (Prot branch) Ã¢â‚¬â€ cheat death, revive at 30% + 4s invuln
     case 'ardentDefender':
-      u.ardentDefender={used:false,revivePct:0.40,invulnDur:1*GAME_TICK_HZ,resetCD:45*GAME_TICK_HZ,resetT:0};
+      u.ardentDefender={used:false,revivePct:0.32,invulnDur:1*GAME_TICK_HZ,resetCD:45*GAME_TICK_HZ,resetT:0};
       break;
     case 'lightOfDawn':
       u.lightOfDawn={counter:0,every:4,healPct:0.08*boost,range:140,arc:Math.PI*0.6};

@@ -432,8 +432,8 @@ const ABILITIES={
     u.goakTimer=12*GAME_TICK_HZ;
     u._goakOrigArmor=u.armor;
     u.armor=Math.round(u.armor*1.50);
-    u.goakDR=0.30;
-    u.goakHealPerTick=Math.round(u.maxHp*0.015);
+    u.goakDR=0.25;
+    u.goakHealPerTick=Math.round(u.maxHp*0.011);
     addP(u.x,u.y,'#ffd700',28,6);addP(u.x,u.y,'#ffffff',14,4);
     for(let i=0;i<12;i++){const a=Math.PI*2*i/12;addP(u.x+Math.cos(a)*u.size*1.3,u.y+Math.sin(a)*u.size*1.3,'#ffd700',2,4)}
     groundFx.push({x:u.x,y:u.y,r:0,maxR:70,life:0.5,color:'#ffd700',flatten:true});

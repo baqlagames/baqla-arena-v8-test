@@ -7,23 +7,23 @@ export const BOSSES=[
     spawnCD:720,spawnEnemy:0,spawnCount:2,spawnPhase:1,
     debuffCD:480,debuffType:'poison',debuffDmg:9,debuffDur:300,debuffPhase:1,
     timeEnrageAt:12600},
-  {id:1,name:'Hornet Sovereign',tier:'strong',act:1,color:'#c08820',accent:'#7a4a0a',hp:21500,dmg:113,speed:0.42,atkSpd:52,range:60,size:48,armor:7,magicRes:4,points:700,raidAoeDmg:32,spawnFromTop:true,spawnYOffset:52,entryHold:30,
+  {id:1,name:'Hornet Sovereign',tier:'strong',act:1,color:'#c08820',accent:'#7a4a0a',hp:21500,dmg:108,speed:0.42,atkSpd:52,range:60,size:48,armor:7,magicRes:4,points:700,raidAoeDmg:30,spawnFromTop:true,spawnYOffset:52,entryHold:30,
     // arena stage 5 boss (retuned 2026-04-30 Ã¢â‚¬â€ was a wall at L2 cap; HP -20%,
     // dmg -12%, atkSpd 48Ã¢â€ â€™54 (slower), lungeDmg -39%, lungeCD +50%, escorts 2Ã¢â€ â€™1,
     // hornet aura mult 1.20Ã¢â€ â€™1.12, Wing-Buzz dmg -25%).
     // 76 px buff aura grants nearby hornet enemies +12% atkSpd.
     // Boss-round support uses weak themed minions, not full normal-wave enemies.
     // Wing-buzz AoE every 8s. Frenzy at 50% HP Ã¢â‚¬â€ +20% atkSpd self (one-shot).
-    aoeCD:480,aoeRadius:72,aoeDmg:74,aoePhase:1,aoeColor:'#ffaa00',
-    buzzShotCD:300,buzzShotCount:3,buzzShotDmg:40,buzzShotPhase:1,
+    aoeCD:480,aoeRadius:72,aoeDmg:70,aoePhase:1,aoeColor:'#ffaa00',
+    buzzShotCD:300,buzzShotCount:3,buzzShotDmg:38,buzzShotPhase:1,
     hornetAura:76,hornetAuraMult:1.12,
     escortSpawn:1,escortEnemy:2,
     // Recurring hive support: 1 light skirmisher every 12s.
     spawnCD:720,spawnEnemy:2,spawnCount:1,spawnPhase:1,
     bossMinionName:'Hive Skirmisher',bossMinionHpMult:0.42,bossMinionDmgMult:0.50,bossMinionPointsMult:0.35,
     frenzyAt:0.5,frenzyAtkSpdMult:0.90,
-    royalStingEvery:4,royalStingHpPct:0.036,royalStingPoisonDmg:4,royalStingDur:360,royalStingAmp:1.12,royalHatchlingHpPct:0.024,
-    royalCarapaceAt:[0.70,0.35],royalCarapaceCast:720,royalCarapaceShieldPct:0.11,royalCarapaceShieldMin:1500,royalCarapaceShieldMax:2000,royalCarapaceFailDmg:165,royalCarapaceTickDmg:29,royalCarapaceAdds:2,
+    royalStingEvery:4,royalStingHpPct:0.034,royalStingPoisonDmg:3,royalStingDur:360,royalStingAmp:1.10,royalHatchlingHpPct:0.024,
+    royalCarapaceAt:[0.70,0.35],royalCarapaceCast:720,royalCarapaceShieldPct:0.11,royalCarapaceShieldMin:1500,royalCarapaceShieldMax:2000,royalCarapaceFailDmg:165,royalCarapaceTickDmg:27,royalCarapaceAdds:2,
     projType:'normal',timeEnrageAt:9000},
   {id:2,name:'Spice Lord',tier:'mini',act:2,color:'#aa4a8e',accent:'#5e224a',hp:3200,dmg:40,speed:0.30,atkSpd:60,range:50,size:44,armor:3,magicRes:5,points:400,
     // P1: toxic volley AoE. P2: + poison cloud. P3: + frenzy disease debuff.

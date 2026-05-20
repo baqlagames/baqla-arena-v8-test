@@ -100,7 +100,7 @@ export const ARENA_PATH_DETAIL_LINES={
   taoon_plague:['Stats: +10% HP, +8% magic resist, +6% damage, 6% faster attacks','Soul Chains: 5th hit slows/interrupts grouped non-boss enemies','Maw of the Grave: 16% HP shield, -25% damage, pull zone setup'],
   batata_nature:['Stats: +22% HP, +10% MR, -5% damage','Backline Garden: healer/ranged allies -10% damage taken','Living Bulwark: 22% HP shield, -30% damage, shelter bonuses'],
   batata_berserker:['Stats: +14% HP, +12% armor, +6% damage, 4% faster attacks','Mirebreaker: Batata -10% damage while swarmed','Quakebreak: 20% HP shield, -25% damage, mud weakens swarms'],
-  king_protection:['Stats: +120% HP/armor, +65% MR, -15% damage','Hallowed Leap: jumps toward ranged/caster threats and shields King','Avenger Shield: 6s, 3 targets; L4 hits 5 at 1.65x with 16% shield cap','Ashen Hallow: 25% shield, -35% damage, ally DR inside'],
+  king_protection:['Stats: +120% HP/armor, +65% MR, -15% damage','Hallowed Leap: jumps toward ranged/caster threats and shields King','Avenger Shield: 6s, 3 targets; L4 hits 5 at 1.65x with 16% shield cap','Ashen Hallow: 20% shield, -30% damage, ally DR inside'],
   king_retribution:['Wings: +20% damage and +20% crit','Shield of Vengeance: 20% max HP absorb then burst','Final Reckoning: marked enemies take +20% damage'],
   monk_dps:['Fast melee pressure with guard windows','Combo attacks focus on uptime and survival','One-path spec: no branch fork'],
   alibaba_frost:['Stats: -10% damage, 10% faster attacks','Frost hits slow by 35%; Frozen Orb slows 50%','Frozen Orb roots normal enemies for 0.5s per hit'],

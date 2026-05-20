@@ -138,7 +138,7 @@ export function tryArdentDefenderSave(unit, {
   unit.ardentDefender.used = true;
   unit.hp = Math.round(unit.maxHp * unit.ardentDefender.revivePct);
   unit.ardentDefenderTimer = unit.ardentDefender.invulnDur;
-  addGoldShield(unit, Math.round(unit.maxHp * 0.12), 4 * tickHz, Math.round(unit.maxHp * 0.18), true);
+  addGoldShield(unit, Math.round(unit.maxHp * 0.08), 4 * tickHz, Math.round(unit.maxHp * 0.14), true);
   emitParticle(unit.x, unit.y, '#ffd700', 32, 6);
   emitParticle(unit.x, unit.y, '#ffffff', 16, 4);
   groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: 80, life: 0.6, color: '#ffd700' });

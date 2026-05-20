@@ -207,9 +207,9 @@ return {
       hallow:true
     };
     u.ashenGuardianTimer=6*GAME_TICK_HZ;
-    arena_addGoldShield(u,Math.round(u.maxHp*0.25),6*GAME_TICK_HZ,Math.round(u.maxHp*0.30),true);
+    arena_addGoldShield(u,Math.round(u.maxHp*0.20),6*GAME_TICK_HZ,Math.round(u.maxHp*0.24),true);
     if(u.hp<u.maxHp*0.45){
-      const _ahHeal=arena_applyTrackedHeal(u,Math.round(u.maxHp*0.10),u,true);
+      const _ahHeal=arena_applyTrackedHeal(u,Math.round(u.maxHp*0.07),u,true);
       if(_ahHeal>0)addDmg(u.x,u.y-u.size-24,'HALLOW MEND','#ff8844',{sz:12,bold:true});
     }
     for(const e of enemies){
