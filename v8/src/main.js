@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=39e7126-text-cleanup';
+import { startArena } from './systems/arena-runtime.js?v=1b60f21-hornet-ease';
 
 startArena();
