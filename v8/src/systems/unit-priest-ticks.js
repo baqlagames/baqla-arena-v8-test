@@ -118,12 +118,12 @@ function tickHolyRenew(unit, {
   if (unit.holyRenew) {
     unit.holyRenew.cd++;
     if (unit.holyRenew.cd >= unit.holyRenew.every) {
-      unit.holyRenew.cd = 0;
       const candidates = units
-        .filter(ally => ally && ally.isPlayer && ally.hp > 0 && !ally.isGhost)
+        .filter(ally => ally && ally.isPlayer && ally.hp > 0 && !ally.isGhost && ally.hp < ally.maxHp * 0.98)
         .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
       const target = candidates.find(ally => !ally._holyRenew) || candidates[0];
       if (target) {
+        unit.holyRenew.cd = 0;
         target._holyRenew = { timer: unit.holyRenew.dur, healPct: unit.holyRenew.healPct, from: unit, tick: 0 };
         projectiles.push({ x: unit.x, y: unit.y, target, tx: target.x, ty: target.y, speed: 3, projType: 'pomOrb', visualOnly: true, color: '#fff5b0', _arrN: 10, _arrSz: 3, _arrGnd: 28, isPlayer: true, dmg: 0 });
         addDamageText(target.x, target.y - target.size - 8, 'RENEW', '#fff5b0', { sz: 11, bold: true });

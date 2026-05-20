@@ -30,7 +30,7 @@ export function applyNaanaFoulFelfelOnHitProcs(unit, target, {
 
   if (u.unitIdx === 10 && !u.branch && u.holySanctify && _ohTier === 5 && t.hp > 0) {
     const targets = units
-      .filter(ally => ally && ally.isPlayer && ally.hp > 0 && !ally.isGhost)
+      .filter(ally => ally && ally.isPlayer && ally.hp > 0 && !ally.isGhost && ally.hp < ally.maxHp)
       .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))
       .slice(0, u.holySanctify.count || 4);
     let healed = 0;

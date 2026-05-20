@@ -284,7 +284,7 @@ return {
   }},
   // ===== NAANA HOLY SIGNATURE =====
   divine_hymn:{name:'Divine Hymn',cd:30,fire(u){
-    if(!units.some(a=>a.isPlayer&&a.hp>0&&a!==u))return false;
+    if(!units.some(a=>a.isPlayer&&a.hp>0&&!a.isGhost&&a.hp<a.maxHp*0.92))return false;
     u._divineHymn={timer:7*GAME_TICK_HZ,healPct:0.09,slowPct:0.30,radius:220,renew:true};
     // Holy light pillar VFX
     groundFx.push({x:u.x,y:u.y,r:0,maxR:220,life:1.2,color:'#66ffaa',flatten:true});

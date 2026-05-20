@@ -196,7 +196,7 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
       }
     }
     if(unitIdx===10&&!u.branch){ // Naana Holy - reactive raid healer identity
-      u.holyRenew={cd:0,every:Math.round(5*GAME_TICK_HZ),dur:Math.round(6*GAME_TICK_HZ),healPct:0.025};
+      u.holyRenew={cd:0,every:Math.round(4*GAME_TICK_HZ),dur:Math.round(6*GAME_TICK_HZ),healPct:0.025};
       u.holySanctify={healPct:0.07,radius:150,count:4};
     }
   }

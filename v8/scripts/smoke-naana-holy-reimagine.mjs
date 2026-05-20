@@ -28,6 +28,7 @@ function makeNaana(level = 3) {
 const naana = makeNaana(3);
 assert.equal(naana.prayerOfMending.every, 420, 'Holy Prayer of Mending should cast every 7s');
 assert.equal(naana.prayerOfMending.maxBounces, 5, 'Holy Prayer of Mending should start at 5 bounces');
+assert.equal(naana.holyRenew.every, 240, 'Holy Renew should refresh every 4s');
 assert.equal(naana.holyRenew.healPct, 0.025, 'Holy Renew should exist at L3');
 assert.equal(naana.holySanctify.healPct, 0.07, 'Holy Sanctify should exist at L3');
 assert.equal(naana.tankResolve, undefined, 'Naana Holy should not use generic tank survival');
@@ -59,6 +60,31 @@ applyNaanaFoulFelfelOnHitProcs(naana, target, {
   shake: noop,
 });
 assert.ok(heals.some(entry => entry.amount === 70), 'Sanctify should heal low allies for 7% max HP');
+
+const fullHeals = [];
+ally.hp = ally.maxHp;
+naana.hp = naana.maxHp;
+applyNaanaFoulFelfelOnHitProcs(naana, target, {
+  frame: 2,
+  ohTier: 5,
+  damage: 80,
+  units: [naana, ally],
+  enemies: [target],
+  beamFx: [],
+  groundEffects: [],
+  randomRange: () => 0,
+  dealDamage: noop,
+  applyHealingReceived: (_unit, amount) => amount,
+  addHealFx: (x, y, amount) => fullHeals.push({ x, y, amount }),
+  applyFelfelDeadlyPoison: noop,
+  showFlash: noop,
+  emitParticle: noop,
+  addDamageText: noop,
+  shake: noop,
+});
+assert.equal(fullHeals.length, 0, 'Sanctify should not fire healing VFX into a full-health team');
+ally.hp = 300;
+naana.hp = 900;
 
 naana.holyRenew.cd = naana.holyRenew.every - 1;
 tickUnitPriestPassives(naana, {
@@ -94,6 +120,10 @@ const signatures = createArenaSignatures({
   showFlash: noop,
   shake: noop,
 });
+naana.hp = naana.maxHp;
+ally.hp = ally.maxHp;
+assert.equal(signatures.divine_hymn.fire(naana), false, 'Divine Hymn should not cast when the team is healthy');
+ally.hp = Math.round(ally.maxHp * 0.75);
 signatures.divine_hymn.fire(naana);
 assert.equal(naana._divineHymn.timer, 420, 'Divine Hymn should last 7s');
 assert.equal(naana._divineHymn.healPct, 0.09, 'Divine Hymn should heal for 9% per tick');
