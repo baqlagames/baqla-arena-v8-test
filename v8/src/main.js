@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=c98f822-prot-hornet-tune';
+import { startArena } from './systems/arena-runtime.js?v=45d648e-buzz-7s';
 
 startArena();

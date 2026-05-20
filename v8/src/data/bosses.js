@@ -15,7 +15,7 @@ export const BOSSES=[
     // Boss-round support uses weak themed minions, not full normal-wave enemies.
     // Wing-buzz AoE every 8s. Frenzy at 50% HP Ã¢â‚¬â€ +20% atkSpd self (one-shot).
     aoeCD:480,aoeRadius:72,aoeDmg:70,aoePhase:1,aoeColor:'#ffaa00',
-    buzzShotCD:300,buzzShotCount:3,buzzShotDmg:38,buzzShotPhase:1,
+    buzzShotCD:420,buzzShotCount:3,buzzShotDmg:38,buzzShotPhase:1,
     hornetAura:76,hornetAuraMult:1.12,
     escortSpawn:1,escortEnemy:2,
     // Recurring hive support: 1 light skirmisher every 12s.
