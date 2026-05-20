@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=1b60f21-hornet-ease';
+import { startArena } from './systems/arena-runtime.js?v=dd192c4-boss-hud-reset';
 
 startArena();
