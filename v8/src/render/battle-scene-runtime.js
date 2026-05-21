@@ -1,5 +1,47 @@
 import { drawUnitShieldVfx } from './shield-vfx.js';
 
+function drawAstralWardenForeground(ctx,boss,frame){
+  if(!boss||boss.hp<=0||boss.id!==10)return;
+  const x=boss.x||0,y=boss.y||0,s=boss.size||58;
+  const pulse=0.72+0.28*Math.sin((frame||0)*0.09);
+  const ward=!!(boss.hiveShield&&boss.hiveShield.hp>0&&boss.hiveShield.astralWard);
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.globalCompositeOperation='screen';
+  ctx.globalAlpha=0.36+0.16*pulse;
+  ctx.fillStyle=ward?'#ffd166':'#8bdfff';
+  ctx.beginPath();ctx.ellipse(0,-s*1.26,s*0.78,s*0.22,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=0.72;
+  ctx.strokeStyle=ward?'#ffd166':'#d8f4ff';
+  ctx.lineWidth=ward?4:3;
+  ctx.beginPath();ctx.ellipse(0,-s*1.26,s*0.88,s*0.26,0,0,Math.PI*2);ctx.stroke();
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(-s*0.46,-s*1.02);
+  ctx.lineTo(-s*0.22,-s*1.48);
+  ctx.lineTo(0,-s*1.12);
+  ctx.lineTo(s*0.22,-s*1.48);
+  ctx.lineTo(s*0.46,-s*1.02);
+  ctx.stroke();
+  ctx.globalAlpha=0.50;
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,-s*1.55);ctx.lineTo(0,-s*0.62);ctx.stroke();
+  const motes=ward?5:3;
+  for(let i=0;i<motes;i++){
+    const a=(frame||0)*0.052+i*Math.PI*2/motes;
+    const rx=Math.cos(a)*s*0.98,ry=-s*0.74+Math.sin(a)*s*0.34;
+    ctx.globalAlpha=0.55+0.25*Math.sin((frame||0)*0.12+i);
+    ctx.fillStyle=i%2?'#ffd166':'#8bdfff';
+    ctx.beginPath();ctx.arc(rx,ry,ward?s*0.07:s*0.055,0,Math.PI*2);ctx.fill();
+  }
+  if(ward){
+    ctx.globalAlpha=0.28+0.12*pulse;
+    ctx.strokeStyle='#ffd166';ctx.lineWidth=5;
+    ctx.beginPath();ctx.ellipse(0,-s*0.08,s*1.14,s*0.92,0,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export function createBattleSceneRuntime(deps) {
   function render(){
     const view=deps.view();
@@ -638,6 +680,7 @@ export function createBattleSceneRuntime(deps) {
   }
   for(const u of units)drawUnit(u);
   drawUnitOverlays();
+  drawAstralWardenForeground(ctx,bossRef,frame);
   drawBeamFx();
   drawProjectiles();
   drawBombs();

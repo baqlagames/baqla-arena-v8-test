@@ -29,7 +29,7 @@ function createRecordingCanvasContext(textCalls) {
     ['createLinearGradient', () => gradient],
     ['createRadialGradient', () => gradient],
     ['measureText', text => ({ width: String(text || '').length * 7 })],
-    ['fillText', text => { textCalls.push(String(text)); }],
+    ['fillText', (text, x, y) => { textCalls.push({ text: String(text), x, y }); }],
   ]);
 
   return new Proxy({}, {
@@ -111,14 +111,18 @@ const roleUnits = [
 for (const unit of roleUnits) renderer.drawUnitRaw(unit);
 
 for (const label of ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST']) {
-  assert(textCalls.includes(label), `player role chip should render ${label}`);
+  assert(textCalls.some(call => call.text === label), `player role chip should render ${label}`);
 }
 
-const beforeMinions = textCalls.filter(text => ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'].includes(text)).length;
+const tankChip = textCalls.find(call => call.text === 'TANK');
+const meleeChip = textCalls.find(call => call.text === 'MELEE');
+assert(Math.abs(tankChip.x - meleeChip.x) >= 30, 'clustered tank/melee role chips should separate horizontally');
+
+const beforeMinions = textCalls.filter(call => ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'].includes(call.text)).length;
 renderer.drawUnitRaw(makeUnit('melee', 5, { isMinion: true }));
 renderer.drawUnitRaw(makeUnit('ranged', 6, { isGhost: true }));
 renderer.drawUnitRaw(makeUnit('caster', 7, { isMirror: true }));
-const afterMinions = textCalls.filter(text => ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'].includes(text)).length;
+const afterMinions = textCalls.filter(call => ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'].includes(call.text)).length;
 assert.equal(afterMinions, beforeMinions, 'role chips should not render for minions, ghosts, or mirrors');
 
 console.log('smoke-player-role-chips: ok');

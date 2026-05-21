@@ -91,19 +91,40 @@ function playerRoleChip(u){
   if(u.arch==='ranged'||u.arch==='pierce'||u.prefersRanged)return {label:'RANGE',color:'#ffcc66'};
   return null;
 }
+function naturalPlayerHudY(u,waveBoost){
+  if(!u)return 0;
+  const bob=Math.sin(Number.isFinite(u.bobPhase)?u.bobPhase:0)*1.2;
+  return Math.max(ARENA_TOP+20,(u.y||0)+bob-(u.size||20)-8-waveBoost);
+}
+function playerHudOffset(u,baseY,barW){
+  if(!(arena&&arena.phase==='wave')||!playerRoleChip(u))return {x:0,y:0};
+  const waveBoost=16;
+  const close=(units||[]).filter(other=>{
+    if(!other||other.hp<=0||!playerRoleChip(other))return false;
+    const otherY=naturalPlayerHudY(other,waveBoost);
+    return Math.abs((other.x||0)-(u.x||0))<48&&Math.abs(otherY-baseY)<20;
+  }).sort((a,b)=>((a.y||0)-(b.y||0))||((a.x||0)-(b.x||0))||((a.unitIdx||a.id||0)-(b.unitIdx||b.id||0)));
+  const idx=close.indexOf(u);
+  if(close.length<2||idx<0)return {x:0,y:0};
+  const spacing=Math.max(30,Math.min(44,barW+8));
+  const slot=idx-(close.length-1)/2;
+  const x=slot*spacing;
+  const y=(idx%2===0?-3:7);
+  return {x,y};
+}
 function drawPlayerRoleChip(u,x,y){
   if(!(arena&&arena.phase==='wave'))return;
   const chip=playerRoleChip(u);
   if(!chip)return;
   const label=chip.label;
-  const w=Math.max(26,label.length*5+8),h=9;
+  const w=Math.max(32,label.length*6+10),h=11;
   ctx.save();
-  ctx.fillStyle='rgba(3,7,16,0.72)';
+  ctx.fillStyle='rgba(3,7,16,0.84)';
   ctx.beginPath();ctx.roundRect(x-w/2,y,w,h,3);ctx.fill();
-  ctx.strokeStyle=chip.color;ctx.globalAlpha=0.86;ctx.lineWidth=0.8;
+  ctx.strokeStyle=chip.color;ctx.globalAlpha=0.95;ctx.lineWidth=1;
   ctx.beginPath();ctx.roundRect(x-w/2+0.5,y+0.5,w-1,h-1,3);ctx.stroke();
-  ctx.globalAlpha=1;ctx.fillStyle=chip.color;ctx.font='bold 6.5px Arial';ctx.textAlign='center';
-  ctx.fillText(label,x,y+h-2);
+  ctx.globalAlpha=1;ctx.fillStyle=chip.color;ctx.font='900 7.5px Arial';ctx.textAlign='center';
+  ctx.fillText(label,x,y+h-3);
   ctx.restore();
 }
 function drawUnitRaw(u){
@@ -596,10 +617,12 @@ function drawUnitRaw(u){
   const _barW=u.size+14;
   const _hudMinY=ARENA_TOP+20;
   const _hpBarY=Math.max(_hudMinY,y-u.size-8-_waveBoost);
-  const _hudY=_hpBarY;
-  drawHpBar(u.x,_hudY,u.hp,u.maxHp,_barW,'player');
-  drawPlayerRoleChip(u,u.x,_hudY+10);
-  drawStatusIcons(u,u.x,_hudY-16);
+  const _hudOffset=playerHudOffset(u,_hpBarY,_barW);
+  const _hudX=u.x+_hudOffset.x;
+  const _hudY=_hpBarY+_hudOffset.y;
+  drawHpBar(_hudX,_hudY,u.hp,u.maxHp,_barW,'player');
+  drawPlayerRoleChip(u,_hudX,_hudY+10);
+  drawStatusIcons(u,_hudX,_hudY-16);
   // Summon CD ring on Foul/Sabbar
   if(u.summonCDt>0){
     const totalCD=(u.kind==='bear'||u.kind==='wolf'||u.kind==='raptor'||u.kind==='spiritBeast'||u.kind==='flameSprite')?600:720;
@@ -626,7 +649,7 @@ function drawUnitRaw(u){
       const _pipY=_hudY-4;
       const _pipGap=6;
       const _pipW=(_pipCount-1)*_pipGap;
-      let _px=u.x-_pipW/2;
+      let _px=_hudX-_pipW/2;
       ctx.save();
       for(let i=0;i<_pipCount;i++){
         // L5 pips slightly bigger + soft glow halo behind
