@@ -4,7 +4,7 @@ export const CODEX_LIST_ROW_H = 66;
 export const CODEX_LIST_GAP = 6;
 export const CODEX_HEADER_Y = 14;
 export const CODEX_HEADER_H = 58;
-export const CODEX_LIST_MAX_SCROLL = 800;
+export const CODEX_LIST_MAX_SCROLL = 920;
 
 export function resolveCodexClick(point, {
   width,
@@ -40,6 +40,11 @@ export function resolveCodexClick(point, {
     const armorY = startY + (unitCount + 2) * (CODEX_LIST_ROW_H + CODEX_LIST_GAP);
     if (pointInRect(point, 12, armorY, width - 24, CODEX_LIST_ROW_H)) {
       return { type: 'open', codexUnit: 101 };
+    }
+
+    const bossY = startY + (unitCount + 3) * (CODEX_LIST_ROW_H + CODEX_LIST_GAP);
+    if (pointInRect(point, 12, bossY, width - 24, CODEX_LIST_ROW_H)) {
+      return { type: 'open', codexUnit: 102 };
     }
 
     return { type: 'none' };

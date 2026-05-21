@@ -15,9 +15,14 @@ function threatTagColor(tag,colors){
   return (colors&&colors[tag])||'#9aa3b2';
 }
 
+function visibleThreatTags(threat){
+  return Array.isArray(threat&&threat.tags)?threat.tags.slice(0,5):[];
+}
+
 export function threatPanelHeight(threat){
   const shown=threat&&threat.isBoss?0:Math.min(3,(threat&&threat.enemies&&threat.enemies.length)||0);
-  return threat&&threat.isBoss?66:Math.max(70,38+shown*16+8);
+  const tagRows=visibleThreatTags(threat).length?1:0;
+  return threat&&threat.isBoss?Math.max(66,66+tagRows*18):Math.max(78,46+tagRows*18+shown*16+8);
 }
 
 function bossThreatCardStyle(threat){
@@ -40,6 +45,7 @@ export function drawThreatsPanel(ctx,view){
   if(!threat)return false;
   const W=view.width,colors=view.tagColors||{};
   const shownCount=threat.isBoss?0:Math.min(3,threat.enemies.length);
+  const threatTags=visibleThreatTags(threat);
   const x=8,w=Math.min(W-58,368),y=4,h=threatPanelHeight(threat);
   const metaW=68;
   const bossStyle=threat.isBoss?bossThreatCardStyle(threat):null;
@@ -103,22 +109,31 @@ export function drawThreatsPanel(ctx,view){
     ctx.fillStyle='rgba(198,205,220,0.76)';ctx.font='900 7px Segoe UI, Arial';ctx.textAlign='right';
     ctx.fillText('+'+(threat.enemies.length-shownCount)+' TYPES',x+w-metaW-8,y+13);ctx.textAlign='left';
   }
-  if(threat.isBoss){
-    const tags=[];if(threat.isBarrier)tags.push('BARRIER');else if(threat.isAerial)tags.push('AERIAL');else tags.push('BOSS');
+  const drawTagChips=(tags,baseY)=>{
     let cx=x+10;
     ctx.font='800 7px Segoe UI';
     for(const tag of tags){
-      const cw=Math.max(34,ctx.measureText(tag).width+12),c=threatTagColor(tag,colors);
-      ctx.fillStyle=rgba(c,0.24);ctx.beginPath();ctx.roundRect(cx,y+38,cw,14,7);ctx.fill();
-      ctx.strokeStyle=rgba(c,0.62);ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(cx+0.5,y+38.5,cw-1,13,7);ctx.stroke();
-      ctx.fillStyle=c;ctx.textAlign='center';ctx.fillText(tag,cx+cw/2,y+48);ctx.textAlign='left';
+      const label=typeof tag==='string'?tag:(tag.label||tag.key||'TAG');
+      const key=typeof tag==='string'?tag:(tag.key||label);
+      const cw=Math.max(34,Math.min(92,ctx.measureText(label).width+12)),c=threatTagColor(key,colors);
+      ctx.fillStyle=rgba(c,0.24);ctx.beginPath();ctx.roundRect(cx,baseY,cw,14,7);ctx.fill();
+      ctx.strokeStyle=rgba(c,0.62);ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(cx+0.5,baseY+0.5,cw-1,13,7);ctx.stroke();
+      ctx.fillStyle=c;ctx.textAlign='center';ctx.fillText(label,cx+cw/2,baseY+10);ctx.textAlign='left';
       cx+=cw+4;
+      if(cx>x+w-metaW-8)break;
     }
-  }else if(threat.enemies.length){
+  };
+  if(threat.isBoss){
+    const tags=threatTags.length?threatTags:(threat.isBarrier?[{key:'BARRIER',label:'BARRIER'}]:threat.isAerial?[{key:'AERIAL',label:'AERIAL'}]:[{key:'BOSS',label:'BOSS'}]);
+    drawTagChips(tags,y+38);
+  }else{
+    if(threatTags.length)drawTagChips(threatTags,y+38);
+  }
+  if(!threat.isBoss&&threat.enemies.length){
     const shown=threat.enemies.slice(0,shownCount);
     ctx.font='900 9.5px Segoe UI, Arial';
     for(let i=0;i<shown.length;i++){
-      const en=shown[i],cellX=x+10,baseY=y+48+i*16;
+      const en=shown[i],cellX=x+10,baseY=y+(threatTags.length?66:48)+i*16;
       const tag=en.attack||'PHYSICAL',tagColor=threatTagColor(tag,colors);
       ctx.font='900 7.5px Segoe UI, Arial';
       const tagW=Math.max(48,ctx.measureText(tag).width+14);

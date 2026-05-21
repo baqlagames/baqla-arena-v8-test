@@ -10,6 +10,7 @@ export function drawCodexScreen(ctx, view) {
     drawPillButton: drawPillBtn,
     drawThreatsLegend: drawCodexThreatsLegend,
     drawArmorMatrix: drawCodexArmorMatrix,
+    drawBossMechanics: drawCodexBossMechanics,
     drawDetail: drawCodexDetail,
   } = view;
   // Backdrop with gradient
@@ -196,10 +197,41 @@ export function drawCodexScreen(ctx, view) {
       ctx.fillText('>',W-22,amRy+_rowH/2+6);
       ctx.textAlign='left';
     }
+    // ===== BOSS MECHANICS tile (codexUnit=102) =====
+    const bmRy=yo+(PLAYER_UNITS.length+3)*(_rowH+6);
+    if(bmRy+_rowH>=_hY+_hH&&bmRy<=H-30){
+      const _bg=ctx.createLinearGradient(0,bmRy,0,bmRy+_rowH);
+      _bg.addColorStop(0,'rgba(58,18,26,0.95)');_bg.addColorStop(1,'rgba(20,10,18,0.95)');
+      ctx.fillStyle=_bg;ctx.beginPath();ctx.roundRect(12,bmRy,W-24,_rowH,14);ctx.fill();
+      const _shB=ctx.createLinearGradient(0,bmRy,0,bmRy+12);
+      _shB.addColorStop(0,'rgba(255,95,95,0.12)');_shB.addColorStop(1,'rgba(255,95,95,0)');
+      ctx.fillStyle=_shB;ctx.beginPath();ctx.roundRect(12,bmRy,W-24,12,14);ctx.fill();
+      ctx.fillStyle='#ff4d4d';ctx.beginPath();ctx.roundRect(12,bmRy,4,_rowH,2);ctx.fill();
+      ctx.fillStyle='#ff4d4d';ctx.beginPath();ctx.roundRect(22,bmRy+10,52,46,10);ctx.fill();
+      ctx.fillStyle='#3b1010';ctx.font='bold 22px Arial';ctx.textAlign='center';
+      ctx.fillText('!',48,bmRy+39);
+      ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.textAlign='left';
+      ctx.fillText('Boss Mechanics',84,bmRy+22);
+      ctx.font='9px Arial';
+      const _bmTag=ctx.measureText('AFTER CLEAR').width+12;
+      ctx.fillStyle='#ff4d4d';ctx.globalAlpha=0.22;
+      ctx.beginPath();ctx.roundRect(84,bmRy+30,_bmTag,14,7);ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.fillStyle='#ffb3b3';ctx.font='bold 9px Arial';ctx.textAlign='center';
+      ctx.fillText('AFTER CLEAR',84+_bmTag/2,bmRy+40);
+      ctx.textAlign='left';
+      ctx.fillStyle='#888';ctx.font='10px Arial';
+      ctx.fillText('Unlocks after each boss fight',84,bmRy+56);
+      ctx.fillStyle='#ff4d4d';ctx.font='bold 18px Arial';ctx.textAlign='right';
+      ctx.fillText('>',W-22,bmRy+_rowH/2+6);
+      ctx.textAlign='left';
+    }
   }else if(codexUnit===100){
     drawCodexThreatsLegend();
   }else if(codexUnit===101){
     drawCodexArmorMatrix();
+  }else if(codexUnit===102){
+    drawCodexBossMechanics();
   }else{
     drawCodexDetail();
   }

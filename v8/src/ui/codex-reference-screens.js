@@ -1,3 +1,5 @@
+import { BOSS_CODEX_ENTRIES } from '../data/boss-codex.js';
+
 export function createCodexReferenceScreens(deps) {
   const ctx = deps.ctx;
   const PLAYER_UNITS = deps.playerUnits;
@@ -5,7 +7,7 @@ export function createCodexReferenceScreens(deps) {
   const ARENA_ARMOR_MATRIX = deps.armorMatrix;
   const ARENA_DEFENSE_MATRIX = deps.defenseMatrix;
   const ARENA_PLAYER_ARMOR_TYPE = deps.playerArmorType;
-  let W = 500, H = 1000, arena = null;
+  let W = 500, H = 1000, arena = null, defeatedBosses = [];
 
   const arena_threatTagColor = (...args) => deps.threatTagColor(...args);
   const arena_rgba = (...args) => deps.rgba(...args);
@@ -15,6 +17,7 @@ export function createCodexReferenceScreens(deps) {
     W = v.width || W;
     H = v.height || H;
     arena = v.arena || arena;
+    defeatedBosses = Array.isArray(v.defeatedBosses) ? v.defeatedBosses : defeatedBosses;
   }
 
   function drawBackButton(y) {
@@ -103,6 +106,13 @@ export function createCodexReferenceScreens(deps) {
     drawTagRow('BURROW', 'Untargetable until it surfaces', 'Place a back-line defender');
     drawTagRow('BACKLINE', 'Bypasses tanks and hunts your back row', 'Body-block or burst quickly');
     drawTagRow('STEALTH', 'Invisible until first hit', 'First-strike units bait it out');
+    drawSection('TACTICAL PREVIEW');
+    drawTagRow('FLYERS', 'Wave contains airborne enemies', 'Bring ranged or spell damage');
+    drawTagRow('ARMOR', 'Wave has heavy armor or strong resistance', 'Check damage mix');
+    drawTagRow('BURST', 'Wave can spike one target quickly', 'Tank buffer and healing');
+    drawTagRow('POISON', 'Damage continues after the hit', 'Sustain and cleanse-style healing');
+    drawTagRow('BOSS SHIELD', 'Boss has a break or reveal shield', 'Save damage for the window');
+    drawTagRow('BACKLINE THREAT', 'Threats can reach ranged or healers', 'Protect the back row');
     drawSection('ROLE');
     drawTagRow('SWARM', 'Many low-HP units in one wave', 'AoE / cleave clears');
     drawTagRow('TANK', 'High HP front-liner that soaks taunts', 'Burst through with magic / pierce');
@@ -227,5 +237,88 @@ export function createCodexReferenceScreens(deps) {
     drawBackButton(state.y + 20);
   }
 
-  return { drawThreatsLegend, drawArmorMatrix };
+  function drawBossTagRow(entry, y) {
+    let x = 96;
+    ctx.font = 'bold 7.5px Segoe UI';
+    for (const tag of (entry.tags || []).slice(0, 4)) {
+      const color = arena_threatTagColor(tag);
+      const w = Math.max(42, Math.min(86, ctx.measureText(tag).width + 12));
+      ctx.fillStyle = arena_rgba(color, 0.20);
+      ctx.beginPath(); ctx.roundRect(x, y, w, 14, 7); ctx.fill();
+      ctx.strokeStyle = arena_rgba(color, 0.55); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(x + 0.5, y + 0.5, w - 1, 13, 7); ctx.stroke();
+      ctx.fillStyle = color; ctx.textAlign = 'center';
+      ctx.fillText(tag, x + w / 2, y + 10);
+      x += w + 4;
+      if (x > W - 34) break;
+    }
+    ctx.textAlign = 'left';
+  }
+
+  function drawBossMechanics() {
+    sync();
+    const defeated = new Set((defeatedBosses || []).map(id => Number(id)));
+    let y = drawHeroCard(80, {
+      title: 'Boss Mechanics',
+      subtitle: 'Mechanics reveal only after you defeat that boss.',
+      color: '#ff4d4d',
+      subColor: '#ffb3b3',
+      bg0: 'rgba(58,18,26,0.95)',
+      bg1: 'rgba(20,10,18,0.95)',
+      after: 10
+    });
+
+    for (const entry of BOSS_CODEX_ENTRIES) {
+      const unlocked = defeated.has(entry.bossId);
+      const rowH = unlocked ? 112 : 68;
+      const color = entry.color || '#ff4d4d';
+      const bg = ctx.createLinearGradient(0, y, 0, y + rowH);
+      bg.addColorStop(0, unlocked ? 'rgba(30,28,42,0.92)' : 'rgba(22,22,32,0.80)');
+      bg.addColorStop(1, unlocked ? 'rgba(12,12,22,0.92)' : 'rgba(10,10,16,0.82)');
+      ctx.fillStyle = bg;
+      ctx.beginPath(); ctx.roundRect(14, y, W - 28, rowH, 10); ctx.fill();
+      ctx.fillStyle = unlocked ? color : '#555';
+      ctx.beginPath(); ctx.roundRect(14, y, 4, rowH, 2); ctx.fill();
+
+      ctx.fillStyle = unlocked ? arena_rgba(color, 0.22) : 'rgba(90,90,100,0.22)';
+      ctx.beginPath(); ctx.roundRect(24, y + 10, 52, 44, 9); ctx.fill();
+      ctx.strokeStyle = unlocked ? arena_rgba(color, 0.72) : 'rgba(130,130,145,0.35)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(24.5, y + 10.5, 51, 43, 9); ctx.stroke();
+      ctx.fillStyle = unlocked ? color : '#777';
+      ctx.font = 'bold 9px Segoe UI'; ctx.textAlign = 'center';
+      ctx.fillText('S' + entry.stage, 50, y + 35);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#888'; ctx.font = 'bold 8px Segoe UI';
+      ctx.fillText('STAGE ' + entry.stage, 96, y + 16);
+      ctx.fillStyle = unlocked ? '#fff' : '#b7bbc6';
+      ctx.font = 'bold 14px Segoe UI';
+      ctx.fillText(unlocked ? entry.title : 'Locked Boss', 96, y + 34);
+
+      if (!unlocked) {
+        ctx.fillStyle = '#777'; ctx.font = '10px Segoe UI';
+        ctx.fillText('Defeat this boss to reveal its mechanics.', 96, y + 52);
+        y += rowH + 7;
+        continue;
+      }
+
+      ctx.fillStyle = '#aab0c0'; ctx.font = '10px Segoe UI';
+      ctx.fillText(entry.subtitle, 96, y + 50);
+      drawBossTagRow(entry, y + 59);
+      ctx.fillStyle = '#d7dbe7'; ctx.font = '9px Segoe UI';
+      let lineY = y + 80;
+      for (const mechanic of entry.mechanics.slice(0, 3)) {
+        ctx.fillStyle = color; ctx.font = 'bold 9px Segoe UI';
+        ctx.fillText(mechanic[0] + ':', 26, lineY);
+        ctx.fillStyle = '#d7dbe7'; ctx.font = '9px Segoe UI';
+        ctx.fillText(mechanic[1], 118, lineY);
+        lineY += 12;
+      }
+      y += rowH + 7;
+    }
+    drawBackButton(y + 2);
+  }
+
+  return { drawThreatsLegend, drawArmorMatrix, drawBossMechanics };
 }

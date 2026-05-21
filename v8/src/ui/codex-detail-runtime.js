@@ -15,6 +15,7 @@ export function createCodexDetailRuntime(deps) {
   const ARENA_MAX_UNIT_LEVEL = deps.maxUnitLevel;
   let W = 500, H = 1000, arena = null, codexUnit = -1, codexScroll = 0, drawFns = {};
   let unitLevels = [], vodkaLevel = 1, frame = 0, ARENA_SIGNATURES = {};
+  let defeatedBosses = [];
 
   const arena_threatTagColor = (...args) => deps.threatTagColor(...args);
   const arena_rgba = (...args) => deps.rgba(...args);
@@ -34,7 +35,7 @@ export function createCodexDetailRuntime(deps) {
     armorMatrix: ARENA_ARMOR_MATRIX,
     defenseMatrix: ARENA_DEFENSE_MATRIX,
     playerArmorType: ARENA_PLAYER_ARMOR_TYPE,
-    view: () => ({ width: W, height: H, arena }),
+    view: () => ({ width: W, height: H, arena, defeatedBosses }),
     threatTagColor: arena_threatTagColor,
     rgba: arena_rgba
   });
@@ -51,10 +52,12 @@ export function createCodexDetailRuntime(deps) {
     frame = v.frame || 0;
     ARENA_SIGNATURES = v.signatures || ARENA_SIGNATURES;
     drawFns = v.drawFns || drawFns;
+    defeatedBosses = Array.isArray(v.defeatedBosses) ? v.defeatedBosses : defeatedBosses;
   }
 
 function drawCodexThreatsLegend(){return codexReferenceScreens.drawThreatsLegend()}
 function drawCodexArmorMatrix(){return codexReferenceScreens.drawArmorMatrix()}
+function drawCodexBossMechanics(){return codexReferenceScreens.drawBossMechanics()}
 function drawCodexDetail(){
   const u=codexUnit===99?VODKA:PLAYER_UNITS[codexUnit];
   // ===== HERO CARD with REAL UNIT SPRITE Ã¢â‚¬â€ compressed to 76 px =====
@@ -1019,6 +1022,7 @@ function drawLevelEditor(){
   const api = {
     drawCodexThreatsLegend,
     drawCodexArmorMatrix,
+    drawCodexBossMechanics,
     drawCodexDetail,
     prettyAbil,
     wrapText,

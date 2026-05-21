@@ -60,6 +60,7 @@ export function createGameState(){
       beans: 0,
       unlockedPerks: ['openingLedger'],
       selectedPerks: ['openingLedger'],
+      defeatedBosses: [],
     },
     economy: {
       crystal: 5,

@@ -1,4 +1,4 @@
-import { ARENA_BUILD_NEXT } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { ARENA_BUILD_NEXT } from '../data/tuning.js';
 import { ARENA_PERKS } from '../data/perks.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
 import { STAGE_TRANSIENT_BATTLE_ARRAYS } from '../core/state.js';
@@ -40,6 +40,7 @@ export function createScreenProgressRuntime(deps = {}) {
     deps.setBeans(progress.beans);
     deps.setUnlockedPerks(progress.unlockedPerks);
     deps.setSelectedPerks(progress.selectedPerks);
+    if (deps.setDefeatedBosses) deps.setDefeatedBosses(progress.defeatedBosses);
   }
 
   function loadSave() {
@@ -52,6 +53,7 @@ export function createScreenProgressRuntime(deps = {}) {
       beans: v.beans,
       unlockedPerks: v.unlockedPerks,
       selectedPerks: v.selectedPerks,
+      defeatedBosses: v.defeatedBosses,
       unitCount: PLAYER_UNITS.length,
     });
     applyProgress(progress);
@@ -67,6 +69,7 @@ export function createScreenProgressRuntime(deps = {}) {
       beans: v.beans,
       unlockedPerks: v.unlockedPerks,
       selectedPerks: v.selectedPerks,
+      defeatedBosses: v.defeatedBosses,
     });
     applyProgress(meta);
   }

@@ -24,4 +24,7 @@ export const ARENA_THREAT_TAG_COLOR={
   PHYSICAL:'#d1d5db',  PIERCE:'#fbbf24',    MAGIC:'#c084fc',
   BOSS:'#ff4d4d',      BARRIER:'#a855f7',   AERIAL:'#fbbf24',
   ELITE:'#ff8c00',
+  FLYERS:'#7dd3fc',    ARMOR:'#ff7a45',     BURST:'#fb7185',
+  POISON:'#86c44f',    'BOSS SHIELD':'#facc15',
+  'BACKLINE THREAT':'#c084fc',
 };

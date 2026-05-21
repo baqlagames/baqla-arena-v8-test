@@ -1,4 +1,4 @@
-import { ARENA_ARMOR_MATRIX, ARENA_DEFENSE_MATRIX, ARENA_PLAYER_ARMOR_TYPE } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { ARENA_ARMOR_MATRIX, ARENA_DEFENSE_MATRIX, ARENA_PLAYER_ARMOR_TYPE } from '../data/tuning.js';
 import { ARENA_SPEC_HALO_COLORS } from '../data/roles.js';
 import { drawCodexScreen } from '../ui/codex-screen.js';
 import { createCodexDetailRuntime } from '../ui/codex-detail-runtime.js';
@@ -39,12 +39,14 @@ export function createArenaCodexRuntime(deps = {}) {
       height: v.height,
       codexUnit: v.codexUnit,
       codexScroll: v.codexScroll,
+      defeatedBosses: v.defeatedBosses,
       playerUnits: deps.playerUnits,
       vodka: deps.vodka,
       unitBranches: deps.unitBranches,
       drawPillButton: deps.drawPillBtn,
       drawThreatsLegend: (...args) => codexDetailRuntime.drawCodexThreatsLegend(...args),
       drawArmorMatrix: (...args) => codexDetailRuntime.drawCodexArmorMatrix(...args),
+      drawBossMechanics: (...args) => codexDetailRuntime.drawCodexBossMechanics(...args),
       drawDetail: (...args) => codexDetailRuntime.drawCodexDetail(...args),
     });
   }
@@ -53,6 +55,7 @@ export function createArenaCodexRuntime(deps = {}) {
     drawCodex,
     drawCodexThreatsLegend: (...args) => codexDetailRuntime.drawCodexThreatsLegend(...args),
     drawCodexArmorMatrix: (...args) => codexDetailRuntime.drawCodexArmorMatrix(...args),
+    drawCodexBossMechanics: (...args) => codexDetailRuntime.drawCodexBossMechanics(...args),
     drawCodexDetail: (...args) => codexDetailRuntime.drawCodexDetail(...args),
     wrapText: (...args) => codexDetailRuntime.wrapText(...args),
     arena_wrapTextClamped: (...args) => codexDetailRuntime.arena_wrapTextClamped(...args),

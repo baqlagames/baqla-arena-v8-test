@@ -2,7 +2,7 @@ import { SPRITE_BASE } from '../assets.js';
 import { dist, clamp, rnd } from '../core/math.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { createGameState, STAGE_TRANSIENT_BATTLE_ARRAYS } from '../core/state.js';
-import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, RESPAWN_FRAMES, GRID_COLS, GRID_ROWS, GRID_X, GRID_W, CELL_W, ARENA_MAX_UNIT_LEVEL, ARENA_ATTACK_TYPE_BY_UNIT, ARENA_INTEREST_RATE, ARENA_INTEREST_CAP, ARENA_BUILD_FIRST, ARENA_BUILD_NEXT, ARENA_BUILD_BOSS, ARENA_LEASH_FWD, ARENA_LEASH_BACK, ARENA_LEASH_SIDE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js?v=52758ab-naana-holy';
+import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, RESPAWN_FRAMES, GRID_COLS, GRID_ROWS, GRID_X, GRID_W, CELL_W, ARENA_MAX_UNIT_LEVEL, ARENA_ATTACK_TYPE_BY_UNIT, ARENA_INTEREST_RATE, ARENA_INTEREST_CAP, ARENA_BUILD_FIRST, ARENA_BUILD_NEXT, ARENA_BUILD_BOSS, ARENA_LEASH_FWD, ARENA_LEASH_BACK, ARENA_LEASH_SIDE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
 import { ENEMIES } from '../data/enemies.js';
 import { BOSSES } from '../data/bosses.js';
@@ -13,47 +13,47 @@ import { ARENA_UNIT_BRANCHES, ARENA_BASE_SIGNATURES, ARENA_BRANCH_SIGNATURES } f
 import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=8cc7d77-combat-readability';
-import { createArenaSceneRenderer } from '../render/arena-scene.js?v=52758ab-naana-holy';
+import { createActorRenderer } from '../render/actor-renderer.js?v=20260517-zavs-sprite';
+import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-nogrid-6x3';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';
-import { updateArenaEnemyAi } from './combat-enemy-ai.js?v=8cc7d77-combat-readability';
+import { updateArenaEnemyAi } from './combat-enemy-ai.js';
 import { createCombatEnemyRuntime } from './combat-enemy-runtime.js';
-import { spawnEnemyByIndex } from './enemy-spawn.js?v=52758ab-naana-holy';
+import { spawnEnemyByIndex } from './enemy-spawn.js?v=20260517-grid-calibration';
 import { compactRemovedCombatUnits, tickEnemyCombatUnits, tickPlayerCombatUnits } from './combat-loop.js';
-import { createCombatTransientsRuntime } from './combat-transients-runtime.js?v=8cc7d77-combat-readability';
+import { createCombatTransientsRuntime } from './combat-transients-runtime.js';
 import { createCombatUpdateRuntime } from './combat-update-runtime.js';
-import { completeCombatStats, getRoundCombatReport, getStageCombatReport } from './combat-stats.js?v=52758ab-naana-holy';
-import { tickEnemyPostUpdateStatusEffects } from './combat-status-effects.js?v=52758ab-naana-holy';
+import { completeCombatStats, getRoundCombatReport, getStageCombatReport } from './combat-stats.js';
+import { tickEnemyPostUpdateStatusEffects } from './combat-status-effects.js';
 import { perkSlotCount, stageBeansReward } from './perks.js';
-import { createStageFlowRuntime } from './stage-flow-runtime.js?v=52758ab-naana-holy';
-import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js?v=52758ab-naana-holy';
-import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=52758ab-naana-holy';
-import { createArenaBossRuntime } from './arena-boss-runtime.js?v=8cc7d77-combat-readability';
-import { tickTimedFieldEffects } from './timed-field-effects.js?v=52758ab-naana-holy';
+import { createStageFlowRuntime } from './stage-flow-runtime.js?v=20260517-grid-calibration';
+import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js';
+import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260517-grid-calibration';
+import { createArenaBossRuntime } from './arena-boss-runtime.js';
+import { tickTimedFieldEffects } from './timed-field-effects.js';
 import { arena_stageStarCriteria, arena_stageStarRule, arena_starText } from './stage-stars.js';
 import { createRoleProgressionRuntime } from './role-progression.js';
 import { createUnitPayoffRuntime } from './unit-payoff-runtime.js';
 import { createUnitAbilityRuntime } from './unit-ability-runtime.js';
-import { createUnitMinionRuntime } from './unit-minion-runtime.js?v=52758ab-naana-holy';
+import { createUnitMinionRuntime } from './unit-minion-runtime.js';
 import { createArenaAudio } from './arena-audio.js';
 import { createStageBattleRuntime } from './stage-battle-runtime.js';
 import { createArenaLayoutRuntime } from './arena-layout-runtime.js';
-import { createCombatHelperRuntime } from './combat-helper-runtime.js?v=8cc7d77-combat-readability';
-import { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST, createArenaSpellRuntime } from './arena-spell-runtime.js?v=52758ab-naana-holy';
+import { createCombatHelperRuntime } from './combat-helper-runtime.js';
+import { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST, createArenaSpellRuntime } from './arena-spell-runtime.js';
 import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js';
-import { createPlacementEconomyRuntime } from './placement-economy-runtime.js?v=52758ab-naana-holy';
+import { createPlacementEconomyRuntime } from './placement-economy-runtime.js';
 import { createScreenProgressRuntime } from './screen-progress-runtime.js';
-import { createBattleObjectiveRuntime } from './battle-objective-runtime.js?v=8cc7d77-combat-readability';
-import { createArenaScreenUiComposition } from './arena-screen-ui-composition.js?v=8cc7d77-combat-readability';
+import { createBattleObjectiveRuntime } from './battle-objective-runtime.js';
+import { createArenaScreenUiComposition } from './arena-screen-ui-composition.js';
 import { createArenaGridRuntime } from './arena-grid-runtime.js';
-import { createUnitRuntimeComposition } from './unit-runtime-composition.js?v=52758ab-naana-holy';
-import { createArenaCombatEffectsRuntime } from './arena-combat-effects-runtime.js?v=8cc7d77-combat-readability';
+import { createUnitRuntimeComposition } from './unit-runtime-composition.js';
+import { createArenaCombatEffectsRuntime } from './arena-combat-effects-runtime.js';
 import { createArenaGameStateRuntime } from './arena-game-state-runtime.js';
 import { createArenaBattleArrayRuntime } from './arena-battle-array-runtime.js';
 import { createArenaCodexComposition } from './arena-codex-composition.js';
 import { createArenaInputComposition } from './arena-input-composition.js';
-import { createBattleSceneComposition } from './battle-scene-composition.js?v=52758ab-naana-holy';
+import { createBattleSceneComposition } from './battle-scene-composition.js';
 import { createArenaShellComposition } from './arena-shell-composition.js';
 
 export function startArena(){
@@ -79,6 +79,7 @@ const {
   addBeans,
   setUnlockedPerks,
   setSelectedPerks,
+  setDefeatedBosses,
   setCrystal,
   addCrystal,
   setGold,
@@ -404,9 +405,10 @@ const screenProgressRuntime=createScreenProgressRuntime({
     selectedSpells:progressState.selectedSpells,
     beans:progressState.beans,
     unlockedPerks:progressState.unlockedPerks,
-    selectedPerks:progressState.selectedPerks
+    selectedPerks:progressState.selectedPerks,
+    defeatedBosses:progressState.defeatedBosses
   }),
-  setMaxStage,setStageStars,setSelectedDeck,setSelectedSpells,setBeans,addBeans,setUnlockedPerks,setSelectedPerks,
+  setMaxStage,setStageStars,setSelectedDeck,setSelectedSpells,setBeans,addBeans,setUnlockedPerks,setSelectedPerks,setDefeatedBosses,
   clearBattleArrays,setPlayerCastle,setBossRef,setBossSpawned,setStageOver,setStageWon,setScreen,
   startBuild:arena_startBuild,
   buildWavePreview:arena_buildWavePreview,
@@ -836,7 +838,7 @@ const arenaCodexRuntime=createArenaCodexComposition({
   baseSignatures:ARENA_BASE_SIGNATURES,
   branchSignatures:ARENA_BRANCH_SIGNATURES,
   maxUnitLevel:ARENA_MAX_UNIT_LEVEL,
-  states:{uiState,squadState,combatRuntimeState},
+  states:{progressState,uiState,squadState,combatRuntimeState},
   layoutView:()=>({width:W,height:H}),
   arenaState:()=>arena,
   signatures:arena_getSignatures,
@@ -981,6 +983,15 @@ const stageFlowRuntime=createStageFlowRuntime({
   save:saveSave,
   stageStar:sn=>progressState.stageStars[sn],
   setStageStar:(sn,value)=>{progressState.stageStars[sn]=value;},
+  unlockBossCodex:bossId=>{
+    const id=Number(bossId);
+    if(!Number.isFinite(id))return false;
+    const current=Array.isArray(progressState.defeatedBosses)?progressState.defeatedBosses:[];
+    if(current.includes(id))return false;
+    progressState.defeatedBosses=[...current,id].sort((a,b)=>a-b);
+    showFlash('BOSS CODEX UPDATED','#facc15',90);
+    return true;
+  },
   stageBeansReward,
   computeStageStars:arena_computeStageStars,
   finishRoundStats:arena_statsFinishRound,

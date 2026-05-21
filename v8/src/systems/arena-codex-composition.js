@@ -2,6 +2,7 @@ import { createArenaCodexRuntime } from './arena-codex-runtime.js';
 
 export function createArenaCodexComposition(deps) {
   const states = deps.states;
+  const progressState = states.progressState || {};
   const uiState = states.uiState;
   const squadState = states.squadState;
   const combatRuntimeState = states.combatRuntimeState;
@@ -22,7 +23,8 @@ export function createArenaCodexComposition(deps) {
         width: layout.width,
         height: layout.height,
         codexUnit: uiState.codexUnit,
-        codexScroll: uiState.codexScroll
+        codexScroll: uiState.codexScroll,
+        defeatedBosses: progressState.defeatedBosses
       };
     },
     detailView: () => {
@@ -36,6 +38,7 @@ export function createArenaCodexComposition(deps) {
         unitLevels: squadState.unitLevels,
         vodkaLevel: squadState.vodkaLevel,
         frame: combatRuntimeState.frame,
+        defeatedBosses: progressState.defeatedBosses,
         signatures: typeof deps.signatures === 'function' ? deps.signatures() : deps.signatures,
         drawFns: deps.drawFns
       };
