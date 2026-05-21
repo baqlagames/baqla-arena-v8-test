@@ -2,12 +2,12 @@ import {
   ARENA_BASE_INCOME,
   ARENA_INCOME_PER_STAGE,
   ARENA_ROUNDS_PER_STAGE,
-} from '../data/tuning.js?v=9d6b186-combat-feedback';
+} from '../data/tuning.js';
 
 export function arena_stageStartGold(stageN) {
   stageN = stageN || 1;
   if (stageN <= 5) return 110 + stageN * 5;
-  if (stageN <= 10) return 210;
+  if (stageN <= 10) return 160 + Math.max(0, stageN - 6) * 10;
   if (stageN <= 15) return 250;
   if (stageN <= 20) return 315;
   return 375;
@@ -16,7 +16,7 @@ export function arena_stageStartGold(stageN) {
 function arena_campaignIncomeCompression(stageN) {
   stageN = stageN || 1;
   if (stageN <= 5) return 0.84 + stageN * 0.02;
-  if (stageN <= 10) return 1.14;
+  if (stageN <= 10) return 0.96 + Math.max(0, stageN - 6) * 0.025;
   if (stageN <= 15) return 1.08;
   if (stageN <= 20) return 1.14;
   return 1.20;
@@ -30,7 +30,7 @@ export function arena_stageIncome(stageN) {
 export function arena_campaignKillBountyStageMult(stageN) {
   stageN = stageN || 1;
   if (stageN <= 5) return 0.80 + stageN * 0.02;
-  if (stageN <= 10) return 0.92 + Math.max(0, stageN - 6) * 0.018;
+  if (stageN <= 10) return 0.62 + Math.max(0, stageN - 6) * 0.035;
   if (stageN <= 15) return 0.86 + Math.max(0, stageN - 11) * 0.012;
   if (stageN <= 20) return 0.91 + Math.max(0, stageN - 16) * 0.010;
   return 0.96 + Math.min(0.06, Math.max(0, stageN - 21) * 0.008);
@@ -43,15 +43,16 @@ function arena_stageLateRoundTuning(stageN, round) {
 export function arena_roundGoldMult(round, stageN) {
   stageN = stageN || 1;
   round = round || 1;
+  if (stageN >= 6 && stageN <= 10 && round === 3) return 0.90;
   if (!arena_stageLateRoundTuning(stageN, round)) return 1;
   if (stageN >= 11) {
     if (round === 4) return 0.92;
     if (round === 5) return 0.88;
     if (round >= 6) return 1.00;
   }
-  if (round === 4) return 0.98;
-  if (round === 5) return 0.96;
-  if (round >= 6) return 1.00;
+  if (round === 4) return 0.78;
+  if (round === 5) return 0.82;
+  if (round >= 6) return 0.88;
   return 1;
 }
 
