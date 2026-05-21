@@ -85,7 +85,7 @@ const BOSS_SKILL_LABELS={
   4:{aoe:'INFERNO',debuff:'BURN',spawn:'IMP',meteor:'METEOR'},
   5:{aoe:'QUAKE',burrow:'BURROW',debuff:'SLOW',magicBolt:'SAND'},
   6:{aoe:'SUN',debuff:'DEATH',spawn:'MUMMY',magicBolt:'BOLT'},
-  10:{aoe:'SMOKE',debuff:'MARK',vanish:'AMBUSH'},
+  10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
   11:{aoe:'CURSE',debuff:'HEX',spawn:'CULTIST',magicBolt:'BOLT'},
   12:{bombDrop:'BOMB',skyStrafe:'STRAFE',sandStorm:'STORM',aoe:'SAND',lunge:'DIVE',magicBolt:'BOLT'},
   13:{magicBolt:'BOLT',emberVolley:'VOLLEY',emberDecree:'DECREE'},
@@ -110,7 +110,11 @@ const DEFAULT_SKILL_LABELS={
   iceblock:'ICE',
   bombDrop:'BOMB',
   skyStrafe:'STRAFE',
-  sandStorm:'STORM'
+  sandStorm:'STORM',
+  starfall:'STARFALL',
+  eclipseBeam:'ECLIPSE',
+  gravityToll:'GRAVITY',
+  lanternOrbit:'ORBIT'
 };
 
 const BOSS_SKILL_HINTS={
@@ -118,7 +122,7 @@ const BOSS_SKILL_HINTS={
   4:{aoe:'WIDE FIRE',debuff:'BURNING TARGET',spawn:'ADDS',meteor:'DODGE RING'},
   5:{aoe:'GROUND SLAM',burrow:'MOVE AWAY',debuff:'SLOW TARGET',magicBolt:'RANGED HIT'},
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
-  10:{aoe:'MOVE OUT',debuff:'MARKED TARGET',vanish:'BACKLINE AMBUSH'},
+  10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
   12:{bombDrop:'DODGE BOMBS',skyStrafe:'LANE STRAFE',sandStorm:'WIDE STORM',aoe:'SAND RING',lunge:'DIVE TARGET',magicBolt:'RANGED HIT'},
   13:{magicBolt:'RANGED HIT',emberVolley:'SPREAD SHOTS',emberDecree:'STACK/DODGE'},
   14:{aoe:'WIDE SUN',debuff:'DEATH MARK',meteor:'DODGE RING',magicBolt:'RANGED HIT'}
@@ -142,7 +146,11 @@ const DEFAULT_SKILL_HINTS={
   iceblock:'HEALING',
   bombDrop:'DODGE',
   skyStrafe:'LANES',
-  sandStorm:'WIDE AOE'
+  sandStorm:'WIDE AOE',
+  starfall:'DODGE RINGS',
+  eclipseBeam:'LINE BEAM',
+  gravityToll:'RAID PULSE',
+  lanternOrbit:'BACKLINE'
 };
 
 const READABILITY_BOSS_IDS=new Set([3,4,5,6,10,11,12,13,14]);
@@ -188,6 +196,10 @@ export function bossReadableSkillPills(boss){
   add('bombDrop','bombDropCD','#ff8844');
   add('skyStrafe','skyStrafeCD','#ffaa44');
   add('sandStorm','sandStormCD','#c8a05a');
+  add('starfall','starfallCD','#8bdfff');
+  add('eclipseBeam','eclipseBeamCD','#5cc8ff');
+  add('gravityToll','gravityTollCD','#9bb8ff');
+  add('lanternOrbit','lanternOrbitCD','#ffd166');
   return skills;
 }
 

@@ -99,13 +99,15 @@ export const BOSSES=[
     windCD:840,windPhase:3,
     lieutenantPhase:3,lieutenantSpawned:false,
     timeEnrageAt:19200},
-  {id:10,name:'Veiled Stalker',tier:'mini',act:2,color:'#3a1a3a',accent:'#1a0a1a',hp:29500,dmg:150,speed:0.30,atkSpd:54,range:50,size:46,armor:3,magicRes:5,points:600,raidAoeDmg:48,
-    // arena stage 8 elite: vanishes for 1s every 5s, reappears with a heavy 3Ãƒâ€” strike on its current target.
-    // No fog, no mark Ã¢â‚¬â€ distilled from Veiled Assassin to test tank HP buffer + healing.
-    vanishCD:480,vanishMult:2.8,vanishPhase:1,
-    aoeCD:600,aoeRadius:60,aoeDmg:78,aoePhase:2,aoeColor:'#3a1a3a',aoeIsFog:true,
-    debuffCD:540,debuffType:'mark',debuffDur:300,debuffPhase:1,
-    projType:'normal',timeEnrageAt:9000},
+  {id:10,name:'Astral Lantern Warden',tier:'mini',act:2,color:'#3f6fff',accent:'#ffd166',hp:30000,dmg:135,speed:0.28,atkSpd:58,range:150,size:48,armor:4,magicRes:7,points:600,
+    // Stage 8 rework: cosmic lantern guardian with visible raid mechanics.
+    // No vanish/smoke/mark; all damage comes from authored Warden casts.
+    astralWarden:true,astralStorm:true,disableGenericBossPressure:true,
+    starfallCD:420,starfallFirst:150,starfallCount:3,starfallDmg:74,starfallRadius:54,
+    eclipseBeamCD:540,eclipseBeamFirst:330,eclipseBeamDmg:96,eclipseBeamWidth:46,
+    gravityTollCD:720,gravityTollFirst:210,gravityTollDmg:78,gravityTollRadius:9999,gravityTollPhase:2,
+    lanternOrbitCD:900,lanternOrbitFirst:240,lanternOrbitDmg:42,lanternOrbitShots:5,lanternOrbitPhase:3,
+    projType:'lightning',timeEnrageAt:9000},
   // ===== STAGE 7 Ã¢â‚¬â€ WALL BOSS (Cursed Bazaar Gate) =====
   // Phase 1: barrier blocks the path. Boss untargetable, throws curses over the wall.
   // Healers' restoration purifies the barrier (drains 50% of each heal into healHp).

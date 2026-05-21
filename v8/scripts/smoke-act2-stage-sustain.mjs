@@ -74,7 +74,7 @@ function applyHealingReceived(unit, amount) {
   return amount;
 }
 
-function applyDamage(target, amount, source, type = 'normal', logs) {
+function applyDamage(target, amount, source, type = 'normal', logs, attackType = '') {
   if (!target || target.hp <= 0 || !Number.isFinite(amount) || amount <= 0) return;
   let next = amount;
   if (source && source.stealth && !source.stealthHits) {
@@ -107,6 +107,10 @@ function applyDamage(target, amount, source, type = 'normal', logs) {
   logs.damageTaken[target.name] = (logs.damageTaken[target.name] || 0) + damage;
   const sourceName = source && source.name ? source.name : 'environment';
   logs.damageBySource[sourceName] = (logs.damageBySource[sourceName] || 0) + damage;
+  if (source && source.id === 10) {
+    logs.wardenDamage[target.name] = (logs.wardenDamage[target.name] || 0) + damage;
+    if (attackType === 'gravityToll' && target.arch === 'melee') logs.wardenMeleeAoE += damage;
+  }
 }
 
 function makeEnemy(template, stageIndex, frame, random) {
@@ -366,6 +370,9 @@ function simulateStage(stage, stageIndex, seed) {
     riftMinions: 0,
     vanishCasts: 0,
     vanishStrikes: 0,
+    wardenCasts: { starfall: 0, eclipse: 0, gravity: 0, orbit: 0 },
+    wardenDamage: {},
+    wardenMeleeAoE: 0,
     searingBrands: 0,
     telegraphHits: 0,
     meteors: 0,
@@ -433,11 +440,15 @@ function simulateStage(stage, stageIndex, seed) {
     arenaBottom: ARENA_BOT,
     spawnLeft: SPAWN_LEFT,
     spawnRight: SPAWN_RIGHT,
-    dealDamage: (target, amount, source, type) => applyDamage(target, amount, source, type || 'normal', logs),
+    dealDamage: (target, amount, source, type, attackType) => applyDamage(target, amount, source, type || 'normal', logs, attackType || ''),
     addParticle: () => { logs.particles++; },
     addDamageText: () => {},
     showFlash: text => {
       if (text === 'VANISH!') logs.vanishCasts++;
+      if (text === 'STARFALL!') logs.wardenCasts.starfall++;
+      if (text === 'ECLIPSE BEAM!') logs.wardenCasts.eclipse++;
+      if (text === 'GRAVITY TOLL!') logs.wardenCasts.gravity++;
+      if (text === 'LANTERN ORBIT!') logs.wardenCasts.orbit++;
       if (text === 'METEOR!') logs.meteors++;
     },
     fireProjectile: (source, target, damage, opts = {}) => applyDamage(target, damage, source, ['curse', 'fire', 'lightning', 'frost'].includes(opts.projType) ? 'magic' : 'normal', logs),
@@ -534,8 +545,11 @@ function simulateStage(stage, stageIndex, seed) {
   assert(healer.minHp / healer.maxHp >= 0.18, `stage ${stage.n}: healer dipped too low (${Math.round(100 * healer.minHp / healer.maxHp)}%)`);
   assert(logs.riftMinions > 0, `stage ${stage.n}: forced rift did not spawn minions`);
   if (stage.n === 8) {
-    assert(logs.vanishCasts > 0, 'stage 8: Veiled Stalker vanish was not exercised');
-    assert(logs.vanishStrikes > 0, 'stage 8: Veiled Stalker ambush strike was not applied');
+    assert(logs.wardenCasts.starfall > 0, 'stage 8: Astral Warden Starfall was not exercised');
+    assert(logs.wardenCasts.eclipse > 0, 'stage 8: Astral Warden Eclipse Beam was not exercised');
+    assert(logs.wardenCasts.gravity > 0, 'stage 8: Astral Warden Gravity Toll was not exercised');
+    assert(logs.wardenCasts.orbit > 0, 'stage 8: Astral Warden Lantern Orbit was not exercised');
+    assert(logs.wardenMeleeAoE > 0, 'stage 8: melee unit did not receive reduced Warden AoE pressure');
   }
   if (stage.n === 10) {
     assert(logs.miniBossSeen, 'stage 10: Ember Crow Prince was not exercised');
@@ -552,7 +566,8 @@ function simulateStage(stage, stageIndex, seed) {
     heal: logs.heal,
     silentHeals: logs.silentHeals,
     riftMinions: logs.riftMinions,
-    vanishStrikes: logs.vanishStrikes,
+    wardenCasts: logs.wardenCasts,
+    wardenMeleeAoE: logs.wardenMeleeAoE,
     searingBrands: logs.searingBrands,
     meteors: logs.meteors,
     sonsSeen: logs.sonsSeen,
@@ -571,7 +586,8 @@ console.log('Act 2 sustain smoke passed for stages 6-10.');
 for (const summary of summaries) {
   const details = [
     `rift minions ${summary.riftMinions}`,
-    summary.vanishStrikes ? `ambush strikes ${summary.vanishStrikes}` : null,
+    summary.wardenCasts ? `warden casts ${Object.values(summary.wardenCasts).join('/')}` : null,
+    summary.wardenMeleeAoE ? `melee AoE ${summary.wardenMeleeAoE}` : null,
     summary.searingBrands ? `searing brands ${summary.searingBrands}` : null,
     summary.meteors ? `meteors ${summary.meteors}` : null,
     summary.sonsSeen ? 'sons exercised' : null,

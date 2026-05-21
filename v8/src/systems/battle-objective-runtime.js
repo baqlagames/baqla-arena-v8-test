@@ -1,5 +1,5 @@
 import { createWeatherParticles, drawWeatherOverlay } from '../render/weather.js';
-import { createBattleStructuresRenderer } from '../render/battle-structures.js?v=8cc7d77-combat-readability';
+import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 
 export function createBattleObjectiveRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
@@ -172,6 +172,9 @@ export function createBattleObjectiveRuntime(deps = {}) {
       arenaTop: v.arenaTop,
       arenaBot: v.arenaBottom,
       particles: v.weatherParticles,
+      astralStorm: v.arena && v.arena.astralStorm,
+      bossRef: v.bossRef,
+      frame: v.frame,
     });
   }
 

@@ -365,7 +365,7 @@ export function createBattleSceneRuntime(deps) {
       ctx.beginPath();ctx.arc(e.x,e.y,e.size+10,0,Math.PI*2);ctx.fill();
       ctx.restore();
     }
-    // Vanished boss (Veiled Stalker) Ã¢â‚¬â€ show a faint shadow at the position.
+    // Vanished bosses show a faint shadow at their position.
     for(const e of enemies){
       if(e.hp<=0||!e.stealth||!e.isBoss)continue;
       ctx.save();

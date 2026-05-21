@@ -282,6 +282,18 @@ export function spawnBossById({
 
   enemies.push(boss);
 
+  if (template.astralStorm && arenaState) {
+    arenaState.astralStorm = {
+      active: true,
+      bossId: template.id,
+      startedFrame: frame,
+      nextThunderFrame: frame + 600 + Math.round(randomFloat() * 120),
+      flashTimer: 0,
+      flashMax: 0,
+      forks: [],
+    };
+  }
+
   if (template.isAerial) {
     boss.untargetable = true;
     boss.aerial = true;

@@ -47,11 +47,11 @@ function bossHasArmor(boss){
 }
 
 function bossHasBurst(boss){
-  return !!(boss&&(boss.vanishCD||boss.meteorCD||boss.lungeCD||boss.burrowCD||boss.stompCD||boss.diveCD||boss.debuffType==='deathMark'));
+  return !!(boss&&(boss.vanishCD||boss.meteorCD||boss.lungeCD||boss.burrowCD||boss.stompCD||boss.diveCD||boss.starfallCD||boss.eclipseBeamCD||boss.gravityTollCD||boss.debuffType==='deathMark'));
 }
 
 function bossHasCasterPressure(boss){
-  return !!(boss&&(boss.magicBoltCD||boss.aoeCD||boss.stormCD||boss.cawCD||boss.projType==='curse'||boss.projType==='fire'||boss.projType==='frost'));
+  return !!(boss&&(boss.magicBoltCD||boss.aoeCD||boss.stormCD||boss.cawCD||boss.starfallCD||boss.eclipseBeamCD||boss.projType==='curse'||boss.projType==='fire'||boss.projType==='frost'||boss.projType==='lightning'));
 }
 
 function deriveBossTags(boss){
@@ -63,7 +63,7 @@ function deriveBossTags(boss){
   if(boss.poisonOnHit||boss.poisonDmg||boss.debuffType==='poison'||boss.royalStingPoisonDmg)pushThreatTag(tags,'POISON','Damage over time');
   if(bossHasCasterPressure(boss))pushThreatTag(tags,'CASTER','Spell pressure');
   if(boss.royalCarapaceAt||boss.hasBarrier||boss.iceBlockCD)pushThreatTag(tags,'BOSS SHIELD','Break or reveal');
-  if(boss.prefersBackline||boss.magicBoltBackline||boss.diveCD||boss.skyStrafeCD)pushThreatTag(tags,'BACKLINE THREAT','Back row pressure');
+  if(boss.prefersBackline||boss.magicBoltBackline||boss.diveCD||boss.skyStrafeCD||boss.starfallCD||boss.lanternOrbitCD)pushThreatTag(tags,'BACKLINE THREAT','Back row pressure');
   return tags.slice(0,6);
 }
 

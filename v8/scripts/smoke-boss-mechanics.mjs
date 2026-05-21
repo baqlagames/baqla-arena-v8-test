@@ -219,6 +219,29 @@ function smokeRoyalCarapace(ctx, boss) {
   return 'carapace-broken';
 }
 
+function smokeAstralWarden(ctx, boss) {
+  if (boss.id !== 10) return null;
+  const casts = [
+    { hpPct: 0.90, key: 'starfall', cds: { starfall: 0, eclipseBeam: 999, gravityToll: 999, lanternOrbit: 999 } },
+    { hpPct: 0.90, key: 'eclipseBeam', cds: { starfall: 999, eclipseBeam: 0, gravityToll: 999, lanternOrbit: 999 } },
+    { hpPct: 0.50, key: 'gravityToll', cds: { starfall: 999, eclipseBeam: 999, gravityToll: 0, lanternOrbit: 999 } },
+    { hpPct: 0.25, key: 'lanternOrbit', cds: { starfall: 999, eclipseBeam: 999, gravityToll: 999, lanternOrbit: 0 } },
+  ];
+  for (const cast of casts) {
+    boss.hp = Math.max(1, Math.round(boss.maxHp * cast.hpPct));
+    boss.mechCD = { ...cast.cds };
+    boss._astralCastLock = 0;
+    if (cast.key === 'gravityToll') boss._astralGravityUnlocked = true;
+    if (cast.key === 'lanternOrbit') {
+      boss._astralGravityUnlocked = true;
+      boss._astralOrbitUnlocked = true;
+    }
+    tickBoss(ctx, boss, 3);
+  }
+  if (!ctx.arena.astralStorm || !ctx.arena.astralStorm.active) throw new Error('Astral Warden did not activate astral storm atmosphere');
+  return 'astral-warden';
+}
+
 function assertBossReadability(ctx, boss) {
   const texts = (ctx.damageText || []).map(item => item.text);
   const labels = (ctx.groundFx || []).map(item => item && item.label).filter(Boolean);
@@ -230,8 +253,14 @@ function assertBossReadability(ctx, boss) {
     if (!texts.includes('METEOR TARGET')) throw new Error('Sultan missing meteor target callout');
   }
   if (boss.id === 10) {
-    if (!texts.includes('AMBUSH PRIMED')) throw new Error('Veiled Stalker missing ambush primed callout');
-    if (!labels.includes('SMOKE')) throw new Error('Veiled Stalker missing smoke danger-ring label');
+    for (const text of ['STARFALL LANTERNS', 'ECLIPSE BEAM', 'GRAVITY TOLL', 'LANTERN ORBIT']) {
+      if (!texts.includes(text)) throw new Error(`Astral Lantern Warden missing ${text} callout`);
+    }
+    for (const label of ['STAR', 'ECLIPSE', 'GRAVITY']) {
+      if (!labels.includes(label)) throw new Error(`Astral Lantern Warden missing ${label} warning label`);
+    }
+    if (texts.includes('AMBUSH PRIMED')) throw new Error('Astral Lantern Warden should not use old ambush callout');
+    if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
   }
   if (boss.id === 6) {
     if (!labels.includes('SUN')) throw new Error('Pharaoh missing Sun danger-ring label');
@@ -300,6 +329,8 @@ function smokeBoss(bossTemplate) {
   if (aerialNote) notes.push(aerialNote);
 
   for (const hpPct of [0.9, 0.5, 0.25]) forcePhase(ctx, boss, hpPct);
+  const astralNote = smokeAstralWarden(ctx, boss);
+  if (astralNote) notes.push(astralNote);
   assertBossReadability(ctx, boss);
 
   const carapaceNote = smokeRoyalCarapace(ctx, boss);

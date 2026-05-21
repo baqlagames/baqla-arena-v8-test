@@ -35,6 +35,7 @@ export function createStageArenaReset({ kingHp, starRule }) {
     activeBarrier: null,
     lieutenants: null,
     aerialBombs: [],
+    astralStorm: null,
     _stageStartKingHp: kingHp,
     _stageBaseDamaged: false,
     _stageMaxSquadCounts: { total: 0, tanks: 0, healers: 0, meleeDps: 0 },

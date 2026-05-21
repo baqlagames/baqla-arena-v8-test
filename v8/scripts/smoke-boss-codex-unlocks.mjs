@@ -6,7 +6,7 @@ import { normalizeProgress, saveProgress } from '../src/systems/progress.js';
 import { createStageFlowRuntime } from '../src/systems/stage-flow-runtime.js';
 
 assert(bossCodexEntryForId(1), 'Hornet Sovereign should have a boss codex entry');
-assert(bossCodexEntryForId(10), 'Veiled Stalker should have a boss codex entry');
+assert(bossCodexEntryForId(10), 'Astral Lantern Warden should have a boss codex entry');
 assert(bossCodexEntryForId(4), 'Sultan of Embers should have a boss codex entry');
 assert(bossCodexEntryForId(6), 'Pharaoh Ka should have a boss codex entry');
 assert(BOSS_CODEX_ENTRIES.every(entry => entry.mechanics.length >= 3), 'boss codex entries should expose three readable mechanics');

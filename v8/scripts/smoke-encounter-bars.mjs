@@ -59,10 +59,20 @@ assert.equal(urgent.seconds, 2, 'urgent mechanic HUD should expose seconds remai
 assert.equal(urgent.danger, false, 'urgent mechanic HUD should distinguish final-second danger');
 assert.equal(urgent.soonWindow, tickHz * 4, 'Act 2/3 bosses should use a wider readability warning window');
 
-const veiled = { id: 10, name: 'Veiled Stalker', vanishCD: 480, debuffCD: 540, mechCD: { vanish: 45, debuff: 200 } };
-const ambush = bossUrgentSkillHudState(veiled, tickHz);
-assert.equal(ambush.label, 'AMBUSH', 'Veiled Stalker vanish should read as Ambush');
-assert.equal(ambush.danger, true, 'imminent ambush should be danger state inside 1s');
+const warden = {
+  id: 10,
+  name: 'Astral Lantern Warden',
+  starfallCD: 420,
+  eclipseBeamCD: 540,
+  gravityTollCD: 720,
+  lanternOrbitCD: 900,
+  mechCD: { starfall: 140, eclipseBeam: 45, gravityToll: 210, lanternOrbit: 300 },
+};
+assert.equal(bossReadableSkillLabel(warden, 'starfall'), 'STARFALL', 'Warden Starfall should use readable label');
+assert.equal(bossReadableSkillHint(warden, 'eclipseBeam'), 'LINE BEAM', 'Warden Eclipse should expose line-beam hint');
+const eclipse = bossUrgentSkillHudState(warden, tickHz);
+assert.equal(eclipse.label, 'ECLIPSE', 'Warden urgent mechanic should pick imminent Eclipse');
+assert.equal(eclipse.danger, true, 'imminent Eclipse should be danger state inside 1s');
 
 const bossIcons = collectStatusIcons({ isBoss: true, stealth: true, vanishCD: 480, stealthHits: 0, mechCD: { meteor: 80 }, meteorCD: 720 }, tickHz);
 assert.ok(bossIcons.some(icon => icon.title === 'Ambush Ready'), 'boss status icons should expose primed ambush');
@@ -70,5 +80,8 @@ assert.ok(bossIcons.some(icon => icon.title === 'Meteor Soon'), 'boss status ico
 
 const earlyBossIcons = collectStatusIcons({ isBoss: true, mechCD: { magicBolt: 220 }, magicBoltCD: 540 }, tickHz);
 assert.ok(earlyBossIcons.some(icon => icon.title === 'Bolt Soon'), 'boss status icons should expose 4s mechanic warnings');
+
+const wardenIcons = collectStatusIcons({ isBoss: true, mechCD: { starfall: 80 }, starfallCD: 420 }, tickHz);
+assert.ok(wardenIcons.some(icon => icon.title === 'Starfall Soon'), 'boss status icons should expose Warden mechanic warnings');
 
 console.log('smoke-encounter-bars: ok');

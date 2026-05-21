@@ -213,7 +213,8 @@ function hitSourceFeedbackInfo({ opts, dmgType, attacker, attackTypeOverride }) 
   if (type.includes('holy')) return { label: 'HOLY', color: '#ffe066' };
   if (attacker && attacker.isBoss) {
     if (attacker.id === 4) return { label: 'EMBER HIT', color: '#ff6600' };
-    if (attacker.id === 3 || attacker.id === 10) return { label: 'AMBUSH', color: '#aa66cc' };
+    if (attacker.id === 10) return { label: 'ASTRAL HIT', color: '#8bdfff' };
+    if (attacker.id === 3) return { label: 'AMBUSH', color: '#aa66cc' };
     if (attacker.id === 6) return { label: 'PHARAOH', color: '#d4a857' };
     if (attacker.id === 5) return { label: 'SAND HIT', color: '#c8a05a' };
     return { label: 'BOSS HIT', color: attacker.color || '#ff8844' };

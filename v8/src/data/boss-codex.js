@@ -15,14 +15,14 @@ export const BOSS_CODEX_ENTRIES = [
   {
     bossId: 10,
     stage: 8,
-    title: 'Veiled Stalker',
-    subtitle: 'Vanish, mark, fog',
-    color: '#3a1a3a',
-    tags: ['BURST', 'CASTER'],
+    title: 'Astral Lantern Warden',
+    subtitle: 'Starfall, eclipse, gravity',
+    color: '#3f6fff',
+    tags: ['CASTER', 'BURST', 'BACKLINE THREAT'],
     mechanics: [
-      ['Ambush', 'Vanish returns as a heavy strike on the current target.'],
-      ['Mark', 'Marked targets take much more damage during the window.'],
-      ['Fog', 'Phase 2 smoke zones punish clumped or slow repositioning.'],
+      ['Starfall Lanterns', 'Falling lantern strikes target wounded and backline allies.'],
+      ['Eclipse Beam', 'A line warning shows where the astral beam will fire.'],
+      ['Gravity Toll', 'Phase 2 pulse pulls the team inward and pressures ranged units.'],
     ],
   },
   {
