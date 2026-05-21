@@ -19,18 +19,18 @@ export function createWeatherParticles(weather,width,height,randomRange){
 function ensureAstralRain(particles,width,height){
   if(!particles)return;
   if(!Array.isArray(particles.raindrops))particles.raindrops=[];
-  while(particles.raindrops.length<36){
-    particles.raindrops.push({x:Math.random()*width,y:Math.random()*height,vy:5+Math.random()*3,astral:true});
+  while(particles.raindrops.filter(drop=>drop&&drop.astral).length<70){
+    particles.raindrops.push({x:Math.random()*width,y:Math.random()*height,vy:7+Math.random()*4,astral:true});
   }
 }
 
 function makeLightningForks(width,arenaTop,arenaBot){
   const forks=[];
-  const count=1+Math.floor(Math.random()*2);
+  const count=2+Math.floor(Math.random()*2);
   for(let i=0;i<count;i++){
     const x=width*(0.18+Math.random()*0.64);
     const top=arenaTop+12+Math.random()*42;
-    const len=90+Math.random()*120;
+    const len=140+Math.random()*160;
     const pts=[];
     let px=x,py=top;
     pts.push({x:px,y:py});
@@ -59,34 +59,53 @@ function drawAstralStorm(ctx,view){
   ctx.save();
   ctx.fillStyle='rgba(5,10,38,0.16)';
   ctx.fillRect(0,arenaTop,width,arenaBot-arenaTop);
-  ctx.strokeStyle='rgba(155,205,255,0.33)';
-  ctx.lineWidth=1;
+  if(storm.arrivalTimer>0){
+    const t=storm.arrivalTimer/120;
+    ctx.fillStyle='rgba(120,180,255,'+(0.10*t).toFixed(3)+')';
+    ctx.fillRect(0,arenaTop,width,arenaBot-arenaTop);
+    storm.arrivalTimer--;
+  }
+
+  if(Number.isFinite(frame)&&frame>=(storm.nextThunderFrame||0)){
+    storm.flashTimer=14;
+    storm.flashMax=14;
+    storm.nextThunderFrame=frame+360+Math.round(Math.random()*120);
+    storm.forks=makeLightningForks(width,arenaTop,arenaBot);
+  }
+  ctx.restore();
+}
+
+function drawAstralStormForeground(ctx,view){
+  const storm=view.astralStorm;
+  if(!storm||!storm.active)return;
+  const boss=view.bossRef;
+  if(storm.bossId!=null&&(!boss||boss.hp<=0||boss.id!==storm.bossId))return;
+  const {width,height,arenaTop,arenaBot}=view;
+  const particles=view.particles||{};
+  ensureAstralRain(particles,width,height);
+
+  ctx.save();
+  ctx.strokeStyle='rgba(180,220,255,0.58)';
+  ctx.lineWidth=1.15;
   for(const r of particles.raindrops||[]){
     if(!r.astral)continue;
     ctx.beginPath();
     ctx.moveTo(r.x,r.y);
-    ctx.lineTo(r.x-2,r.y+10);
+    ctx.lineTo(r.x-3,r.y+16);
     ctx.stroke();
     r.y+=r.vy;
     if(r.y>height){
-      r.y=arenaTop-10;
+      r.y=arenaTop-12;
       r.x=Math.random()*width;
     }
   }
-
-  if(Number.isFinite(frame)&&frame>=(storm.nextThunderFrame||0)){
-    storm.flashTimer=10;
-    storm.flashMax=10;
-    storm.nextThunderFrame=frame+600+Math.round(Math.random()*120);
-    storm.forks=makeLightningForks(width,arenaTop,arenaBot);
-  }
   if(storm.flashTimer>0){
     const t=storm.flashTimer/Math.max(1,storm.flashMax||10);
-    const flicker=(storm.flashTimer>6||storm.flashTimer<4)?1:0.35;
-    ctx.fillStyle='rgba(160,205,255,'+(0.12*t*flicker).toFixed(3)+')';
+    const flicker=(storm.flashTimer>9||storm.flashTimer<5)?1:0.28;
+    ctx.fillStyle='rgba(180,220,255,'+(0.18*t*flicker).toFixed(3)+')';
     ctx.fillRect(0,arenaTop,width,arenaBot-arenaTop);
-    ctx.strokeStyle='rgba(210,235,255,'+(0.75*t).toFixed(3)+')';
-    ctx.lineWidth=2;
+    ctx.strokeStyle='rgba(220,245,255,'+(0.92*t).toFixed(3)+')';
+    ctx.lineWidth=2.4;
     for(const fork of storm.forks||[]){
       ctx.beginPath();
       for(let i=0;i<fork.length;i++){
@@ -149,4 +168,8 @@ export function drawWeatherOverlay(ctx,view){
     ctx.fillRect(0,arenaTop,width,arenaBot-arenaTop);
   }
   drawAstralStorm(ctx,view);
+}
+
+export function drawWeatherForegroundOverlay(ctx,view){
+  drawAstralStormForeground(ctx,view);
 }

@@ -1,4 +1,4 @@
-import { createWeatherParticles, drawWeatherOverlay } from '../render/weather.js';
+import { createWeatherParticles, drawWeatherForegroundOverlay, drawWeatherOverlay } from '../render/weather.js';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 
 export function createBattleObjectiveRuntime(deps = {}) {
@@ -177,6 +177,21 @@ export function createBattleObjectiveRuntime(deps = {}) {
       frame: v.frame,
     });
   }
+  function drawWeatherForeground() {
+    const v = view();
+    if (!v.currentStage) return;
+    drawWeatherForegroundOverlay(ctx, {
+      weather: v.currentStage.weather,
+      width: v.width,
+      height: v.height,
+      arenaTop: v.arenaTop,
+      arenaBot: v.arenaBottom,
+      particles: v.weatherParticles,
+      astralStorm: v.arena && v.arena.astralStorm,
+      bossRef: v.bossRef,
+      frame: v.frame,
+    });
+  }
 
   return {
     updateCastle,
@@ -185,6 +200,7 @@ export function createBattleObjectiveRuntime(deps = {}) {
     timedFieldEffectsContext,
     initWeather,
     drawWeather,
+    drawWeatherForeground,
     drawPlayerKeep: (...args) => structuresRenderer.drawPlayerKeep(...args),
     drawCastle: (...args) => structuresRenderer.drawCastle(...args),
     drawCastleRaw: (...args) => structuresRenderer.drawCastleRaw(...args),

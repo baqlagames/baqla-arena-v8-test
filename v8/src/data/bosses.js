@@ -99,7 +99,7 @@ export const BOSSES=[
     windCD:840,windPhase:3,
     lieutenantPhase:3,lieutenantSpawned:false,
     timeEnrageAt:19200},
-  {id:10,name:'Astral Lantern Warden',tier:'mini',act:2,color:'#3f6fff',accent:'#ffd166',hp:30000,dmg:135,speed:0.28,atkSpd:58,range:150,size:48,armor:4,magicRes:7,points:600,
+  {id:10,name:'Astral Lantern Warden',tier:'mini',act:2,color:'#3f6fff',accent:'#ffd166',hp:33000,dmg:135,speed:0.28,atkSpd:58,range:150,size:58,armor:4,magicRes:7,points:600,
     // Stage 8 rework: cosmic lantern guardian with visible raid mechanics.
     // No vanish/smoke/mark; all damage comes from authored Warden casts.
     astralWarden:true,astralStorm:true,disableGenericBossPressure:true,
@@ -107,6 +107,7 @@ export const BOSSES=[
     eclipseBeamCD:540,eclipseBeamFirst:330,eclipseBeamDmg:96,eclipseBeamWidth:46,
     gravityTollCD:720,gravityTollFirst:210,gravityTollDmg:78,gravityTollRadius:9999,gravityTollPhase:2,
     lanternOrbitCD:900,lanternOrbitFirst:240,lanternOrbitDmg:42,lanternOrbitShots:5,lanternOrbitPhase:3,
+    lanternWardAt:[0.70,0.35],lanternWardShieldPct:0.07,astralBlightDur:300,astralBlightHpPct:0.008,gravityBrandDur:240,gravityBrandHealCut:0.12,
     projType:'lightning',timeEnrageAt:9000},
   // ===== STAGE 7 Ã¢â‚¬â€ WALL BOSS (Cursed Bazaar Gate) =====
   // Phase 1: barrier blocks the path. Boss untargetable, throws curses over the wall.

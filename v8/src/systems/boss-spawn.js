@@ -287,9 +287,10 @@ export function spawnBossById({
       active: true,
       bossId: template.id,
       startedFrame: frame,
-      nextThunderFrame: frame + 600 + Math.round(randomFloat() * 120),
-      flashTimer: 0,
-      flashMax: 0,
+      arrivalTimer: 120,
+      nextThunderFrame: frame + 60 + Math.round(randomFloat() * 60),
+      flashTimer: 14,
+      flashMax: 14,
       forks: [],
     };
   }

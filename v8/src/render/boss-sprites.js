@@ -145,16 +145,18 @@ function _drawBoss_AstralLanternWardenV2(e,x,y,s){
   const blue=e.color||'#3f6fff',gold=e.accent||'#ffd166';
   ctx.save();ctx.translate(x,y);
   ctx.fillStyle='rgba(0,0,0,0.52)';ctx.beginPath();ctx.ellipse(0,s*0.88,s*0.88,s*0.22,0,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=0.20*pulse;ctx.fillStyle=blue;ctx.beginPath();ctx.ellipse(0,-s*0.10,s*1.05,s*0.85,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  ctx.globalAlpha=0.24*pulse;ctx.fillStyle=blue;ctx.beginPath();ctx.ellipse(0,-s*0.18,s*1.15,s*0.98,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   ctx.strokeStyle='rgba(139,223,255,0.62)';ctx.lineWidth=2;ctx.setLineDash([8,5]);ctx.lineDashOffset=-frame*0.5;
-  ctx.beginPath();ctx.arc(0,-s*0.18,s*0.78,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(0,-s*0.28,s*0.92,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle='#10204f';ctx.strokeStyle='#061433';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(-s*0.42,-s*0.42);ctx.quadraticCurveTo(0,-s*0.78,s*0.42,-s*0.42);ctx.lineTo(s*0.34,s*0.58);ctx.quadraticCurveTo(0,s*0.78,-s*0.34,s*0.58);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.fillStyle=blue;ctx.globalAlpha=0.72;ctx.beginPath();ctx.ellipse(0,-s*0.05,s*0.34,s*0.58,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-  ctx.fillStyle=gold;ctx.beginPath();ctx.arc(0,-s*0.40,s*0.17*pulse,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#f8fbff';ctx.beginPath();ctx.arc(0,-s*0.40,s*0.07,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.moveTo(-s*0.46,-s*0.46);ctx.quadraticCurveTo(0,-s*0.92,s*0.46,-s*0.46);ctx.lineTo(s*0.36,s*0.60);ctx.quadraticCurveTo(0,s*0.82,-s*0.36,s*0.60);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=blue;ctx.globalAlpha=0.76;ctx.beginPath();ctx.ellipse(0,-s*0.10,s*0.38,s*0.66,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  ctx.fillStyle=gold;ctx.beginPath();ctx.arc(0,-s*0.50,s*0.19*pulse,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f8fbff';ctx.beginPath();ctx.arc(0,-s*0.50,s*0.075,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle=gold;ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(-s*0.34,-s*0.62);ctx.lineTo(-s*0.18,-s*0.88);ctx.lineTo(0,-s*0.68);ctx.lineTo(s*0.18,-s*0.88);ctx.lineTo(s*0.34,-s*0.62);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-s*0.38,-s*0.72);ctx.lineTo(-s*0.20,-s*1.08);ctx.lineTo(0,-s*0.78);ctx.lineTo(s*0.20,-s*1.08);ctx.lineTo(s*0.38,-s*0.72);ctx.stroke();
+  ctx.strokeStyle='rgba(216,244,255,0.85)';ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(0,-s*1.12);ctx.lineTo(0,-s*0.80);ctx.stroke();
   ctx.strokeStyle='#d8f4ff';ctx.lineWidth=3;
   ctx.beginPath();ctx.moveTo(s*0.48,-s*0.32);ctx.lineTo(s*0.70,s*0.62);ctx.stroke();
   ctx.fillStyle=gold;ctx.beginPath();ctx.roundRect(s*0.59,s*0.05,s*0.20,s*0.30,4);ctx.fill();
@@ -169,7 +171,7 @@ function _drawBoss_AstralLanternWardenV2(e,x,y,s){
     ctx.beginPath();ctx.arc(mx,my,s*(e._astralOrbit?0.075:0.055),0,Math.PI*2);ctx.fill();
   }
   ctx.globalAlpha=1;
-  if(frame%4===0)addP(x+rnd(-s*0.55,s*0.55),y+rnd(-s*0.70,s*0.20),Math.random()<0.5?'#8bdfff':'#ffd166',1,3);
+  if(frame%4===0)addP(x+rnd(-s*0.55,s*0.55),y+rnd(-s*0.88,s*0.20),rnd(0,1)<0.5?'#8bdfff':'#ffd166',1,3);
   ctx.restore();
 }
 function _drawBoss_BroodMother(e,x,y,s){

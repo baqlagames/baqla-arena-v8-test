@@ -62,7 +62,7 @@ function deriveBossTags(boss){
   if(bossHasBurst(boss))pushThreatTag(tags,'BURST','Spike mechanic');
   if(boss.poisonOnHit||boss.poisonDmg||boss.debuffType==='poison'||boss.royalStingPoisonDmg)pushThreatTag(tags,'POISON','Damage over time');
   if(bossHasCasterPressure(boss))pushThreatTag(tags,'CASTER','Spell pressure');
-  if(boss.royalCarapaceAt||boss.hasBarrier||boss.iceBlockCD)pushThreatTag(tags,'BOSS SHIELD','Break or reveal');
+  if(boss.royalCarapaceAt||boss.hasBarrier||boss.iceBlockCD||boss.lanternWardAt)pushThreatTag(tags,'BOSS SHIELD','Break or reveal');
   if(boss.prefersBackline||boss.magicBoltBackline||boss.diveCD||boss.skyStrafeCD||boss.starfallCD||boss.lanternOrbitCD)pushThreatTag(tags,'BACKLINE THREAT','Back row pressure');
   return tags.slice(0,6);
 }

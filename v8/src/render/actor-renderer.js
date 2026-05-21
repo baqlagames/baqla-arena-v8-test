@@ -82,6 +82,30 @@ function drawUnit(u){
   if(!u||u.hp<=0)return;
   arena_drawWithClashCamera(u.x,u.y,()=>drawUnitRaw(u));
 }
+function playerRoleChip(u){
+  if(!u||!u.isPlayer||u.isMinion||u.isGhost||u.isMirror)return null;
+  if(u.arch==='tank'||u.taunt)return {label:'TANK',color:'#5cc8ff'};
+  if(u.arch==='melee'||u.prefersMelee)return {label:'MELEE',color:'#ffd166'};
+  if(u.arch==='healer')return {label:'HEAL',color:'#66ffaa'};
+  if(u.arch==='caster'||u.arch==='magic')return {label:'CAST',color:'#aa88ff'};
+  if(u.arch==='ranged'||u.arch==='pierce'||u.prefersRanged)return {label:'RANGE',color:'#ffcc66'};
+  return null;
+}
+function drawPlayerRoleChip(u,x,y){
+  if(!(arena&&arena.phase==='wave'))return;
+  const chip=playerRoleChip(u);
+  if(!chip)return;
+  const label=chip.label;
+  const w=Math.max(26,label.length*5+8),h=9;
+  ctx.save();
+  ctx.fillStyle='rgba(3,7,16,0.72)';
+  ctx.beginPath();ctx.roundRect(x-w/2,y,w,h,3);ctx.fill();
+  ctx.strokeStyle=chip.color;ctx.globalAlpha=0.86;ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.roundRect(x-w/2+0.5,y+0.5,w-1,h-1,3);ctx.stroke();
+  ctx.globalAlpha=1;ctx.fillStyle=chip.color;ctx.font='bold 6.5px Arial';ctx.textAlign='center';
+  ctx.fillText(label,x,y+h-2);
+  ctx.restore();
+}
 function drawUnitRaw(u){
   if(u.hp<=0)return;
   if(!Number.isFinite(u.x)||!Number.isFinite(u.y))return;
@@ -574,6 +598,7 @@ function drawUnitRaw(u){
   const _hpBarY=Math.max(_hudMinY,y-u.size-8-_waveBoost);
   const _hudY=_hpBarY;
   drawHpBar(u.x,_hudY,u.hp,u.maxHp,_barW,'player');
+  drawPlayerRoleChip(u,u.x,_hudY+10);
   drawStatusIcons(u,u.x,_hudY-16);
   // Summon CD ring on Foul/Sabbar
   if(u.summonCDt>0){

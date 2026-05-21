@@ -69,7 +69,10 @@ function makeSquad(stageN) {
 
 function applyHealingReceived(unit, amount) {
   if (unit && unit._searingBrandTimer > 0) {
-    return Math.max(1, Math.round(amount * (1 - (unit._searingBrandHealCut || 0.10))));
+    amount = Math.max(1, Math.round(amount * (1 - (unit._searingBrandHealCut || 0.10))));
+  }
+  if (unit && unit._gravityBrandTimer > 0) {
+    amount = Math.max(1, Math.round(amount * (1 - (unit._gravityBrandHealCut || 0.12))));
   }
   return amount;
 }
@@ -110,6 +113,7 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
   if (source && source.id === 10) {
     logs.wardenDamage[target.name] = (logs.wardenDamage[target.name] || 0) + damage;
     if (attackType === 'gravityToll' && target.arch === 'melee') logs.wardenMeleeAoE += damage;
+    if (attackType === 'astralBlight') logs.wardenBlightTicks++;
   }
 }
 
@@ -201,7 +205,7 @@ function tickUnitDebuffs(frame, units, logs) {
       frame,
       randomRange: (min, max) => min + (max - min) * 0.5,
       groundEffects: logs.groundEffects,
-      dealDamage: (target, amount, source, type) => applyDamage(target, amount, source, type || 'magic', logs),
+      dealDamage: (target, amount, source, type, attackType) => applyDamage(target, amount, source, type || 'magic', logs, attackType || ''),
       emitParticle: () => { logs.particles++; },
       addDamageText: () => {},
     });
@@ -373,6 +377,11 @@ function simulateStage(stage, stageIndex, seed) {
     wardenCasts: { starfall: 0, eclipse: 0, gravity: 0, orbit: 0 },
     wardenDamage: {},
     wardenMeleeAoE: 0,
+    wardenShields: 0,
+    wardenWardBreaks: 0,
+    wardenBlightBursts: 0,
+    wardenBlightTicks: 0,
+    wardenGravityBrands: 0,
     searingBrands: 0,
     telegraphHits: 0,
     meteors: 0,
@@ -442,13 +451,18 @@ function simulateStage(stage, stageIndex, seed) {
     spawnRight: SPAWN_RIGHT,
     dealDamage: (target, amount, source, type, attackType) => applyDamage(target, amount, source, type || 'normal', logs, attackType || ''),
     addParticle: () => { logs.particles++; },
-    addDamageText: () => {},
+    addDamageText: (_x, _y, text) => {
+      if (text === 'GRAVITY BRAND') logs.wardenGravityBrands++;
+    },
     showFlash: text => {
       if (text === 'VANISH!') logs.vanishCasts++;
       if (text === 'STARFALL!') logs.wardenCasts.starfall++;
       if (text === 'ECLIPSE BEAM!') logs.wardenCasts.eclipse++;
       if (text === 'GRAVITY TOLL!') logs.wardenCasts.gravity++;
       if (text === 'LANTERN ORBIT!') logs.wardenCasts.orbit++;
+      if (text === 'LANTERN WARD!') logs.wardenShields++;
+      if (text === 'WARD BROKEN!') logs.wardenWardBreaks++;
+      if (text === 'ASTRAL BLIGHT!') logs.wardenBlightBursts++;
       if (text === 'METEOR!') logs.meteors++;
     },
     fireProjectile: (source, target, damage, opts = {}) => applyDamage(target, damage, source, ['curse', 'fire', 'lightning', 'frost'].includes(opts.projType) ? 'magic' : 'normal', logs),
@@ -519,9 +533,15 @@ function simulateStage(stage, stageIndex, seed) {
       updateBoss(boss, ctx);
       tickBossBasic(boss, tank, units, logs);
       if (frame % 30 === 0 && !boss.isLieutenant) {
-        const damage = 220 + (stage.n || 1) * 22;
+        let damage = 220 + (stage.n || 1) * 22;
+        if (boss.hiveShield && boss.hiveShield.hp > 0) {
+          const absorbed = Math.min(boss.hiveShield.hp, damage);
+          boss.hiveShield.hp -= absorbed;
+          damage -= absorbed;
+          if (boss.hiveShield.hp <= 0) boss.hiveShield.hp = 0;
+        }
         const keepAliveForMechanics = boss === mainBoss || boss === miniBoss;
-        boss.hp = keepAliveForMechanics ? Math.max(1, boss.hp - damage) : Math.max(0, boss.hp - damage);
+        if (damage > 0) boss.hp = keepAliveForMechanics ? Math.max(1, boss.hp - damage) : Math.max(0, boss.hp - damage);
       }
     }
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Son of Embers')) logs.sonsSeen = true;
@@ -550,6 +570,11 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.wardenCasts.gravity > 0, 'stage 8: Astral Warden Gravity Toll was not exercised');
     assert(logs.wardenCasts.orbit > 0, 'stage 8: Astral Warden Lantern Orbit was not exercised');
     assert(logs.wardenMeleeAoE > 0, 'stage 8: melee unit did not receive reduced Warden AoE pressure');
+    assert(logs.wardenShields >= 2, 'stage 8: Lantern Ward phase shields were not exercised');
+    assert(logs.wardenWardBreaks >= 2, 'stage 8: Lantern Ward breaks were not exercised');
+    assert(logs.wardenBlightBursts >= 2, 'stage 8: Astral Blight shield-break bursts were not exercised');
+    assert(logs.wardenBlightTicks > 0, 'stage 8: Astral Blight DoT ticks were not exercised');
+    assert(logs.wardenGravityBrands > 0, 'stage 8: Gravity Brand was not applied to tank/melee units');
   }
   if (stage.n === 10) {
     assert(logs.miniBossSeen, 'stage 10: Ember Crow Prince was not exercised');
@@ -568,6 +593,10 @@ function simulateStage(stage, stageIndex, seed) {
     riftMinions: logs.riftMinions,
     wardenCasts: logs.wardenCasts,
     wardenMeleeAoE: logs.wardenMeleeAoE,
+    wardenShields: logs.wardenShields,
+    wardenWardBreaks: logs.wardenWardBreaks,
+    wardenBlightTicks: logs.wardenBlightTicks,
+    wardenGravityBrands: logs.wardenGravityBrands,
     searingBrands: logs.searingBrands,
     meteors: logs.meteors,
     sonsSeen: logs.sonsSeen,
@@ -588,6 +617,9 @@ for (const summary of summaries) {
     `rift minions ${summary.riftMinions}`,
     summary.wardenCasts ? `warden casts ${Object.values(summary.wardenCasts).join('/')}` : null,
     summary.wardenMeleeAoE ? `melee AoE ${summary.wardenMeleeAoE}` : null,
+    summary.wardenShields ? `wards ${summary.wardenShields}/${summary.wardenWardBreaks}` : null,
+    summary.wardenBlightTicks ? `blight ticks ${summary.wardenBlightTicks}` : null,
+    summary.wardenGravityBrands ? `gravity brands ${summary.wardenGravityBrands}` : null,
     summary.searingBrands ? `searing brands ${summary.searingBrands}` : null,
     summary.meteors ? `meteors ${summary.meteors}` : null,
     summary.sonsSeen ? 'sons exercised' : null,

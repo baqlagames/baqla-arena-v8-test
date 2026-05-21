@@ -221,6 +221,27 @@ function smokeRoyalCarapace(ctx, boss) {
 
 function smokeAstralWarden(ctx, boss) {
   if (boss.id !== 10) return null;
+  boss._astralWardTriggered = {};
+  boss._astralWardActive = null;
+  boss._astralWardBreakLock = 0;
+  boss.hiveShield = null;
+  boss.hp = Math.max(1, Math.round(boss.maxHp * 0.69));
+  boss.mechCD = { starfall: 999, eclipseBeam: 999, gravityToll: 999, lanternOrbit: 999 };
+  boss._astralCastLock = 0;
+  tickBoss(ctx, boss, 2);
+  if (!boss.hiveShield || !boss.hiveShield.astralWard) throw new Error('Astral Warden did not cast Lantern Ward at 70%');
+  boss.hiveShield.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if (boss.hiveShield) throw new Error('Astral Warden Lantern Ward did not break cleanly');
+  if (!ctx.units.every(unit => unit._astralBlightTimer > 0)) throw new Error('Astral Warden shield break did not apply Astral Blight to the team');
+  boss._astralWardBreakLock = 0;
+  boss.hp = Math.max(1, Math.round(boss.maxHp * 0.34));
+  tickBoss(ctx, boss, 2);
+  if (!boss.hiveShield || !boss.hiveShield.astralWard) throw new Error('Astral Warden did not cast Lantern Ward at 35%');
+  boss.hiveShield.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if ((boss._astralWardBreaks || 0) < 2) throw new Error('Astral Warden did not break both Lantern Wards');
+
   const casts = [
     { hpPct: 0.90, key: 'starfall', cds: { starfall: 0, eclipseBeam: 999, gravityToll: 999, lanternOrbit: 999 } },
     { hpPct: 0.90, key: 'eclipseBeam', cds: { starfall: 999, eclipseBeam: 0, gravityToll: 999, lanternOrbit: 999 } },
@@ -231,14 +252,18 @@ function smokeAstralWarden(ctx, boss) {
     boss.hp = Math.max(1, Math.round(boss.maxHp * cast.hpPct));
     boss.mechCD = { ...cast.cds };
     boss._astralCastLock = 0;
+    boss.hiveShield = null;
+    boss._astralWardActive = null;
     if (cast.key === 'gravityToll') boss._astralGravityUnlocked = true;
     if (cast.key === 'lanternOrbit') {
       boss._astralGravityUnlocked = true;
       boss._astralOrbitUnlocked = true;
     }
     tickBoss(ctx, boss, 3);
+    if (cast.key === 'gravityToll') tickBoss(ctx, boss, 55);
   }
   if (!ctx.arena.astralStorm || !ctx.arena.astralStorm.active) throw new Error('Astral Warden did not activate astral storm atmosphere');
+  if (!ctx.units.some(unit => unit._gravityBrandTimer > 0)) throw new Error('Astral Warden Gravity Toll did not apply Gravity Brand');
   return 'astral-warden';
 }
 
@@ -253,7 +278,7 @@ function assertBossReadability(ctx, boss) {
     if (!texts.includes('METEOR TARGET')) throw new Error('Sultan missing meteor target callout');
   }
   if (boss.id === 10) {
-    for (const text of ['STARFALL LANTERNS', 'ECLIPSE BEAM', 'GRAVITY TOLL', 'LANTERN ORBIT']) {
+    for (const text of ['LANTERN WARD', 'LANTERN WARD BROKEN', 'ASTRAL BLIGHT', 'GRAVITY BRAND', 'STARFALL LANTERNS', 'ECLIPSE BEAM', 'GRAVITY TOLL', 'LANTERN ORBIT']) {
       if (!texts.includes(text)) throw new Error(`Astral Lantern Warden missing ${text} callout`);
     }
     for (const label of ['STAR', 'ECLIPSE', 'GRAVITY']) {

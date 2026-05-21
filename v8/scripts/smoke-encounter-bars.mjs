@@ -84,4 +84,13 @@ assert.ok(earlyBossIcons.some(icon => icon.title === 'Bolt Soon'), 'boss status 
 const wardenIcons = collectStatusIcons({ isBoss: true, mechCD: { starfall: 80 }, starfallCD: 420 }, tickHz);
 assert.ok(wardenIcons.some(icon => icon.title === 'Starfall Soon'), 'boss status icons should expose Warden mechanic warnings');
 
+const wardIcons = collectStatusIcons({ isBoss: true, hiveShield: { hp: 1200, maxHp: 2000, astralWard: true, color: '#8bdfff' } }, tickHz);
+assert.ok(wardIcons.some(icon => icon.title === 'Lantern Ward'), 'boss status icons should expose Lantern Ward shields');
+
+const brandedIcons = collectStatusIcons({ isPlayer: true, _gravityBrandTimer: 120 }, tickHz);
+assert.ok(brandedIcons.some(icon => icon.title === 'Gravity Brand'), 'player status icons should expose Gravity Brand');
+
+const blightedIcons = collectStatusIcons({ isPlayer: true, _astralBlightTimer: 120 }, tickHz);
+assert.ok(blightedIcons.some(icon => icon.title === 'Astral Blight'), 'player status icons should expose Astral Blight');
+
 console.log('smoke-encounter-bars: ok');

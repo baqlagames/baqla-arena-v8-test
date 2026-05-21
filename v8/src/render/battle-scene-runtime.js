@@ -12,7 +12,7 @@ export function createBattleSceneRuntime(deps) {
       applyRenderQuality:arena_applyRenderQuality,
       recomputeGrid,
       drawMenu,drawFlash,drawCodex,drawStageSelect,drawStageBrief,drawDeckPick,drawSpellPick,drawPerkPick,
-      drawArena,drawWeather,drawGroundFx,arena_drawGrid,drawCastle,drawDummy,arena_specHalo,arena_isCapstoneLevel,
+      drawArena,drawWeather,drawWeatherForeground,drawGroundFx,arena_drawGrid,drawCastle,drawDummy,arena_specHalo,arena_isCapstoneLevel,
       drawUnit,drawUnitOverlays,drawBeamFx,drawProjectiles,drawBombs,drawParticles,drawDmgNums,arena_drawHud,
       drawSigBanner,drawWinScreen,drawLoseScreen
     }=deps;
@@ -642,6 +642,7 @@ export function createBattleSceneRuntime(deps) {
   drawProjectiles();
   drawBombs();
   drawParticles();
+  if(state==='battle'&&typeof drawWeatherForeground==='function')drawWeatherForeground();
   drawDmgNums();
   ctx.restore();
   // HUD

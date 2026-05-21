@@ -18,11 +18,12 @@ export const BOSS_CODEX_ENTRIES = [
     title: 'Astral Lantern Warden',
     subtitle: 'Starfall, eclipse, gravity',
     color: '#3f6fff',
-    tags: ['CASTER', 'BURST', 'BACKLINE THREAT'],
+    tags: ['CASTER', 'BURST', 'BACKLINE THREAT', 'BOSS SHIELD'],
     mechanics: [
       ['Starfall Lanterns', 'Falling lantern strikes target wounded and backline allies.'],
       ['Eclipse Beam', 'A line warning shows where the astral beam will fire.'],
-      ['Gravity Toll', 'Phase 2 pulse pulls the team inward and pressures ranged units.'],
+      ['Gravity Toll', 'Phase 2 pulse pulls the team inward and brands tank/melee healing.'],
+      ['Lantern Ward', 'Phase shields break into a short Astral Blight on the team.'],
     ],
   },
   {

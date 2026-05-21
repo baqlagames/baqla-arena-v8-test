@@ -258,17 +258,25 @@ export function createActorEnemyRenderer({
       ctx.save();
       const shPct = enemy.hiveShield.hp / enemy.hiveShield.maxHp;
       const pulse = 0.7 + 0.3 * Math.sin(f * 0.1);
-      ctx.strokeStyle = '#ffdd44';
-      ctx.globalAlpha = 0.6 * pulse * shPct;
-      ctx.lineWidth = 4;
+      const shieldColor = enemy.hiveShield.color || '#ffdd44';
+      ctx.strokeStyle = shieldColor;
+      ctx.globalAlpha = (enemy.hiveShield.astralWard ? 0.82 : 0.6) * pulse * Math.max(0.35, shPct);
+      ctx.lineWidth = enemy.hiveShield.astralWard ? 5.5 : 4;
       ctx.beginPath();
-      ctx.arc(x, y, size + 8, 0, Math.PI * 2);
+      ctx.arc(x, y, size + (enemy.hiveShield.astralWard ? 14 : 8), 0, Math.PI * 2);
       ctx.stroke();
-      ctx.globalAlpha = 0.15 * pulse * shPct;
-      ctx.fillStyle = '#ffdd44';
+      ctx.globalAlpha = (enemy.hiveShield.astralWard ? 0.20 : 0.15) * pulse * shPct;
+      ctx.fillStyle = shieldColor;
       ctx.beginPath();
-      ctx.arc(x, y, size + 6, 0, Math.PI * 2);
+      ctx.arc(x, y, size + (enemy.hiveShield.astralWard ? 11 : 6), 0, Math.PI * 2);
       ctx.fill();
+      if (enemy.hiveShield.astralWard) {
+        ctx.globalAlpha = 0.9;
+        ctx.font = 'bold 8px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#d8f4ff';
+        ctx.fillText('WARD ' + Math.ceil(enemy.hiveShield.hp), x, Math.max(top + 6, y - size - 28));
+      }
       ctx.restore();
     }
 

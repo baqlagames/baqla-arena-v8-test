@@ -1192,7 +1192,7 @@ const battleSceneRuntime=createBattleSceneComposition({
   },
   drawers:{
     drawMenu,drawFlash,drawCodex,drawStageSelect,drawStageBrief,drawDeckPick,drawSpellPick,drawPerkPick,
-    drawArena,drawWeather,drawGroundFx,arena_drawGrid,drawCastle,drawDummy,arena_specHalo,arena_isCapstoneLevel,
+    drawArena,drawWeather,drawWeatherForeground,drawGroundFx,arena_drawGrid,drawCastle,drawDummy,arena_specHalo,arena_isCapstoneLevel,
     drawUnit,drawUnitOverlays,drawBeamFx,drawProjectiles,drawBombs,drawParticles,drawDmgNums,arena_drawHud,
     drawSigBanner,drawWinScreen,drawLoseScreen
   }
@@ -1448,6 +1448,7 @@ function arena_drainHealToBarrier(amount,srcUnit){
 function arena_timedFieldEffectsContext(...args){return battleObjectiveRuntime.timedFieldEffectsContext(...args)}
 function initWeather(...args){return battleObjectiveRuntime.initWeather(...args)}
 function drawWeather(...args){return battleObjectiveRuntime.drawWeather(...args)}
+function drawWeatherForeground(...args){return battleObjectiveRuntime.drawWeatherForeground(...args)}
 
 // =====================
 // ARENA ABILITIES (spell casting)

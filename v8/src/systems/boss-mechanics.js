@@ -631,8 +631,8 @@ function astralPlayerUnits(units){
 function astralIsTank(u){return !!(u&&(u.arch==='tank'||u.taunt))}
 function astralIsMelee(u){return !!(u&&(u.arch==='melee'||u.range<=75||u.prefersMelee))}
 function astralRoleDamageMult(u){
-  if(astralIsTank(u))return 0.40;
-  if(astralIsMelee(u))return 0.55;
+  if(astralIsTank(u))return 0.55;
+  if(astralIsMelee(u))return 0.65;
   return 1;
 }
 function astralTargetScore(u){
@@ -658,11 +658,69 @@ function ensureAstralStorm(b,ctx){
     active:true,
     bossId:b.id,
     startedFrame:ctx.frame||0,
-    nextThunderFrame:(ctx.frame||0)+600+Math.round(Math.random()*120),
-    flashTimer:0,
-    flashMax:0,
+    arrivalTimer:120,
+    nextThunderFrame:(ctx.frame||0)+60+Math.round(Math.random()*60),
+    flashTimer:14,
+    flashMax:14,
     forks:[]
   };
+}
+function applyAstralBlight(b,ctx){
+  const { units, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  let applied=0;
+  for(const u of astralPlayerUnits(units)){
+    u._astralBlightTimer=Math.max(u._astralBlightTimer||0,b.astralBlightDur||300);
+    u._astralBlightTick=60;
+    u._astralBlightHpPct=b.astralBlightHpPct||0.008;
+    u._astralBlightFrom=b;
+    applied++;
+    addP(u.x,u.y-u.size*0.4,'#8bdfff',6,2);
+  }
+  if(applied>0){
+    addDmg(b.x,b.y-b.size-16,'ASTRAL BLIGHT','#8bdfff',{sz:13,bold:true,outline:'#061433'});
+    groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(170,b.size*3.1),life:0.55,color:'#8bdfff',flatten:true});
+    showFlash('ASTRAL BLIGHT!','#8bdfff',42);
+    shake(6);
+  }
+}
+function breakAstralWard(b,ctx){
+  if(!b._astralWardActive)return;
+  const { groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  b._astralWardBreaks=(b._astralWardBreaks||0)+1;
+  b._astralWardActive=null;
+  b._astralWardBreakLock=54;
+  b.hiveShield=null;
+  addDmg(b.x,b.y-b.size-14,'LANTERN WARD BROKEN','#ffd166',{sz:13,bold:true,outline:'#3a2500'});
+  for(let i=0;i<30;i++)addP(b.x+rnd(-b.size,b.size),b.y+rnd(-b.size,b.size),'#ffd166',1,4);
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(180,b.size*3.2),life:0.55,color:'#ffd166',celestialAuraFx:true});
+  showFlash('WARD BROKEN!','#ffd166',36);
+  b._astralCastLock=Math.max(b._astralCastLock||0,54);
+  shake(7);
+  applyAstralBlight(b,ctx);
+  return true;
+}
+function tryAstralWard(b,ctx){
+  const thresholds=Array.isArray(b.lanternWardAt)?b.lanternWardAt:[];
+  if(!thresholds.length||b._astralWardBreakLock>0||b.hiveShield&&b.hiveShield.hp>0)return false;
+  b._astralWardTriggered=b._astralWardTriggered||{};
+  const hpPct=(b.maxHp>0)?b.hp/b.maxHp:1;
+  for(const threshold of thresholds){
+    const key=String(threshold);
+    if(b._astralWardTriggered[key]||hpPct>threshold)continue;
+    b._astralWardTriggered[key]=true;
+    const shieldMax=Math.max(1,Math.round((b.maxHp||b.hp||1)*(b.lanternWardShieldPct||0.07)));
+    b.hiveShield={hp:shieldMax,maxHp:shieldMax,astralWard:true,color:'#8bdfff'};
+    b._astralWardActive=key;
+    b._astralWardCasts=(b._astralWardCasts||0)+1;
+    b._astralCastLock=Math.max(b._astralCastLock||0,72);
+    ctx.addDamageText(b.x,b.y-b.size-14,'LANTERN WARD','#ffd166',{sz:13,bold:true,outline:'#3a2500'});
+    ctx.showFlash('LANTERN WARD!','#ffd166',45);
+    ctx.groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(170,b.size*2.8),life:0.85,color:'#ffd166',celestialAuraFx:true});
+    for(let i=0;i<24;i++)ctx.addParticle(b.x+rnd(-b.size,b.size),b.y+rnd(-b.size,b.size),'#ffd166',1,4);
+    ctx.shake(5);
+    return true;
+  }
+  return false;
 }
 function initAstralWarden(b,ctx){
   ensureAstralStorm(b,ctx);
@@ -715,6 +773,11 @@ function tickAstralPending(b,ctx){
         u.x+=(dx/d)*pull;u.y+=(dy/d)*pull;
         clampToArena(u);
         dealDamage(u,Math.round(p.dmg*astralRoleDamageMult(u)),b,'magic','gravityToll',{sourceLabel:'GRAVITY',sourceColor:'#9bb8ff'});
+        if(astralIsTank(u)||astralIsMelee(u)){
+          u._gravityBrandTimer=Math.max(u._gravityBrandTimer||0,b.gravityBrandDur||240);
+          u._gravityBrandHealCut=b.gravityBrandHealCut||0.12;
+          addDmg(u.x,u.y-(u.size||20)-10,'GRAVITY BRAND','#9bb8ff',{sz:10,bold:true,outline:'#061433'});
+        }
         addP(u.x,u.y,'#9bb8ff',6,3);
       }
       groundFx.push({x:b.x,y:b.y,r:0,maxR:220,life:0.75,color:'#9bb8ff',celestialAuraFx:true});
@@ -808,9 +871,15 @@ function castAstralLanternOrbit(b,ctx){
 }
 function updateAstralWarden(b,ctx){
   initAstralWarden(b,ctx);
+  b._astralWardBreakLock=Math.max(0,(b._astralWardBreakLock||0)-1);
+  if(b._astralWardActive&&(!b.hiveShield||b.hiveShield.hp<=0)){
+    breakAstralWard(b,ctx);
+    return;
+  }
   tickAstralPending(b,ctx);
   tickAstralOrbit(b,ctx);
   tickAstralCooldowns(b);
+  if(tryAstralWard(b,ctx))return;
   const phase=bossPhase(b);
   if(phase>=2&&!b._astralGravityUnlocked){
     b._astralGravityUnlocked=true;

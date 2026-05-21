@@ -46,6 +46,25 @@ function tickBossDebuffs(unit, {
     unit._searingBrandTimer--;
     if (frame % 12 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.4, unit.size * 0.4), unit.y - unit.size * 0.4, '#ff6a22', 1, 2);
   }
+  if (unit._gravityBrandTimer > 0) {
+    unit._gravityBrandTimer--;
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.4, unit.size * 0.4), unit.y - unit.size * 0.5, '#9bb8ff', 1, 2);
+  }
+  if (unit._astralBlightTimer > 0) {
+    unit._astralBlightTimer--;
+    unit._astralBlightTick = Math.max(0, (unit._astralBlightTick || 60) - 1);
+    if (unit._astralBlightTick <= 0 && unit.hp > 0) {
+      unit._astralBlightTick = 60;
+      const dmg = Math.max(6, Math.round((unit.maxHp || unit.hp || 1) * (unit._astralBlightHpPct || 0.008)));
+      dealDamage(unit, dmg, unit._astralBlightFrom || null, 'magic', 'astralBlight', { sourceLabel: 'ASTRAL BLIGHT', sourceColor: '#8bdfff' });
+      addDamageText(unit.x, unit.y - unit.size - 8, 'ASTRAL BLIGHT', '#8bdfff');
+      emitParticle(unit.x, unit.y - unit.size * 0.5, '#8bdfff', 4, 2);
+    }
+    if (unit._astralBlightTimer <= 0) {
+      unit._astralBlightTick = 0;
+      unit._astralBlightFrom = null;
+    }
+  }
   if (unit._royalStingTimer > 0) {
     unit._royalStingTimer--;
     if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.5, '#ffdd44', 1, 2);

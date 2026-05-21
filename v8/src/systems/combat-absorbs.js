@@ -1,4 +1,4 @@
-import { emitShieldAbsorbFx } from './shield-vfx-events.js?v=72b1f6b-damage-tags';
+import { emitShieldAbsorbFx } from './shield-vfx-events.js';
 
 export function stopInvalidDamageTarget(target, {
   frame,
@@ -43,11 +43,13 @@ export function absorbHiveShield(target, raw, attacker, {
       addDamageText(attacker.x, attacker.y - attacker.size, 'REFLECT -' + reflected, '#ffdd44');
     }
   }
-  emitShieldAbsorbFx(target, { type: 'hive', color: '#ffdd44', amount: absorb, frame, emitParticle, groundEffects, particleCount: 4, particleSize: 3 });
+  const shieldColor = target.hiveShield.color || '#ffdd44';
+  const isAstralWard = !!target.hiveShield.astralWard;
+  emitShieldAbsorbFx(target, { type: 'hive', color: shieldColor, amount: absorb, frame, emitParticle, groundEffects, particleCount: 4, particleSize: 3 });
   if (target.hiveShield.hp <= 0) {
     if (target.hiveShield.royalCarapace) target._royalCarapaceBroken = true;
-    else showFlash('HIVE SHIELD BROKEN!', '#ffdd44', 40);
-    emitShieldAbsorbFx(target, { type: 'hive', color: '#ffdd44', amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: 'HIVE BREAK', groundPulse: true });
+    else showFlash(isAstralWard ? 'WARD BROKEN!' : 'HIVE SHIELD BROKEN!', shieldColor, 40);
+    emitShieldAbsorbFx(target, { type: 'hive', color: shieldColor, amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: isAstralWard ? 'WARD BREAK' : 'HIVE BREAK', groundPulse: true });
     target.hiveShield = null;
   }
   return { raw: leftover, blocked: leftover <= 0 };
