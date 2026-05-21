@@ -24,7 +24,7 @@ export function createArenaCodexComposition(deps) {
         height: layout.height,
         codexUnit: uiState.codexUnit,
         codexScroll: uiState.codexScroll,
-        defeatedBosses: progressState.defeatedBosses
+        foughtBosses: progressState.foughtBosses
       };
     },
     detailView: () => {
@@ -38,7 +38,7 @@ export function createArenaCodexComposition(deps) {
         unitLevels: squadState.unitLevels,
         vodkaLevel: squadState.vodkaLevel,
         frame: combatRuntimeState.frame,
-        defeatedBosses: progressState.defeatedBosses,
+        foughtBosses: progressState.foughtBosses,
         signatures: typeof deps.signatures === 'function' ? deps.signatures() : deps.signatures,
         drawFns: deps.drawFns
       };

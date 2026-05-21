@@ -1,8 +1,8 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=8cc7d77-combat-readability';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=8cc7d77-combat-readability';
+import { createActorOverlayRenderer } from './actor-overlays.js';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js';
 import { createActorEnemyRenderer } from './actor-enemy-renderer.js';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
@@ -178,34 +178,6 @@ function drawUnitRaw(u){
     ctx.globalAlpha=0.2*(u.whirlwindFx/24);
     ctx.strokeStyle=_wfCol;ctx.lineWidth=4;
     ctx.beginPath();ctx.arc(u.x,y,_wfR*0.45,0,Math.PI*2);ctx.stroke();
-    ctx.restore();
-  }
-  // ===== SIGNATURE CAST FLASH Ã¢â‚¬â€ bright halo briefly after sig fires =====
-  // Drawn BEFORE the sprite so the halo encloses the unit. Fades over 18 frames.
-  if(u.signatureCastFx>0){
-    ctx.save();
-    const _csf=u.signatureCastFx/18;
-    const _csR=u.size*2.0+(1-_csf)*16;
-    ctx.strokeStyle='#ffd700';ctx.lineWidth=3;ctx.globalAlpha=_csf*0.85;
-    ctx.beginPath();ctx.arc(u.x,y,_csR,0,Math.PI*2);ctx.stroke();
-    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.globalAlpha=_csf;
-    ctx.beginPath();ctx.arc(u.x,y,_csR-3,0,Math.PI*2);ctx.stroke();
-    ctx.restore();
-  }
-  // L5 rotating gold halo Ã¢â‚¬â€ drawn BEFORE the sprite so it sits behind the unit.
-  // Persistent premium tier signal that reads at a glance even in chaotic waves.
-  // Outer dashed ring spins via lineDashOffset, inner soft ring pulses with a sine.
-  if((u.cellLevel||u.level||1)>=5&&!u.isMinion&&!u.isGhost&&!u.isMirror){
-    ctx.save();
-    const _haloR=(u.size||16)*1.55;
-    ctx.strokeStyle='#ffd700';ctx.lineWidth=1.6;
-    ctx.globalAlpha=0.55;
-    ctx.setLineDash([5,4]);ctx.lineDashOffset=-frame*0.4;
-    ctx.beginPath();ctx.arc(u.x,y,_haloR,0,Math.PI*2);ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.globalAlpha=0.20+Math.sin(frame*0.08)*0.06;
-    ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(u.x,y,_haloR-3,0,Math.PI*2);ctx.stroke();
     ctx.restore();
   }
   // Level-up size punch: brief 1.0 Ã¢â€ â€™ 1.30 Ã¢â€ â€™ 1.0 over 20 frames so upgrades
@@ -540,7 +512,7 @@ function drawUnitRaw(u){
   if(u.ironwillActive){
     ctx.strokeStyle='#cc8844';ctx.lineWidth=2.5;
     ctx.beginPath();ctx.arc(u.x,y,u.size+5+Math.sin(frame*0.25)*2,0,Math.PI*2);ctx.stroke();
-    if(frame%3===0)addP(u.x+rnd(-u.size,u.size),y+rnd(-u.size/2,u.size/2),'#cc8844',1,2);
+    if(frame%10===0)addP(u.x+rnd(-u.size,u.size),y+rnd(-u.size/2,u.size/2),'#cc8844',1,2);
   }
   if(u.amsActive){
     ctx.strokeStyle='#aa66ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(u.x,y,u.size+5+Math.sin(frame*0.3)*2,0,Math.PI*2);ctx.stroke();
@@ -553,13 +525,13 @@ function drawUnitRaw(u){
   }
   if(u.furyTimer>0){
     ctx.strokeStyle='#ff8c00';ctx.lineWidth=3;ctx.beginPath();ctx.arc(u.x,y,u.size+10,0,Math.PI*2);ctx.stroke();
-    addP(u.x+rnd(-u.size,u.size),y-u.size,'#ff6600',1,3);
+    if(frame%6===0)addP(u.x+rnd(-u.size,u.size),y-u.size,'#ff6600',1,3);
   }
   if(u.armorBuff>0){
     ctx.strokeStyle='#ffd700';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(u.x,y,u.size+3,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
   }
   if(u.hotTimer>0){
-    if(frame%5===0)addP(u.x+rnd(-u.size/2,u.size/2),y-u.size,'#3aa84e',1,2);
+    if(frame%12===0)addP(u.x+rnd(-u.size/2,u.size/2),y-u.size,'#3aa84e',1,2);
     u.hotTimer--;
     u.hotTick++;
     if(u.hotTick%30===0){const _hh=arena_applyHealingReceived(u,u.hotAmt/2);u.hp=Math.min(u.maxHp,u.hp+_hh);addHealFx(u.x,y,_hh)}
@@ -576,15 +548,15 @@ function drawUnitRaw(u){
     ctx.strokeStyle='#aaffaa';ctx.lineWidth=2.5;ctx.globalAlpha=0.7;
     ctx.beginPath();ctx.arc(u.x,y,u.size+6,-Math.PI/2,-Math.PI/2+Math.PI*2*_hotPct);ctx.stroke();
     ctx.restore();
-    if(frame%4===0){const ang=Math.random()*Math.PI*2;addP(u.x+Math.cos(ang)*(u.size+2),y+Math.sin(ang)*(u.size+2),'#aaffaa',1,3)}
-    if(frame%8===0)addP(u.x+rnd(-4,4),y-u.size-rnd(2,10),'#88cc66',1,2);
+    if(frame%12===0){const ang=Math.random()*Math.PI*2;addP(u.x+Math.cos(ang)*(u.size+2),y+Math.sin(ang)*(u.size+2),'#aaffaa',1,3)}
+    if(frame%16===0)addP(u.x+rnd(-4,4),y-u.size-rnd(2,10),'#88cc66',1,2);
     u._essenceHot.timer--;
     if(u._essenceHot.timer<=0)u._essenceHot=null;
   }
   // Golden Shield (Prescient Barrier) Ã¢â‚¬â€ pulsing golden dome + timer
   if(u._goldShield){
     u._goldShield.timer--;
-    if(frame%10===0)addP(u.x+rnd(-u.size,u.size),y-u.size-rnd(2,8),'#ffd700',1,2);
+    if(frame%20===0)addP(u.x+rnd(-u.size,u.size),y-u.size-rnd(2,8),'#ffd700',1,2);
     if(u._goldShield.timer<=0){
       const _rem=u._goldShield.amt;
       if(_rem>0&&!u._goldShield.noExpireHeal){const _gh=arena_applyHealingReceived(u,_rem);u.hp=Math.min(u.maxHp,u.hp+_gh);addHealFx(u.x,y,_gh)}
@@ -617,35 +589,6 @@ function drawUnitRaw(u){
     ctx.fillStyle='#000a';ctx.fillRect(u.x-7,y+u.size+2,14,8);
     ctx.fillStyle='#fff';ctx.font='bold 7px Arial';ctx.textAlign='center';
     ctx.fillText('L'+(u.level||1),u.x,y+u.size+9);
-  }
-  // ===== SIGNATURE READY INDICATOR Ã¢â‚¬â€ bigger + more visible =====
-  // Horizontal CD bar UNDER the unit + Ã¢Å¡Â¡ glyph when nearly charged.
-  // The bar fills left-to-right in gold as the signature charges.
-  if(u.signature&&!u.isMinion&&!u.isGhost&&!u.isMirror){
-    const _sigPct=Math.min(1,u.signature.t/u.signature.cd);
-    if(_sigPct>=0.90){
-      const _wind=Math.min(1,(_sigPct-0.90)/0.10);
-      const _sigCol=u.accent||arena_playerVfxColor(u);
-      ctx.save();
-      ctx.globalAlpha=(0.18+0.22*Math.sin(frame*0.22))*_wind;
-      ctx.strokeStyle=_sigCol;ctx.lineWidth=2.2;
-      ctx.setLineDash([6,4]);ctx.lineDashOffset=-frame*0.75;
-      ctx.beginPath();ctx.arc(u.x,y,u.size+12+_wind*8,0,Math.PI*2);ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha=0.10*_wind;ctx.fillStyle=_sigCol;
-      ctx.beginPath();ctx.arc(u.x,y,u.size+10+_wind*6,0,Math.PI*2);ctx.fill();
-      ctx.restore();
-    }
-    if(_sigPct>=0.85){
-      const _alpha=Math.min(1,(_sigPct-0.85)/0.15);
-      ctx.save();
-      ctx.globalAlpha=_alpha*(0.75+Math.sin(frame*0.3)*0.25);
-      ctx.fillStyle='#ffd700';
-      ctx.beginPath();ctx.arc(u.x+_barW/2+6,_hudY+3,3.5,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#fff';ctx.lineWidth=1;
-      ctx.beginPath();ctx.arc(u.x+_barW/2+6,_hudY+3,5.5,0,Math.PI*2);ctx.stroke();
-      ctx.restore();
-    }
   }
   // Tier pips Ã¢â‚¬â€ persistent across build AND wave. Replaces the
   // build-only chip as the primary level signal you read mid-fight.

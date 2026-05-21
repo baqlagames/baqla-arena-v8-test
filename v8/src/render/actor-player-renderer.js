@@ -42,7 +42,7 @@ drawFns.drawTreant=function(x,y,u){
   ctx.fillStyle='#ffffff';
   ctx.beginPath();ctx.arc(x-s*0.15,y-s*0.35,2,0,Math.PI*2);ctx.fill();
   ctx.beginPath();ctx.arc(x+s*0.15,y-s*0.35,2,0,Math.PI*2);ctx.fill();
-  if(frame%8===0)addP(x+rnd(-s*0.5,s*0.5),y-s*0.8,'#33cc33',1,2);
+  if(frame%18===0)addP(x+rnd(-s*0.5,s*0.5),y-s*0.8,'#33cc33',1,2);
 };
 
 Object.assign(drawFns, createActorPlayerTankRenderer({

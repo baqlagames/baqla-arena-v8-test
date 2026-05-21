@@ -45,8 +45,8 @@ drawFns.drawFelfel=function(x,y,u){
     });
     ctx.restore();
     if(_drawn){
-      if(u.branch==='a'&&frame%8===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.3,s*0.3),'#7733aa',1,2);
-      if(u.branch==='b'&&frame%10===0)addP(x+rnd(-s*0.2,s*0.2),y+s*0.6,'#55aa33',1,2);
+      if(u.branch==='a'&&frame%18===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.3,s*0.3),'#7733aa',1,2);
+      if(u.branch==='b'&&frame%20===0)addP(x+rnd(-s*0.2,s*0.2),y+s*0.6,'#55aa33',1,2);
       if(u.killingSpree){ctx.fillStyle='rgba(255,34,68,0.3)';ctx.beginPath();ctx.arc(x,y,s*0.8,0,Math.PI*2);ctx.fill();}
       if(u.dfaTimer>0){
         if(u.dfaPhase==='rising'){ctx.fillStyle='rgba(255,68,102,0.2)';ctx.beginPath();ctx.arc(x,y,s+10,0,Math.PI*2);ctx.fill();}
@@ -61,7 +61,7 @@ drawFns.drawFelfel=function(x,y,u){
         ctx.strokeStyle='#7733aa';ctx.lineWidth=2;ctx.shadowColor='#7733aa';ctx.shadowBlur=10;
         ctx.beginPath();ctx.arc(x,y,s+6,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
       }
-      if(u.crimsonVial&&u.crimsonVial.active&&frame%6===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.5,0),'#cc3344',1,2);
+      if(u.crimsonVial&&u.crimsonVial.active&&frame%10===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.5,0),'#cc3344',1,2);
       if(u.sliceAndDice&&u.sliceAndDice.timer>0){
         ctx.strokeStyle='rgba(255,204,0,0.4)';ctx.lineWidth=1;
         for(let i=0;i<3;i++){const a=frame*0.15+i*2.1;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*s*0.6,y+Math.sin(a)*s*0.6);ctx.lineTo(x+Math.cos(a)*s*1.0,y+Math.sin(a)*s*1.0);ctx.stroke();}
@@ -142,11 +142,11 @@ drawFns.drawFelfel=function(x,y,u){
   // Branch-specific VFX
   if(u.branch==='a'){
     // Shadow Dancer: purple shadow wisps
-    if(frame%8===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.3,s*0.3),'#7733aa',1,2);
+    if(frame%18===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.3,s*0.3),'#7733aa',1,2);
   }
   if(u.branch==='b'){
     // Poison Assassin: green poison drip particles
-    if(frame%10===0)addP(x+rnd(-s*0.2,s*0.2),y+s*0.6,'#55aa33',1,2);
+    if(frame%20===0)addP(x+rnd(-s*0.2,s*0.2),y+s*0.6,'#55aa33',1,2);
   }
   // Killing Spree: afterimage trail
   if(u.killingSpree){
@@ -173,7 +173,7 @@ drawFns.drawFelfel=function(x,y,u){
   }
   // Crimson Vial active
   if(u.crimsonVial&&u.crimsonVial.active){
-    if(frame%6===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.5,0),'#cc3344',1,2);
+    if(frame%10===0)addP(x+rnd(-s*0.3,s*0.3),y+rnd(-s*0.5,0),'#cc3344',1,2);
   }
   // Slice and Dice active: speed lines
   if(u.sliceAndDice&&u.sliceAndDice.timer>0){
@@ -276,7 +276,7 @@ drawFns.drawJazar=function(x,y,u){
     });
     ctx.restore();
     if(_drawn){
-      if(frame%8===0)addP(x+rnd(-s*0.55,s*0.55),y+rnd(-s*0.35,s*0.75),_jazarGlow,1,2.5);
+      if(frame%18===0)addP(x+rnd(-s*0.55,s*0.55),y+rnd(-s*0.35,s*0.75),_jazarGlow,1,2.5);
       if(u.killingSpree){
         ctx.fillStyle='rgba(255,100,34,0.3)';ctx.beginPath();ctx.arc(x,y,s*0.8,0,Math.PI*2);ctx.fill();
       }
@@ -415,7 +415,7 @@ drawFns.drawFilfilHar=function(x,y,u){
     if((u.facing||1)<0)ctx.scale(-1,1);
     ctx.drawImage(img,Math.round(-drawW/2),Math.round(-drawH*0.45),drawW,drawH);
     ctx.restore();
-    if(frame%8===0)addP(x+rnd(-s*0.4,s*0.4),y+s*0.6,'#ff88ff',1,2);
+    if(frame%18===0)addP(x+rnd(-s*0.4,s*0.4),y+s*0.6,'#ff88ff',1,2);
   }else{
     ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(x,y+s+1,s*0.5,s*0.12,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=u.color;ctx.beginPath();

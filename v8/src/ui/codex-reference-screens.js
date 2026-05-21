@@ -7,7 +7,7 @@ export function createCodexReferenceScreens(deps) {
   const ARENA_ARMOR_MATRIX = deps.armorMatrix;
   const ARENA_DEFENSE_MATRIX = deps.defenseMatrix;
   const ARENA_PLAYER_ARMOR_TYPE = deps.playerArmorType;
-  let W = 500, H = 1000, arena = null, defeatedBosses = [];
+  let W = 500, H = 1000, arena = null, foughtBosses = [];
 
   const arena_threatTagColor = (...args) => deps.threatTagColor(...args);
   const arena_rgba = (...args) => deps.rgba(...args);
@@ -17,7 +17,7 @@ export function createCodexReferenceScreens(deps) {
     W = v.width || W;
     H = v.height || H;
     arena = v.arena || arena;
-    defeatedBosses = Array.isArray(v.defeatedBosses) ? v.defeatedBosses : defeatedBosses;
+    foughtBosses = Array.isArray(v.foughtBosses) ? v.foughtBosses : foughtBosses;
   }
 
   function drawBackButton(y) {
@@ -257,10 +257,10 @@ export function createCodexReferenceScreens(deps) {
 
   function drawBossMechanics() {
     sync();
-    const defeated = new Set((defeatedBosses || []).map(id => Number(id)));
+    const fought = new Set((foughtBosses || []).map(id => Number(id)));
     let y = drawHeroCard(80, {
       title: 'Boss Mechanics',
-      subtitle: 'Mechanics reveal only after you defeat that boss.',
+      subtitle: 'Mechanics reveal after you face that boss.',
       color: '#ff4d4d',
       subColor: '#ffb3b3',
       bg0: 'rgba(58,18,26,0.95)',
@@ -269,7 +269,7 @@ export function createCodexReferenceScreens(deps) {
     });
 
     for (const entry of BOSS_CODEX_ENTRIES) {
-      const unlocked = defeated.has(entry.bossId);
+      const unlocked = fought.has(entry.bossId);
       const rowH = unlocked ? 112 : 68;
       const color = entry.color || '#ff4d4d';
       const bg = ctx.createLinearGradient(0, y, 0, y + rowH);
@@ -298,7 +298,7 @@ export function createCodexReferenceScreens(deps) {
 
       if (!unlocked) {
         ctx.fillStyle = '#777'; ctx.font = '10px Segoe UI';
-        ctx.fillText('Defeat this boss to reveal its mechanics.', 96, y + 52);
+        ctx.fillText('Fight this boss to reveal its mechanics.', 96, y + 52);
         y += rowH + 7;
         continue;
       }

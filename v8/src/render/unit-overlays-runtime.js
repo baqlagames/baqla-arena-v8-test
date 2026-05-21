@@ -126,16 +126,8 @@ export function createUnitOverlaysRuntime(deps) {
   for(const u of units){if(u.hp>0&&u.isPlayer&&u._beaconMark&&u._beaconMark>0)_beaconUnits.push(u)}
   if(_beaconUnits.length>=2){
     ctx.save();
-    const _pulse=0.15+Math.sin(frame*0.06)*0.08;
-    ctx.strokeStyle='#ffd700';ctx.lineWidth=1.5;ctx.globalAlpha=_pulse;
-    for(let i=0;i<_beaconUnits.length;i++){
-      for(let j=i+1;j<_beaconUnits.length;j++){
-        const a=_beaconUnits[i],b=_beaconUnits[j];
-        const ay=a.y+Math.sin(a.bobPhase)*1.2,by=b.y+Math.sin(b.bobPhase)*1.2;
-        ctx.beginPath();ctx.moveTo(a.x,ay);ctx.lineTo(b.x,by);ctx.stroke();
-      }
-    }
-    ctx.globalAlpha=_pulse*0.4;ctx.lineWidth=5;
+    const _pulse=0.11+Math.sin(frame*0.06)*0.05;
+    ctx.strokeStyle='#ffd700';ctx.lineWidth=1.15;ctx.globalAlpha=_pulse;
     for(let i=0;i<_beaconUnits.length;i++){
       for(let j=i+1;j<_beaconUnits.length;j++){
         const a=_beaconUnits[i],b=_beaconUnits[j];

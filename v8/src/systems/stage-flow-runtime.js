@@ -57,6 +57,7 @@ export function createStageFlowRuntime(ctx) {
     if (b) {
       ctx.setBossRef(b);
       ctx.setBossSpawned(true);
+      if (typeof ctx.unlockBossCodex === 'function') ctx.unlockBossCodex(bossId);
     }
     return b;
   }
@@ -197,7 +198,6 @@ export function createStageFlowRuntime(ctx) {
       arena.lastStars = result;
       const sn = v.currentStage.n || 1;
       ctx.setStageStar(sn, Math.max(ctx.stageStar(sn) || 0, result.stars || 1));
-      if (v.currentStage.bossId != null && typeof ctx.unlockBossCodex === 'function') ctx.unlockBossCodex(v.currentStage.bossId);
       const firstClear = v.currentStage.n >= v.maxStage;
       const beanReward = ctx.stageBeansReward({
         stage: v.currentStage,

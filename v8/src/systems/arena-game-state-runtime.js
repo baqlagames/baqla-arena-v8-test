@@ -21,7 +21,7 @@ export function createArenaGameStateRuntime(gameState) {
   function addBeans(value) { return setBeans(progressState.beans + value); }
   function setUnlockedPerks(value) { progressState.unlockedPerks = value; return progressState.unlockedPerks; }
   function setSelectedPerks(value) { progressState.selectedPerks = value; return progressState.selectedPerks; }
-  function setDefeatedBosses(value) { progressState.defeatedBosses = Array.isArray(value) ? value : []; return progressState.defeatedBosses; }
+  function setFoughtBosses(value) { progressState.foughtBosses = Array.isArray(value) ? value : []; return progressState.foughtBosses; }
 
   function setCrystal(value) { economyState.crystal = value; return economyState.crystal; }
   function addCrystal(value) { return setCrystal(Math.min(economyState.maxCrystal, economyState.crystal + value)); }
@@ -86,7 +86,7 @@ export function createArenaGameStateRuntime(gameState) {
     addBeans,
     setUnlockedPerks,
     setSelectedPerks,
-    setDefeatedBosses,
+    setFoughtBosses,
     setCrystal,
     addCrystal,
     setGold,

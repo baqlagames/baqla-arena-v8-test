@@ -32,7 +32,7 @@ drawFns.drawFoul=function(x,y,u){
   const _jfGlow=u.branch==='a'?'#5a3a8a':(u.branch==='b'?'#ff6600':'#9b59b6');
   const _jfSprite=unitSpriteAssets.pick(u.branch==='a'?'jafaarDemon':(u.branch==='b'?'jafaarDestruction':'jafaar'),10)||unitSpriteAssets.pick('jafaar',10);
   if(_jfSprite&&arena_drawUnitSprite(_jfSprite,x,y,u,{buildScale:ARENA_SPRITE_BUILD_SCALE,waveScale:ARENA_SPRITE_WAVE_SCALE,anchor:0.50,glow:_jfGlow,glowAlpha:0.13})){
-    if(frame%12===0)addP(x+rnd(-s*0.3,s*0.3),y+s*0.8,_jfGlow,1,2);
+    if(frame%24===0)addP(x+rnd(-s*0.3,s*0.3),y+s*0.8,_jfGlow,1,2);
   }else{
     ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(x,y+s+1,s*0.5,s*0.12,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=u.color;ctx.beginPath();
@@ -156,7 +156,7 @@ drawFns.drawRumman=function(x,y,u){
       ctx.fillStyle='rgba(68,204,255,0.30)';ctx.beginPath();ctx.arc(s*0.95,0,s*0.22,0,Math.PI*2);ctx.fill();
     }
     ctx.restore();
-    if(frame%5===0&&isMech)addP(x-f*s*0.35,y+s*0.68,'#ffb3d1',1,3);
+    if(frame%12===0&&isMech)addP(x-f*s*0.35,y+s*0.68,'#ffb3d1',1,3);
   }else{
   ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(x,y+s+1,s*(isMech?0.8:0.6),s*0.12,0,0,Math.PI*2);ctx.fill();
   if(isMech){
@@ -176,8 +176,8 @@ drawFns.drawRumman=function(x,y,u){
     ctx.fillStyle='#ffd36a';ctx.beginPath();ctx.arc(x,y-s*0.1,s*0.35,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=u._mechRebuilding?'#cc9aa8':'#ff5ca8';ctx.beginPath();ctx.arc(x,y-s*0.1,s*0.28,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.arc(x-s*0.08,y-s*0.18,s*0.1,0,Math.PI*2);ctx.fill();
-    if(frame%6===0&&!u._mechRebuilding)addP(x-s*0.5+rnd(-3,3),y+s*0.3,'#ffb3d1',1,2);
-    if(frame%6===3&&!u._mechRebuilding)addP(x+s*0.5+rnd(-3,3),y+s*0.3,'#ffb3d1',1,2);
+    if(frame%14===0&&!u._mechRebuilding)addP(x-s*0.5+rnd(-3,3),y+s*0.3,'#ffb3d1',1,2);
+    if(frame%14===7&&!u._mechRebuilding)addP(x+s*0.5+rnd(-3,3),y+s*0.3,'#ffb3d1',1,2);
   }else{
     ctx.fillStyle=u.color;ctx.beginPath();ctx.arc(x,y,s*0.85,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=u.accent;
@@ -270,7 +270,7 @@ drawFns.drawNaana=function(x,y,u){
   const _nanaaKey=u.branch?'nanaaBase':'nanaaHealer';
   const _sprite=unitSpriteAssets.pick(_nanaaKey,9)||unitSpriteAssets.frames(_nanaaKey)[0];
   if(arena_drawUnitSprite(_sprite,x,y,u,{buildScale:4.15,waveScale:6.3,anchor:0.50,glow:_spriteGlow,glowAlpha:isShadow?0.18:0.12})){
-    if(frame%7===0)addP(x+rnd(-s*0.55,s*0.55),y+rnd(-s*0.45,s*0.7),_spriteGlow,1,3);
+    if(frame%18===0)addP(x+rnd(-s*0.55,s*0.55),y+rnd(-s*0.45,s*0.7),_spriteGlow,1,3);
     return;
   }
   const _bc=isShadow?'#2a0a3a':isDisc?'#e0c0d8':u.color;
@@ -343,7 +343,7 @@ drawFns.drawNaana=function(x,y,u){
   ctx.beginPath();ctx.arc(_sx-f*s*0.1,y-s*0.87,s*0.06,0,Math.PI*2);ctx.fill();
   ctx.save();ctx.fillStyle='#ffffff';ctx.globalAlpha=0.6;ctx.beginPath();ctx.arc(_sx-f*s*0.1-1,y-s*0.89,s*0.02,0,Math.PI*2);ctx.fill();ctx.restore();
   // Holy particles
-  if(frame%6===0){
+  if(frame%18===0){
     const _pc=isShadow?'#aa66ff':isDisc?'#ffaadd':'#ffe066';
     addP(x+rnd(-s*0.5,s*0.5),y+rnd(-s*0.3,s*0.8),_pc,1,3);
   }
@@ -375,7 +375,7 @@ drawFns.drawBakdounes=function(x,y,u){
   const _sprite=unitSpriteAssets.pick('bakdounesFlying',8)||_v8UnitSprites.bakdounesDruid;
   if(arena_drawUnitSprite(_sprite,x,y,u,{buildScale:ARENA_SPRITE_BUILD_SCALE,waveScale:ARENA_SPRITE_WAVE_SCALE,anchor:0.53,glow:_glowCol,glowAlpha:_isTree?0.22:0.13})){
     if(_isMoonkin)arena_drawMoonkinSpriteOverlay(x,y,s,u,_eclipsePhase);
-    if(frame%8===0)addP(x+rnd(-s*0.7,s*0.7),y+rnd(-s*0.5,s*0.8),_glowCol,1,2.5);
+    if(frame%18===0)addP(x+rnd(-s*0.7,s*0.7),y+rnd(-s*0.5,s*0.8),_glowCol,1,2.5);
     return;
   }
   ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(x,y+s+1,s*0.55,s*0.14,0,0,Math.PI*2);ctx.fill();
@@ -506,7 +506,7 @@ drawFns.drawBakdounes=function(x,y,u){
     }
   }
   // Nature particles
-  if(frame%8===0){
+  if(frame%18===0){
     const _pc=_isMoonkin?(_eclipsePhase==='solar'?'#ffd70044':'#aaccff44'):(_isTree?'#44ff66':'#66ff88');
     addP(x+rnd(-s*0.4,s*0.4),y+rnd(-s*0.5,s*0.6),_pc,1,3);
     if(_isTree)addP(x+rnd(-s*0.6,s*0.6),y+rnd(-s*0.8,s*0.3),'#88ffaa',1,2);
@@ -532,14 +532,14 @@ drawFns.drawHabaq=function(x,y,u){
   const col=u.color||'#5e8a3a';
   const acc=u.accent||'#3c5c22';
   if(u.unitIdx===13&&arena_drawUnitSprite(_v8UnitSprites.habaqMonk,x,y,u,{buildScale:ARENA_SPRITE_BUILD_SCALE,waveScale:ARENA_SPRITE_WAVE_SCALE,anchor:0.51,glow:'#ffb24a',glowAlpha:0.16})){
-    if(frame%7===0)addP(x+rnd(-s*0.45,s*0.45),y+rnd(-s*0.35,s*0.45),'#ffb24a',1,2.5);
+    if(frame%18===0)addP(x+rnd(-s*0.45,s*0.45),y+rnd(-s*0.35,s*0.45),'#ffb24a',1,2.5);
     return;
   }
   const glow=u.branch==='b'?'#ff6644':(u.branch==='a'?'#44ccff':'#ffb24a');
   const _hbSprite=unitSpriteAssets.pick(u.branch==='a'?'habaqBlue':(u.branch==='b'?'habaqRed':'habaqBase'),9);
   if(_hbSprite&&arena_drawUnitSprite(_hbSprite,x,y,u,{buildScale:ARENA_SPRITE_BUILD_SCALE,waveScale:ARENA_SPRITE_WAVE_SCALE,anchor:0.51,glow,glowAlpha:0.13})){
     if(u.branch==='b')arena_drawToxinSpriteOverlay(x,y,s,u);
-    if(frame%8===0)addP(x+rnd(-s*0.6,s*0.6),y+rnd(-s*0.4,s*0.75),glow,1,2.5);
+    if(frame%18===0)addP(x+rnd(-s*0.6,s*0.6),y+rnd(-s*0.4,s*0.75),glow,1,2.5);
     return;
   }
   // shadow

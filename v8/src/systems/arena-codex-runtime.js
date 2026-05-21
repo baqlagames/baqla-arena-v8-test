@@ -39,7 +39,7 @@ export function createArenaCodexRuntime(deps = {}) {
       height: v.height,
       codexUnit: v.codexUnit,
       codexScroll: v.codexScroll,
-      defeatedBosses: v.defeatedBosses,
+      foughtBosses: v.foughtBosses,
       playerUnits: deps.playerUnits,
       vodka: deps.vodka,
       unitBranches: deps.unitBranches,

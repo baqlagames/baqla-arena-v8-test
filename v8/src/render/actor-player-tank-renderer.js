@@ -146,7 +146,7 @@ drawFns.drawTaoon=function(x,y,u){
     ctx.save();
     ctx.strokeStyle='#88ddff';ctx.lineWidth=1.5;ctx.globalAlpha=0.4+Math.sin(frame*0.1)*0.2;
     ctx.beginPath();ctx.arc(x,y,s*1.5+Math.sin(frame*0.08)*5,0,Math.PI*2);ctx.stroke();
-    if(frame%4===0)addP(x+rnd(-s,s),y+rnd(-s,s),'#aaeeff',1,2);
+    if(frame%8===0)addP(x+rnd(-s,s),y+rnd(-s,s),'#aaeeff',1,2);
     ctx.restore();
   }
   // dark transformation glow (Plague Lord)
@@ -162,14 +162,14 @@ drawFns.drawBatata=function(x,y,u){
   const _batataSprite=unitSpriteAssets.pick(_isBranchA?'batataFlyingBlue':(_isBranchB?'batataFlyingRed':'batataFlying'),8);
   const _batataGlow=_isBranchA?'#6fbf5a':(_isBranchB?'#b0793a':'#6b8e23');
   if(arena_drawUnitSprite(_batataSprite,x,y,u,{buildScale:4.0,waveScale:6.4,anchor:0.50,glow:_batataGlow,glowAlpha:u.incarnationActive?0.22:0.13})){
-    if(frame%8===0)addP(x+rnd(-s*0.65,s*0.65),y+rnd(-s*0.45,s*0.85),_batataGlow,1,2.5);
+    if(frame%18===0)addP(x+rnd(-s*0.65,s*0.65),y+rnd(-s*0.45,s*0.85),_batataGlow,1,2.5);
     return;
   }
   // shadow
   ctx.fillStyle='#0006';ctx.beginPath();ctx.ellipse(x,y+s+2,s*0.8,s*0.18,0,0,Math.PI*2);ctx.fill();
   // Branch-specific ground VFX
-  if(_isBranchA&&frame%12===0)addP(x+rnd(-s*0.4,s*0.4),y+s*0.8,'#6b8e23',1,2);
-  if(_isBranchB&&frame%10===0)addP(x+rnd(-s*0.5,s*0.5),y-s*0.5,'#8ab4f8',1,2);
+  if(_isBranchA&&frame%24===0)addP(x+rnd(-s*0.4,s*0.4),y+s*0.8,'#6b8e23',1,2);
+  if(_isBranchB&&frame%24===0)addP(x+rnd(-s*0.5,s*0.5),y-s*0.5,'#8ab4f8',1,2);
   // Incarnation glow
   if(u.incarnationActive){
     ctx.save();ctx.globalAlpha=0.3+Math.sin(frame*0.1)*0.15;
@@ -183,7 +183,7 @@ drawFns.drawBatata=function(x,y,u){
     ctx.globalAlpha=0.6;ctx.strokeStyle='#88ff44';ctx.lineWidth=2;
     ctx.beginPath();ctx.ellipse(x,y,s*1.15,s*1.25,0,0,Math.PI*2);ctx.stroke();
     ctx.restore();
-    if(frame%6===0)addP(x+rnd(-s,s),y+rnd(-s,s),'#88ff44',1,2);
+    if(frame%12===0)addP(x+rnd(-s,s),y+rnd(-s,s),'#88ff44',1,2);
   }
   // Bear body Ã¢â‚¬â€ broad-shouldered bear silhouette
   ctx.fillStyle=u.color;
@@ -290,7 +290,7 @@ drawFns.drawBatata=function(x,y,u){
     for(let i=0;i<_ifs;i++){
       const _ia=(-0.8+i*0.8);ctx.beginPath();ctx.arc(x+Math.cos(_ia)*s*0.9,y-s*0.6+i*s*0.35,3.5,0,Math.PI*2);ctx.fill();
     }
-    if(frame%8===0&&_ifs>=2)addP(x+rnd(-s*0.5,s*0.5),y+rnd(-s*0.5,s*0.5),'#c8a050',1,2);
+    if(frame%18===0&&_ifs>=2)addP(x+rnd(-s*0.5,s*0.5),y+rnd(-s*0.5,s*0.5),'#c8a050',1,2);
   }
   // Frenzied Regen active VFX Ã¢â‚¬â€ pulsing green aura with rising leaves
   if(u.frenziedRegen&&u.frenziedRegen.active){
@@ -303,12 +303,12 @@ drawFns.drawBatata=function(x,y,u){
   }
   // Rejuvenation Aura passive glow (Batata Halwa)
   if(u.rejuvAura){
-    ctx.save();ctx.globalAlpha=0.12+Math.sin(frame*0.06)*0.06;
+    ctx.save();ctx.globalAlpha=0.05+Math.sin(frame*0.06)*0.03;
     ctx.fillStyle='#33cc33';ctx.beginPath();ctx.arc(x,y,u.rejuvAura.radius,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=0.3;ctx.strokeStyle='#44ff44';ctx.lineWidth=1;ctx.setLineDash([4,6]);ctx.lineDashOffset=-frame*0.3;
+    ctx.globalAlpha=0.16;ctx.strokeStyle='#44ff44';ctx.lineWidth=1;ctx.setLineDash([4,6]);ctx.lineDashOffset=-frame*0.3;
     ctx.beginPath();ctx.arc(x,y,u.rejuvAura.radius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
     ctx.restore();
-    if(frame%10===0)addP(x+rnd(-20,20),y+rnd(-20,20),'#44ff44',1,2);
+    if(frame%30===0)addP(x+rnd(-20,20),y+rnd(-20,20),'#44ff44',1,2);
   }
   // Tree of Life active VFX (Batata Halwa A5)
   if(u.incarnTreeActive){
@@ -416,11 +416,11 @@ drawFns.drawZayton=function(x,y,u){
   ctx.fillStyle='rgba(255,215,0,0.15)';ctx.beginPath();ctx.ellipse(x,_hY,s*0.42,s*0.14,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
   // Branch-specific VFX
-  if(_isAW&&frame%3===0){addP(x+rnd(-s*0.5,s*0.5),y-s*0.6,'#ffd700',1,3)}
-  if(_isProt&&u.avengersShield&&frame%12===0){
+  if(_isAW&&frame%7===0){addP(x+rnd(-s*0.5,s*0.5),y-s*0.6,'#ffd700',1,3)}
+  if(_isProt&&u.avengersShield&&frame%20===0){
     const _a=frame*0.1;addP(x+Math.cos(_a)*s*0.8,y+Math.sin(_a)*s*0.8,'#88aaff',1,2);
   }
-  if(_isHoly&&frame%8===0){addP(x+rnd(-s*0.3,s*0.3),y-rnd(0,s*0.8),'#ffe066',1,2)}
+  if(_isHoly&&frame%18===0){addP(x+rnd(-s*0.3,s*0.3),y-rnd(0,s*0.8),'#ffe066',1,2)}
   // Shield of Vengeance active glow
   if(u.shieldOfVengeance&&u.shieldOfVengeance.active&&u.shieldOfVengeanceHp>0){
     ctx.save();ctx.globalAlpha=0.3+Math.sin(frame*0.15)*0.1;

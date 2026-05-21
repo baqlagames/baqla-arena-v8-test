@@ -527,7 +527,7 @@ export function drawPlayerAuraOver(ctx, {
       ctx.lineTo(sx - Math.cos(a) * size * 0.34, sy - Math.sin(a) * size * 0.16);
       ctx.stroke();
     }
-    if (frame % 10 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y - randomRange(0, size * 0.75), haste.color, 1, 2);
+    if (frame % 16 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y - randomRange(0, size * 0.75), haste.color, 1, 2);
   }
   if (unit.arch === 'healer') {
     ctx.globalAlpha = 0.50 + 0.18 * Math.sin(t);
@@ -541,7 +541,7 @@ export function drawPlayerAuraOver(ctx, {
     ctx.moveTo(px, py - 3);
     ctx.lineTo(px, py + 3);
     ctx.stroke();
-    if (frame % 12 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.45, size * 0.45), y - randomRange(2, size * 0.8), col, 1, 2);
+    if (frame % 18 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.45, size * 0.45), y - randomRange(2, size * 0.8), col, 1, 2);
     if (unit._lastHealTarget && unit._lastHealTarget.hp > 0 && unit._lastHealTarget !== unit) {
       ctx.globalAlpha = 0.22 + 0.08 * Math.sin(t);
       ctx.strokeStyle = col;
@@ -567,7 +567,7 @@ export function drawPlayerAuraOver(ctx, {
     ctx.moveTo(x + size * 0.16, y + size * 0.05);
     ctx.lineTo(x + size * 0.54, y - size * 0.08);
     ctx.stroke();
-    if (unit.taunt && frame % 18 === 0) emitParticle(emitParticleFn, x, y + size * 0.20, col, 1, 2.5);
+    if (unit.taunt && frame % 24 === 0) emitParticle(emitParticleFn, x, y + size * 0.20, col, 1, 2.5);
   }
   if (unit.arch === 'ranged' || unit.range > 120) {
     ctx.globalAlpha = 0.36;

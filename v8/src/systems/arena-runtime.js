@@ -79,7 +79,7 @@ const {
   addBeans,
   setUnlockedPerks,
   setSelectedPerks,
-  setDefeatedBosses,
+  setFoughtBosses,
   setCrystal,
   addCrystal,
   setGold,
@@ -406,9 +406,9 @@ const screenProgressRuntime=createScreenProgressRuntime({
     beans:progressState.beans,
     unlockedPerks:progressState.unlockedPerks,
     selectedPerks:progressState.selectedPerks,
-    defeatedBosses:progressState.defeatedBosses
+    foughtBosses:progressState.foughtBosses
   }),
-  setMaxStage,setStageStars,setSelectedDeck,setSelectedSpells,setBeans,addBeans,setUnlockedPerks,setSelectedPerks,setDefeatedBosses,
+  setMaxStage,setStageStars,setSelectedDeck,setSelectedSpells,setBeans,addBeans,setUnlockedPerks,setSelectedPerks,setFoughtBosses,
   clearBattleArrays,setPlayerCastle,setBossRef,setBossSpawned,setStageOver,setStageWon,setScreen,
   startBuild:arena_startBuild,
   buildWavePreview:arena_buildWavePreview,
@@ -986,10 +986,11 @@ const stageFlowRuntime=createStageFlowRuntime({
   unlockBossCodex:bossId=>{
     const id=Number(bossId);
     if(!Number.isFinite(id))return false;
-    const current=Array.isArray(progressState.defeatedBosses)?progressState.defeatedBosses:[];
+    const current=Array.isArray(progressState.foughtBosses)?progressState.foughtBosses:[];
     if(current.includes(id))return false;
-    progressState.defeatedBosses=[...current,id].sort((a,b)=>a-b);
-    showFlash('BOSS CODEX UPDATED','#facc15',90);
+    progressState.foughtBosses=[...current,id].sort((a,b)=>a-b);
+    saveSave();
+    showFlash('BOSS CODEX REVEALED','#facc15',90);
     return true;
   },
   stageBeansReward,

@@ -40,7 +40,7 @@ export function createScreenProgressRuntime(deps = {}) {
     deps.setBeans(progress.beans);
     deps.setUnlockedPerks(progress.unlockedPerks);
     deps.setSelectedPerks(progress.selectedPerks);
-    if (deps.setDefeatedBosses) deps.setDefeatedBosses(progress.defeatedBosses);
+    if (deps.setFoughtBosses) deps.setFoughtBosses(progress.foughtBosses);
   }
 
   function loadSave() {
@@ -53,7 +53,7 @@ export function createScreenProgressRuntime(deps = {}) {
       beans: v.beans,
       unlockedPerks: v.unlockedPerks,
       selectedPerks: v.selectedPerks,
-      defeatedBosses: v.defeatedBosses,
+      foughtBosses: v.foughtBosses,
       unitCount: PLAYER_UNITS.length,
     });
     applyProgress(progress);
@@ -69,7 +69,7 @@ export function createScreenProgressRuntime(deps = {}) {
       beans: v.beans,
       unlockedPerks: v.unlockedPerks,
       selectedPerks: v.selectedPerks,
-      defeatedBosses: v.defeatedBosses,
+      foughtBosses: v.foughtBosses,
     });
     applyProgress(meta);
   }
