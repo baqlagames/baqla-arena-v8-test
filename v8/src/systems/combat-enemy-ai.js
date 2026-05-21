@@ -196,6 +196,10 @@ export function updateArenaEnemyAi(enemy, {
 
 function enemyApproachPoint(enemy, target, { arenaTop, arenaBottom, arenaPhase }) {
   if (!arenaPhase || !target || !target.isPlayer) return { x: target.x, y: target.y };
+  if (target.isKing) {
+    const standOff = Math.max(12, Math.min(28, ((target.size || 30) + (enemy.size || 18)) * 0.35));
+    return { x: target.x, y: target.y - standOff };
+  }
   const ranged = enemy.range > 80 || enemy.arch === 'ranged' || enemy.arch === 'caster';
   if (ranged || enemy.prefersBackline || enemy._snipeReady) return { x: target.x, y: target.y };
   const bands = arenaEngagementBands({ arenaTop, arenaBot: arenaBottom });

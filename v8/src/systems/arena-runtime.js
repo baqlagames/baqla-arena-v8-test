@@ -17,7 +17,7 @@ import { createActorRenderer } from '../render/actor-renderer.js?v=52758ab-naana
 import { createArenaSceneRenderer } from '../render/arena-scene.js?v=52758ab-naana-holy';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';
-import { updateArenaEnemyAi } from './combat-enemy-ai.js?v=52758ab-naana-holy';
+import { updateArenaEnemyAi } from './combat-enemy-ai.js?v=636ffce-castle-fallback';
 import { createCombatEnemyRuntime } from './combat-enemy-runtime.js';
 import { spawnEnemyByIndex } from './enemy-spawn.js?v=52758ab-naana-holy';
 import { compactRemovedCombatUnits, tickEnemyCombatUnits, tickPlayerCombatUnits } from './combat-loop.js';
