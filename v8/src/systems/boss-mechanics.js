@@ -441,7 +441,7 @@ function bossBurrow(b,ctx){
 function bossVanish(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   b.stealth=true;b.stealthHits=0;b.firstHitDone=false;
-  b.vanishStrikeMult=b.vanishMult||3.0;
+  b.stealthMult=b.vanishMult||3.0;
   addP(b.x,b.y,'#440044',24,5);
   showFlash('VANISH!','#aa66cc',30);
 }

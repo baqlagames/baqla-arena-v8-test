@@ -102,7 +102,7 @@ export const BOSSES=[
   {id:10,name:'Veiled Stalker',tier:'mini',act:2,color:'#3a1a3a',accent:'#1a0a1a',hp:29500,dmg:150,speed:0.30,atkSpd:54,range:50,size:46,armor:3,magicRes:5,points:600,raidAoeDmg:48,
     // arena stage 8 elite: vanishes for 1s every 5s, reappears with a heavy 3Ãƒâ€” strike on its current target.
     // No fog, no mark Ã¢â‚¬â€ distilled from Veiled Assassin to test tank HP buffer + healing.
-    vanishCD:480,vanishMult:4.0,vanishPhase:1,
+    vanishCD:480,vanishMult:2.8,vanishPhase:1,
     aoeCD:600,aoeRadius:60,aoeDmg:78,aoePhase:2,aoeColor:'#3a1a3a',aoeIsFog:true,
     debuffCD:540,debuffType:'mark',debuffDur:300,debuffPhase:1,
     projType:'normal',timeEnrageAt:9000},

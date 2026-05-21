@@ -9,6 +9,12 @@ export const ARENA_RIFT_MIN_STAGE = 6;
 export const ARENA_RIFT_HP_MULT = 1.14;
 export const ARENA_RIFT_DMG_MULT = 1.14;
 
+export function arenaRiftStagePressureProfile(stageN = 1) {
+  if (stageN >= ARENA_RIFT_MIN_STAGE && stageN <= 7) return { hp: 0.94, dmg: 0.92, countAdjust: -1 };
+  if (stageN >= 8 && stageN <= 10) return { hp: 1.00, dmg: 0.98, countAdjust: 0 };
+  return { hp: 1.00, dmg: 1.00, countAdjust: 0 };
+}
+
 export function createRiftRuntime(deps) {
   const randomRange = typeof deps.randomRange === 'function' ? deps.randomRange : ((min, max) => min + Math.random() * (max - min));
   const distance = typeof deps.distance === 'function' ? deps.distance : ((a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0)));
@@ -83,7 +89,9 @@ export function createRiftRuntime(deps) {
     }
     if (!mix.length && actEnemies.length) mix.push(actEnemies[0].id);
 
-    const count = Math.min(6, 3 + Math.floor((currentStage.n || 1) / 5));
+    const stageN = currentStage.n || 1;
+    const pressure = arenaRiftStagePressureProfile(stageN);
+    const count = Math.min(6, Math.max(3, 3 + Math.floor(stageN / 5) + (pressure.countAdjust || 0)));
     const spawnList = [];
     for (let i = 0; i < count; i++) spawnList.push(mix[i % mix.length]);
     arena.rift = { x: rx, y: ry, telegraphTimer: ARENA_RIFT_TELEGRAPH_FRAMES, spawnList, count, totalTime: ARENA_RIFT_TELEGRAPH_FRAMES };
@@ -100,6 +108,8 @@ export function createRiftRuntime(deps) {
     const list = r.spawnList || [];
     const enemiesData = v.enemiesData || [];
     const currentStageIdx = v.currentStageIdx || 0;
+    const currentStage = v.currentStage || {};
+    const pressure = arenaRiftStagePressureProfile(currentStage.n || 1);
     const stageHpMult = v.stageHpMult || [];
     const stageDmgMult = v.stageDmgMult || [];
     const hpMultEnemy = v.hpMultEnemy || 1;
@@ -128,9 +138,9 @@ export function createRiftRuntime(deps) {
         x: r.x + ox,
         y: r.y + oy,
         size: (tmpl.size || 16) * unitSizeScale,
-        maxHp: Math.round(tmpl.hp * stageHpM * ARENA_RIFT_HP_MULT),
-        hp: Math.round(tmpl.hp * stageHpM * ARENA_RIFT_HP_MULT),
-        dmg: Math.round(tmpl.dmg * stageDmgM * ARENA_RIFT_DMG_MULT),
+        maxHp: Math.round(tmpl.hp * stageHpM * ARENA_RIFT_HP_MULT * pressure.hp),
+        hp: Math.round(tmpl.hp * stageHpM * ARENA_RIFT_HP_MULT * pressure.hp),
+        dmg: Math.round(tmpl.dmg * stageDmgM * ARENA_RIFT_DMG_MULT * pressure.dmg),
         isEnemy: true,
         fromRift: true,
         cd: 0,
