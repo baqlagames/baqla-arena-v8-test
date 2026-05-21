@@ -55,6 +55,7 @@ function makeContext() {
     bombs,
     groundFx,
     beamFx,
+    damageText,
     frame: 0,
     width: WIDTH,
     arenaTop: ARENA_TOP,
@@ -218,6 +219,26 @@ function smokeRoyalCarapace(ctx, boss) {
   return 'carapace-broken';
 }
 
+function assertBossReadability(ctx, boss) {
+  const texts = (ctx.damageText || []).map(item => item.text);
+  const labels = (ctx.groundFx || []).map(item => item && item.label).filter(Boolean);
+  const warnLabels = (ctx.groundFx || []).filter(item => item && item.enemyWarn).map(item => item.label);
+  if (boss.id === 4) {
+    if (!labels.includes('INFERNO')) throw new Error('Sultan missing Inferno danger-ring label');
+    if (!warnLabels.includes('METEOR')) throw new Error('Sultan missing Meteor warning ring label');
+    if (!texts.includes('BURNING DOT')) throw new Error('Sultan missing target debuff hit callout');
+    if (!texts.includes('METEOR TARGET')) throw new Error('Sultan missing meteor target callout');
+  }
+  if (boss.id === 10) {
+    if (!texts.includes('AMBUSH PRIMED')) throw new Error('Veiled Stalker missing ambush primed callout');
+    if (!labels.includes('SMOKE')) throw new Error('Veiled Stalker missing smoke danger-ring label');
+  }
+  if (boss.id === 6) {
+    if (!labels.includes('SUN')) throw new Error('Pharaoh missing Sun danger-ring label');
+    if (!texts.includes('DEATH MARK')) throw new Error('Pharaoh missing Death Mark target callout');
+  }
+}
+
 function smokeBossEnrageSpawnFrame() {
   const ctx = makeContext();
   const boss = {
@@ -279,6 +300,7 @@ function smokeBoss(bossTemplate) {
   if (aerialNote) notes.push(aerialNote);
 
   for (const hpPct of [0.9, 0.5, 0.25]) forcePhase(ctx, boss, hpPct);
+  assertBossReadability(ctx, boss);
 
   const carapaceNote = smokeRoyalCarapace(ctx, boss);
   if (carapaceNote) notes.push(carapaceNote);

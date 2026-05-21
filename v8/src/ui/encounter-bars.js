@@ -79,25 +79,90 @@ export function drawLieutenantsBar(ctx,view){
   ctx.textAlign='left';
 }
 
-function bossSkillPills(boss){
+const BOSS_SKILL_LABELS={
+  2:{aoe:'TOXIC',debuff:'DISEASE',pcloud:'CLOUD'},
+  3:{aoe:'SMOKE',debuff:'MARK',vanish:'AMBUSH'},
+  4:{aoe:'INFERNO',debuff:'BURN',spawn:'IMP',meteor:'METEOR'},
+  5:{aoe:'QUAKE',burrow:'BURROW',debuff:'SLOW',magicBolt:'SAND'},
+  6:{aoe:'SUN',debuff:'DEATH',spawn:'MUMMY',magicBolt:'BOLT'},
+  10:{aoe:'SMOKE',debuff:'MARK',vanish:'AMBUSH'},
+  11:{aoe:'CURSE',debuff:'HEX',spawn:'CULTIST',magicBolt:'BOLT'},
+  12:{bombDrop:'BOMB',skyStrafe:'STRAFE',sandStorm:'STORM',aoe:'SAND',lunge:'DIVE',magicBolt:'BOLT'},
+  13:{magicBolt:'BOLT',emberVolley:'VOLLEY',emberDecree:'DECREE'},
+  14:{aoe:'SUN',debuff:'DEATH',meteor:'METEOR',magicBolt:'BOLT'}
+};
+
+const DEFAULT_SKILL_LABELS={
+  aoe:'AOE',
+  lunge:'LUNGE',
+  debuff:'DEBUFF',
+  spawn:'SPAWN',
+  meteor:'METEOR',
+  burrow:'BURROW',
+  pcloud:'CLOUD',
+  magicBolt:'BOLT',
+  emberVolley:'EMBER',
+  emberDecree:'DECREE',
+  royalDive:'DIVE',
+  bliz:'BLIZ',
+  stomp:'STOMP',
+  vanish:'VANISH',
+  iceblock:'ICE',
+  bombDrop:'BOMB',
+  skyStrafe:'STRAFE',
+  sandStorm:'STORM'
+};
+
+export function bossReadableSkillLabel(boss,key){
+  if(!boss||!key)return DEFAULT_SKILL_LABELS[key]||key.toUpperCase();
+  const byId=BOSS_SKILL_LABELS[boss.id]||{};
+  return byId[key]||DEFAULT_SKILL_LABELS[key]||key.toUpperCase();
+}
+
+export function bossReadableSkillPills(boss){
   const cd=boss.mechCD||{};
   const skills=[];
-  if(boss.aoeCD)skills.push({name:'AOE',col:'#ff8800',cd:cd.aoe||0,max:boss.aoeCD});
-  if(boss.lungeCD)skills.push({name:'LUNGE',col:'#ff4444',cd:cd.lunge||0,max:boss.lungeCD});
-  if(boss.debuffCD)skills.push({name:'DEBUFF',col:'#aa66cc',cd:cd.debuff||0,max:boss.debuffCD});
-  if(boss.spawnCD)skills.push({name:'SPAWN',col:'#44aa44',cd:cd.spawn||0,max:boss.spawnCD});
-  if(boss.meteorCD)skills.push({name:'METEOR',col:'#ff4400',cd:cd.meteor||0,max:boss.meteorCD});
-  if(boss.burrowCD)skills.push({name:'BURROW',col:'#8b6f3d',cd:cd.burrow||0,max:boss.burrowCD});
-  if(boss.poisonCloudCD)skills.push({name:'CLOUD',col:'#88aa44',cd:cd.pcloud||0,max:boss.poisonCloudCD});
-  if(boss.magicBoltCD)skills.push({name:'BOLT',col:'#aa88ff',cd:cd.magicBolt||0,max:boss.magicBoltCD});
-  if(boss.emberVolleyCD)skills.push({name:'EMBER',col:'#ff8c22',cd:cd.emberVolley||0,max:boss.emberVolleyCD});
-  if(boss.emberDecreeCD)skills.push({name:'DECREE',col:'#ffb238',cd:cd.emberDecree||0,max:boss.emberDecreeCD});
-  if(boss.royalDiveCD)skills.push({name:'DIVE',col:'#ff5a3a',cd:cd.royalDive||0,max:boss.royalDiveCD});
-  if(boss.blizzardCD)skills.push({name:'BLIZ',col:'#88ddff',cd:cd.bliz||0,max:boss.blizzardCD});
-  if(boss.stompCD)skills.push({name:'STOMP',col:'#7a8a9a',cd:cd.stomp||0,max:boss.stompCD});
-  if(boss.vanishCD)skills.push({name:'VANISH',col:'#aa66cc',cd:cd.vanish||0,max:boss.vanishCD});
-  if(boss.iceBlockCD)skills.push({name:'ICE',col:'#88ddff',cd:cd.iceblock||0,max:boss.iceBlockCD});
+  const add=(key,cdProp,col,cdKey=key)=>{
+    if(!boss[cdProp])return;
+    skills.push({key,name:bossReadableSkillLabel(boss,key),col,cd:cd[cdKey]||0,max:boss[cdProp]});
+  };
+  add('aoe','aoeCD','#ff8800');
+  add('lunge','lungeCD','#ff4444');
+  add('debuff','debuffCD','#aa66cc');
+  add('spawn','spawnCD','#44aa44');
+  add('meteor','meteorCD','#ff4400');
+  add('burrow','burrowCD','#8b6f3d');
+  add('pcloud','poisonCloudCD','#88aa44');
+  add('magicBolt','magicBoltCD','#aa88ff');
+  add('emberVolley','emberVolleyCD','#ff8c22');
+  add('emberDecree','emberDecreeCD','#ffb238');
+  add('royalDive','royalDiveCD','#ff5a3a');
+  add('bliz','blizzardCD','#88ddff');
+  add('stomp','stompCD','#7a8a9a');
+  add('vanish','vanishCD','#aa66cc');
+  add('iceblock','iceBlockCD','#88ddff');
+  add('bombDrop','bombDropCD','#ff8844');
+  add('skyStrafe','skyStrafeCD','#ffaa44');
+  add('sandStorm','sandStormCD','#c8a05a');
   return skills;
+}
+
+export function bossUrgentSkillHudState(boss,tickHz=60){
+  if(!boss||boss.royalCarapaceTimer>0)return null;
+  const soon=2.5*tickHz;
+  const skills=bossReadableSkillPills(boss)
+    .filter(skill=>skill.cd>0&&skill.cd<=soon&&skill.max>soon)
+    .sort((a,b)=>a.cd-b.cd);
+  const skill=skills[0];
+  if(!skill)return null;
+  return {
+    label:skill.name,
+    key:skill.key,
+    color:skill.col,
+    seconds:Math.max(1,Math.ceil(skill.cd/tickHz)),
+    pct:Math.max(0,Math.min(1,1-(skill.cd/skill.max))),
+    danger:skill.cd<=tickHz
+  };
 }
 
 export function bossEnrageHudState(boss,frame,tickHz=60){
@@ -181,7 +246,7 @@ export function drawBossHpBar(ctx,view){
     ctx.fillStyle=shine;ctx.beginPath();ctx.roundRect(barX+Math.max(0,barW*hpPct-10),barY+1,Math.min(10,barW*hpPct),barH-2,3);ctx.fill();
   }
   const skillY=barY+barH+3;
-  const skills=bossSkillPills(b);
+  const skills=bossReadableSkillPills(b);
   if(skills.length){
     ctx.font='bold 5.5px Segoe UI';ctx.textAlign='center';
     const pillH=10,pillGap=2;
@@ -246,11 +311,52 @@ function drawBossEnrageCountdownBar(ctx,{width:W,frame,tickHz,boss}){
   ctx.textAlign='left';
 }
 
+function drawBossUrgentSkillBar(ctx,{width:W,frame,boss,tickHz}){
+  const state=bossUrgentSkillHudState(boss,tickHz);
+  if(!state)return false;
+  const cardX=20,cardW=W-40,cardY=78,cardH=30;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.48)';ctx.shadowBlur=10;ctx.shadowOffsetY=3;
+  const bg=ctx.createLinearGradient(0,cardY,0,cardY+cardH);
+  bg.addColorStop(0,state.danger?'rgba(78,20,12,0.96)':'rgba(42,28,22,0.94)');
+  bg.addColorStop(1,'rgba(16,10,8,0.94)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(cardX,cardY,cardW,cardH,9);ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  const pulse=0.62+0.38*Math.sin(frame*0.18);
+  ctx.strokeStyle=state.danger?'rgba(255,96,56,'+pulse+')':state.color;
+  ctx.lineWidth=state.danger?1.5:1;
+  ctx.beginPath();ctx.roundRect(cardX+0.5,cardY+0.5,cardW-1,cardH-1,9);ctx.stroke();
+  ctx.fillStyle=state.color;
+  ctx.beginPath();ctx.roundRect(cardX,cardY,4,cardH,3);ctx.fill();
+  ctx.textAlign='left';
+  ctx.fillStyle='rgba(255,235,220,0.78)';ctx.font='800 8px Segoe UI';
+  ctx.fillText('NEXT MECHANIC',cardX+12,cardY+11);
+  ctx.fillStyle='#fff';ctx.font='900 12px Segoe UI';
+  ctx.fillText((boss.name||'Boss').toUpperCase()+': '+state.label,cardX+12,cardY+23);
+  ctx.textAlign='right';
+  ctx.fillStyle=state.danger?'#ffb4a0':'#ffd966';ctx.font='900 16px Segoe UI';
+  ctx.fillText(state.seconds+'s',cardX+cardW-12,cardY+21);
+  const barX=cardX+12,barW=cardW-24,barY=cardY+26,barH=3;
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.beginPath();ctx.roundRect(barX,barY,barW,barH,3);ctx.fill();
+  const fg=ctx.createLinearGradient(barX,0,barX+barW,0);
+  fg.addColorStop(0,state.color);fg.addColorStop(1,state.danger?'#ff3333':'#ffe066');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.roundRect(barX,barY,Math.max(3,barW*state.pct),barH,3);ctx.fill();
+  ctx.restore();
+  ctx.textAlign='left';
+  return true;
+}
+
 export function drawBossCastBar(ctx,view){
   const W=view.width,frame=view.frame,tickHz=view.tickHz,b=view.boss;
   if(!b)return;
   const carapace=bossCarapaceHudState(b,tickHz);
   if(!carapace){
+    const enrage=bossEnrageHudState(b,frame,tickHz);
+    if(enrage&&(enrage.warning||enrage.enraged)){
+      drawBossEnrageCountdownBar(ctx,{width:W,frame,tickHz,boss:b});
+      return;
+    }
+    if(drawBossUrgentSkillBar(ctx,{width:W,frame,tickHz,boss:b}))return;
     drawBossEnrageCountdownBar(ctx,{width:W,frame,tickHz,boss:b});
     return;
   }

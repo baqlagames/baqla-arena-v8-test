@@ -145,8 +145,9 @@ export function createGroundEffectsRuntime(deps) {
       ctx.setLineDash([]);ctx.lineDashOffset=0;
       // countdown text
       if(g.telTimer>5){
-        ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.textAlign='center';
-        ctx.fillText('!',g.x,g.y+5);
+        const label=g.label||'!';
+        ctx.fillStyle='#fff';ctx.font=label.length>2?'bold 10px Arial':'bold 14px Arial';ctx.textAlign='center';
+        ctx.fillText(label,g.x,g.y+4);
         ctx.textAlign='left';
       }
     }else if(g.enemyWarn){
@@ -186,7 +187,7 @@ export function createGroundEffectsRuntime(deps) {
         ctx.beginPath();ctx.arc(g.x,g.y,Math.max(4,g.maxR*p),0,Math.PI*2);ctx.stroke();
       }
       ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.textAlign='center';
-      ctx.fillText(g.warnKind==='meteor'?'METEOR':(g.warnKind==='line'?'LINE':'!'),g.x,g.y+4);
+      ctx.fillText(g.label||(g.warnKind==='meteor'?'METEOR':(g.warnKind==='line'?'LINE':'!')),g.x,g.y+4);
       ctx.textAlign='left';
       ctx.restore();
     }else if(g.enemyDeathFx){

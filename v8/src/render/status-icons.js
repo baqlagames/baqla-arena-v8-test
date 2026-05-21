@@ -1,3 +1,14 @@
+function imminentBossSkillIcon(t,tickHz){
+  if(!t||!t.isBoss||!t.mechCD)return null;
+  const soon=2*tickHz;
+  const cd=t.mechCD;
+  if(t.meteorCD&&cd.meteor>0&&cd.meteor<=soon)return {c:'#ff4400',g:'M',title:'Meteor Soon',pulse:true};
+  if(t.vanishCD&&cd.vanish>0&&cd.vanish<=soon)return {c:'#aa66cc',g:'A',title:'Ambush Soon',pulse:true};
+  if(t.debuffCD&&cd.debuff>0&&cd.debuff<=soon)return {c:'#aa66cc',g:'!',title:'Debuff Soon',pulse:true};
+  if(t.aoeCD&&cd.aoe>0&&cd.aoe<=soon)return {c:'#ff8800',g:'!',title:'AoE Soon',pulse:true};
+  return null;
+}
+
 export function collectStatusIcons(t,tickHz=120){
   const icons=[];
   // DOTS (red-ish) ----------------
@@ -105,6 +116,11 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._searingBrandTimer>0)icons.push({c:'#ff6a22',g:'B',title:'Searing Brand'});
   if(t._royalStingTimer>0)icons.push({c:'#ffdd44',g:'S',title:'Royal Sting'});
   if(t.timeEnraged)icons.push({c:'#ff2200',g:'!',title:'Boss Enraged',pulse:true});
+  if(t.royalCarapaceTimer>0)icons.push({c:'#ffdd44',g:'C',title:'Carapace Casting',pulse:true});
+  if(t.hiveShield&&t.hiveShield.hp>0)icons.push({c:'#ffdd44',g:'S',title:'Boss Shield',pulse:true});
+  if(t.stealth&&t.vanishCD&&!(t.stealthHits>0))icons.push({c:'#aa66cc',g:'A',title:'Ambush Ready',pulse:true});
+  const bossSoon=imminentBossSkillIcon(t,tickHz);
+  if(bossSoon)icons.push(bossSoon);
   if(t.vanishActive)icons.push({c:'#440044',g:'V',title:'Vanish'});
   if(t.sliceAndDice&&t.sliceAndDice.timer>0)icons.push({c:'#ffcc00',g:'S',title:'Slice & Dice'});
   if(t.shadowDance&&t.shadowDance.t>t.shadowDance.every-t.shadowDance.dur)icons.push({c:'#aa44ff',g:'D',title:'Shadow Dance',pulse:true});

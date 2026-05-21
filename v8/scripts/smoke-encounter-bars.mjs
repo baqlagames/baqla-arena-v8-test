@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
-import { bossCarapaceHudState, bossEnrageHudState } from '../src/ui/encounter-bars.js';
+import {
+  bossCarapaceHudState,
+  bossEnrageHudState,
+  bossReadableSkillLabel,
+  bossReadableSkillPills,
+  bossUrgentSkillHudState,
+} from '../src/ui/encounter-bars.js';
+import { collectStatusIcons } from '../src/render/status-icons.js';
 
 const tickHz = 60;
 
@@ -37,5 +44,24 @@ const danger = bossCarapaceHudState({
   hiveShield: { hp: 500, maxHp: 2000 },
 }, tickHz);
 assert.equal(danger.danger, true, 'carapace HUD should mark the final 2s as danger state');
+
+const sultan = { id: 4, name: 'Sultan of Embers', aoeCD: 480, meteorCD: 720, debuffCD: 600, spawnCD: 900, mechCD: { aoe: 150, meteor: 90, debuff: 240, spawn: 500 } };
+assert.equal(bossReadableSkillLabel(sultan, 'aoe'), 'INFERNO', 'Sultan AoE should be readable as Inferno');
+assert.equal(bossReadableSkillLabel(sultan, 'debuff'), 'BURN', 'Sultan debuff should be readable as Burn');
+assert.deepEqual(bossReadableSkillPills(sultan).map(skill => skill.name), ['INFERNO', 'BURN', 'IMP', 'METEOR'], 'Sultan skill pills should use boss-specific labels');
+
+const urgent = bossUrgentSkillHudState(sultan, tickHz);
+assert.equal(urgent.label, 'METEOR', 'urgent mechanic HUD should pick the nearest imminent mechanic');
+assert.equal(urgent.seconds, 2, 'urgent mechanic HUD should expose seconds remaining');
+assert.equal(urgent.danger, false, 'urgent mechanic HUD should distinguish final-second danger');
+
+const veiled = { id: 10, name: 'Veiled Stalker', vanishCD: 480, debuffCD: 540, mechCD: { vanish: 45, debuff: 200 } };
+const ambush = bossUrgentSkillHudState(veiled, tickHz);
+assert.equal(ambush.label, 'AMBUSH', 'Veiled Stalker vanish should read as Ambush');
+assert.equal(ambush.danger, true, 'imminent ambush should be danger state inside 1s');
+
+const bossIcons = collectStatusIcons({ isBoss: true, stealth: true, vanishCD: 480, stealthHits: 0, mechCD: { meteor: 80 }, meteorCD: 720 }, tickHz);
+assert.ok(bossIcons.some(icon => icon.title === 'Ambush Ready'), 'boss status icons should expose primed ambush');
+assert.ok(bossIcons.some(icon => icon.title === 'Meteor Soon'), 'boss status icons should expose imminent meteor');
 
 console.log('smoke-encounter-bars: ok');

@@ -101,6 +101,27 @@ function safeBossAbility(b, key, cdKey, phase, handler, ctx) {
   }
 }
 
+function bossAoeReadability(b) {
+  if (!b) return { label: 'AOE', text: 'DANGER AOE', color: '#ff8800' };
+  if (b.id === 4 || b.name === 'Sultan of Embers') return { label: 'INFERNO', text: 'INFERNO PULSE', color: '#ff6600' };
+  if (b.id === 6 || b.name === 'Pharaoh Ka') return { label: 'SUN', text: 'SUN PULSE', color: '#d4a857' };
+  if (b.id === 10 || b.id === 3) return { label: 'SMOKE', text: 'SMOKE BURST', color: '#aa66cc' };
+  if (b.id === 14 || b.name === 'Sphinx Judicator') return { label: 'SUN', text: 'SOLAR PULSE', color: '#d8a84a' };
+  if (b.id === 5 || b.name === 'Dune Worm') return { label: 'QUAKE', text: 'SAND QUAKE', color: '#a07a44' };
+  return { label: 'AOE', text: 'DANGER AOE', color: b.aoeColor || '#ff8800' };
+}
+
+function bossDebuffReadability(type, b) {
+  if (type === 'deathMark') return { label: 'DEATH MARK', color: '#660066', flash: 'DEATH MARK!' };
+  if (type === 'mark') return { label: 'MARKED', color: '#aa00aa', flash: 'MARKED!' };
+  if (type === 'amp') return { label: 'HEXED', color: '#aa66cc', flash: 'HEX!' };
+  if (type === 'poison' && (b && (b.id === 4 || b.name === 'Sultan of Embers'))) return { label: 'BURNING DOT', color: '#ff6a22', flash: 'BURNING DOT!' };
+  if (type === 'poison') return { label: 'POISON', color: '#55aa33', flash: 'POISON!' };
+  if (type === 'slow') return { label: 'SLOWED', color: '#88ddff', flash: 'SLOW!' };
+  if (type === 'freeze') return { label: 'FROZEN', color: '#88ddff', flash: 'FREEZE!' };
+  return { label: type.toUpperCase(), color: '#aa00aa', flash: type.toUpperCase() + '!' };
+}
+
 export function tickAerialBombs(ctx) {
   ctx = normalizeBossContext(ctx);
   const { arena, units, groundFx, dealDamage, addParticle: addP, shake } = ctx;
@@ -143,8 +164,10 @@ function bossAoEPulse(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   // Telegraph circle + delayed damage
   const r=b.aoeRadius||90,dmg=b.aoeDmg||50;
-  groundFx.push({x:b.x,y:b.y,r:0,maxR:r,life:1,color:b.aoeColor||'#ff6600',bossTel:true,telTimer:30,telDmg:dmg,telKnock:b.aoeKnockback,telFrom:b,telFreeze:b.aoeFreeze,telSlowAll:b.aoeSlowAll,telIsFog:b.aoeIsFog,telIsWind:b.aoeIsWind});
-  showFlash(b.aoeIsWind?'FREEZING WIND!':'INCOMING AOE!',b.aoeColor||'#ff6600',30);
+  const read=bossAoeReadability(b);
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:r,life:1,color:b.aoeColor||read.color,bossTel:true,telTimer:30,telDmg:dmg,telKnock:b.aoeKnockback,telFrom:b,telFreeze:b.aoeFreeze,telSlowAll:b.aoeSlowAll,telIsFog:b.aoeIsFog,telIsWind:b.aoeIsWind,label:read.label});
+  addDmg(b.x,b.y-(b.size||32)-8,read.text,read.color,{sz:12,bold:true,outline:'#2a0800'});
+  showFlash(b.aoeIsWind?'FREEZING WIND!':read.text,b.aoeColor||read.color,30);
   for(let i=0;i<16;i++)addP(b.x,b.y,b.aoeColor||'#ff6600',1,3);
 }
 function bossDebuff(b,ctx){
@@ -153,6 +176,7 @@ function bossDebuff(b,ctx){
   if(t.debuffImmune>0||t.ccImmune){addDmg(t.x,t.y-t.size,'IMMUNE','#88ffdd');return;}
   const type=b.debuffType||'poison';
   const dur=b.debuffDur||240;
+  const read=bossDebuffReadability(type,b);
   if(type==='poison'){if(!t.ccImmune){t.poisonTimer=dur;t.poisonDmgVal=b.debuffDmg||6}}
   else if(type==='slow'){if(!t.ccImmune){t.slowTimer=dur;t.slowMult=0.5;} if(b.debuffDmg)dealDamage(t,b.debuffDmg,b,'normal')}
   else if(type==='freeze'){if(!t.ccImmune){t.stunned=dur;} if(b.debuffDmg)dealDamage(t,b.debuffDmg,b,'magic')}
@@ -162,7 +186,9 @@ function bossDebuff(b,ctx){
   else if(type==='livingBomb'){t.livingBomb=true;t.livingBombTimer=300;t.livingBombDmg=b.dmg*2;t.livingBombFrom=b}
   // Visual
   for(let i=0;i<10;i++)addP(t.x,t.y,'#aa00aa',1,3);
-  showFlash(type.toUpperCase()+'!','#aa00aa',24);
+  groundFx.push({x:t.x,y:t.y,r:0,maxR:Math.max(34,(t.size||20)*1.7),life:0.42,color:read.color,flatten:true});
+  addDmg(t.x,t.y-(t.size||20)-10,read.label,read.color,{sz:12,bold:true,outline:'#1d071f'});
+  showFlash(read.flash,read.color,28);
 }
 // Generic ranged-magic boss attack Ã¢â‚¬â€ fires a magic projectile at a random
 // =====================================================================
@@ -423,8 +449,11 @@ function bossMeteor(b,ctx){
   const t=pickBossTarget(b,'random',ctx);
   const target=clampBossPoint(t?t.x:W/2,t?t.y:ARENA_BOT-100,ctx,{sideMargin:50,topMargin:70,bottomMargin:80});
   const tx=target.x,ty=target.y;
+  const radius=b.meteorRadius||80,duration=55;
+  groundFx.push({x:tx,y:ty,r:0,maxR:radius,life:0.95,color:'#ff4400',enemyWarn:true,warnTimer:duration,warnMax:duration,warnKind:'meteor',label:'METEOR'});
+  addDmg(tx,ty-18,'METEOR TARGET','#ff8844',{sz:12,bold:true,outline:'#3a0800'});
   bombs.push({x:tx,y:ARENA_TOP-60,fromX:tx,fromY:ARENA_TOP-60,tx,ty,t:0,dur:55,
-    dmg:b.meteorDmg||120,radius:b.meteorRadius||80,attacker:b,isPlayer:false,color:'#ff4400',meteor:true});
+    dmg:b.meteorDmg||120,radius,attacker:b,isPlayer:false,color:'#ff4400',meteor:true});
   showFlash('METEOR!','#ff4400',30);
 }
 function bossBurrow(b,ctx){
@@ -442,7 +471,9 @@ function bossVanish(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   b.stealth=true;b.stealthHits=0;b.firstHitDone=false;
   b.stealthMult=b.vanishMult||3.0;
+  b._ambushPrimedTimer=180;
   addP(b.x,b.y,'#440044',24,5);
+  addDmg(b.x,b.y-(b.size||32)-10,'AMBUSH PRIMED','#aa66cc',{sz:13,bold:true,outline:'#160420'});
   showFlash('VANISH!','#aa66cc',30);
 }
 function bossPoisonCloud(b,ctx){

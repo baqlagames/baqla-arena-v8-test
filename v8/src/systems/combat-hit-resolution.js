@@ -2,6 +2,7 @@ export function applyAttackerOpeningDamageModifiers(dmg, {
   target,
   attacker,
   emitParticle,
+  addDamageText,
 }) {
   let next = dmg;
   if (attacker && attacker.stealth && !attacker.stealthHits) {
@@ -16,6 +17,10 @@ export function applyAttackerOpeningDamageModifiers(dmg, {
       }
     } else {
       next *= (attacker.stealthMult || 1);
+    }
+    if (attacker.vanishCD && attacker.stealthMult > 1 && typeof addDamageText === 'function') {
+      addDamageText(target.x, target.y - (target.size || 20) - 10, 'AMBUSH!', '#aa66cc', { sz: 13, bold: true, outline: '#160420' });
+      attacker._ambushPrimedTimer = 0;
     }
     attacker.stealthHits = 1;
   }
