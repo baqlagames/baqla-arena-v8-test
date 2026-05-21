@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=8cc7d77-combat-readability';
+import { drawHealthBar } from './health-bars.js?v=20260521-player-hud';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js';
 
 export function createActorOverlayRenderer({
   ctx,

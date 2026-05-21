@@ -13,7 +13,7 @@ import { ARENA_UNIT_BRANCHES, ARENA_BASE_SIGNATURES, ARENA_BRANCH_SIGNATURES } f
 import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=20260521-warden-clarity';
+import { createActorRenderer } from '../render/actor-renderer.js?v=20260521-player-hud';
 import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260521-warden-pressure';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';

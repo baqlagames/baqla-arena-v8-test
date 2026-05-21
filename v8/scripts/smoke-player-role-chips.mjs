@@ -23,13 +23,14 @@ class FakeImage {
   }
 }
 
-function createRecordingCanvasContext(textCalls) {
+function createRecordingCanvasContext(textCalls, roundRects) {
   const gradient = { addColorStop: noop };
   const methods = new Map([
     ['createLinearGradient', () => gradient],
     ['createRadialGradient', () => gradient],
     ['measureText', text => ({ width: String(text || '').length * 7 })],
     ['fillText', (text, x, y) => { textCalls.push({ text: String(text), x, y }); }],
+    ['roundRect', (x, y, w, h, r) => { roundRects.push({ x, y, w, h, r }); }],
   ]);
 
   return new Proxy({}, {
@@ -51,8 +52,12 @@ globalThis.Image = FakeImage;
 const { createActorRenderer } = await import('../src/render/actor-renderer.js');
 
 const textCalls = [];
-const ctx = createRecordingCanvasContext(textCalls);
-const units = [];
+const roundRects = [];
+const ctx = createRecordingCanvasContext(textCalls, roundRects);
+const units = [
+  makeUnit('tank', 0, { taunt: true, x: 230, y: 660 }),
+  makeUnit('melee', 1, { prefersMelee: true, x: 236, y: 664 }),
+];
 const groundFx = [];
 const viewState = {
   width: 500,
@@ -100,29 +105,27 @@ function makeUnit(arch, id, extra = {}) {
   };
 }
 
-const roleUnits = [
-  makeUnit('tank', 0, { taunt: true }),
-  makeUnit('melee', 1, { prefersMelee: true }),
-  makeUnit('healer', 2),
-  makeUnit('ranged', 3, { prefersRanged: true }),
-  makeUnit('caster', 4),
-];
+for (const unit of units) renderer.drawUnitRaw(unit);
 
-for (const unit of roleUnits) renderer.drawUnitRaw(unit);
-
-for (const label of ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST']) {
-  assert(textCalls.some(call => call.text === label), `player role chip should render ${label}`);
+const roleLabels = ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'];
+for (const label of roleLabels) {
+  assert(!textCalls.some(call => call.text === label), `player HUD should not render ${label} role text`);
 }
 
-const tankChip = textCalls.find(call => call.text === 'TANK');
-const meleeChip = textCalls.find(call => call.text === 'MELEE');
-assert(Math.abs(tankChip.x - meleeChip.x) >= 30, 'clustered tank/melee role chips should separate horizontally');
+const tankTrack = roundRects.find(rect => Math.abs(rect.w - 52) < 0.1 && Math.abs(rect.h - 9) < 0.1);
+const meleeTrack = roundRects.find(rect => Math.abs(rect.w - 36) < 0.1 && Math.abs(rect.h - 7) < 0.1);
+assert(tankTrack, 'tank player HP bar should use the wider/taller tank track');
+assert(meleeTrack, 'melee player HP bar should keep the compact player track');
 
-const beforeMinions = textCalls.filter(call => ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'].includes(call.text)).length;
+const tankCenter = tankTrack.x + tankTrack.w / 2;
+const meleeCenter = meleeTrack.x + meleeTrack.w / 2;
+assert(Math.abs(tankCenter - meleeCenter) >= 30, 'clustered tank/melee HP bars should separate horizontally');
+
 renderer.drawUnitRaw(makeUnit('melee', 5, { isMinion: true }));
 renderer.drawUnitRaw(makeUnit('ranged', 6, { isGhost: true }));
 renderer.drawUnitRaw(makeUnit('caster', 7, { isMirror: true }));
-const afterMinions = textCalls.filter(call => ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'].includes(call.text)).length;
-assert.equal(afterMinions, beforeMinions, 'role chips should not render for minions, ghosts, or mirrors');
+for (const label of roleLabels) {
+  assert(!textCalls.some(call => call.text === label), `minions/ghosts/mirrors should not render ${label} role text`);
+}
 
-console.log('smoke-player-role-chips: ok');
+console.log('smoke-player-role-chips: player HUD labels removed and clustered HP bars separate');

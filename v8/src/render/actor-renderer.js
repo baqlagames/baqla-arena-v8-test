@@ -1,7 +1,7 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260521-player-hud';
 import { createActorSpriteHelpers } from './actor-sprite-helpers.js';
 import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260521-warden-clarity';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
@@ -82,14 +82,14 @@ function drawUnit(u){
   if(!u||u.hp<=0)return;
   arena_drawWithClashCamera(u.x,u.y,()=>drawUnitRaw(u));
 }
-function playerRoleChip(u){
+function playerHudInfo(u){
   if(!u||!u.isPlayer||u.isMinion||u.isGhost||u.isMirror)return null;
-  if(u.arch==='tank'||u.taunt)return {label:'TANK',color:'#5cc8ff'};
-  if(u.arch==='melee'||u.prefersMelee)return {label:'MELEE',color:'#ffd166'};
-  if(u.arch==='healer')return {label:'HEAL',color:'#66ffaa'};
-  if(u.arch==='caster'||u.arch==='magic')return {label:'CAST',color:'#aa88ff'};
-  if(u.arch==='ranged'||u.arch==='pierce'||u.prefersRanged)return {label:'RANGE',color:'#ffcc66'};
-  return null;
+  return {tank:u.arch==='tank'||u.taunt};
+}
+function playerHudBarWidth(u){
+  const info=playerHudInfo(u);
+  if(!info)return (u&&u.size?u.size:20)+14;
+  return info.tank?Math.max(50,(u.size||20)+24):(u.size||20)+14;
 }
 function naturalPlayerHudY(u,waveBoost){
   if(!u)return 0;
@@ -97,35 +97,23 @@ function naturalPlayerHudY(u,waveBoost){
   return Math.max(ARENA_TOP+20,(u.y||0)+bob-(u.size||20)-8-waveBoost);
 }
 function playerHudOffset(u,baseY,barW){
-  if(!(arena&&arena.phase==='wave')||!playerRoleChip(u))return {x:0,y:0};
+  const info=playerHudInfo(u);
+  if(!(arena&&arena.phase==='wave')||!info)return {x:0,y:0};
   const waveBoost=16;
   const close=(units||[]).filter(other=>{
-    if(!other||other.hp<=0||!playerRoleChip(other))return false;
+    if(!other||other.hp<=0||!playerHudInfo(other))return false;
     const otherY=naturalPlayerHudY(other,waveBoost);
-    return Math.abs((other.x||0)-(u.x||0))<48&&Math.abs(otherY-baseY)<20;
+    const otherW=playerHudBarWidth(other);
+    const overlapX=Math.abs((other.x||0)-(u.x||0))<(barW+otherW)/2+10;
+    return overlapX&&Math.abs(otherY-baseY)<20;
   }).sort((a,b)=>((a.y||0)-(b.y||0))||((a.x||0)-(b.x||0))||((a.unitIdx||a.id||0)-(b.unitIdx||b.id||0)));
   const idx=close.indexOf(u);
   if(close.length<2||idx<0)return {x:0,y:0};
-  const spacing=Math.max(30,Math.min(44,barW+8));
+  const spacing=Math.max(34,Math.min(54,barW+14));
   const slot=idx-(close.length-1)/2;
   const x=slot*spacing;
-  const y=(idx%2===0?-3:7);
+  const y=(idx%2===0?-5:6)+(info.tank?-4:0);
   return {x,y};
-}
-function drawPlayerRoleChip(u,x,y){
-  if(!(arena&&arena.phase==='wave'))return;
-  const chip=playerRoleChip(u);
-  if(!chip)return;
-  const label=chip.label;
-  const w=Math.max(32,label.length*6+10),h=11;
-  ctx.save();
-  ctx.fillStyle='rgba(3,7,16,0.84)';
-  ctx.beginPath();ctx.roundRect(x-w/2,y,w,h,3);ctx.fill();
-  ctx.strokeStyle=chip.color;ctx.globalAlpha=0.95;ctx.lineWidth=1;
-  ctx.beginPath();ctx.roundRect(x-w/2+0.5,y+0.5,w-1,h-1,3);ctx.stroke();
-  ctx.globalAlpha=1;ctx.fillStyle=chip.color;ctx.font='900 7.5px Arial';ctx.textAlign='center';
-  ctx.fillText(label,x,y+h-3);
-  ctx.restore();
 }
 function drawUnitRaw(u){
   if(u.hp<=0)return;
@@ -614,14 +602,14 @@ function drawUnitRaw(u){
   // so the bar renders on top of everything else.
   arena_drawSpecAccessory(u);
   const _waveBoost=(arena&&arena.phase==='wave')?16:0;
-  const _barW=u.size+14;
+  const _hudInfo=playerHudInfo(u);
+  const _barW=playerHudBarWidth(u);
   const _hudMinY=ARENA_TOP+20;
   const _hpBarY=Math.max(_hudMinY,y-u.size-8-_waveBoost);
   const _hudOffset=playerHudOffset(u,_hpBarY,_barW);
   const _hudX=u.x+_hudOffset.x;
   const _hudY=_hpBarY+_hudOffset.y;
-  drawHpBar(_hudX,_hudY,u.hp,u.maxHp,_barW,'player');
-  drawPlayerRoleChip(u,_hudX,_hudY+10);
+  drawHpBar(_hudX,_hudY,u.hp,u.maxHp,_barW,_hudInfo&&_hudInfo.tank?'playerTank':'player');
   drawStatusIcons(u,_hudX,_hudY-16);
   // Summon CD ring on Foul/Sabbar
   if(u.summonCDt>0){

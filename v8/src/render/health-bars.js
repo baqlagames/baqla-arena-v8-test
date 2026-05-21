@@ -28,6 +28,15 @@ function healthBarPalette(kind,pct){
     shine:'rgba(255,210,180,0.24)',
     glow:'rgba(255,56,56,0.18)'
   };
+  if(kind==='playerTank')return {
+    shell:'rgba(3,10,22,0.90)',
+    track:'rgba(8,24,32,0.96)',
+    start:pct>0.25?'#22e6ff':'#d6f25a',
+    end:pct>0.25?'#b9ff8a':'#69e873',
+    stroke:'rgba(92,200,255,0.78)',
+    shine:'rgba(255,255,255,0.30)',
+    glow:'rgba(92,200,255,0.24)'
+  };
   return {
     shell:'rgba(4,7,14,0.86)',
     track:'rgba(12,22,18,0.96)',
@@ -41,7 +50,7 @@ function healthBarPalette(kind,pct){
 
 export function drawHealthBar(ctx, view){
   let {x,y,hp,maxHp,width,kind='player'}=view;
-  const h=kind==='boss'?8:7;
+  const h=kind==='boss'?8:kind==='playerTank'?9:7;
   if(!Number.isFinite(x)||!Number.isFinite(y))return;
   width=Number.isFinite(width)?Math.max(18,width):44;
   hp=Number.isFinite(hp)?hp:0;
@@ -55,9 +64,9 @@ export function drawHealthBar(ctx, view){
   ctx.shadowBlur=low?6:3;ctx.shadowOffsetY=1;
   ctx.fillStyle=pal.shell;
   ctx.beginPath();ctx.roundRect(bx-3,by-2,width+6,h+4,6);ctx.fill();
-  if(kind==='boss'){
+  if(kind==='boss'||kind==='playerTank'){
     ctx.shadowColor=pal.glow;ctx.shadowBlur=7;ctx.shadowOffsetY=0;
-    ctx.strokeStyle=pal.stroke;ctx.lineWidth=1.25;
+    ctx.strokeStyle=pal.stroke;ctx.lineWidth=kind==='playerTank'?1.5:1.25;
     ctx.beginPath();ctx.roundRect(bx-3,by-2.5,width+6,h+5,6);ctx.stroke();
   }
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
@@ -75,6 +84,11 @@ export function drawHealthBar(ctx, view){
       ctx.fillStyle='rgba(255,255,255,0.18)';
       ctx.fillRect(bx+Math.max(0,width*pct)-1,by,1,h);
     }
+  }
+  if(kind==='playerTank'){
+    ctx.fillStyle='rgba(92,200,255,0.76)';
+    ctx.fillRect(bx-2,by+1,2,Math.max(2,h-2));
+    ctx.fillRect(bx+width,by+1,2,Math.max(2,h-2));
   }
   if(low&&kind!=='player'){
     ctx.fillStyle='rgba(255,255,255,0.30)';
