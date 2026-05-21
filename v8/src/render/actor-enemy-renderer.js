@@ -133,6 +133,7 @@ export function createActorEnemyRenderer({
     const bx = enemy.x;
     const by = enemy.y;
     const s = enemy.size;
+    const wake = Math.max(0, Math.min(1, (enemy.burrowT || 0) / Math.max(1, enemy.burrowTimer || 240)));
     ctx.fillStyle = '#7a5028';
     ctx.globalAlpha = 0.8;
     ctx.beginPath();
@@ -149,6 +150,37 @@ export function createActorEnemyRenderer({
     ctx.beginPath();
     ctx.ellipse(bx, by + 2, s * 0.24, s * 0.10, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.globalAlpha = 0.38 + 0.18 * Math.sin(f * 0.18);
+    ctx.strokeStyle = wake < 0.35 ? '#ffcc66' : '#d0a060';
+    ctx.lineWidth = wake < 0.35 ? 2 : 1.4;
+    ctx.setLineDash([5, 4]);
+    ctx.lineDashOffset = -f * 0.7;
+    ctx.beginPath();
+    ctx.ellipse(bx, by + 7, s * (1.05 + (1 - wake) * 0.22), s * (0.34 + (1 - wake) * 0.10), 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < 4; i++) {
+      const a = f * 0.05 + i * Math.PI / 2;
+      ctx.globalAlpha = 0.20;
+      ctx.strokeStyle = '#f0c080';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(bx + Math.cos(a) * s * 0.35, by + 7 + Math.sin(a) * s * 0.10);
+      ctx.lineTo(bx + Math.cos(a) * s * 0.92, by + 7 + Math.sin(a) * s * 0.28);
+      ctx.stroke();
+    }
+    if (wake < 0.35) {
+      ctx.globalAlpha = 0.58 + 0.20 * Math.sin(f * 0.28);
+      ctx.strokeStyle = '#fff2bd';
+      ctx.lineWidth = 1.4;
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath();
+        ctx.moveTo(bx + i * s * 0.22 - 4, by - s * 0.28);
+        ctx.lineTo(bx + i * s * 0.22, by - s * 0.42);
+        ctx.lineTo(bx + i * s * 0.22 + 4, by - s * 0.28);
+        ctx.stroke();
+      }
+    }
     ctx.globalAlpha = 1;
     if (f % 8 === 0) emitParticle(bx + randomRange(-6, 6), by + 6, '#a07050', 1, 3);
   }

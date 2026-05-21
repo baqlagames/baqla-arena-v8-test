@@ -8,6 +8,51 @@ function emitParticle(emitParticleFn, x, y, color, count, size) {
   if (emitParticleFn) emitParticleFn(x, y, color, count, size);
 }
 
+export const ENEMY_WAVE_MECHANIC_VFX = Object.freeze({
+  shield: { color: '#44aaff', label: 'SHIELD', kind: 'shield' },
+  banner: { color: '#ffcc44', label: 'BANNER', kind: 'banner' },
+  medic: { color: '#44ff88', label: 'MEDIC', kind: 'medic' },
+  ritual: { color: '#aa66ff', label: 'RITUAL', kind: 'ritual' },
+  exploding: { color: '#ff8844', label: 'BURST', kind: 'burst' },
+  sniper: { color: '#ff4444', label: 'SNIPER', kind: 'sniper' },
+});
+
+function enemyMechanicInfo(enemy) {
+  if (!enemy || !enemy.waveMechanic) return null;
+  return ENEMY_WAVE_MECHANIC_VFX[enemy.waveMechanic] || { color: '#ffd700', label: 'SPECIAL', kind: 'special' };
+}
+
+export function enemyReadabilityCues(enemy) {
+  if (!enemy) return [];
+  const cues = [];
+  const mechanic = enemyMechanicInfo(enemy);
+  if (mechanic) cues.push({ type: 'mechanic', key: enemy.waveMechanic, color: mechanic.color, label: mechanic.label });
+  if (enemy.isBoss) cues.push({ type: 'rank', key: 'boss', color: enemy.color || '#ff8844', label: 'BOSS' });
+  else if (enemy.isElite || enemy.champion) cues.push({ type: 'rank', key: 'elite', color: '#ffd700', label: 'ELITE' });
+  if (enemy.armorType === 'heavy' || enemy.taunt) cues.push({ type: 'trait', key: 'heavy', color: '#d8a938', label: 'HEAVY' });
+  if (enemy.armorType === 'warded' || enemy.arch === 'caster' || enemy.projType === 'curse') cues.push({ type: 'trait', key: 'warded', color: enemyVfxColor(enemy), label: 'WARD' });
+  if (enemy.flying) cues.push({ type: 'trait', key: 'flying', color: enemyVfxColor(enemy), label: 'AIR' });
+  if (enemy.burrow || enemy.burrowing) cues.push({ type: 'trait', key: 'burrow', color: '#c8a05a', label: 'BURROW' });
+  if (enemy.prefersBackline || enemy.stealth) cues.push({ type: 'trait', key: 'backline', color: '#ff5a66', label: 'BACKLINE' });
+  if (enemy.fromRift) cues.push({ type: 'trait', key: 'rift', color: '#c08aff', label: 'RIFT' });
+  return cues;
+}
+
+export function playerSignatureReadiness(unit) {
+  if (!unit || !unit.signature || !Number.isFinite(unit.signature.cd) || unit.signature.cd <= 0) {
+    return { active: false, pct: 0, ready: false, casting: false, color: playerVfxColor(unit || {}) };
+  }
+  const pct = Math.max(0, Math.min(1, (unit.signature.t || 0) / unit.signature.cd));
+  const casting = (unit.signatureCastFx || 0) > 0;
+  return {
+    active: casting || pct >= 0.70,
+    pct,
+    ready: pct >= 1,
+    casting,
+    color: playerVfxColor(unit),
+  };
+}
+
 export function playerVfxColor(unit) {
   const projectileType = unit.projType || unit.attackType || '';
   if (projectileType === 'fire') return '#ff7a22';
@@ -21,6 +66,49 @@ export function playerVfxColor(unit) {
   if (unit.arch === 'tank' || unit.taunt) return '#ffd166';
   if (unit.arch === 'melee' || unit.stealth) return '#ff8c44';
   return unit.accent || unit.color || '#88ddff';
+}
+
+function drawPlayerSignatureCue(ctx, { unit, x, y, size, frame }) {
+  const sig = playerSignatureReadiness(unit);
+  if (!sig.active) return;
+  const t = frame * 0.09 + (unit.unitIdx || 0) * 0.5;
+  const radius = size + 10;
+  const castP = Math.max(0, Math.min(1, (unit.signatureCastFx || 0) / 18));
+  const col = sig.ready ? '#fff0a8' : sig.color;
+  ctx.save();
+  ctx.globalAlpha = sig.casting ? 0.30 + castP * 0.50 : 0.26 + sig.pct * 0.20;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = sig.ready ? 2.4 : 1.6;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.08, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * sig.pct);
+  ctx.stroke();
+  if (sig.ready) {
+    ctx.globalAlpha = 0.30 + 0.18 * Math.sin(t * 2.0);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([4, 4]);
+    ctx.lineDashOffset = -frame * 0.55;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.08, radius + 3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (sig.casting) {
+    ctx.globalAlpha = 0.42 * castP;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.08, radius + (1 - castP) * 12, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  const sx = x + Math.cos(t) * radius * 0.68;
+  const sy = y - size * 0.08 + Math.sin(t) * radius * 0.42;
+  ctx.globalAlpha = sig.ready ? 0.72 : 0.42;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.arc(sx, sy, sig.ready ? 2.8 : 2.0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 export function unitAttackSpeedVfxState(unit) {
@@ -358,6 +446,7 @@ export function drawPlayerAuraOver(ctx, {
       ctx.stroke();
     }
   }
+  drawPlayerSignatureCue(ctx, { unit, x, y, size, frame });
   if (unit.arch === 'paladin' || unit.projType === 'holy' || unit.attackType === 'holy') {
     ctx.globalAlpha = 0.34 + 0.12 * Math.sin(t);
     ctx.strokeStyle = '#ffe066';
@@ -405,7 +494,7 @@ export function enemyVfxColor(enemy) {
   return enemy.accent || actCol;
 }
 
-function enemyRoleInfo(enemy) {
+export function enemyRoleInfo(enemy) {
   if (enemy.isBoss) return { key: 'boss', color: enemy.color || '#ff8844', label: 'B' };
   if (enemy.isLieutenant) return { key: 'lieutenant', color: '#ffaa44', label: 'L' };
   if (enemy.bossSupport) return { key: 'support', color: enemy.bossSupportColor || enemy.color || '#ffaa44', label: '+' };
@@ -464,6 +553,244 @@ function drawChampionCrown(ctx, { x, y, size, frame, color = '#ffd700' }) {
   ctx.strokeStyle = '#fff6b0';
   ctx.lineWidth = 1;
   ctx.stroke();
+  ctx.restore();
+}
+
+function drawMechanicSymbol(ctx, { kind, cx, cy, r, color, frame }) {
+  ctx.save();
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.3;
+  if (kind === 'shield') {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r * 0.78);
+    ctx.lineTo(cx + r * 0.55, cy - r * 0.38);
+    ctx.lineTo(cx + r * 0.42, cy + r * 0.42);
+    ctx.lineTo(cx, cy + r * 0.78);
+    ctx.lineTo(cx - r * 0.42, cy + r * 0.42);
+    ctx.lineTo(cx - r * 0.55, cy - r * 0.38);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else if (kind === 'banner') {
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.35, cy + r * 0.72);
+    ctx.lineTo(cx - r * 0.35, cy - r * 0.76);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.30, cy - r * 0.72);
+    ctx.lineTo(cx + r * 0.55, cy - r * 0.50);
+    ctx.lineTo(cx - r * 0.30, cy - r * 0.18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else if (kind === 'medic') {
+    ctx.fillStyle = color;
+    ctx.fillRect(cx - r * 0.18, cy - r * 0.66, r * 0.36, r * 1.32);
+    ctx.fillRect(cx - r * 0.66, cy - r * 0.18, r * 1.32, r * 0.36);
+    ctx.strokeRect(cx - r * 0.18, cy - r * 0.66, r * 0.36, r * 1.32);
+    ctx.strokeRect(cx - r * 0.66, cy - r * 0.18, r * 1.32, r * 0.36);
+  } else if (kind === 'ritual') {
+    const rot = frame * 0.025;
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.moveTo(0, -r * 0.76);
+    ctx.lineTo(r * 0.70, r * 0.48);
+    ctx.lineTo(-r * 0.70, r * 0.48);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else if (kind === 'sniper') {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.62, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.95, cy);
+    ctx.lineTo(cx - r * 0.30, cy);
+    ctx.moveTo(cx + r * 0.30, cy);
+    ctx.lineTo(cx + r * 0.95, cy);
+    ctx.moveTo(cx, cy - r * 0.95);
+    ctx.lineTo(cx, cy - r * 0.30);
+    ctx.moveTo(cx, cy + r * 0.30);
+    ctx.lineTo(cx, cy + r * 0.95);
+    ctx.stroke();
+  } else if (kind === 'burst') {
+    ctx.fillStyle = color;
+    for (let i = 0; i < 8; i++) {
+      const a = frame * 0.02 + i * Math.PI / 4;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a - 0.12) * r * 0.42, cy + Math.sin(a - 0.12) * r * 0.42);
+      ctx.lineTo(cx + Math.cos(a) * r * 0.92, cy + Math.sin(a) * r * 0.92);
+      ctx.lineTo(cx + Math.cos(a + 0.12) * r * 0.42, cy + Math.sin(a + 0.12) * r * 0.42);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.30, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.62, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawEnemyMechanicIcon(ctx, { enemy, x, y, size, frame }) {
+  const info = enemyMechanicInfo(enemy);
+  if (!info) return;
+  const pulse = 0.78 + 0.16 * Math.sin(frame * 0.12);
+  const cx = x + size * 0.55;
+  const cy = y - size * 0.76;
+  const r = 5.3;
+  ctx.save();
+  ctx.globalAlpha = 0.72;
+  ctx.fillStyle = 'rgba(10,10,14,0.76)';
+  ctx.beginPath();
+  ctx.roundRect(cx - r - 2, cy - r - 2, r * 2 + 4, r * 2 + 4, 3);
+  ctx.fill();
+  ctx.globalAlpha = pulse;
+  ctx.strokeStyle = info.color;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.roundRect(cx - r - 2.5, cy - r - 2.5, r * 2 + 5, r * 2 + 5, 3.5);
+  ctx.stroke();
+  ctx.restore();
+  drawMechanicSymbol(ctx, { kind: info.kind, cx, cy, r: 4.5, color: info.color, frame });
+}
+
+function drawEnemyTraitPips(ctx, { enemy, x, y, size, frame }) {
+  const cues = enemyReadabilityCues(enemy)
+    .filter(cue => cue.type === 'trait')
+    .filter(cue => cue.key !== 'backline' || enemy.stealth || enemy.prefersBackline)
+    .slice(0, 3);
+  if (!cues.length) return;
+  const startX = x + size * 0.62;
+  const startY = y - size * 0.36;
+  ctx.save();
+  for (let i = 0; i < cues.length; i++) {
+    const cue = cues[i];
+    const px = startX;
+    const py = startY + i * 7;
+    ctx.globalAlpha = 0.62;
+    ctx.fillStyle = 'rgba(6,6,10,0.72)';
+    ctx.beginPath();
+    ctx.arc(px, py, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.75 + 0.12 * Math.sin(frame * 0.10 + i);
+    ctx.strokeStyle = cue.color;
+    ctx.fillStyle = cue.color;
+    ctx.lineWidth = 1;
+    if (cue.key === 'heavy') {
+      ctx.fillRect(px - 2, py - 2, 4, 4);
+      ctx.strokeRect(px - 2.5, py - 2.5, 5, 5);
+    } else if (cue.key === 'warded') {
+      ctx.beginPath();
+      ctx.moveTo(px, py - 3);
+      ctx.lineTo(px + 3, py);
+      ctx.lineTo(px, py + 3);
+      ctx.lineTo(px - 3, py);
+      ctx.closePath();
+      ctx.stroke();
+    } else if (cue.key === 'flying') {
+      ctx.beginPath();
+      ctx.moveTo(px - 3.2, py + 1.5);
+      ctx.lineTo(px, py - 2.5);
+      ctx.lineTo(px + 3.2, py + 1.5);
+      ctx.stroke();
+    } else if (cue.key === 'burrow') {
+      ctx.beginPath();
+      ctx.ellipse(px, py + 1, 3.4, 1.7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (cue.key === 'rift') {
+      ctx.beginPath();
+      ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(px - 2.5, py + 2.5);
+      ctx.lineTo(px + 2.5, py - 2.5);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawEnemyMechanicGroundCue(ctx, { enemy, x, y, size, frame, t }) {
+  const info = enemyMechanicInfo(enemy);
+  if (!info) return;
+  const c = info.color;
+  ctx.save();
+  ctx.globalAlpha = 0.15 + 0.06 * Math.sin(t * 1.5);
+  ctx.strokeStyle = c;
+  ctx.fillStyle = c;
+  ctx.lineWidth = 2;
+  if (info.kind === 'shield') {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = Math.PI / 6 + i * Math.PI / 3;
+      const px = x + Math.cos(a) * size * 1.12;
+      const py = y + size * 0.77 + Math.sin(a) * size * 0.27;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  } else if (info.kind === 'banner') {
+    ctx.setLineDash([8, 6]);
+    ctx.lineDashOffset = -frame * 0.45;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.78, size * 1.45, size * 0.36, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2 + frame * 0.018;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a) * size * 0.55, y + size * 0.78 + Math.sin(a) * size * 0.15);
+      ctx.lineTo(x + Math.cos(a) * size * 1.18, y + size * 0.78 + Math.sin(a) * size * 0.31);
+      ctx.stroke();
+    }
+  } else if (info.kind === 'medic') {
+    ctx.globalAlpha = 0.14 + 0.06 * Math.sin(t * 1.8);
+    ctx.fillRect(x - size * 0.12, y + size * 0.55, size * 0.24, size * 0.48);
+    ctx.fillRect(x - size * 0.40, y + size * 0.67, size * 0.80, size * 0.18);
+  } else if (info.kind === 'ritual') {
+    ctx.translate(x, y + size * 0.76);
+    ctx.rotate(frame * 0.018);
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.36);
+    ctx.lineTo(size * 0.72, size * 0.22);
+    ctx.lineTo(-size * 0.72, size * 0.22);
+    ctx.closePath();
+    ctx.stroke();
+  } else if (info.kind === 'sniper') {
+    ctx.globalAlpha = 0.16 + 0.08 * Math.sin(t * 2.0);
+    ctx.beginPath();
+    ctx.moveTo(x - size * 1.24, y + size * 0.67);
+    ctx.lineTo(x + size * 1.24, y + size * 0.67);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.67, size * 0.76, size * 0.19, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (info.kind === 'burst') {
+    ctx.globalAlpha = 0.18 + 0.08 * Math.sin(t * 2.2);
+    ctx.setLineDash([5, 4]);
+    ctx.lineDashOffset = -frame * 0.75;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.75, size * 1.22, size * 0.31, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
   ctx.restore();
 }
 
@@ -590,6 +917,32 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
       ctx.stroke();
     }
   }
+  if (enemy.burrow || enemy.burrowing) {
+    const dust = '#c8a05a';
+    ctx.globalAlpha = enemy.burrowing ? 0.34 : 0.16;
+    ctx.fillStyle = 'rgba(160,112,70,0.36)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.90, size * 1.16, size * 0.24, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.26 + 0.08 * Math.sin(t * 1.8);
+    ctx.strokeStyle = dust;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.lineDashOffset = -frame * 0.45;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.88, size * 1.28, size * 0.30, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = -1; i <= 1; i++) {
+      ctx.globalAlpha = 0.18;
+      ctx.strokeStyle = dust;
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(x + i * size * 0.22 - size * 0.18, y + size * 0.78);
+      ctx.lineTo(x + i * size * 0.22 + size * 0.18, y + size * 0.88);
+      ctx.stroke();
+    }
+  }
   if (enemy.splashOnHit || enemy.meteorCD) {
     ctx.globalAlpha = 0.18 + 0.08 * Math.sin(t * 1.4);
     ctx.strokeStyle = '#ff8c22';
@@ -644,6 +997,7 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
     ctx.beginPath();
     ctx.ellipse(x, y + size * 0.74, size * 1.10, size * 0.25, 0, 0, Math.PI * 2);
     ctx.fill();
+    drawEnemyMechanicGroundCue(ctx, { enemy, x, y, size, frame, t });
   }
   ctx.restore();
 }
@@ -662,6 +1016,7 @@ export function drawEnemyVfxOver(ctx, {
   const t = frame * 0.075 + (enemy.id || 0) * 0.8 + (enemy.bobPhase || 0);
   ctx.save();
   drawEnemyRoleBadge(ctx, { x, y, size, frame, info: role, elite: enemy.isElite || enemy.champion || enemy.isLieutenant });
+  drawEnemyTraitPips(ctx, { enemy, x, y, size, frame });
   if (enemy.isElite || enemy.champion || enemy.isLieutenant) drawChampionCrown(ctx, { x, y, size, frame, color: enemy.isLieutenant ? '#ffaa44' : '#ffd700' });
   if (enemy.armorType === 'warded' || enemy.arch === 'caster' || enemy.chainBoltCD) {
     for (let i = 0; i < 3; i++) {
@@ -786,6 +1141,21 @@ export function drawEnemyVfxOver(ctx, {
     ctx.ellipse(x + size * 0.10 * Math.sin(t), y, size * 0.74, size * 0.90, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+  if (enemy.burrow || enemy.burrowing) {
+    const sand = '#c8a05a';
+    ctx.globalAlpha = 0.38 + 0.14 * Math.sin(t * 1.6);
+    ctx.strokeStyle = sand;
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 3; i++) {
+      const ox = (i - 1) * size * 0.22;
+      ctx.beginPath();
+      ctx.moveTo(x + ox - size * 0.16, y + size * 0.40 + i * 1.5);
+      ctx.lineTo(x + ox, y + size * 0.30 + i * 1.5);
+      ctx.lineTo(x + ox + size * 0.16, y + size * 0.40 + i * 1.5);
+      ctx.stroke();
+    }
+    if (frame % 10 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.45, size * 0.45), y + size * 0.50, sand, 1, 2);
+  }
   if (enemy.splashOnHit || enemy.meteorCD) {
     const a = t * 1.8;
     ctx.globalAlpha = 0.70;
@@ -811,17 +1181,7 @@ export function drawEnemyVfxOver(ctx, {
   }
   let drewWaveShield = false;
   if (enemy.waveMechanic) {
-    const mc = { shield: '#44aaff', banner: '#ffcc44', medic: '#44ff88', ritual: '#aa66ff', exploding: '#ff8844', sniper: '#ff4444' }[enemy.waveMechanic] || '#ffd700';
-    ctx.globalAlpha = 0.78;
-    ctx.fillStyle = mc;
-    ctx.beginPath();
-    ctx.arc(x + size * 0.52, y - size * 0.72, 4.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(x + size * 0.52, y - size * 0.72, 5.4, 0, Math.PI * 2);
-    ctx.stroke();
+    drawEnemyMechanicIcon(ctx, { enemy, x, y, size, frame });
     if (enemy._enemyShield > 0) {
       drawActorShieldVfx(ctx, { unit: enemy, x, y: y - size * 0.05, size, frame });
       drewWaveShield = true;
