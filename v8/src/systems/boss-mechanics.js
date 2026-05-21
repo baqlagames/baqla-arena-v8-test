@@ -732,7 +732,8 @@ export function updateBoss(b,ctx){
   }
   // Time-based enrage Ã¢â‚¬â€ measured from when THIS boss spawned, not from stage start.
   // Otherwise a stage with long wave preamble would enrage the boss almost immediately.
-  const bossLifeFrames=frame-(b.spawnFrame||frame);
+  const bossSpawnFrame=Number.isFinite(b.spawnFrame)?b.spawnFrame:frame;
+  const bossLifeFrames=frame-bossSpawnFrame;
   if(!b.timeEnraged && bossLifeFrames>(b.timeEnrageAt||5400)){
     b.timeEnraged=true;
     b.dmg=Math.round(b.dmg*1.25);

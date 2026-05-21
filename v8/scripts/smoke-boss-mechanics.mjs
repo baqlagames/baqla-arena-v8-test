@@ -217,6 +217,43 @@ function smokeRoyalCarapace(ctx, boss) {
   return 'carapace-broken';
 }
 
+function smokeBossEnrageSpawnFrame() {
+  const ctx = makeContext();
+  const boss = {
+    id: 'enrage-smoke',
+    name: 'Frame Zero Enrage Boss',
+    x: WIDTH / 2,
+    y: ARENA_TOP + 160,
+    size: 42,
+    maxHp: 5000,
+    hp: 5000,
+    dmg: 100,
+    atkSpd: 60,
+    speed: 0.3,
+    range: 50,
+    isEnemy: true,
+    isBoss: true,
+    spawnFrame: 0,
+    timeEnrageAt: 3,
+    cd: 0,
+    facing: -1,
+    bobPhase: 0,
+    debuffs: {},
+    mechCD: {},
+  };
+  ctx.frame = 4;
+  updateBoss(boss, ctx);
+  if (!boss.timeEnraged) throw new Error('boss spawned at frame 0 did not enrage after its authored window');
+
+  const delayedBoss = { ...boss, timeEnraged: false, spawnFrame: 10, dmg: 100, atkSpd: 60, mechCD: {}, debuffs: {} };
+  ctx.frame = 12;
+  updateBoss(delayedBoss, ctx);
+  if (delayedBoss.timeEnraged) throw new Error('boss enraged before its nonzero spawn frame window elapsed');
+  ctx.frame = 14;
+  updateBoss(delayedBoss, ctx);
+  if (!delayedBoss.timeEnraged) throw new Error('boss with nonzero spawn frame did not enrage after its window elapsed');
+}
+
 function smokeBoss(bossTemplate) {
   const ctx = makeContext();
   const boss = spawnBossForSmoke(bossTemplate.id, ctx);
@@ -257,6 +294,7 @@ for (const boss of BOSSES) {
     throw new Error(`${boss.name} boss smoke failed: ${error.message}`, { cause: error });
   }
 }
+smokeBossEnrageSpawnFrame();
 
 console.log(`Smoke-tested ${results.length} bosses through spawn, phase gates, and special mechanics.`);
 for (const result of results) {
