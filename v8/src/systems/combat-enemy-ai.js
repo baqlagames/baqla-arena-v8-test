@@ -305,7 +305,7 @@ function handleForcedTarget(enemy, {
       enemy.cd = enemyAttackCooldown(enemy);
       applySearingBrandOnBasic(enemy, enemy.forcedTarget);
       applyRoyalStingOnBasic(enemy, enemy.forcedTarget);
-      if (enemy.forcedTarget.hp > 0) dealDamage(enemy.forcedTarget, enemy.dmg, enemy, 'normal');
+      if (enemy.forcedTarget.hp > 0) dealDamage(enemy.forcedTarget, enemy.dmg, enemy, 'normal', undefined, { sourceLabel: enemyAttackSourceLabel(enemy, enemy.forcedTarget), sourceColor: enemyAttackSourceColor(enemy) });
     }
     return true;
   }
@@ -474,8 +474,8 @@ function handleSniperWindup(enemy, bestTarget, bestDistance, {
     }
     if (windup.charge <= 0 && bestTarget && bestTarget.hp > 0) {
       const shotDamage = Math.max(1, Math.round(enemy.dmg * (windup.shotMult || 1.35)));
-      if (enemy.projType) fireProjectile(enemy, bestTarget, shotDamage, { projType: enemy.projType, color: '#ff4444' });
-      else dealDamage(bestTarget, shotDamage, enemy, 'normal');
+      if (enemy.projType) fireProjectile(enemy, bestTarget, shotDamage, { projType: enemy.projType, color: '#ff4444', sourceLabel: 'SNIPER', sourceColor: '#ff4444' });
+      else dealDamage(bestTarget, shotDamage, enemy, 'normal', undefined, { sourceLabel: 'SNIPER', sourceColor: '#ff4444' });
       addDamageText(bestTarget.x, bestTarget.y - bestTarget.size, 'SNIPER SHOT', '#ff4444', { sz: 13, bold: true });
       emitParticle(enemy.x, enemy.y, '#ff4444', 10, 3);
       enemy.cd = enemyAttackCooldown(enemy) + Math.round(1.5 * GAME_TICK_HZ);
@@ -543,8 +543,11 @@ function performEnemyBasicAttack(enemy, bestTarget, {
   applyRoyalStingOnBasic(enemy, bestTarget);
   if (bestTarget.hp > 0) {
     markFocusedPlayerTarget(enemy, bestTarget);
-    if (enemy.projType) fireProjectile(enemy, bestTarget, enemy.dmg, { projType: enemy.projType });
-    else dealDamage(bestTarget, enemy.dmg, enemy, enemy.projType === 'curse' ? 'magic' : 'normal');
+    const sourceLabel = enemyAttackSourceLabel(enemy, bestTarget);
+    const sourceColor = enemyAttackSourceColor(enemy);
+    if (bestTarget.isKing) markCastleAssault(bestTarget, enemy, { frame, addDamageText, emitParticle, groundEffects });
+    if (enemy.projType) fireProjectile(enemy, bestTarget, enemy.dmg, { projType: enemy.projType, sourceLabel, sourceColor });
+    else dealDamage(bestTarget, enemy.dmg, enemy, enemy.projType === 'curse' ? 'magic' : 'normal', undefined, { sourceLabel, sourceColor });
   }
   emitParticle(bestTarget.x, bestTarget.y, '#fff', 3, 2);
   if (enemy._v8TargetClass === 'rangedBypass') {
@@ -575,7 +578,7 @@ function performEnemyBasicAttack(enemy, bestTarget, {
       if (unit === bestTarget || unit.hp <= 0 || !unit.isPlayer || unit.untargetable || unit.isGhost) continue;
       const splashDistance = Math.hypot(unit.x - bestTarget.x, unit.y - bestTarget.y);
       if (splashDistance <= radius) {
-        dealDamage(unit, splashDamage, enemy, 'normal');
+        dealDamage(unit, splashDamage, enemy, 'normal', 'cleave', { sourceLabel: 'CLEAVE', sourceColor: '#ff8844' });
         emitParticle(unit.x, unit.y, '#ff8c00', 4, 3);
       }
     }
@@ -589,6 +592,45 @@ function markFocusedPlayerTarget(enemy, target) {
   const rangedEnemy = enemy.arch === 'ranged' || enemy.arch === 'caster' || enemy.range > 90 || enemy.projType;
   const bypass = enemy._v8TargetClass === 'rangedBypass' || enemy._v8TargetClass === 'snipeBackline' || enemy.prefersBackline;
   if (focusRole && (rangedEnemy || bypass)) target._targetedMarker = Math.max(target._targetedMarker || 0, bypass ? 28 : 18);
+}
+
+function enemyAttackSourceLabel(enemy, target) {
+  if (target && target.isKing) return 'BREACH';
+  if (!enemy) return 'HIT';
+  if (enemy._snipeReady || enemy._sniperWindup) return 'SNIPER';
+  if (enemy.splashOnHit) return enemy.arch === 'aoe' ? 'AOE' : 'CLEAVE';
+  if (enemy.poisonOnHit || enemy.projType === 'poison') return 'POISON';
+  if (enemy.projType === 'curse') return 'CURSE';
+  if (enemy.projType === 'fire') return 'FIRE';
+  if (enemy.projType === 'frost' || enemy.projType === 'ice') return 'FROST';
+  if (enemy.prefersBackline || enemy.stealth) return 'AMBUSH';
+  if (enemy.arch === 'caster') return 'SPELL';
+  if (enemy.armorType === 'heavy' || enemy.arch === 'tank' || enemy.taunt) return 'CRUSH';
+  if (enemy.arch === 'melee' || enemy.range <= 70) return 'STRIKE';
+  return 'HIT';
+}
+
+function enemyAttackSourceColor(enemy) {
+  if (!enemy) return '#ff4444';
+  if (enemy._snipeReady || enemy._sniperWindup) return '#ff4444';
+  if (enemy.splashOnHit || enemy.projType === 'fire') return '#ff8844';
+  if (enemy.poisonOnHit || enemy.projType === 'poison') return '#78d64b';
+  if (enemy.projType === 'curse' || enemy.arch === 'caster') return '#aa66ff';
+  if (enemy.projType === 'frost' || enemy.projType === 'ice') return '#88ddff';
+  return enemy.accent || enemy.color || '#ff4444';
+}
+
+function markCastleAssault(castle, enemy, { frame, addDamageText, emitParticle, groundEffects }) {
+  if (!castle || !castle.isKing) return;
+  castle._underAttackTimer = Math.max(castle._underAttackTimer || 0, 120);
+  castle._castleHitFx = Math.max(castle._castleHitFx || 0, 30);
+  castle._lastCastleAttacker = enemy;
+  if (frame - (castle._lastCastleWarningFrame || -999) > 90) {
+    castle._lastCastleWarningFrame = frame;
+    addDamageText(castle.x, castle.y - (castle.size || 30) * 2.0, 'CASTLE UNDER ATTACK', '#ff6644', { sz: 13, bold: true, outline: '#2a0800' });
+    groundEffects.push({ x: castle.x, y: castle.y - 10, r: 0, maxR: (castle.size || 30) + 42, life: 0.45, color: '#ff6644', flatten: true });
+  }
+  emitParticle(castle.x + (enemy.x < castle.x ? -12 : 12), castle.y - (castle.size || 30) * 0.45, '#ff6644', 5, 3);
 }
 
 function tickChainBolt(enemy, {
@@ -634,7 +676,7 @@ function tickChainBolt(enemy, {
     }
     emitParticle(next.x, next.y, '#fff700', 8, 4);
     emitParticle(next.x, next.y, '#ffffff', 4, 2);
-    dealDamage(next, baseDamage, enemy, 'magic');
+    dealDamage(next, baseDamage, enemy, 'magic', 'chain', { sourceLabel: 'CHAIN', sourceColor: '#fff700' });
     from = { x: next.x, y: next.y };
     landed++;
   }
@@ -665,7 +707,7 @@ function tickMeteor(enemy, {
     }
     for (const unit of units) {
       if (unit.hp <= 0 || unit.divineShield || unit.untargetable || unit.isGhost) continue;
-      if (Math.hypot(unit.x - warn.x, unit.y - warn.y) <= warn.radius) dealDamage(unit, warn.damage, enemy, 'magic');
+      if (Math.hypot(unit.x - warn.x, unit.y - warn.y) <= warn.radius) dealDamage(unit, warn.damage, enemy, 'magic', 'meteor', { sourceLabel: 'METEOR', sourceColor: '#ff8844' });
     }
     groundEffects.push({ x: warn.x, y: warn.y, r: 0, maxR: warn.radius, life: 0.6, color: '#ff4400' });
     groundEffects.push({ x: warn.x, y: warn.y, r: 0, maxR: warn.radius * 0.5, life: 0.3, color: '#ffcc0066' });

@@ -113,10 +113,54 @@ const DEFAULT_SKILL_LABELS={
   sandStorm:'STORM'
 };
 
+const BOSS_SKILL_HINTS={
+  3:{aoe:'MOVE OUT',debuff:'MARKED TARGET',vanish:'BACKLINE AMBUSH'},
+  4:{aoe:'WIDE FIRE',debuff:'BURNING TARGET',spawn:'ADDS',meteor:'DODGE RING'},
+  5:{aoe:'GROUND SLAM',burrow:'MOVE AWAY',debuff:'SLOW TARGET',magicBolt:'RANGED HIT'},
+  6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
+  10:{aoe:'MOVE OUT',debuff:'MARKED TARGET',vanish:'BACKLINE AMBUSH'},
+  12:{bombDrop:'DODGE BOMBS',skyStrafe:'LANE STRAFE',sandStorm:'WIDE STORM',aoe:'SAND RING',lunge:'DIVE TARGET',magicBolt:'RANGED HIT'},
+  13:{magicBolt:'RANGED HIT',emberVolley:'SPREAD SHOTS',emberDecree:'STACK/DODGE'},
+  14:{aoe:'WIDE SUN',debuff:'DEATH MARK',meteor:'DODGE RING',magicBolt:'RANGED HIT'}
+};
+
+const DEFAULT_SKILL_HINTS={
+  aoe:'DODGE AREA',
+  lunge:'TANK HIT',
+  debuff:'STATUS',
+  spawn:'ADDS',
+  meteor:'DODGE RING',
+  burrow:'MOVE AWAY',
+  pcloud:'MOVE OUT',
+  magicBolt:'RANGED HIT',
+  emberVolley:'SPREAD',
+  emberDecree:'WATCH TARGETS',
+  royalDive:'BACKLINE',
+  bliz:'MOVE OUT',
+  stomp:'STUN RING',
+  vanish:'AMBUSH',
+  iceblock:'HEALING',
+  bombDrop:'DODGE',
+  skyStrafe:'LANES',
+  sandStorm:'WIDE AOE'
+};
+
+const READABILITY_BOSS_IDS=new Set([3,4,5,6,10,11,12,13,14]);
+
 export function bossReadableSkillLabel(boss,key){
   if(!boss||!key)return DEFAULT_SKILL_LABELS[key]||key.toUpperCase();
   const byId=BOSS_SKILL_LABELS[boss.id]||{};
   return byId[key]||DEFAULT_SKILL_LABELS[key]||key.toUpperCase();
+}
+
+export function bossReadableSkillHint(boss,key){
+  if(!boss||!key)return DEFAULT_SKILL_HINTS[key]||'WATCH';
+  const byId=BOSS_SKILL_HINTS[boss.id]||{};
+  return byId[key]||DEFAULT_SKILL_HINTS[key]||'WATCH';
+}
+
+function bossMechanicLookahead(boss,tickHz){
+  return (boss&&READABILITY_BOSS_IDS.has(boss.id)?4:2.5)*tickHz;
 }
 
 export function bossReadableSkillPills(boss){
@@ -124,7 +168,7 @@ export function bossReadableSkillPills(boss){
   const skills=[];
   const add=(key,cdProp,col,cdKey=key)=>{
     if(!boss[cdProp])return;
-    skills.push({key,name:bossReadableSkillLabel(boss,key),col,cd:cd[cdKey]||0,max:boss[cdProp]});
+    skills.push({key,name:bossReadableSkillLabel(boss,key),hint:bossReadableSkillHint(boss,key),col,cd:cd[cdKey]||0,max:boss[cdProp]});
   };
   add('aoe','aoeCD','#ff8800');
   add('lunge','lungeCD','#ff4444');
@@ -149,7 +193,7 @@ export function bossReadableSkillPills(boss){
 
 export function bossUrgentSkillHudState(boss,tickHz=60){
   if(!boss||boss.royalCarapaceTimer>0)return null;
-  const soon=2.5*tickHz;
+  const soon=bossMechanicLookahead(boss,tickHz);
   const skills=bossReadableSkillPills(boss)
     .filter(skill=>skill.cd>0&&skill.cd<=soon&&skill.max>soon)
     .sort((a,b)=>a.cd-b.cd);
@@ -157,11 +201,13 @@ export function bossUrgentSkillHudState(boss,tickHz=60){
   if(!skill)return null;
   return {
     label:skill.name,
+    hint:skill.hint,
     key:skill.key,
     color:skill.col,
     seconds:Math.max(1,Math.ceil(skill.cd/tickHz)),
     pct:Math.max(0,Math.min(1,1-(skill.cd/skill.max))),
-    danger:skill.cd<=tickHz
+    danger:skill.cd<=tickHz,
+    soonWindow:soon
   };
 }
 
@@ -311,10 +357,19 @@ function drawBossEnrageCountdownBar(ctx,{width:W,frame,tickHz,boss}){
   ctx.textAlign='left';
 }
 
+function fitCanvasText(ctx,text,maxWidth){
+  const raw=String(text||'');
+  if(!ctx.measureText)return raw;
+  if(ctx.measureText(raw).width<=maxWidth)return raw;
+  let out=raw;
+  while(out.length>4&&ctx.measureText(out+'...').width>maxWidth)out=out.slice(0,-1);
+  return out.length>4?out+'...':raw.slice(0,4);
+}
+
 function drawBossUrgentSkillBar(ctx,{width:W,frame,boss,tickHz}){
   const state=bossUrgentSkillHudState(boss,tickHz);
   if(!state)return false;
-  const cardX=20,cardW=W-40,cardY=78,cardH=30;
+  const cardX=20,cardW=W-40,cardY=78,cardH=34;
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.48)';ctx.shadowBlur=10;ctx.shadowOffsetY=3;
   const bg=ctx.createLinearGradient(0,cardY,0,cardY+cardH);
@@ -330,13 +385,14 @@ function drawBossUrgentSkillBar(ctx,{width:W,frame,boss,tickHz}){
   ctx.beginPath();ctx.roundRect(cardX,cardY,4,cardH,3);ctx.fill();
   ctx.textAlign='left';
   ctx.fillStyle='rgba(255,235,220,0.78)';ctx.font='800 8px Segoe UI';
-  ctx.fillText('NEXT MECHANIC',cardX+12,cardY+11);
+  ctx.fillText('NEXT MECHANIC - '+(state.hint||'WATCH'),cardX+12,cardY+11);
   ctx.fillStyle='#fff';ctx.font='900 12px Segoe UI';
-  ctx.fillText((boss.name||'Boss').toUpperCase()+': '+state.label,cardX+12,cardY+23);
+  const mechanicText=(boss.name||'Boss').toUpperCase()+': '+state.label;
+  ctx.fillText(fitCanvasText(ctx,mechanicText,cardW-92),cardX+12,cardY+24);
   ctx.textAlign='right';
   ctx.fillStyle=state.danger?'#ffb4a0':'#ffd966';ctx.font='900 16px Segoe UI';
-  ctx.fillText(state.seconds+'s',cardX+cardW-12,cardY+21);
-  const barX=cardX+12,barW=cardW-24,barY=cardY+26,barH=3;
+  ctx.fillText(state.seconds+'s',cardX+cardW-12,cardY+22);
+  const barX=cardX+12,barW=cardW-24,barY=cardY+30,barH=3;
   ctx.fillStyle='rgba(0,0,0,0.55)';ctx.beginPath();ctx.roundRect(barX,barY,barW,barH,3);ctx.fill();
   const fg=ctx.createLinearGradient(barX,0,barX+barW,0);
   fg.addColorStop(0,state.color);fg.addColorStop(1,state.danger?'#ff3333':'#ffe066');

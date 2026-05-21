@@ -3,7 +3,7 @@ import { createProjectilesRuntime } from '../render/projectiles-runtime.js';
 import { createGroundEffectsRuntime } from '../render/ground-effects-runtime.js?v=7861d9c-text-declutter';
 import { drawBombEffects } from '../render/bombs.js';
 import { drawBeamEffects, drawFloatingNumbers, drawFlashText, drawParticleEffects, drawSignatureBanner } from '../render/effects.js?v=7861d9c-text-declutter';
-import { fireArenaProjectile, lobArenaBomb, projectileColor, updateArenaBomb, updateArenaProjectile } from './combat-projectiles.js?v=7861d9c-text-declutter';
+import { fireArenaProjectile, lobArenaBomb, projectileColor, updateArenaBomb, updateArenaProjectile } from './combat-projectiles.js?v=8cc7d77-combat-readability';
 
 export function createArenaCombatEffectsRuntime(deps = {}) {
   const ctx = deps.ctx;

@@ -11,8 +11,13 @@ import {
   drawPlayerAuraOver,
   drawPlayerAuraUnder,
   enemyReadabilityCues,
+  enemyIntentVfxState,
+  playerHitSourceVfxState,
   playerSignatureReadiness,
+  playerSignatureVfxState,
 } from '../src/render/actor-vfx.js';
+import { playerCastleAssaultVfxState } from '../src/render/battle-structures.js';
+import { showDamageHitFeedback } from '../src/systems/combat-hit-resolution.js';
 
 function makeCtx() {
   const calls = [];
@@ -163,14 +168,64 @@ const readyUnit = player(8, {
   signature: { t: 100, cd: 100 },
   signatureCastFx: 12,
 });
+const capstoneUnit = player(8, {
+  arch: 'ranged',
+  range: 180,
+  cellLevel: 5,
+  signature: { t: 100, cd: 100, name: 'Overdrive' },
+});
+const hitSourceUnit = player(0, {
+  _lastHitSourceLabel: 'METEOR',
+  _lastHitSourceColor: '#ff4400',
+  _lastHitSourceTimer: 30,
+  _lastHitSourceDmgRatio: 0.18,
+});
 assert.equal(playerSignatureReadiness(player(0)).active, false, 'no signature should not be active');
 assert.equal(playerSignatureReadiness(chargingUnit).active, true, '75% signature should show readiness cue');
 assert.equal(playerSignatureReadiness(readyUnit).ready, true, 'full signature should be ready');
+assert.equal(playerSignatureVfxState(capstoneUnit).capstone, true, 'level 5 signatures should expose capstone VFX state');
+assert.equal(playerHitSourceVfxState(hitSourceUnit).danger, true, 'high-impact source labels should expose danger VFX state');
+
+const casterIntent = enemyIntentVfxState(enemy(38, { cd: 3, atkSpd: 80, chainBoltCD: 300 }));
+assert.equal(casterIntent.active, true, 'dangerous enemy roles should expose intent VFX state');
+assert.equal(casterIntent.imminent, true, 'nearly-ready enemy attacks should expose imminent intent VFX');
+
+const castleState = playerCastleAssaultVfxState({ _underAttackTimer: 80, _castleHitFx: 12 });
+assert.equal(castleState.active, true, 'castle breach state should be renderable');
+assert(castleState.assaultPct > 0.6, 'castle breach state should expose assault intensity');
+
+const hitTexts = [];
+const hitTarget = player(0);
+showDamageHitFeedback(hitTarget, 90, {
+  opts: { sourceLabel: 'METEOR', sourceColor: '#ff4400' },
+  dmgType: 'magic',
+  attacker: boss(4),
+  attackTypeOverride: 'meteor',
+  frame: 100,
+  combatRatio: 1,
+  addDamageText: (x, y, val) => hitTexts.push(String(val)),
+});
+assert.equal(hitTarget._lastHitSourceLabel, 'METEOR', 'source feedback should store the latest hit source on player units');
+assert(hitTexts.includes('METEOR'), 'source feedback should add a readable hit source text');
+
+const smallHitTarget = player(1);
+showDamageHitFeedback(smallHitTarget, 6, {
+  opts: { sourceLabel: 'STRIKE', sourceColor: '#ff4444' },
+  dmgType: 'normal',
+  attacker: enemy(30, { arch: 'melee' }),
+  attackTypeOverride: null,
+  frame: 101,
+  combatRatio: 1,
+  addDamageText: () => {},
+});
+assert.equal(smallHitTarget._lastHitSourceLabel, undefined, 'minor generic strikes should not spam source labels');
 
 for (const unit of [
   player(0, { arch: 'tank', taunt: true }),
   chargingUnit,
   readyUnit,
+  capstoneUnit,
+  hitSourceUnit,
   player(4, { arch: 'melee', stealth: true, stealthHits: 0 }),
 ]) {
   drawPlayerAuraUnder(ctx, { unit, x: unit.x, y: unit.y, size: unit.size, frame: 120 });
@@ -186,4 +241,4 @@ for (const unit of [
 }
 
 assert(ctx.calls.length > 200, `expected VFX drawing calls, saw ${ctx.calls.length}`);
-console.log(`VFX readability smoke passed: ${renderEnemies.length} enemy cues and 4 player aura cases rendered.`);
+console.log(`VFX readability smoke passed: ${renderEnemies.length} enemy cues and 6 player aura cases rendered.`);

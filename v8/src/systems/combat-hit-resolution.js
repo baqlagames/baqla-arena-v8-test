@@ -159,6 +159,14 @@ export function showDamageHitFeedback(target, dmg, {
       group: target,
     });
   }
+  showHitSourceFeedback(target, dmg, {
+    opts,
+    dmgType,
+    attacker,
+    attackTypeOverride,
+    frame,
+    addDamageText,
+  });
 }
 
 function damageTypeVisual({ dmgType, attacker, attackTypeOverride, opts }) {
@@ -185,6 +193,90 @@ function damageTypeVisual({ dmgType, attacker, attackTypeOverride, opts }) {
     dot: { tag: '☠', color: '#78d64b', tagColor: '#78d64b' },
   };
   return table[key] || table.physical;
+}
+
+function hitSourceFeedbackInfo({ opts, dmgType, attacker, attackTypeOverride }) {
+  if (opts && opts.sourceLabel) {
+    return { label: String(opts.sourceLabel).toUpperCase().slice(0, 14), color: opts.sourceColor || hitSourceColor(dmgType, attacker, attackTypeOverride) };
+  }
+  const type = String(attackTypeOverride || (attacker && attacker.projType) || '').toLowerCase();
+  if (type.includes('meteor')) return { label: 'METEOR', color: '#ff6633' };
+  if (type.includes('cleave')) return { label: 'CLEAVE', color: '#ff8844' };
+  if (type.includes('inferno')) return { label: 'INFERNO', color: '#ff6600' };
+  if (type.includes('sun')) return { label: 'SUN PULSE', color: '#d4a857' };
+  if (type.includes('smoke')) return { label: 'SMOKE', color: '#aa66cc' };
+  if (type.includes('death')) return { label: 'DEATH MARK', color: '#660066' };
+  if (type.includes('curse')) return { label: 'CURSE', color: '#aa66cc' };
+  if (type.includes('fire')) return { label: 'FIRE', color: '#ff6600' };
+  if (type.includes('frost') || type.includes('ice')) return { label: 'FROST', color: '#88ddff' };
+  if (type.includes('poison') || type.includes('toxic')) return { label: 'POISON', color: '#78d64b' };
+  if (type.includes('holy')) return { label: 'HOLY', color: '#ffe066' };
+  if (attacker && attacker.isBoss) {
+    if (attacker.id === 4) return { label: 'EMBER HIT', color: '#ff6600' };
+    if (attacker.id === 3 || attacker.id === 10) return { label: 'AMBUSH', color: '#aa66cc' };
+    if (attacker.id === 6) return { label: 'PHARAOH', color: '#d4a857' };
+    if (attacker.id === 5) return { label: 'SAND HIT', color: '#c8a05a' };
+    return { label: 'BOSS HIT', color: attacker.color || '#ff8844' };
+  }
+  if (attacker && attacker._sniperWindup) return { label: 'SNIPER', color: '#ff4444' };
+  if (attacker && attacker.splashOnHit) return { label: 'CLEAVE', color: '#ff8844' };
+  if (attacker && attacker.chainBoltCD) return { label: 'CHAIN', color: '#fff700' };
+  if (attacker && attacker.meteorCD) return { label: 'METEOR', color: '#ff8844' };
+  if (type === 'curse') return { label: 'CURSE', color: '#aa66cc' };
+  if (type === 'fire') return { label: 'FIRE', color: '#ff6600' };
+  if (type === 'frost' || type === 'ice') return { label: 'FROST', color: '#88ddff' };
+  if (type === 'poison') return { label: 'POISON', color: '#78d64b' };
+  if (dmgType === 'magic') return { label: 'MAGIC', color: '#aa66ff' };
+  return { label: 'HEAVY HIT', color: '#ff4444' };
+}
+
+function hitSourceColor(dmgType, attacker, attackTypeOverride) {
+  const type = String(attackTypeOverride || (attacker && attacker.projType) || '').toLowerCase();
+  if (type.includes('fire')) return '#ff6600';
+  if (type.includes('frost') || type.includes('ice')) return '#88ddff';
+  if (type.includes('poison') || type.includes('toxic')) return '#78d64b';
+  if (type.includes('curse') || type.includes('void') || dmgType === 'magic') return '#aa66ff';
+  if (type.includes('holy')) return '#ffe066';
+  return attacker && attacker.color || '#ff4444';
+}
+
+function showHitSourceFeedback(target, dmg, {
+  opts,
+  dmgType,
+  attacker,
+  attackTypeOverride,
+  frame,
+  addDamageText,
+}) {
+  if (!target || !target.isPlayer || !Number.isFinite(dmg) || dmg <= 0) return;
+  const maxHp = Math.max(1, target.maxHp || target.hp || 1);
+  const explicitLabel = opts && opts.sourceLabel ? String(opts.sourceLabel).toUpperCase().slice(0, 14) : '';
+  const genericExplicit = explicitLabel === 'HIT' || explicitLabel === 'STRIKE';
+  const significant = !!(
+    target.isKing ||
+    (attacker && attacker.isBoss) ||
+    (explicitLabel && !genericExplicit) ||
+    dmg >= Math.max(24, maxHp * 0.075)
+  );
+  if (!significant) return;
+  const info = hitSourceFeedbackInfo({ opts, dmgType, attacker, attackTypeOverride });
+  if (genericExplicit && dmg >= Math.max(24, maxHp * 0.075)) info.label = 'HEAVY HIT';
+  const now = Number.isFinite(frame) ? frame : 0;
+  const sameRecent = target._lastHitSourceLabel === info.label && now - (target._lastHitSourceFrame || -999) < (target.isKing ? 42 : 34);
+  if (sameRecent) return;
+  target._lastHitSourceLabel = info.label;
+  target._lastHitSourceColor = info.color;
+  target._lastHitSourceFrame = now;
+  target._lastHitSourceTimer = target.isKing ? 70 : 46;
+  target._lastHitSourceDmgRatio = Math.max(0, Math.min(1.5, dmg / maxHp));
+  const y = target.y - (target.size || 18) - (target.isKing ? 24 : 28);
+  addDamageText(target.x, y, info.label, info.color, {
+    sz: target.isKing ? 13 : 11,
+    bold: true,
+    outline: '#1b0606',
+    dy: -4,
+    life: 0.92,
+  });
 }
 
 export function applyLegacyPostDamageHooks(dmg, {

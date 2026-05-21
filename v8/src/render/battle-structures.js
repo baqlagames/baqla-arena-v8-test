@@ -1,6 +1,23 @@
 import { drawPlayerKeep } from './castle.js';
 import { drawBigHealthBar, drawHealthBar } from './health-bars.js';
 
+function clamp01(value) {
+  return Math.max(0, Math.min(1, Number(value) || 0));
+}
+
+export function playerCastleAssaultVfxState(castle) {
+  if (!castle) return { active: false, assaultPct: 0, hitPct: 0, color: '#ff6644' };
+  const assaultTimer = Math.max(0, castle._underAttackTimer || 0);
+  const hitTimer = Math.max(0, castle._castleHitFx || 0);
+  return {
+    active: assaultTimer > 0 || hitTimer > 0,
+    assaultPct: clamp01(assaultTimer / 120),
+    hitPct: clamp01(hitTimer / 30),
+    color: '#ff6644',
+    attacker: castle._lastCastleAttacker || null,
+  };
+}
+
 export function createBattleStructuresRenderer(deps) {
   const ctx = deps.ctx;
   let W = 500, frame = 0, currentStage = null, playerCastle = null, enemyCastle = null, bossRef = null;
@@ -25,6 +42,59 @@ export function createBattleStructuresRenderer(deps) {
     drawPlayerKeep(ctx, { x, y, size, dmgRatio, frame, randomRange: rnd, addParticle: emitParticle });
   }
 
+  function drawPlayerCastleAssaultFx(c, x, y, s, dmgRatio) {
+    const state = playerCastleAssaultVfxState(c);
+    if (!state.active) return;
+    const pulse = 0.65 + 0.35 * Math.sin(frame * 0.22);
+    const hit = state.hitPct;
+    ctx.save();
+    ctx.globalAlpha = 0.18 * state.assaultPct + 0.20 * hit;
+    ctx.fillStyle = state.color;
+    ctx.beginPath();
+    ctx.ellipse(x, y + s * 0.58, s * (1.55 + hit * 0.35), s * (0.34 + hit * 0.08), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.42 * state.assaultPct + 0.22 * hit;
+    ctx.strokeStyle = hit > 0 ? '#fff1d6' : state.color;
+    ctx.lineWidth = hit > 0 ? 2.6 : 1.8;
+    ctx.setLineDash([8, 5]);
+    ctx.lineDashOffset = -frame * 0.75;
+    ctx.beginPath();
+    ctx.ellipse(x, y + s * 0.62, s * (1.70 + hit * 0.45), s * (0.38 + hit * 0.10), 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (hit > 0) {
+      ctx.globalAlpha = 0.52 * hit;
+      ctx.strokeStyle = '#ffccb8';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI * 0.85 + i * Math.PI * 0.42 + Math.sin(frame * 0.08 + i) * 0.06;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * s * 0.38, y - s * 0.18 + Math.sin(a) * s * 0.20);
+        ctx.lineTo(x + Math.cos(a) * s * (0.86 + hit * 0.28), y - s * 0.26 + Math.sin(a) * s * (0.42 + hit * 0.20));
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 0.74 * state.assaultPct + 0.18 * pulse;
+    const badgeY = y - s * 1.52;
+    ctx.fillStyle = 'rgba(36,8,4,0.86)';
+    ctx.beginPath();
+    ctx.arc(x, badgeY, 9 + hit * 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = state.color;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(x, badgeY, 10.5 + pulse * 1.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#ffe0d6';
+    ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('!', x, badgeY + 4);
+    ctx.textAlign = 'left';
+    ctx.restore();
+    c._underAttackTimer = Math.max(0, (c._underAttackTimer || 0) - 1);
+    c._castleHitFx = Math.max(0, (c._castleHitFx || 0) - 1);
+  }
+
   function drawCastle(c) {
     sync();
     if (!c) return;
@@ -37,6 +107,7 @@ export function createBattleStructuresRenderer(deps) {
     const dmgRatio = 1 - c.hp / c.maxHp;
     if (c.isPlayer) {
       drawPlayerKeepRuntime(x, y, s, dmgRatio);
+      drawPlayerCastleAssaultFx(c, x, y, s, dmgRatio);
       return;
     }
 
@@ -230,6 +301,24 @@ export function createBattleStructuresRenderer(deps) {
 
       const bx = ax + portR + 8, by = ay - 7, bw = W / 2 - portR - 30, bh = 14;
       drawBigHpBar(bx, by, bw, bh, pc.hp, pc.maxHp, '#4caf50', '#1f3a1f');
+      const breach = playerCastleAssaultVfxState(pc);
+      if (breach.active) {
+        const pulse = 0.55 + 0.45 * Math.sin(frame * 0.18);
+        ctx.strokeStyle = 'rgba(255,100,68,' + (0.38 + pulse * 0.28) + ')';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.roundRect(bx - 2, by - 2, bw + 4, bh + 4, 4);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(80,12,8,0.88)';
+        ctx.beginPath();
+        ctx.arc(bx + bw + 8, by + bh / 2, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffd6c8';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('!', bx + bw + 8, by + bh / 2 + 3);
+        ctx.textAlign = 'left';
+      }
       ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'left';
       ctx.fillText(pc.name, bx, by - 2);
     }

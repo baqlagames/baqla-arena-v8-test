@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=8cc7d77-combat-readability';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

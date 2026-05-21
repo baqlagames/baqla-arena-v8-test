@@ -4,7 +4,7 @@ import { ARENA_L, ARENA_R } from '../data/tuning.js';
 import { ENEMIES } from '../data/enemies.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 import { bossPhase, fireBossAbility as fireBossAbil, pickBossTarget } from './boss-mechanics-helpers.js';
-import { tryRoyalCarapace, updateRoyalCarapace } from './boss-royal-carapace.js';
+import { tryRoyalCarapace, updateRoyalCarapace } from './boss-royal-carapace.js?v=8cc7d77-combat-readability';
 
 export { bossPhase };
 
@@ -140,7 +140,7 @@ export function tickAerialBombs(ctx) {
       if (unit.hp <= 0 || !unit.isPlayer || unit.isGhost || unit.untargetable) continue;
       const distance = Math.hypot(unit.x - bomb.x, unit.y - bomb.y);
       if (distance <= radius) {
-        dealDamage(unit, dmg, bomb.from, 'normal');
+        dealDamage(unit, dmg, bomb.from, 'normal', 'bomb', { sourceLabel: bomb.strafe ? 'STRAFE' : 'BOMB', sourceColor: bomb.strafe ? '#ffaa44' : '#ff8844' });
         addP(unit.x, unit.y, '#ff8844', 6, 4);
       }
     }
@@ -178,8 +178,8 @@ function bossDebuff(b,ctx){
   const dur=b.debuffDur||240;
   const read=bossDebuffReadability(type,b);
   if(type==='poison'){if(!t.ccImmune){t.poisonTimer=dur;t.poisonDmgVal=b.debuffDmg||6}}
-  else if(type==='slow'){if(!t.ccImmune){t.slowTimer=dur;t.slowMult=0.5;} if(b.debuffDmg)dealDamage(t,b.debuffDmg,b,'normal')}
-  else if(type==='freeze'){if(!t.ccImmune){t.stunned=dur;} if(b.debuffDmg)dealDamage(t,b.debuffDmg,b,'magic')}
+  else if(type==='slow'){if(!t.ccImmune){t.slowTimer=dur;t.slowMult=0.5;} if(b.debuffDmg)dealDamage(t,b.debuffDmg,b,'normal','slow',{ sourceLabel: read.label, sourceColor: read.color })}
+  else if(type==='freeze'){if(!t.ccImmune){t.stunned=dur;} if(b.debuffDmg)dealDamage(t,b.debuffDmg,b,'magic','freeze',{ sourceLabel: read.label, sourceColor: read.color })}
   else if(type==='amp'){t.ampTimer=dur;t.ampMult=1.3}  // takes +30% damage
   else if(type==='mark'){t.markTimer=dur;t.markMult=1.5}
   else if(type==='deathMark'){t.deathMarkTimer=dur;t.deathMarkDmg=b.debuffDmg||200;t.deathMarkFrom=b}
@@ -245,7 +245,7 @@ function arena_breakBarrier(ctx){
     const dmg=Math.round((b.dmg||50)*0.7);
     for(const u of units){
       if(u.hp<=0||!u.isPlayer||u.isGhost)continue;
-      dealDamage(u,dmg,b,'magic');
+      dealDamage(u,dmg,b,'magic','vengeance',{ sourceLabel: 'VENGEANCE', sourceColor: '#ff4444' });
     }
     addDmg(b.x,b.y-b.size-6,'VENGEANCE!','#ff4444');
   }
@@ -276,7 +276,7 @@ function arena_landSkyTyrant(b,ctx){
   const dmg=Math.round((b.dmg||60)*0.6);
   for(const u of units){
     if(u.hp<=0||!u.isPlayer||u.isGhost)continue;
-    dealDamage(u,dmg,b,'normal');
+    dealDamage(u,dmg,b,'normal','landing',{ sourceLabel: 'LANDING', sourceColor: '#ffaa44' });
   }
 }
 // =====================================================================
@@ -297,7 +297,7 @@ function bossBombDrop(b,ctx){
   groundFx.push({x:tx,y:ty,r:0,maxR:b.bombDropRadius||80,life:1.5,color:'rgba(200,80,40,0.55)'});
   // Schedule explosion
   arena.aerialBombs=arena.aerialBombs||[];
-  arena.aerialBombs.push({x:tx,y:ty,t:90,dmg:b.bombDropDmg||80,radius:b.bombDropRadius||80,from:b});
+  arena.aerialBombs.push({x:tx,y:ty,t:90,dmg:b.bombDropDmg||80,radius:b.bombDropRadius||80,from:b,sourceLabel:'BOMB',sourceColor:'#ff8844'});
   addDmg(tx,ty-12,'BOMB!','#ff8844');
 }
 function bossSkyStrafe(b,ctx){
@@ -311,7 +311,7 @@ function bossSkyStrafe(b,ctx){
     const ty=point.y;
     // Schedule frame-delay strikes via the aerialBombs list (faster fuse than bomb drop)
     arena.aerialBombs=arena.aerialBombs||[];
-    arena.aerialBombs.push({x:cx,y:ty,t:30+i*18,dmg:dmg,radius:55,from:b,strafe:true});
+    arena.aerialBombs.push({x:cx,y:ty,t:30+i*18,dmg:dmg,radius:55,from:b,strafe:true,sourceLabel:'STRAFE',sourceColor:'#ffaa44'});
     groundFx.push({x:cx,y:ty,r:0,maxR:55,life:0.5+i*0.3,color:'rgba(200,140,40,0.4)'});
   }
   showFlash('SKY STRAFE!','#ffaa44',40);
@@ -322,7 +322,7 @@ function bossSandStorm(b,ctx){
   const dmg=b.sandStormDmg||50;
   for(const u of units){
     if(u.hp<=0||!u.isPlayer||u.isGhost)continue;
-    dealDamage(u,dmg,b,'magic');
+    dealDamage(u,dmg,b,'magic','storm',{ sourceLabel: 'SAND STORM', sourceColor: '#c8a05a' });
     // Slow effect via debuffs
     if(!u.debuffs)u.debuffs={};
     u.debuffs.slow=Math.max(u.debuffs.slow||0,180);
@@ -361,7 +361,7 @@ function bossMagicBolt(b,ctx){
   addP(t.x,t.y,_col,12,4);
   addP(t.x,t.y,'#ffffff',6,3);
   addDmg(t.x,t.y-t.size-6,'BOLT!',_col);
-  dealDamage(t,_dmg,b,'magic');
+  dealDamage(t,_dmg,b,'magic','magicBolt',{ sourceLabel: 'BOLT', sourceColor: _col });
   showFlash('MAGIC BOLT','#aa66ff',24);
 }
 function bossBuzzShots(b,ctx){
@@ -375,7 +375,7 @@ function bossBuzzShots(b,ctx){
     const idx=Math.floor(Math.random()*pool.length);
     const t=pool.splice(idx,1)[0];
     if(!t)continue;
-    fireProjectile(b,t,dmg,{projType:'normal',speed:7,color:'#ffd54a'});
+    fireProjectile(b,t,dmg,{projType:'normal',speed:7,color:'#ffd54a',sourceLabel:'BUZZ',sourceColor:'#ffd54a'});
     beamFx.push({x1:b.x,y1:b.y-(b.size||32)*0.35,x2:t.x,y2:t.y-(t.size||18)*0.25,life:0.14,maxLife:0.14,color:'#ffd54a',width:1.5,straight:true});
     addP(b.x,b.y,'#ffd54a',3,2);
     addP(t.x,t.y,'#ffd54a',2,2);
@@ -409,7 +409,7 @@ function bossLunge(b,ctx){
   b.x+=(dx/d)*reach;b.y+=(dy/d)*reach;
   clampToArena(b);
   addP(b.x,b.y,'#ffaa00',24,5);shake(10);
-  for(const u of units){if(u.hp>0&&dist(b,u)<70)dealDamage(u,b.lungeDmg||80,b,'normal')}
+  for(const u of units){if(u.hp>0&&dist(b,u)<70)dealDamage(u,b.lungeDmg||80,b,'normal','lunge',{ sourceLabel: 'LUNGE', sourceColor: '#ffaa00' })}
   showFlash('AERIAL DIVE!','#ffaa00',40);
 }
 function bossSpawn(b,ctx){
@@ -453,7 +453,7 @@ function bossMeteor(b,ctx){
   groundFx.push({x:tx,y:ty,r:0,maxR:radius,life:0.95,color:'#ff4400',enemyWarn:true,warnTimer:duration,warnMax:duration,warnKind:'meteor',label:'METEOR'});
   addDmg(tx,ty-18,'METEOR TARGET','#ff8844',{sz:12,bold:true,outline:'#3a0800'});
   bombs.push({x:tx,y:ARENA_TOP-60,fromX:tx,fromY:ARENA_TOP-60,tx,ty,t:0,dur:55,
-    dmg:b.meteorDmg||120,radius,attacker:b,isPlayer:false,color:'#ff4400',meteor:true});
+    dmg:b.meteorDmg||120,radius,attacker:b,isPlayer:false,color:'#ff4400',meteor:true,sourceLabel:'METEOR',sourceColor:'#ff4400'});
   showFlash('METEOR!','#ff4400',30);
 }
 function bossBurrow(b,ctx){
@@ -464,7 +464,7 @@ function bossBurrow(b,ctx){
   clampToArena(b);
   addP(b.x,b.y,'#8b6f3d',24,5);
   shake(10);
-  for(const u of units){if(u.hp>0&&dist(b,u)<70)dealDamage(u,b.burrowDmg||100,b,'normal')}
+  for(const u of units){if(u.hp>0&&dist(b,u)<70)dealDamage(u,b.burrowDmg||100,b,'normal','burrow',{ sourceLabel: 'BURROW', sourceColor: '#8b6f3d' })}
   showFlash('BURROW!','#8b6f3d',30);
 }
 function bossVanish(b,ctx){
@@ -481,7 +481,7 @@ function bossPoisonCloud(b,ctx){
   const t=pickBossTarget(b,'nearest',ctx);
   const target=clampBossPoint(t?t.x:b.x,t?t.y:b.y+60,ctx,{sideMargin:46,topMargin:58,bottomMargin:70});
   const tx=target.x,ty=target.y;
-  groundFx.push({x:tx,y:ty,r:0,maxR:80,life:1,color:'#88aa44',poisonCloud:true,pcTimer:300,pcDmg:8,pcFrom:b});
+  groundFx.push({x:tx,y:ty,r:0,maxR:80,life:1,color:'#88aa44',poisonCloud:true,pcTimer:300,pcDmg:8,pcFrom:b,pcLabel:'CLOUD',pcColor:'#88aa44'});
   showFlash('POISON CLOUD!','#88aa44',30);
 }
 function bossBlizzard(b,ctx){
@@ -489,12 +489,12 @@ function bossBlizzard(b,ctx){
   const t=pickBossTarget(b,'random',ctx);
   const target=clampBossPoint(t?t.x:b.x,t?t.y:b.y+60,ctx,{sideMargin:46,topMargin:58,bottomMargin:70});
   const tx=target.x,ty=target.y;
-  groundFx.push({x:tx,y:ty,r:0,maxR:60,life:1,color:'#88ddff',blizzard:true,blizTimer:300,blizDmg:5,blizFrom:b});
+  groundFx.push({x:tx,y:ty,r:0,maxR:60,life:1,color:'#88ddff',blizzard:true,blizTimer:300,blizDmg:5,blizFrom:b,blizLabel:'BLIZZARD',blizColor:'#88ddff'});
   showFlash('BLIZZARD ZONE!','#88ddff',30);
 }
 function bossStomp(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
-  groundFx.push({x:b.x,y:b.y,r:0,maxR:b.stompRadius||120,life:1,color:'#ccc',bossTel:true,telTimer:30,telDmg:b.stompDmg||90,telStun:b.stompStun||60,telFrom:b});
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:b.stompRadius||120,life:1,color:'#ccc',bossTel:true,telTimer:30,telDmg:b.stompDmg||90,telStun:b.stompStun||60,telFrom:b,label:'STOMP'});
   addP(b.x,b.y,'#7a8a9a',32,5);shake(12);
   showFlash('MOUNTAIN STOMP!','#88ddff',30);
 }
@@ -509,7 +509,7 @@ function bossIceBlock(b,ctx){
 function bossCaw(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   const t=pickBossTarget(b,'lowest',ctx);
-  if(t)fireProjectile(b,t,b.cawDmg||200,{projType:'curse',speed:6});
+  if(t)fireProjectile(b,t,b.cawDmg||200,{projType:'curse',speed:6,sourceLabel:'CAW',sourceColor:'#aa3333'});
   addP(b.x,b.y,'#aa3333',12,4);
   showFlash('CAW OF DOOM!','#aa3333',30);
 }
@@ -517,7 +517,7 @@ function bossDive(b,ctx){
   const { arena, units, enemies, bombs, groundFx, beamFx, frame, width: W, arenaTop: ARENA_TOP, arenaBottom: ARENA_BOT, dealDamage, addParticle: addP, addDamageText: addDmg, showFlash, fireProjectile, spawnEnemyByIndex: spawnEnemyByIdx, tuneBossSupportMinion: arena_tuneBossSupportMinion, clampToArena, SFX, shake } = ctx;
   const target=clampBossPoint(W/2,ARENA_BOT-100,ctx,{sideMargin:60,topMargin:70,bottomMargin:80});
   bombs.push({x:b.x,y:ARENA_TOP-60,fromX:b.x,fromY:ARENA_TOP-60,tx:target.x,ty:target.y,t:0,dur:55,
-    dmg:b.diveDmg||250,radius:130,attacker:b,isPlayer:false,color:'#440044',meteor:true});
+    dmg:b.diveDmg||250,radius:130,attacker:b,isPlayer:false,color:'#440044',meteor:true,sourceLabel:'DIVE',sourceColor:'#aa66cc'});
   showFlash('AERIAL DIVE!','#aa66cc',60);
 }
 function bossFeatherVolley(b,ctx){
@@ -525,7 +525,7 @@ function bossFeatherVolley(b,ctx){
   for(let i=0;i<(b.featherCount||8);i++){
     const ang=Math.PI/2+(i-(b.featherCount-1)/2)*0.18;
     const fakeT={x:b.x+Math.cos(ang)*400,y:b.y+Math.sin(ang)*400,hp:1};
-    fireProjectile(b,fakeT,b.dmg*0.7,{projType:'curse',speed:5});
+    fireProjectile(b,fakeT,b.dmg*0.7,{projType:'curse',speed:5,sourceLabel:'FEATHER',sourceColor:'#aa66cc'});
   }
   showFlash('FEATHER VOLLEY!','#aa66cc',30);
 }
@@ -537,7 +537,7 @@ function bossEmberVolley(b,ctx){
   const mult=b.emberVolleyDmgMult||0.45;
   for(let i=0;i<count;i++){
     const t=alive[Math.floor(Math.random()*alive.length)];
-    fireProjectile(b,t,Math.round(b.dmg*mult),{projType:'fire',speed:5.5});
+    fireProjectile(b,t,Math.round(b.dmg*mult),{projType:'fire',speed:5.5,sourceLabel:'EMBER',sourceColor:'#ff8c22'});
   }
   for(let i=0;i<24;i++)addP(b.x,b.y,'#ff8c22',1,4);
   showFlash('EMBER VOLLEY!','#ff8c22',40);
@@ -560,14 +560,14 @@ function bossEmberDecree(b,ctx){
     if(fallback)chosen.push(fallback);
   }
   for(const t of chosen){
-    groundFx.push({x:t.x,y:t.y,r:0,maxR:radius,life:1.2,color:'#ff7a22',bossTel:true,emberDecree:true,emberDecreeCast:castId,telTimer:45,telMax:45,telDmg:b.emberDecreeDmg||120,telFrom:b,telDmgType:'magic'});
+    groundFx.push({x:t.x,y:t.y,r:0,maxR:radius,life:1.2,color:'#ff7a22',bossTel:true,emberDecree:true,emberDecreeCast:castId,telTimer:45,telMax:45,telDmg:b.emberDecreeDmg||120,telFrom:b,telDmgType:'magic',label:'DECREE'});
     beamFx.push({x1:b.x,y1:b.y,x2:t.x,y2:t.y,life:0.28,maxLife:0.28,color:'#ffb238',width:3,straight:false});
     addDmg(t.x,t.y-(t.size||20)-10,'CINDER!','#ffb238',{sz:13,bold:true});
   }
   if(tanks.length){
     tanks.sort((ta,tb)=>dist(b,ta)-dist(b,tb));
     const tank=tanks[0];
-    groundFx.push({x:tank.x,y:tank.y,r:0,maxR:Math.max(34,radius*0.8),life:1.2,color:'#ff3a22',bossTel:true,emberDecree:true,emberDecreeCast:castId,emberDecreeTank:true,telTimer:45,telMax:45,telDmg:b.emberDecreeTankDmg||80,telFrom:b,telDmgType:'magic'});
+    groundFx.push({x:tank.x,y:tank.y,r:0,maxR:Math.max(34,radius*0.8),life:1.2,color:'#ff3a22',bossTel:true,emberDecree:true,emberDecreeCast:castId,emberDecreeTank:true,telTimer:45,telMax:45,telDmg:b.emberDecreeTankDmg||80,telFrom:b,telDmgType:'magic',label:'TANK HIT'});
     addDmg(tank.x,tank.y-(tank.size||20)-10,'TANK BRAND','#ff6a22',{sz:12,bold:true});
   }
   for(let i=0;i<30;i++)addP(b.x+rnd(-18,18),b.y+rnd(-18,18),'#ff8c22',1,5);
@@ -592,7 +592,7 @@ function bossRoyalDive(b,ctx){
   const stun=b.royalDiveStun||36;
   for(const u of units){
     if(u.hp>0&&u.isPlayer&&dist(b,u)<=radius){
-      dealDamage(u,dmg,b,'magic');
+      dealDamage(u,dmg,b,'magic','royalDive',{ sourceLabel: 'ROYAL DIVE', sourceColor: '#ff8c22' });
       if(!u.ccImmune)u.stunned=Math.max(u.stunned||0,stun);
       addP(u.x,u.y,'#ff8c22',12,4);
     }
@@ -612,7 +612,7 @@ function bossPlagueStorm(b,ctx){
     {sideMargin:50,topMargin:60,bottomMargin:70}
   );
   const tx=target.x,ty=target.y;
-  groundFx.push({x:tx,y:ty,r:0,maxR:55,life:1,color:'#660066',stormTile:true,stormTimer:30,stormDmg:b.dmg*0.5,stormFrom:b});
+  groundFx.push({x:tx,y:ty,r:0,maxR:55,life:1,color:'#660066',stormTile:true,stormTimer:30,stormDmg:b.dmg*0.5,stormFrom:b,stormLabel:'PLAGUE',stormColor:'#660066'});
   addP(tx,ty,'#660066',8,3);
 }
 function bossDarkWind(b,ctx){
@@ -621,7 +621,7 @@ function bossDarkWind(b,ctx){
     const dx=b.x-u.x,dy=b.y-u.y,d=Math.sqrt(dx*dx+dy*dy)||1;
     u.x+=(dx/d)*60;u.y+=(dy/d)*60;
     clampToArena(u);
-    dealDamage(u,b.dmg*0.4,b,'magic');
+    dealDamage(u,b.dmg*0.4,b,'magic','darkWind',{ sourceLabel: 'DARK WIND', sourceColor: '#440044' });
   }}
   showFlash('DARK WIND!','#440044',60);shake(10);
 }
@@ -685,7 +685,7 @@ export function updateBoss(b,ctx){
     if(b._raidAoeCD>=480){
       b._raidAoeCD=0;
       const _aeDmg=b.raidAoeDmg||Math.round(b.dmg*0.30);
-      for(const u of units){if(u.isPlayer&&u.hp>0){dealDamage(u,_aeDmg,b,'magic');addP(u.x,u.y,'#ff2244',4,2)}}
+      for(const u of units){if(u.isPlayer&&u.hp>0){dealDamage(u,_aeDmg,b,'magic','bossPulse',{ sourceLabel: 'BOSS PULSE', sourceColor: '#ff2244' });addP(u.x,u.y,'#ff2244',4,2)}}
       groundFx.push({x:b.x,y:b.y,r:0,maxR:400,life:0.4,color:'rgba(255,34,68,0.3)'});
       if(frame%960<480)addDmg(b.x,b.y-b.size-8,'BOSS PULSE','#ff2244');
     }
@@ -702,7 +702,7 @@ export function updateBoss(b,ctx){
       if(_blCands.length){
         const _bt=_blCands[Math.floor(Math.random()*_blCands.length)];
         const _bsDmg=Math.round(b.dmg*0.40);
-        dealDamage(_bt,_bsDmg,b,'magic');
+        dealDamage(_bt,_bsDmg,b,'magic','bossSlam',{ sourceLabel: 'BOSS SLAM', sourceColor: '#ff4466' });
         beamFx.push({x1:b.x,y1:b.y,x2:_bt.x,y2:_bt.y,life:0.6,maxLife:0.6,color:'#ff2244',width:6,straight:true});
         beamFx.push({x1:b.x,y1:b.y,x2:_bt.x,y2:_bt.y,life:0.4,maxLife:0.4,color:'#ff8866',width:3,straight:false});
         addP(_bt.x,_bt.y,'#ff4466',10,4);addP(_bt.x,_bt.y,'#ff8844',6,5);
@@ -902,7 +902,7 @@ export function updateBoss(b,ctx){
   if(b.avalancheAt&&!b.avalancheUsed&&b.hp<b.maxHp*b.avalancheAt){
     b.avalancheUsed=true;
     for(const u of units){if(u.hp>0){
-      dealDamage(u,b.dmg*1.5,b,'normal');
+      dealDamage(u,b.dmg*1.5,b,'normal','avalanche',{ sourceLabel: 'AVALANCHE', sourceColor: '#88ddff' });
       const dx=u.x-b.x,dy=u.y-b.y,d=Math.sqrt(dx*dx+dy*dy)||1;
       u.x+=(dx/d)*80;u.y+=(dy/d)*80;clampToArena(u);
     }}

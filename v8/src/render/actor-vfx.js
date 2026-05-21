@@ -8,6 +8,10 @@ function emitParticle(emitParticleFn, x, y, color, count, size) {
   if (emitParticleFn) emitParticleFn(x, y, color, count, size);
 }
 
+function clamp01(value) {
+  return Math.max(0, Math.min(1, Number(value) || 0));
+}
+
 export const ENEMY_WAVE_MECHANIC_VFX = Object.freeze({
   shield: { color: '#44aaff', label: 'SHIELD', kind: 'shield' },
   banner: { color: '#ffcc44', label: 'BANNER', kind: 'banner' },
@@ -38,18 +42,47 @@ export function enemyReadabilityCues(enemy) {
   return cues;
 }
 
-export function playerSignatureReadiness(unit) {
+export function playerSignatureVfxState(unit) {
   if (!unit || !unit.signature || !Number.isFinite(unit.signature.cd) || unit.signature.cd <= 0) {
-    return { active: false, pct: 0, ready: false, casting: false, color: playerVfxColor(unit || {}) };
+    return {
+      active: false,
+      pct: 0,
+      ready: false,
+      casting: false,
+      capstone: false,
+      phase: 'inactive',
+      color: playerVfxColor(unit || {}),
+      intensity: 0,
+    };
   }
-  const pct = Math.max(0, Math.min(1, (unit.signature.t || 0) / unit.signature.cd));
+  const pct = clamp01((unit.signature.t || 0) / unit.signature.cd);
   const casting = (unit.signatureCastFx || 0) > 0;
+  const ready = pct >= 1;
+  const capstone = (unit.cellLevel || unit.level || 1) >= 5;
+  const phase = casting ? 'casting' : ready ? 'ready' : pct >= 0.70 ? 'charging' : 'inactive';
   return {
     active: casting || pct >= 0.70,
     pct,
-    ready: pct >= 1,
+    ready,
     casting,
+    capstone,
+    phase,
     color: playerVfxColor(unit),
+    intensity: casting ? 1 : ready ? 0.92 : 0.45 + pct * 0.35,
+    label: unit.signature.name || 'SIGNATURE',
+  };
+}
+
+export function playerSignatureReadiness(unit) {
+  const state = playerSignatureVfxState(unit);
+  return {
+    active: state.active,
+    pct: state.pct,
+    ready: state.ready,
+    casting: state.casting,
+    color: state.color,
+    capstone: state.capstone,
+    phase: state.phase,
   };
 }
 
@@ -69,19 +102,43 @@ export function playerVfxColor(unit) {
 }
 
 function drawPlayerSignatureCue(ctx, { unit, x, y, size, frame }) {
-  const sig = playerSignatureReadiness(unit);
+  const sig = playerSignatureVfxState(unit);
   if (!sig.active) return;
   const t = frame * 0.09 + (unit.unitIdx || 0) * 0.5;
-  const radius = size + 10;
+  const radius = size + 10 + (sig.capstone ? 2 : 0);
   const castP = Math.max(0, Math.min(1, (unit.signatureCastFx || 0) / 18));
   const col = sig.ready ? '#fff0a8' : sig.color;
   ctx.save();
-  ctx.globalAlpha = sig.casting ? 0.30 + castP * 0.50 : 0.26 + sig.pct * 0.20;
+  ctx.globalAlpha = sig.casting ? 0.16 + castP * 0.28 : sig.ready ? 0.18 + 0.08 * Math.sin(t * 2.2) : 0.10 + sig.pct * 0.10;
+  ctx.fillStyle = sig.ready ? '#ffd700' : sig.color;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.08, radius + (sig.casting ? (1 - castP) * 8 : 0), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = sig.casting ? 0.36 + castP * 0.44 : 0.26 + sig.pct * 0.22;
   ctx.strokeStyle = col;
   ctx.lineWidth = sig.ready ? 2.4 : 1.6;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.08, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * sig.pct);
   ctx.stroke();
+  if (sig.capstone) {
+    ctx.globalAlpha = sig.ready || sig.casting ? 0.60 : 0.32;
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([2, 5]);
+    ctx.lineDashOffset = -frame * 0.75;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.08, radius + 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < 5; i++) {
+      const a = t * 0.75 + i * Math.PI * 2 / 5;
+      ctx.globalAlpha = 0.40 + 0.18 * Math.sin(t + i);
+      ctx.fillStyle = i % 2 ? sig.color : '#ffd700';
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(a) * (radius + 6), y - size * 0.08 + Math.sin(a) * (radius + 2), 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
   if (sig.ready) {
     ctx.globalAlpha = 0.30 + 0.18 * Math.sin(t * 2.0);
     ctx.strokeStyle = '#ffd700';
@@ -94,12 +151,22 @@ function drawPlayerSignatureCue(ctx, { unit, x, y, size, frame }) {
     ctx.setLineDash([]);
   }
   if (sig.casting) {
-    ctx.globalAlpha = 0.42 * castP;
+    ctx.globalAlpha = 0.48 * castP;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.arc(x, y - size * 0.08, radius + (1 - castP) * 12, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.globalAlpha = 0.72 * castP;
+    ctx.strokeStyle = sig.color;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i++) {
+      const a = t + i * Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a) * (radius - 5), y - size * 0.08 + Math.sin(a) * (radius - 5));
+      ctx.lineTo(x + Math.cos(a) * (radius + 9), y - size * 0.08 + Math.sin(a) * (radius + 9));
+      ctx.stroke();
+    }
   }
   const sx = x + Math.cos(t) * radius * 0.68;
   const sy = y - size * 0.08 + Math.sin(t) * radius * 0.42;
@@ -108,7 +175,96 @@ function drawPlayerSignatureCue(ctx, { unit, x, y, size, frame }) {
   ctx.beginPath();
   ctx.arc(sx, sy, sig.ready ? 2.8 : 2.0, 0, Math.PI * 2);
   ctx.fill();
+  if (sig.ready || sig.casting) {
+    const label = sig.casting ? 'CAST' : 'SIG';
+    const chipY = y - size - 17;
+    const chipW = sig.casting ? 28 : 23;
+    ctx.globalAlpha = sig.casting ? 0.90 : 0.78 + 0.12 * Math.sin(t * 2.2);
+    ctx.fillStyle = 'rgba(16,12,4,0.82)';
+    ctx.beginPath();
+    ctx.roundRect(x - chipW / 2, chipY - 8, chipW, 13, 5);
+    ctx.fill();
+    ctx.strokeStyle = sig.casting ? sig.color : '#ffd700';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(x - chipW / 2 + 0.5, chipY - 7.5, chipW - 1, 12, 5);
+    ctx.stroke();
+    ctx.fillStyle = '#fff6c2';
+    ctx.font = 'bold 8px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, chipY + 2);
+    ctx.textAlign = 'left';
+  }
   ctx.restore();
+}
+
+export function playerHitSourceVfxState(unit) {
+  if (!unit || !unit._lastHitSourceLabel || !(unit._lastHitSourceTimer > 0)) {
+    return { active: false, pct: 0, label: '', color: '#ff4444', danger: false };
+  }
+  const maxTimer = unit.isKing ? 70 : 46;
+  const pct = clamp01(unit._lastHitSourceTimer / maxTimer);
+  const label = String(unit._lastHitSourceLabel || '').toUpperCase().slice(0, 14);
+  return {
+    active: true,
+    pct,
+    label,
+    color: unit._lastHitSourceColor || '#ff4444',
+    danger: !!(unit.isKing || label === 'METEOR' || label === 'BREACH' || label.includes('SLAM') || label.includes('DIVE') || (unit._lastHitSourceDmgRatio || 0) >= 0.14),
+  };
+}
+
+function drawPlayerHitSourceBadge(ctx, { unit, x, y, size, frame }) {
+  const state = playerHitSourceVfxState(unit);
+  if (!state.active) return;
+  const t = frame * 0.13 + (unit.unitIdx || 0) * 0.4;
+  const p = state.pct;
+  const col = state.color;
+  const dangerBoost = state.danger ? 1 : 0;
+  ctx.save();
+  ctx.globalAlpha = (0.16 + 0.18 * p) * (state.danger ? 1.25 : 1);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.10, size + 9 + dangerBoost * 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.42 * p + dangerBoost * 0.12;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = state.danger ? 2.2 : 1.5;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.10, size + 11 + Math.sin(t * 2.0) * 1.5, 0, Math.PI * 2);
+  ctx.stroke();
+  if (state.danger) {
+    ctx.globalAlpha = 0.62 * p;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.1;
+    for (let i = 0; i < 4; i++) {
+      const a = t + i * Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a) * (size + 6), y - size * 0.10 + Math.sin(a) * (size + 6));
+      ctx.lineTo(x + Math.cos(a) * (size + 14), y - size * 0.10 + Math.sin(a) * (size + 14));
+      ctx.stroke();
+    }
+  }
+  const label = state.label || 'HIT';
+  const chipW = Math.min(86, Math.max(34, label.length * 6 + 12));
+  const chipY = y - size - (unit.isKing ? 31 : 27);
+  ctx.globalAlpha = 0.82 * p;
+  ctx.fillStyle = 'rgba(18,6,6,0.84)';
+  ctx.beginPath();
+  ctx.roundRect(x - chipW / 2, chipY - 8, chipW, 14, 5);
+  ctx.fill();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(x - chipW / 2 + 0.5, chipY - 7.5, chipW - 1, 13, 5);
+  ctx.stroke();
+  ctx.fillStyle = '#fff5f0';
+  ctx.font = 'bold 8px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, chipY + 2.5);
+  ctx.textAlign = 'left';
+  ctx.restore();
+  unit._lastHitSourceTimer = Math.max(0, (unit._lastHitSourceTimer || 0) - 1);
 }
 
 export function unitAttackSpeedVfxState(unit) {
@@ -357,6 +513,7 @@ export function drawPlayerAuraOver(ctx, {
     ctx.stroke();
     unit._targetedMarker--;
   }
+  drawPlayerHitSourceBadge(ctx, { unit, x, y, size, frame });
   if (haste.active) {
     ctx.globalAlpha = 0.42;
     ctx.strokeStyle = haste.color;
@@ -506,6 +663,37 @@ export function enemyRoleInfo(enemy) {
   if (enemy.arch === 'ranged' || enemy.range > 80 || enemy.projType) return { key: 'ranged', color: enemyVfxColor(enemy), label: 'R' };
   if (enemy.arch === 'aoe' || enemy.splashOnHit) return { key: 'aoe', color: '#ff8c22', label: 'A' };
   return { key: 'melee', color: enemyVfxColor(enemy), label: '' };
+}
+
+export function enemyIntentVfxState(enemy) {
+  if (!enemy) return { active: false, key: 'none', color: '#ff8844', readyPct: 0, imminent: false, major: false };
+  const role = enemyRoleInfo(enemy);
+  const hasCd = Number.isFinite(enemy.cd) && Number.isFinite(enemy.atkSpd) && enemy.atkSpd > 0;
+  const readyPct = hasCd ? clamp01(1 - Math.max(0, enemy.cd) / Math.max(1, enemy.atkSpd)) : (enemy.cd <= 10 ? 0.85 : 0.35);
+  const major = !!(
+    enemy.isBoss ||
+    enemy.isElite ||
+    enemy.champion ||
+    enemy.isLieutenant ||
+    enemy.bossSupport ||
+    enemy.waveMechanic ||
+    enemy.chainBoltCD ||
+    enemy.meteorCD ||
+    enemy.splashOnHit ||
+    enemy.prefersBackline ||
+    enemy.stealth ||
+    enemy.poisonOnHit ||
+    enemy.burrow ||
+    enemy.flying
+  );
+  return {
+    active: major || readyPct >= 0.70,
+    key: role.key,
+    color: role.color || enemyVfxColor(enemy),
+    readyPct,
+    imminent: readyPct >= 0.88 || enemy.cd <= 8,
+    major,
+  };
 }
 
 function drawEnemyRoleBadge(ctx, { x, y, size, frame, info, elite }) {
@@ -807,6 +995,92 @@ export function drawEnemyDashedEllipse(ctx, { x, y, rx, ry, color, alpha, rotati
   ctx.restore();
 }
 
+function drawEnemyIntentHalo(ctx, { enemy, x, y, size, frame, t }) {
+  const state = enemyIntentVfxState(enemy);
+  if (!state.active) return;
+  const col = state.color;
+  const baseY = y + size * 0.74;
+  const alpha = state.major ? 0.16 : 0.10;
+  ctx.save();
+  ctx.globalAlpha = alpha + state.readyPct * 0.08;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = state.imminent ? 2 : 1.3;
+  ctx.setLineDash(state.imminent ? [3, 3] : [8, 6]);
+  ctx.lineDashOffset = -frame * (state.imminent ? 0.85 : 0.35);
+  ctx.beginPath();
+  ctx.ellipse(x, baseY, size * (state.major ? 1.36 : 1.08), size * (state.major ? 0.34 : 0.25), 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  if (state.readyPct > 0.35) {
+    ctx.globalAlpha = (state.imminent ? 0.44 : 0.28) * state.readyPct;
+    ctx.strokeStyle = state.imminent ? '#ffffff' : col;
+    ctx.lineWidth = state.imminent ? 1.8 : 1.2;
+    ctx.beginPath();
+    ctx.ellipse(x, baseY, size * 0.78, size * 0.19, 0, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * state.readyPct);
+    ctx.stroke();
+  }
+  if (state.key === 'caster' || state.key === 'boss') {
+    for (let i = 0; i < 3; i++) {
+      const a = t * 1.4 + i * Math.PI * 2 / 3;
+      ctx.globalAlpha = 0.22 + 0.10 * state.readyPct;
+      ctx.fillStyle = i === 0 && state.imminent ? '#fff' : col;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(a) * size * 0.82, baseY + Math.sin(a) * size * 0.20, 2.0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (state.key === 'support') {
+    ctx.globalAlpha = 0.22 + 0.12 * Math.sin(t * 1.8);
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.18, baseY);
+    ctx.lineTo(x + size * 0.18, baseY);
+    ctx.moveTo(x, baseY - size * 0.11);
+    ctx.lineTo(x, baseY + size * 0.11);
+    ctx.stroke();
+  } else if (state.key === 'assassin') {
+    ctx.globalAlpha = 0.24 + 0.12 * state.readyPct;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 3; i++) {
+      const ox = (i - 1) * size * 0.22;
+      ctx.beginPath();
+      ctx.moveTo(x + ox - size * 0.13, baseY - size * 0.08);
+      ctx.lineTo(x + ox, baseY + size * 0.06);
+      ctx.lineTo(x + ox + size * 0.13, baseY - size * 0.08);
+      ctx.stroke();
+    }
+  } else if (state.key === 'aoe') {
+    ctx.globalAlpha = 0.18 + 0.12 * state.readyPct;
+    ctx.strokeStyle = '#ff8c22';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(x, baseY, size * 1.52, size * 0.42, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (state.key === 'ranged' || state.key === 'flying') {
+    ctx.globalAlpha = 0.20 + 0.16 * state.readyPct;
+    ctx.strokeStyle = state.imminent ? '#ffffff' : col;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.90, baseY);
+    ctx.lineTo(x + size * 0.90, baseY);
+    ctx.stroke();
+  } else if (state.key === 'tank') {
+    ctx.globalAlpha = 0.20;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(x, baseY - size * 0.18);
+    ctx.lineTo(x + size * 0.34, baseY - size * 0.04);
+    ctx.lineTo(x + size * 0.24, baseY + size * 0.18);
+    ctx.lineTo(x, baseY + size * 0.26);
+    ctx.lineTo(x - size * 0.24, baseY + size * 0.18);
+    ctx.lineTo(x - size * 0.34, baseY - size * 0.04);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
   const col = enemyVfxColor(enemy);
   const role = enemyRoleInfo(enemy);
@@ -829,6 +1103,7 @@ export function drawEnemyVfxUnder(ctx, { enemy, x, y, size, frame }) {
       ctx.fill();
     }
   }
+  drawEnemyIntentHalo(ctx, { enemy, x, y, size, frame, t });
   if (enemy.isBoss) {
     ctx.globalAlpha = 0.16 + 0.06 * Math.sin(t);
     ctx.fillStyle = col;
@@ -1017,6 +1292,15 @@ export function drawEnemyVfxOver(ctx, {
   ctx.save();
   drawEnemyRoleBadge(ctx, { x, y, size, frame, info: role, elite: enemy.isElite || enemy.champion || enemy.isLieutenant });
   drawEnemyTraitPips(ctx, { enemy, x, y, size, frame });
+  const intent = enemyIntentVfxState(enemy);
+  if (intent.imminent && !enemy.isBoss) {
+    ctx.globalAlpha = 0.34 + 0.20 * Math.sin(t * 2.6);
+    ctx.strokeStyle = intent.color;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.16, size + 6, -Math.PI / 2, Math.PI * 1.5);
+    ctx.stroke();
+  }
   if (enemy.isElite || enemy.champion || enemy.isLieutenant) drawChampionCrown(ctx, { x, y, size, frame, color: enemy.isLieutenant ? '#ffaa44' : '#ffd700' });
   if (enemy.armorType === 'warded' || enemy.arch === 'caster' || enemy.chainBoltCD) {
     for (let i = 0; i < 3; i++) {

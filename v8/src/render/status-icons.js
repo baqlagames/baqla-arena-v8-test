@@ -1,12 +1,32 @@
 function imminentBossSkillIcon(t,tickHz){
   if(!t||!t.isBoss||!t.mechCD)return null;
-  const soon=2*tickHz;
+  const soon=4*tickHz;
   const cd=t.mechCD;
-  if(t.meteorCD&&cd.meteor>0&&cd.meteor<=soon)return {c:'#ff4400',g:'M',title:'Meteor Soon',pulse:true};
-  if(t.vanishCD&&cd.vanish>0&&cd.vanish<=soon)return {c:'#aa66cc',g:'A',title:'Ambush Soon',pulse:true};
-  if(t.debuffCD&&cd.debuff>0&&cd.debuff<=soon)return {c:'#aa66cc',g:'!',title:'Debuff Soon',pulse:true};
-  if(t.aoeCD&&cd.aoe>0&&cd.aoe<=soon)return {c:'#ff8800',g:'!',title:'AoE Soon',pulse:true};
-  return null;
+  const defs=[
+    ['meteor','meteorCD','#ff4400','M','Meteor Soon'],
+    ['vanish','vanishCD','#aa66cc','A','Ambush Soon'],
+    ['emberDecree','emberDecreeCD','#ffb238','D','Decree Soon'],
+    ['skyStrafe','skyStrafeCD','#ffaa44','S','Strafe Soon'],
+    ['bombDrop','bombDropCD','#ff8844','B','Bomb Soon'],
+    ['sandStorm','sandStormCD','#c8a05a','S','Sand Storm Soon'],
+    ['burrow','burrowCD','#8b6f3d','B','Burrow Soon'],
+    ['lunge','lungeCD','#ff4444','L','Lunge Soon'],
+    ['royalDive','royalDiveCD','#ff5a3a','D','Dive Soon'],
+    ['stomp','stompCD','#7a8a9a','S','Stomp Soon'],
+    ['pcloud','poisonCloudCD','#88aa44','C','Cloud Soon'],
+    ['bliz','blizzardCD','#88ddff','B','Blizzard Soon'],
+    ['spawn','spawnCD','#44aa44','+','Adds Soon'],
+    ['magicBolt','magicBoltCD','#aa88ff','B','Bolt Soon'],
+    ['debuff','debuffCD','#aa66cc','!','Debuff Soon'],
+    ['aoe','aoeCD','#ff8800','!','AoE Soon'],
+  ];
+  let best=null;
+  for(const [key,prop,c,g,title] of defs){
+    const value=cd[key]||0;
+    if(!t[prop]||!(value>0)||value>soon)continue;
+    if(!best||value<best.value)best={value,c,g,title};
+  }
+  return best?{c:best.c,g:best.g,title:best.title,pulse:true}:null;
 }
 
 export function collectStatusIcons(t,tickHz=120){

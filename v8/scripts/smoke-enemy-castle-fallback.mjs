@@ -86,6 +86,8 @@ function tickEnemy(enemy, castle, units, frame) {
   assert.equal(enemy.target, castle, 'enemy should keep the king castle as its fallback target');
   assert(enemy.y > bands.enemyDiveY + 150, `enemy stayed at the middle fight band instead of advancing (${enemy.y})`);
   assert(castle.hp < castle.maxHp, `enemy reached no castle damage (${castle.hp}/${castle.maxHp})`);
+  assert(castle._underAttackTimer > 0, 'castle damage should mark the breach warning timer');
+  assert(castle._castleHitFx > 0, 'castle damage should mark the hit impact VFX timer');
 }
 
 console.log('Enemy castle fallback smoke passed: melee enemies advance and damage the king after the squad is wiped.');

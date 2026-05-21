@@ -45,7 +45,7 @@ export function createCombatTransientsRuntime(deps) {
     else if(g.volley){g.volleyTimer--;g.volleyTick++;if(g.volleyTick%15===0){for(const e of enemies){if(e.hp>0&&dist(g,e)<g.maxR)dealDamage(e,g.volleyDmg,g.volleyFrom,'normal')}}if(g.volleyTimer<=0)g.life=0}
     else if(g.wildfirePatch){g.wfT++;if(frame%GAME_TICK_HZ===0){for(const e of enemies){if(e.hp>0&&dist(g,e)<=g.wfRadius){dealDamage(e,g.wfDmg,g.wfFrom,'physical');addP(e.x,e.y,'#ff6600',3,2)}}}if(g.wfT>=g.wfDur)g.life=0;if(frame%6===0)addP(g.x+rnd(-g.wfRadius*0.5,g.wfRadius*0.5),g.y+rnd(-g.wfRadius*0.3,g.wfRadius*0.3),'#ff6600',1,3)}
     else if(g.vineLash){g.vineTimer--;if(g.vineTimer<=0)g.life=0}
-    else if(g.stormTile){g.stormTimer--;if(g.stormTimer===15){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR)dealDamage(u,g.stormDmg,g.stormFrom,'magic')}if(g.stormTimer<=0)g.life=0}
+    else if(g.stormTile){g.stormTimer--;if(g.stormTimer===15){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR)dealDamage(u,g.stormDmg,g.stormFrom,'magic','stormTile',{sourceLabel:g.stormLabel||'STORM',sourceColor:g.stormColor||g.color})}if(g.stormTimer<=0)g.life=0}
     else if(g.enemyWarn){g.warnTimer--;g.life=Math.max(0,g.warnTimer/Math.max(1,g.warnMax||1));if(g.warnTimer<=0)g.life=0}
     else if(g.bossTel){g.telTimer--;
       if(g.telTimer===5){
@@ -59,7 +59,7 @@ export function createCombatTransientsRuntime(deps) {
             }
             if(g.telDmg>0){
               const _telDmg=g.emberDecree?arena_emberDecreeDamage(g.telDmg,u,!!g.emberDecreeTank):g.telDmg;
-              dealDamage(u,_telDmg,g.telFrom,g.telDmgType||'normal');
+              dealDamage(u,_telDmg,g.telFrom,g.telDmgType||'normal',g.label||'bossTel',{sourceLabel:g.label||'BOSS AOE',sourceColor:g.color});
             }
             if(g.telKnock){const dx=u.x-g.x,dy=u.y-g.y,d=Math.sqrt(dx*dx+dy*dy)||1;u.x+=(dx/d)*40;u.y+=(dy/d)*40;clampToArena(u)}
             if(g.telStun)u.stunned=g.telStun;
@@ -72,7 +72,7 @@ export function createCombatTransientsRuntime(deps) {
       if(g.telTimer<=0)g.life=0;
     }
     else if(g.poisonCloud){g.pcTimer--;
-      if(g.pcTimer%30===0){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR){dealDamage(u,g.pcDmg,g.pcFrom,'magic');if(!u.debuffImmune){u.slowTimer=60;u.slowMult=0.7}}}
+      if(g.pcTimer%30===0){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR){dealDamage(u,g.pcDmg,g.pcFrom,'magic','poisonCloud',{sourceLabel:g.pcLabel||'CLOUD',sourceColor:g.pcColor||g.color});if(!u.debuffImmune){u.slowTimer=60;u.slowMult=0.7}}}
       if(g.pcTimer<=0)g.life=0;
     }
     else if(g.bombTrap){
@@ -108,7 +108,7 @@ export function createCombatTransientsRuntime(deps) {
       if(g.stTimer<=0)g.life=0;
     }
     else if(g.blizzard){g.blizTimer--;
-      if(g.blizTimer%30===0){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR){dealDamage(u,g.blizDmg,g.blizFrom,'magic');u.slowTimer=90;u.slowMult=0.5}}
+      if(g.blizTimer%30===0){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR){dealDamage(u,g.blizDmg,g.blizFrom,'magic','blizzard',{sourceLabel:g.blizLabel||'BLIZZARD',sourceColor:g.blizColor||g.color});u.slowTimer=90;u.slowMult=0.5}}
       if(g.blizTimer<=0)g.life=0;
     }
     else if(g.jazarAnchor){

@@ -31,6 +31,8 @@ export function lobArenaBomb(bombs, from, tx, ty, dmg, radius, opts = {}) {
     color: opts.color || '#ff6600',
     altColor: opts.altColor || null,
     toxicPotion: !!opts.toxicPotion,
+    sourceLabel: opts.sourceLabel || null,
+    sourceColor: opts.sourceColor || opts.color || null,
   });
 }
 
@@ -94,6 +96,8 @@ export function fireArenaProjectile(from, to, dmg, opts = {}, {
     basicSecondHit: opts.basicSecondHit || null,
     aimed: opts.aimed || false,
     _isCrit: opts._isCrit || false,
+    sourceLabel: opts.sourceLabel || null,
+    sourceColor: opts.sourceColor || opts.color || null,
     arcT: 0,
     arcDur: opts.arcDur || 50,
     fromX: from.x,
@@ -181,7 +185,11 @@ export function updateArenaProjectile(projectile, {
 
     if (projectile.target && projectile.target.hp > 0) {
       const dmgType = (projectile.projType === 'curse' || projectile.projType === 'fire' || projectile.projType === 'holy' || projectile.projType === 'frost' || projectile.projType === 'chaosBolt' || projectile.projType === 'blackArrow' || projectile.projType === 'voidShard' || projectile.projType === 'voidOrb') ? 'magic' : 'normal';
-      dealDamage(projectile.target, projectile.dmg, projectile.attacker, dmgType, projectile.attackType, projectile._isCrit ? { isCrit: true } : undefined);
+      dealDamage(projectile.target, projectile.dmg, projectile.attacker, dmgType, projectile.attackType, (projectile._isCrit || projectile.sourceLabel) ? {
+        isCrit: !!projectile._isCrit,
+        sourceLabel: projectile.sourceLabel,
+        sourceColor: projectile.sourceColor,
+      } : undefined);
       if (projectile.basicSecondHit) applyBasicSecondHit(projectile.attacker, projectile.target, projectile.dmg, projectile.basicSecondHit, dmgType, projectile.attackType);
       if (projectile._isCrit) {
         addDamageText(projectile.target.x, projectile.target.y - projectile.target.size - 10, 'CRIT!', '#cc44ff', { sz: 18, bold: true, outline: '#220044' });
@@ -199,7 +207,7 @@ export function updateArenaProjectile(projectile, {
         const chaosAoeMult = projectile._cbAoeMult || 0.45;
         for (const target of list) {
           if (target !== projectile.target && target.hp > 0 && dist(projectile.target, target) < projectile.aoeRadius) {
-            dealDamage(target, Math.round(projectile.dmg * chaosAoeMult), projectile.attacker, 'magic', 'ignoreDefense');
+            dealDamage(target, Math.round(projectile.dmg * chaosAoeMult), projectile.attacker, 'magic', 'ignoreDefense', { sourceLabel: projectile.sourceLabel || 'CHAOS', sourceColor: projectile.sourceColor || '#88ffaa' });
             emitParticle(target.x, target.y, '#88ffaa', 10, 3);
           }
         }
@@ -249,7 +257,7 @@ export function updateArenaProjectile(projectile, {
         const level = projectile.attacker && projectile.attacker.level || 1;
         const aoeMult = projectile.attacker && projectile.attacker.aoeMult ? projectile.attacker.aoeMult : (0.30 + level * 0.05);
         for (const target of list) {
-          if (target !== projectile.target && target.hp > 0 && dist(projectile.target, target) < projectile.aoeRadius) dealDamage(target, projectile.dmg * aoeMult, projectile.attacker, dmgType, projectile.attackType);
+          if (target !== projectile.target && target.hp > 0 && dist(projectile.target, target) < projectile.aoeRadius) dealDamage(target, projectile.dmg * aoeMult, projectile.attacker, dmgType, projectile.attackType, projectile.sourceLabel ? { sourceLabel: projectile.sourceLabel, sourceColor: projectile.sourceColor } : undefined);
         }
       }
       if (projectile.poisonOnHit) {
@@ -373,7 +381,7 @@ export function explodeArenaBomb(bomb, {
     const distance = dist(bomb, target);
     if (distance <= bomb.radius) {
       const falloff = baseMult * (1 - (distance / bomb.radius) * 0.5);
-      dealDamage(target, bomb.dmg * falloff, bomb.attacker, dmgType, bomb.attackType);
+      dealDamage(target, bomb.dmg * falloff, bomb.attacker, dmgType, bomb.attackType, bomb.sourceLabel ? { sourceLabel: bomb.sourceLabel, sourceColor: bomb.sourceColor || bomb.color } : undefined);
     }
   }
   if (bomb.felMeteor && bomb.attacker && bomb.attacker.hp > 0) {

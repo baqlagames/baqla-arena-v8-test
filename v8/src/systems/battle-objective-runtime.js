@@ -1,5 +1,5 @@
 import { createWeatherParticles, drawWeatherOverlay } from '../render/weather.js';
-import { createBattleStructuresRenderer } from '../render/battle-structures.js';
+import { createBattleStructuresRenderer } from '../render/battle-structures.js?v=8cc7d77-combat-readability';
 
 export function createBattleObjectiveRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;

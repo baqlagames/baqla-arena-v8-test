@@ -111,7 +111,7 @@ function finishRoyalCarapaceBurst(boss, ctx) {
   for (const unit of units) {
     if (unit.hp <= 0 || unit.isGhost) continue;
     const mult = (unit.arch === 'tank' || unit.taunt) ? 0.75 : 1;
-    dealDamage(unit, Math.round(dmg * mult), boss, 'magic');
+    dealDamage(unit, Math.round(dmg * mult), boss, 'magic', 'hiveBurst', { sourceLabel: 'HIVE BURST', sourceColor: '#ffaa00' });
     addP(unit.x, unit.y, '#ffaa00', 8, 4);
   }
   for (let i = 0; i < 60; i++) addP(boss.x, boss.y, '#ffaa00', 1, 7);
@@ -136,7 +136,7 @@ export function updateRoyalCarapace(boss, ctx) {
     for (const unit of units) {
       if (unit.hp <= 0 || unit.isGhost) continue;
       const mult = (unit.arch === 'tank' || unit.taunt) ? 0.45 : 1;
-      dealDamage(unit, Math.round(pulseDmg * mult), boss, 'magic');
+      dealDamage(unit, Math.round(pulseDmg * mult), boss, 'magic', 'stingingSwarm', { sourceLabel: 'SWARM', sourceColor: '#ffdd44' });
       addP(unit.x, unit.y, '#ffdd44', 4, 3);
     }
     addDmg(boss.x, boss.y - boss.size - 8, 'STINGING SWARM', '#ffdd44', { sz: 11, bold: true, outline: '#4a2600' });

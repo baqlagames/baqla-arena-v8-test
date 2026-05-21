@@ -2,7 +2,7 @@ import { ARENA_RIFT_BONUS_GOLD } from './rift-runtime.js';
 import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived as applyHealingReceivedBase } from './combat-healing.js';
 import { createCombatFeedbackRuntime } from './combat-feedback-runtime.js?v=7861d9c-text-declutter';
 import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js?v=7861d9c-text-declutter';
-import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js?v=7861d9c-text-declutter';
+import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js?v=8cc7d77-combat-readability';
 import { clampCombatActorToArena, clampCombatActorToLeash, createCombatBounds, createTargetingView, moveCombatActorToward, resolvePlayerUnitOverlaps } from './combat-positioning.js';
 import { batataCovers, batataHealingReceivedMultiplier, isBatataBacklineAlly, isZavsMeleeAlly, zavsAllyAttackSpeedFactor, zavsAllyDamageMultiplier, zavsBodyguardCovers } from './combat-protection.js';
 import { findEnemyTargetForUnit, findNearestTarget, findRangedEnemyTargetForUnit, isReachableFromLeash, isSaturatedCombatTarget, updateBossEngagementCounts } from './combat-targeting.js';
