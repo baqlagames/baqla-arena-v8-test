@@ -1,5 +1,59 @@
 import { drawUnitShieldVfx } from './shield-vfx.js';
 
+function unitRoleColor(unit){
+  if(!unit)return '#d8f4ff';
+  if(unit.arch==='tank'||unit.taunt)return '#5cc8ff';
+  if(unit.arch==='melee'||unit.prefersMelee)return '#ffd166';
+  if(unit.arch==='healer')return '#66ffaa';
+  if(unit.arch==='caster'||unit.arch==='magic')return '#aa88ff';
+  return '#ffcc66';
+}
+
+function playerUnitsUnderBoss(boss,units){
+  if(!boss||boss.hp<=0||!Array.isArray(units))return [];
+  const radius=Math.max(44,(boss.size||42)*1.05);
+  return units.filter(unit=>{
+    if(!unit||unit.hp<=0||!unit.isPlayer||unit.isMinion||unit.isGhost||unit.isMirror)return false;
+    return Math.hypot((unit.x||0)-(boss.x||0),(unit.y||0)-(boss.y||0))<=radius;
+  });
+}
+
+function drawUnderBossUnitBackplates(ctx,boss,units,frame){
+  const under=playerUnitsUnderBoss(boss,units);
+  if(!under.length)return;
+  for(const unit of under){
+    const s=unit.size||20,col=unitRoleColor(unit);
+    ctx.save();
+    ctx.fillStyle='rgba(2,6,14,0.56)';
+    ctx.beginPath();ctx.ellipse(unit.x,unit.y+s*0.35,s*1.10,s*0.46,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=col;ctx.globalAlpha=0.38+0.12*Math.sin((frame||0)*0.16+(unit.id||0));
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(unit.x,unit.y+s*0.35,s*1.20,s*0.52,0,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawUnderBossUnitOutlines(ctx,boss,units,frame){
+  const under=playerUnitsUnderBoss(boss,units);
+  if(!under.length)return;
+  for(const unit of under){
+    const s=unit.size||20,col=unitRoleColor(unit);
+    ctx.save();
+    ctx.globalCompositeOperation='source-over';
+    ctx.strokeStyle='rgba(3,7,16,0.96)';
+    ctx.lineWidth=5;
+    ctx.beginPath();ctx.ellipse(unit.x,unit.y-s*0.05,s*0.72,s*1.08,0,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle=col;
+    ctx.lineWidth=2.6;
+    ctx.globalAlpha=0.92;
+    ctx.beginPath();ctx.ellipse(unit.x,unit.y-s*0.05,s*0.72,s*1.08,0,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=0.52+0.18*Math.sin((frame||0)*0.12+(unit.id||0));
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(unit.x,unit.y-s*1.45);ctx.lineTo(unit.x,unit.y-s*0.86);ctx.stroke();
+    ctx.restore();
+  }
+}
+
 function drawAstralWardenForeground(ctx,boss,frame){
   if(!boss||boss.hp<=0||boss.id!==10)return;
   const x=boss.x||0,y=boss.y||0,s=boss.size||58;
@@ -33,11 +87,6 @@ function drawAstralWardenForeground(ctx,boss,frame){
     ctx.globalAlpha=0.55+0.25*Math.sin((frame||0)*0.12+i);
     ctx.fillStyle=i%2?'#ffd166':'#8bdfff';
     ctx.beginPath();ctx.arc(rx,ry,ward?s*0.07:s*0.055,0,Math.PI*2);ctx.fill();
-  }
-  if(ward){
-    ctx.globalAlpha=0.28+0.12*pulse;
-    ctx.strokeStyle='#ffd166';ctx.lineWidth=5;
-    ctx.beginPath();ctx.ellipse(0,-s*0.08,s*1.14,s*0.92,0,0,Math.PI*2);ctx.stroke();
   }
   ctx.restore();
 }
@@ -149,6 +198,7 @@ export function createBattleSceneRuntime(deps) {
   // Castles render on/at arena edges (king is the only castle in arena)
   if(state==='battle')drawCastle(playerCastle);
   for(const e of enemies)drawDummy(e);
+  drawUnderBossUnitBackplates(ctx,bossRef,units,frame);
   // arena: render level ring + aura indicators under each squad unit.
   if(state==='battle'){
     const ringColor={2:'#ffd54a',3:'#3aa0ff',4:'#a855f7',5:'#ffb000'};
@@ -680,6 +730,7 @@ export function createBattleSceneRuntime(deps) {
   }
   for(const u of units)drawUnit(u);
   drawUnitOverlays();
+  drawUnderBossUnitOutlines(ctx,bossRef,units,frame);
   drawAstralWardenForeground(ctx,bossRef,frame);
   drawBeamFx();
   drawProjectiles();

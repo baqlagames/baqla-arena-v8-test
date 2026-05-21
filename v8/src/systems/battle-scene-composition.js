@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260521-warden-live';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260521-warden-clarity';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

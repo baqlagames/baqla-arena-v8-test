@@ -13,7 +13,7 @@ import { ARENA_UNIT_BRANCHES, ARENA_BASE_SIGNATURES, ARENA_BRANCH_SIGNATURES } f
 import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=20260521-warden-live';
+import { createActorRenderer } from '../render/actor-renderer.js?v=20260521-warden-clarity';
 import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260517-nogrid-6x3';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';
@@ -53,7 +53,7 @@ import { createArenaGameStateRuntime } from './arena-game-state-runtime.js';
 import { createArenaBattleArrayRuntime } from './arena-battle-array-runtime.js';
 import { createArenaCodexComposition } from './arena-codex-composition.js';
 import { createArenaInputComposition } from './arena-input-composition.js';
-import { createBattleSceneComposition } from './battle-scene-composition.js?v=20260521-warden-live';
+import { createBattleSceneComposition } from './battle-scene-composition.js?v=20260521-warden-clarity';
 import { createArenaShellComposition } from './arena-shell-composition.js';
 
 export function startArena(){
