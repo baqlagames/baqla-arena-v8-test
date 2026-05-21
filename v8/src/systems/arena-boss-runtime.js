@@ -1,10 +1,10 @@
 import { clamp } from '../core/math.js';
-import { ARENA_L, ARENA_R } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { ARENA_L, ARENA_R } from '../data/tuning.js';
 import {
   drainHealToBarrier,
   tickAerialBombs,
   updateBoss,
-} from './boss-mechanics.js?v=8cc7d77-combat-readability';
+} from './boss-mechanics.js?v=20260521-warden-live';
 
 export function createArenaBossRuntime(deps) {
   const randomRange = typeof deps.randomRange === 'function'

@@ -1,5 +1,5 @@
 import { SPRITE_BASE } from '../assets.js';
-import { BOSSES } from '../data/bosses.js';
+import { BOSSES } from '../data/bosses.js?v=20260521-warden-live';
 import { drawArena25D } from './arena-25d.js';
 import { createArenaDecor, drawClassicArena } from './arena.js';
 
