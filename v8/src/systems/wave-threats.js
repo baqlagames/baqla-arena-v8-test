@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260521-warden-live';
+import { BOSSES } from '../data/bosses.js?v=20260521-gravity-frontline';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){

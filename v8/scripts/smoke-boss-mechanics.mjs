@@ -259,8 +259,21 @@ function smokeAstralWarden(ctx, boss) {
       boss._astralGravityUnlocked = true;
       boss._astralOrbitUnlocked = true;
     }
+    const beforeGravity = cast.key === 'gravityToll'
+      ? ctx.units.map(unit => ({ unit, x: unit.x, y: unit.y }))
+      : null;
     tickBoss(ctx, boss, 3);
-    if (cast.key === 'gravityToll') tickBoss(ctx, boss, 55);
+    if (cast.key === 'gravityToll') {
+      tickBoss(ctx, boss, 55);
+      const frontlinersMoved = beforeGravity
+        .filter(row => row.unit.arch === 'tank' || row.unit.arch === 'melee')
+        .every(row => Math.hypot(row.unit.x - row.x, row.unit.y - row.y) > 1);
+      const backlineHeld = beforeGravity
+        .filter(row => row.unit.arch !== 'tank' && row.unit.arch !== 'melee')
+        .every(row => Math.hypot(row.unit.x - row.x, row.unit.y - row.y) < 0.1);
+      if (!frontlinersMoved) throw new Error('Astral Warden Gravity Toll did not pull tank/melee frontliners');
+      if (!backlineHeld) throw new Error('Astral Warden Gravity Toll should not pull ranged/healer backline units');
+    }
   }
   if (!ctx.arena.astralStorm || !ctx.arena.astralStorm.active) throw new Error('Astral Warden did not activate astral storm atmosphere');
   if (!ctx.units.some(unit => unit._gravityBrandTimer > 0)) throw new Error('Astral Warden Gravity Toll did not apply Gravity Brand');
@@ -278,7 +291,7 @@ function assertBossReadability(ctx, boss) {
     if (!texts.includes('METEOR TARGET')) throw new Error('Sultan missing meteor target callout');
   }
   if (boss.id === 10) {
-    for (const text of ['LANTERN WARD', 'LANTERN WARD BROKEN', 'ASTRAL BLIGHT', 'GRAVITY BRAND', 'STARFALL LANTERNS', 'ECLIPSE BEAM', 'GRAVITY TOLL', 'LANTERN ORBIT']) {
+    for (const text of ['LANTERN WARD', 'LANTERN WARD BROKEN', 'ASTRAL BLIGHT', 'GRAVITY BRAND', 'ASTRAL TOLL', 'STARFALL LANTERNS', 'ECLIPSE BEAM', 'GRAVITY TOLL', 'LANTERN ORBIT']) {
       if (!texts.includes(text)) throw new Error(`Astral Lantern Warden missing ${text} callout`);
     }
     for (const label of ['STAR', 'ECLIPSE', 'GRAVITY']) {

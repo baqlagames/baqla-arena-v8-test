@@ -768,15 +768,24 @@ function tickAstralPending(b,ctx){
       shake(7);
     }else if(p.kind==='gravityToll'){
       for(const u of astralPlayerUnits(units)){
-        const dx=b.x-u.x,dy=b.y-u.y,d=Math.sqrt(dx*dx+dy*dy)||1;
-        const pull=astralIsTank(u)?18:(astralIsMelee(u)?24:34);
-        u.x+=(dx/d)*pull;u.y+=(dy/d)*pull;
-        clampToArena(u);
+        const frontliner=astralIsTank(u)||astralIsMelee(u);
+        if(frontliner){
+          const dx=b.x-u.x,dy=b.y-u.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+          const pull=astralIsTank(u)?18:24;
+          u.x+=(dx/d)*pull;u.y+=(dy/d)*pull;
+          clampToArena(u);
+        }
         dealDamage(u,Math.round(p.dmg*astralRoleDamageMult(u)),b,'magic','gravityToll',{sourceLabel:'GRAVITY',sourceColor:'#9bb8ff'});
-        if(astralIsTank(u)||astralIsMelee(u)){
+        if(frontliner){
           u._gravityBrandTimer=Math.max(u._gravityBrandTimer||0,b.gravityBrandDur||240);
           u._gravityBrandHealCut=b.gravityBrandHealCut||0.12;
           addDmg(u.x,u.y-(u.size||20)-10,'GRAVITY BRAND','#9bb8ff',{sz:10,bold:true,outline:'#061433'});
+          const tollPct=b.gravityTollFrontlineHpPct||0;
+          if(tollPct>0){
+            const tollDmg=Math.max(6,Math.round((u.maxHp||u.hp||1)*tollPct));
+            dealDamage(u,tollDmg,b,'magic','gravityToll',{sourceLabel:'ASTRAL TOLL',sourceColor:'#8bdfff'});
+            addDmg(u.x,u.y+(u.size||20)*0.15,'ASTRAL TOLL','#8bdfff',{sz:10,bold:true,outline:'#061433'});
+          }
         }
         addP(u.x,u.y,'#9bb8ff',6,3);
       }

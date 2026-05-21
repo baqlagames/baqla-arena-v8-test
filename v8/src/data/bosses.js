@@ -107,7 +107,7 @@ export const BOSSES=[
     eclipseBeamCD:540,eclipseBeamFirst:330,eclipseBeamDmg:96,eclipseBeamWidth:46,
     gravityTollCD:720,gravityTollFirst:210,gravityTollDmg:78,gravityTollRadius:9999,gravityTollPhase:2,
     lanternOrbitCD:900,lanternOrbitFirst:240,lanternOrbitDmg:42,lanternOrbitShots:5,lanternOrbitPhase:3,
-    lanternWardAt:[0.70,0.35],lanternWardShieldPct:0.07,astralBlightDur:300,astralBlightHpPct:0.008,gravityBrandDur:240,gravityBrandHealCut:0.12,
+    lanternWardAt:[0.70,0.35],lanternWardShieldPct:0.07,astralBlightDur:300,astralBlightHpPct:0.008,gravityBrandDur:240,gravityBrandHealCut:0.12,gravityTollFrontlineHpPct:0.035,
     projType:'lightning',timeEnrageAt:9000},
   // ===== STAGE 7 Ã¢â‚¬â€ WALL BOSS (Cursed Bazaar Gate) =====
   // Phase 1: barrier blocks the path. Boss untargetable, throws curses over the wall.

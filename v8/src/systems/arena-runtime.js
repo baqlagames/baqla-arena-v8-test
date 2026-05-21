@@ -5,7 +5,7 @@ import { createGameState, STAGE_TRANSIENT_BATTLE_ARRAYS } from '../core/state.js
 import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, RESPAWN_FRAMES, GRID_COLS, GRID_ROWS, GRID_X, GRID_W, CELL_W, ARENA_MAX_UNIT_LEVEL, ARENA_ATTACK_TYPE_BY_UNIT, ARENA_INTEREST_RATE, ARENA_INTEREST_CAP, ARENA_BUILD_FIRST, ARENA_BUILD_NEXT, ARENA_BUILD_BOSS, ARENA_LEASH_FWD, ARENA_LEASH_BACK, ARENA_LEASH_SIDE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
 import { ENEMIES } from '../data/enemies.js';
-import { BOSSES } from '../data/bosses.js?v=20260521-warden-live';
+import { BOSSES } from '../data/bosses.js?v=20260521-gravity-frontline';
 import { ARENA_ABILITIES } from '../data/abilities.js';
 import { ARENA_PERKS } from '../data/perks.js';
 import { STAGES, STAGE_HP_MULT, STAGE_DMG_MULT } from '../data/stages.js';
@@ -29,7 +29,7 @@ import { perkSlotCount, stageBeansReward } from './perks.js';
 import { createStageFlowRuntime } from './stage-flow-runtime.js?v=20260517-grid-calibration';
 import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js';
 import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260521-warden-live';
-import { createArenaBossRuntime } from './arena-boss-runtime.js?v=20260521-warden-live';
+import { createArenaBossRuntime } from './arena-boss-runtime.js?v=20260521-gravity-frontline';
 import { tickTimedFieldEffects } from './timed-field-effects.js';
 import { arena_stageStarCriteria, arena_stageStarRule, arena_starText } from './stage-stars.js';
 import { createRoleProgressionRuntime } from './role-progression.js';
