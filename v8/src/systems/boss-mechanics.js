@@ -1,4 +1,5 @@
 import { dist, rnd } from '../core/math.js';
+import { GAME_TICK_HZ } from '../core/constants.js';
 import { ARENA_L, ARENA_R } from '../data/tuning.js';
 import { ENEMIES } from '../data/enemies.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
@@ -734,8 +735,21 @@ export function updateBoss(b,ctx){
   // Otherwise a stage with long wave preamble would enrage the boss almost immediately.
   const bossSpawnFrame=Number.isFinite(b.spawnFrame)?b.spawnFrame:frame;
   const bossLifeFrames=frame-bossSpawnFrame;
-  if(!b.timeEnraged && bossLifeFrames>(b.timeEnrageAt||5400)){
+  const bossEnrageAt=b.timeEnrageAt||5400;
+  const bossEnrageRemaining=bossEnrageAt-bossLifeFrames;
+  b._enrageRemaining=Math.max(0,bossEnrageRemaining);
+  b._enrageProgress=Math.max(0,Math.min(1,bossLifeFrames/bossEnrageAt));
+  if(!b.timeEnraged&&bossEnrageRemaining>0&&bossEnrageRemaining<=10*GAME_TICK_HZ&&!b._enrageWarned){
+    b._enrageWarned=true;
+    showFlash('ENRAGE SOON!','#ff5533',110);
+    addDmg(b.x,b.y-b.size-16,'ENRAGE SOON','#ff5533',{sz:14,bold:true,outline:'#3a0500'});
+    for(let i=0;i<34;i++)addP(b.x+rnd(-b.size*0.6,b.size*0.6),b.y+rnd(-b.size*0.4,b.size*0.4),'#ff5533',1,5);
+    groundFx.push({x:b.x,y:b.y,r:0,maxR:b.size+64,life:0.55,color:'#ff5533'});
+  }
+  if(!b.timeEnraged && bossLifeFrames>bossEnrageAt){
     b.timeEnraged=true;
+    b._enrageRemaining=0;
+    b._enrageProgress=1;
     b.dmg=Math.round(b.dmg*1.25);
     b.atkSpd=Math.max(20,Math.round(b.atkSpd*0.7));
     showFlash('BOSS ENRAGED!  +25% DMG, +30% SPEED','#ff0040',150);

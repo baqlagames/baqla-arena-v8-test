@@ -20,8 +20,8 @@ export function tickUnitPriestPassives(unit, {
 }) {
   if (tickAngelForm(unit, { frame, units, projectiles, randomRange, applyHealingReceived, addHealFx, emitParticle, addDamageText })) return true;
   tickPrayerOfMending(unit, { frame, units, projectiles, emitParticle, addDamageText });
-  tickHolyComfortAura(unit, { units, applyHealingReceived, addHealFx, emitParticle });
-  tickHolyRenew(unit, { frame, units, projectiles, applyHealingReceived, addHealFx, emitParticle, addDamageText });
+  tickHolyComfortAura(unit, { frame, units, groundEffects, applyHealingReceived, addHealFx, emitParticle });
+  tickHolyRenew(unit, { frame, units, projectiles, groundEffects, applyHealingReceived, addHealFx, emitParticle, addDamageText });
   tickPowerWordBarrier(unit, { frame, units, projectiles, beamEffects, randomRange, emitParticle, addDamageText });
   tickDivineHymn(unit, { frame, units, enemies, projectiles, randomRange, groundEffects, applyHealingReceived, addHealFx, emitParticle });
   tickRapture(unit, { units, projectiles, emitParticle });
@@ -111,6 +111,7 @@ function tickHolyRenew(unit, {
   frame,
   units,
   projectiles,
+  groundEffects,
   applyHealingReceived,
   addHealFx,
   emitParticle,
@@ -137,6 +138,7 @@ function tickHolyRenew(unit, {
           target._holyRenew = { timer: unit.holyRenew.dur, healPct: unit.holyRenew.healPct, from: unit, tick: 0 };
           projectiles.push({ x: unit.x, y: unit.y, target, tx: target.x, ty: target.y, speed: 3, projType: 'pomOrb', visualOnly: true, color: '#fff5b0', _arrN: 8, _arrSz: 3, _arrGnd: 28, isPlayer: true, dmg: 0 });
           emitParticle(target.x, target.y - target.size * 0.35, '#fff5b0', 4, 2);
+          if (groundEffects) groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: Math.max(28, target.size * 1.6), life: 0.28, color: '#fff5b0', flatten: true, holyRenew: true });
         }
       }
     }
@@ -155,6 +157,7 @@ function tickHolyRenew(unit, {
       ally.hp = Math.min(ally.maxHp, ally.hp + heal);
       addHealFx(ally.x, ally.y, heal, false, ally._holyRenew.from, ally);
       emitParticle(ally.x, ally.y - ally.size * 0.25, '#fff5b0', 5, 2);
+      if (groundEffects) groundEffects.push({ x: ally.x, y: ally.y, r: 0, maxR: Math.max(22, ally.size * 1.25), life: 0.18, color: '#fff5b0', flatten: true, holyRenewTick: true });
     } else if (frame % 12 === 0) {
       emitParticle(ally.x, ally.y - ally.size * 0.35, '#fff5b0', 1, 2);
     }
@@ -162,7 +165,9 @@ function tickHolyRenew(unit, {
 }
 
 function tickHolyComfortAura(unit, {
+  frame,
   units,
+  groundEffects,
   applyHealingReceived,
   addHealFx,
   emitParticle,
@@ -180,7 +185,13 @@ function tickHolyComfortAura(unit, {
     ally.hp += heal;
     addHealFx(ally.x, ally.y, heal, false, unit, ally, { silent: true });
     healed++;
-    if (healed <= 3) emitParticle(ally.x, ally.y - ally.size * 0.2, '#caffd8', 2, 2);
+    if (healed <= 3) {
+      emitParticle(ally.x, ally.y - ally.size * 0.2, '#caffd8', 3, 2);
+      if (groundEffects) groundEffects.push({ x: ally.x, y: ally.y, r: 0, maxR: Math.max(24, ally.size * 1.35), life: 0.22, color: '#caffd8', flatten: true, holyComfortAuraTarget: true });
+    }
+  }
+  if (healed > 0 && groundEffects) {
+    groundEffects.push({ x: unit.x, y: unit.y, r: 0, maxR: Math.max(82, unit.size * 4.0), life: 0.26, color: '#caffd8', flatten: true, holyComfortAura: true, frame });
   }
 }
 

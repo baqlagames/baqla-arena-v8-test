@@ -110,7 +110,8 @@ function makeContext() {
     },
     summary() {
       return { particles: particles.length, damageText: damageText.length, projectiles: projectiles.length, flashes: flashes.length, shakes };
-    }
+    },
+    flashes,
   };
   return ctx;
 }
@@ -234,18 +235,29 @@ function smokeBossEnrageSpawnFrame() {
     isEnemy: true,
     isBoss: true,
     spawnFrame: 0,
-    timeEnrageAt: 3,
+    timeEnrageAt: 12 * 60,
     cd: 0,
     facing: -1,
     bobPhase: 0,
     debuffs: {},
     mechCD: {},
   };
-  ctx.frame = 4;
+  ctx.frame = 2 * 60;
+  updateBoss(boss, ctx);
+  if (!ctx.flashes.some(flash => flash.text === 'ENRAGE SOON!')) {
+    throw new Error('boss spawned at frame 0 did not warn before enrage');
+  }
+  ctx.flashes.length = 0;
+  ctx.frame = 11 * 60;
+  updateBoss(boss, ctx);
+  if (ctx.flashes.some(flash => flash.text === 'ENRAGE SOON!')) {
+    throw new Error('boss enrage warning repeated after first warning');
+  }
+  ctx.frame = 12 * 60 + 1;
   updateBoss(boss, ctx);
   if (!boss.timeEnraged) throw new Error('boss spawned at frame 0 did not enrage after its authored window');
 
-  const delayedBoss = { ...boss, timeEnraged: false, spawnFrame: 10, dmg: 100, atkSpd: 60, mechCD: {}, debuffs: {} };
+  const delayedBoss = { ...boss, timeEnraged: false, _enrageWarned: false, spawnFrame: 10, timeEnrageAt: 3, dmg: 100, atkSpd: 60, mechCD: {}, debuffs: {} };
   ctx.frame = 12;
   updateBoss(delayedBoss, ctx);
   if (delayedBoss.timeEnraged) throw new Error('boss enraged before its nonzero spawn frame window elapsed');

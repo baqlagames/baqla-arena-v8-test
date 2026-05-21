@@ -104,6 +104,7 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._healReductionTimer>0)icons.push({c:'#ff4400',g:'Ã¢Ë†â€™',title:'Heal Reduction'});
   if(t._searingBrandTimer>0)icons.push({c:'#ff6a22',g:'B',title:'Searing Brand'});
   if(t._royalStingTimer>0)icons.push({c:'#ffdd44',g:'S',title:'Royal Sting'});
+  if(t.timeEnraged)icons.push({c:'#ff2200',g:'!',title:'Boss Enraged',pulse:true});
   if(t.vanishActive)icons.push({c:'#440044',g:'V',title:'Vanish'});
   if(t.sliceAndDice&&t.sliceAndDice.timer>0)icons.push({c:'#ffcc00',g:'S',title:'Slice & Dice'});
   if(t.shadowDance&&t.shadowDance.t>t.shadowDance.every-t.shadowDance.dur)icons.push({c:'#aa44ff',g:'D',title:'Shadow Dance',pulse:true});

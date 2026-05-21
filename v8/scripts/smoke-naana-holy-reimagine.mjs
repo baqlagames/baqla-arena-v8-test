@@ -116,6 +116,7 @@ ally.hp = 300;
 naana.hp = 900;
 
 const ally2 = { isPlayer: true, hp: 450, maxHp: 1000, size: 24, x: 280, y: 500 };
+const renewGroundEffects = [];
 naana.holyRenew.cd = naana.holyRenew.every - 1;
 tickUnitPriestPassives(naana, {
   frame: 60,
@@ -125,7 +126,7 @@ tickUnitPriestPassives(naana, {
   beamEffects: [],
   arena: {},
   randomRange: () => 0,
-  groundEffects: [],
+  groundEffects: renewGroundEffects,
   dealDamage: noop,
   applyHealingReceived: (_unit, amount) => amount,
   addHealFx: noop,
@@ -136,9 +137,13 @@ tickUnitPriestPassives(naana, {
 });
 assert.ok(ally._holyRenew, 'Holy Renew should mark the lowest ally');
 assert.ok(ally2._holyRenew, 'Holy Renew should mark a second wounded ally');
+assert.equal(renewGroundEffects.filter(effect => effect.holyRenew).length, 2, 'Holy Renew should add readable target rings when applied');
 
 ally.hp = 500;
 ally2.hp = 700;
+const auraGroundEffects = [];
+const auraParticles = [];
+const auraHealFx = [];
 naana.holyComfortAura.cd = naana.holyComfortAura.every - 1;
 tickUnitPriestPassives(naana, {
   frame: 120,
@@ -148,17 +153,21 @@ tickUnitPriestPassives(naana, {
   beamEffects: [],
   arena: {},
   randomRange: () => 0,
-  groundEffects: [],
+  groundEffects: auraGroundEffects,
   dealDamage: noop,
   applyHealingReceived: (_unit, amount) => amount,
-  addHealFx: noop,
+  addHealFx: (x, y, amount, big, source, target, meta) => auraHealFx.push({ x, y, amount, big, source, target, meta }),
   findEnemyForUnit: () => null,
-  emitParticle: noop,
+  emitParticle: (x, y, color, count, size) => auraParticles.push({ x, y, color, count, size }),
   addDamageText: noop,
   shake: noop,
 });
 assert.equal(ally.hp, 510, 'Holy Comfort Aura should heal 1% max HP');
 assert.equal(ally2.hp, 710, 'Holy Comfort Aura should affect wounded allies');
+assert.ok(auraHealFx.length >= 2 && auraHealFx.every(entry => entry.meta && entry.meta.silent), 'Holy Comfort Aura should keep heal numbers silent');
+assert.ok(auraGroundEffects.some(effect => effect.holyComfortAura), 'Holy Comfort Aura should emit a caster aura pulse');
+assert.ok(auraGroundEffects.filter(effect => effect.holyComfortAuraTarget).length >= 2, 'Holy Comfort Aura should mark healed allies visually');
+assert.ok(auraParticles.length >= 2, 'Holy Comfort Aura should emit quiet healing particles');
 
 const signatures = createArenaSignatures({
   gameTickHz: 60,

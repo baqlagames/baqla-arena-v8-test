@@ -100,6 +100,37 @@ function bossSkillPills(boss){
   return skills;
 }
 
+export function bossEnrageHudState(boss,frame,tickHz=60){
+  if(!boss||!Number.isFinite(boss.timeEnrageAt)||boss.timeEnrageAt<=0)return null;
+  if(boss.timeEnrageAt>tickHz*60*20)return null;
+  const spawnFrame=Number.isFinite(boss.spawnFrame)?boss.spawnFrame:frame;
+  const elapsed=Math.max(0,frame-spawnFrame);
+  const remaining=Math.max(0,boss.timeEnrageAt-elapsed);
+  const pct=boss.timeEnraged?1:Math.max(0,Math.min(1,elapsed/boss.timeEnrageAt));
+  return {
+    pct,
+    remaining,
+    seconds:Math.max(0,Math.ceil(remaining/tickHz)),
+    warning:!boss.timeEnraged&&remaining<=tickHz*10,
+    enraged:!!boss.timeEnraged
+  };
+}
+
+export function bossCarapaceHudState(boss,tickHz=60){
+  if(!boss||!(boss.royalCarapaceTimer>0))return null;
+  const shield=boss.hiveShield||{};
+  const shieldHp=Math.max(0,Math.ceil(shield.hp||0));
+  const shieldMax=Math.max(1,Math.ceil(shield.maxHp||shieldHp||1));
+  return {
+    castPct:1-(boss.royalCarapaceTimer/(boss.royalCarapaceMax||1)),
+    seconds:Math.max(0,Math.ceil(boss.royalCarapaceTimer/tickHz)),
+    shieldHp,
+    shieldMax,
+    shieldPct:Math.max(0,Math.min(1,shieldHp/shieldMax)),
+    danger:boss.royalCarapaceTimer<=2*tickHz
+  };
+}
+
 export function drawBossHpBar(ctx,view){
   const W=view.width,frame=view.frame,b=view.boss;
   if(!b)return;
@@ -121,7 +152,8 @@ export function drawBossHpBar(ctx,view){
   ctx.globalAlpha=1;
   const titleY=cardY+13;
   ctx.fillStyle='rgba(220,200,200,0.85)';ctx.font='600 8px Segoe UI';ctx.textAlign='left';
-  const tier=b.tier==='vs'?'BOSS':b.tier==='strong'?'BOSS':'MINI-BOSS';
+  const tier=b.timeEnraged?'ENRAGED':(b.tier==='vs'?'BOSS':b.tier==='strong'?'BOSS':'MINI-BOSS');
+  if(b.timeEnraged)ctx.fillStyle='#ff5533';
   ctx.fillText(tier,cardX+10,titleY);
   ctx.fillStyle='#fff';ctx.font='bold 10px Segoe UI';
   ctx.fillText(b.name||'Boss',cardX+10+(tier.length*5)+6,titleY);
@@ -181,14 +213,51 @@ export function drawBossHpBar(ctx,view){
   ctx.textAlign='left';
 }
 
+function drawBossEnrageCountdownBar(ctx,{width:W,frame,tickHz,boss}){
+  const state=bossEnrageHudState(boss,frame,tickHz);
+  if(!state)return;
+  const cardX=20,cardW=W-40,cardY=78,cardH=28;
+  const danger=state.warning||state.enraged;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.48)';ctx.shadowBlur=10;ctx.shadowOffsetY=3;
+  const bg=ctx.createLinearGradient(0,cardY,0,cardY+cardH);
+  bg.addColorStop(0,danger?'rgba(74,12,12,0.96)':'rgba(44,24,16,0.94)');
+  bg.addColorStop(1,'rgba(16,8,8,0.94)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(cardX,cardY,cardW,cardH,9);ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  const pulse=0.62+0.38*Math.sin(frame*0.18);
+  ctx.strokeStyle=danger?'rgba(255,85,51,'+pulse+')':'rgba(255,140,34,0.45)';
+  ctx.lineWidth=danger?1.5:1;
+  ctx.beginPath();ctx.roundRect(cardX+0.5,cardY+0.5,cardW-1,cardH-1,9);ctx.stroke();
+  ctx.fillStyle=danger?'#ff5533':'#ff8c22';
+  ctx.beginPath();ctx.roundRect(cardX,cardY,4,cardH,3);ctx.fill();
+  ctx.textAlign='left';
+  ctx.fillStyle='#fff';ctx.font='900 11px Segoe UI';
+  ctx.fillText(state.enraged?'BOSS ENRAGED':'ENRAGE COUNTDOWN',cardX+12,cardY+16);
+  ctx.textAlign='right';
+  ctx.fillStyle=state.enraged?'#ffb4a0':'#ffd966';ctx.font='900 14px Segoe UI';
+  ctx.fillText(state.enraged?'ACTIVE':state.seconds+'s',cardX+cardW-12,cardY+17);
+  const barX=cardX+12,barW=cardW-24,barY=cardY+21,barH=4;
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.beginPath();ctx.roundRect(barX,barY,barW,barH,3);ctx.fill();
+  const fg=ctx.createLinearGradient(barX,0,barX+barW,0);
+  fg.addColorStop(0,'#ff8c22');fg.addColorStop(0.7,'#ff5533');fg.addColorStop(1,'#ff1111');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.roundRect(barX,barY,Math.max(3,barW*state.pct),barH,3);ctx.fill();
+  ctx.restore();
+  ctx.textAlign='left';
+}
+
 export function drawBossCastBar(ctx,view){
   const W=view.width,frame=view.frame,tickHz=view.tickHz,b=view.boss;
-  if(!b||!(b.royalCarapaceTimer>0))return;
-  const cardX=20,cardW=W-40,cardY=78,cardH=50;
-  const castPct=1-(b.royalCarapaceTimer/(b.royalCarapaceMax||1));
-  const seconds=Math.max(0,Math.ceil(b.royalCarapaceTimer/tickHz));
-  const shPct=b.hiveShield&&b.hiveShield.maxHp?Math.max(0,b.hiveShield.hp/b.hiveShield.maxHp):0;
-  const danger=b.royalCarapaceTimer<=2*tickHz;
+  if(!b)return;
+  const carapace=bossCarapaceHudState(b,tickHz);
+  if(!carapace){
+    drawBossEnrageCountdownBar(ctx,{width:W,frame,tickHz,boss:b});
+    return;
+  }
+  const cardX=20,cardW=W-40,cardY=78,cardH=58;
+  const castPct=carapace.castPct;
+  const seconds=carapace.seconds;
+  const danger=carapace.danger;
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=14;ctx.shadowOffsetY=4;
   const bg=ctx.createLinearGradient(0,cardY,0,cardY+cardH);
@@ -206,18 +275,20 @@ export function drawBossCastBar(ctx,view){
   ctx.fillStyle='#fff';ctx.font='900 15px Segoe UI';
   ctx.fillText('HIVE BURST CASTING',cardX+14,cardY+19);
   ctx.fillStyle='rgba(255,235,190,0.88)';ctx.font='700 9px Segoe UI';
-  ctx.fillText('BREAK ROYAL CARAPACE BEFORE THE BAR FILLS',cardX+14,cardY+34);
+  ctx.fillText('BREAK SHIELD',cardX+14,cardY+34);
   ctx.textAlign='right';
   ctx.fillStyle=danger?'#ffb4a0':'#ffd966';ctx.font='900 20px Segoe UI';
   ctx.fillText(seconds+'s',cardX+cardW-14,cardY+25);
-  const barX=cardX+14,barW=cardW-28,castY=cardY+38,barH=7;
+  ctx.fillStyle='#ffdd44';ctx.font='800 10px Segoe UI';
+  ctx.fillText('SHIELD '+carapace.shieldHp+' / '+carapace.shieldMax,cardX+cardW-14,cardY+34);
+  const barX=cardX+14,barW=cardW-28,castY=cardY+40,barH=7;
   ctx.fillStyle='rgba(0,0,0,0.55)';ctx.beginPath();ctx.roundRect(barX,castY,barW,barH,4);ctx.fill();
   const fg=ctx.createLinearGradient(barX,0,barX+barW,0);
   fg.addColorStop(0,'#ffdd44');fg.addColorStop(0.55,'#ff8c22');fg.addColorStop(1,'#ff3333');
   ctx.fillStyle=fg;ctx.beginPath();ctx.roundRect(barX,castY,Math.max(3,barW*castPct),barH,4);ctx.fill();
-  const shieldY=cardY+47;
-  ctx.fillStyle='rgba(255,221,68,0.22)';ctx.fillRect(barX,shieldY,barW,2);
-  ctx.fillStyle='#ffdd44';ctx.fillRect(barX,shieldY,barW*shPct,2);
+  const shieldY=cardY+51;
+  ctx.fillStyle='rgba(255,221,68,0.22)';ctx.beginPath();ctx.roundRect(barX,shieldY,barW,3,2);ctx.fill();
+  ctx.fillStyle='#ffdd44';ctx.beginPath();ctx.roundRect(barX,shieldY,Math.max(3,barW*carapace.shieldPct),3,2);ctx.fill();
   ctx.restore();
   ctx.textAlign='left';
 }
