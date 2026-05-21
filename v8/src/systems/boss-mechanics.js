@@ -630,10 +630,23 @@ function astralPlayerUnits(units){
 }
 function astralIsTank(u){return !!(u&&(u.arch==='tank'||u.taunt))}
 function astralIsMelee(u){return !!(u&&(u.arch==='melee'||u.range<=75||u.prefersMelee))}
+function astralFrontlineUnits(units){
+  return astralPlayerUnits(units).filter(u=>astralIsTank(u)||astralIsMelee(u));
+}
 function astralRoleDamageMult(b,u){
   if(astralIsTank(u))return b.gravityTollTankMult||0.70;
   if(astralIsMelee(u))return b.gravityTollMeleeMult||0.82;
   return 1;
+}
+function astralPickFrontlinePressureTarget(units,excluded){
+  const skip=excluded instanceof Set?excluded:new Set(excluded||[]);
+  const front=astralFrontlineUnits(units).filter(u=>!skip.has(u));
+  const melee=front.filter(u=>astralIsMelee(u)&&!astralIsTank(u));
+  const pool=melee.length?melee:front;
+  return pool.sort((a,b)=>{
+    const ap=(a.maxHp>0)?a.hp/a.maxHp:1,bp=(b.maxHp>0)?b.hp/b.maxHp:1;
+    return ap-bp;
+  })[0]||null;
 }
 function astralTargetScore(u){
   const hpPct=(u&&u.maxHp>0)?u.hp/u.maxHp:1;
@@ -750,8 +763,25 @@ function tickAstralPending(b,ctx){
     }
     if(p.t>0)continue;
     if(p.kind==='starfall'){
+      const hit=new Set();
       for(const u of astralPlayerUnits(units)){
-        if(dist(p,u)<=p.r)dealDamage(u,p.dmg,b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
+        if(dist(p,u)<=p.r){
+          dealDamage(u,p.dmg,b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
+          hit.add(u);
+        }
+      }
+      if(p.target&&p.target.hp>0&&!hit.has(p.target)){
+        dealDamage(p.target,Math.round(p.dmg*(b.starfallTargetLockMult||0.90)),b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
+        hit.add(p.target);
+      }
+      if(p.frontlineSplash){
+        const splashR=b.starfallFrontlineRadius||96;
+        const splashDmg=Math.round(p.dmg*(b.starfallFrontlineMult||0.55));
+        for(const u of astralFrontlineUnits(units)){
+          if(hit.has(u)||dist(b,u)>splashR)continue;
+          dealDamage(u,splashDmg,b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
+          hit.add(u);
+        }
       }
       beamFx.push({x1:p.x,y1:p.y-260,x2:p.x,y2:p.y,life:16,maxLife:16,color:'#d8f4ff',width:7,straight:true});
       groundFx.push({x:p.x,y:p.y,r:0,maxR:p.r+18,life:0.45,color:'#8bdfff'});
@@ -759,12 +789,37 @@ function tickAstralPending(b,ctx){
       for(let n=0;n<22;n++)addP(p.x+rnd(-p.r,p.r),p.y+rnd(-p.r*0.5,p.r*0.5),'#ffd166',1,4);
       shake(5);
     }else if(p.kind==='eclipseBeam'){
+      const hit=new Set();
       for(const u of astralPlayerUnits(units)){
-        if(astralLineDistance(u.x,u.y,p.x1,p.y1,p.x2,p.y2)<=p.width)dealDamage(u,p.dmg,b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
+        if(astralLineDistance(u.x,u.y,p.x1,p.y1,p.x2,p.y2)<=p.width){
+          dealDamage(u,p.dmg,b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
+          hit.add(u);
+        }
+      }
+      if(p.target&&p.target.hp>0&&!hit.has(p.target)){
+        dealDamage(p.target,Math.round(p.dmg*(b.eclipseTargetLockMult||0.90)),b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
+        hit.add(p.target);
+      }
+      const wakeR=b.eclipseFrontlineRadius||104;
+      const wakeDmg=Math.round(p.dmg*(b.eclipseFrontlineMult||0.55));
+      let wakeHits=0;
+      for(const u of astralFrontlineUnits(units)){
+        if(hit.has(u)||dist(b,u)>wakeR)continue;
+        dealDamage(u,wakeDmg,b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
+        hit.add(u);wakeHits++;
+      }
+      if(wakeHits===0){
+        const wakeTarget=astralPickFrontlinePressureTarget(units,hit);
+        if(wakeTarget){
+          dealDamage(wakeTarget,wakeDmg,b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
+          addDmg(wakeTarget.x,wakeTarget.y-(wakeTarget.size||20)-8,'ECLIPSE WAKE','#5cc8ff',{sz:10,bold:true,outline:'#061433'});
+          hit.add(wakeTarget);wakeHits++;
+        }
       }
       beamFx.push({x1:p.x1,y1:p.y1,x2:p.x2,y2:p.y2,life:22,maxLife:22,color:'#d8f4ff',width:10,straight:true});
       beamFx.push({x1:p.x1,y1:p.y1,x2:p.x2,y2:p.y2,life:16,maxLife:16,color:'#ffd166',width:4,straight:true});
       addDmg((p.x1+p.x2)/2,(p.y1+p.y2)/2-20,'ECLIPSE','#5cc8ff',{sz:14,bold:true,outline:'#061433'});
+      if(wakeHits>0)addDmg(b.x,b.y+b.size*0.42,'ECLIPSE WAKE','#5cc8ff',{sz:11,bold:true,outline:'#061433'});
       shake(7);
     }else if(p.kind==='gravityToll'){
       for(const u of astralPlayerUnits(units)){
@@ -826,12 +881,17 @@ function castAstralStarfall(b,ctx){
   const { units, groundFx, addDamageText:addDmg, showFlash, addParticle:addP, shake }=ctx;
   const targets=astralPickTargets(units,b.starfallCount||3);
   if(!targets.length)return false;
+  const frontlineTarget=astralPickFrontlinePressureTarget(units,new Set(targets));
+  if(frontlineTarget&&!targets.includes(frontlineTarget)){
+    if(targets.length>=Math.max(1,b.starfallCount||3))targets[targets.length-1]=frontlineTarget;
+    else targets.push(frontlineTarget);
+  }
   b._astralPending=b._astralPending||[];
   for(const t of targets){
     const p=clampBossPoint(t.x+rnd(-18,18),t.y+rnd(-10,10),ctx,{sideMargin:54,topMargin:80,bottomMargin:70});
     const r=b.starfallRadius||54;
     groundFx.push({x:p.x,y:p.y,r:0,maxR:r,life:0.95,color:'#8bdfff',enemyWarn:true,warnTimer:54,warnMax:54,warnKind:'meteor',label:'STAR'});
-    b._astralPending.push({kind:'starfall',t:54,x:p.x,y:p.y,r,dmg:b.starfallDmg||74});
+    b._astralPending.push({kind:'starfall',t:54,x:p.x,y:p.y,r,dmg:b.starfallDmg||74,target:t,frontlineSplash:t===frontlineTarget});
   }
   addDmg(b.x,b.y-b.size-10,'STARFALL LANTERNS','#8bdfff',{sz:13,bold:true,outline:'#061433'});
   showFlash('STARFALL!','#8bdfff',45);
@@ -850,7 +910,7 @@ function castAstralEclipseBeam(b,ctx){
   groundFx.push({x:x1,y:y1,x2:p2.x,y2:p2.y,r:0,maxR:32,life:0.95,color:'#5cc8ff',enemyWarn:true,warnTimer:54,warnMax:54,warnKind:'line',width,label:'ECLIPSE'});
   beamFx.push({x1,y1,x2:p2.x,y2:p2.y,life:14,maxLife:14,color:'#5cc8ff',width:3,straight:true});
   b._astralPending=b._astralPending||[];
-  b._astralPending.push({kind:'eclipseBeam',t:54,x1,y1,x2:p2.x,y2:p2.y,width,dmg:b.eclipseBeamDmg||96});
+  b._astralPending.push({kind:'eclipseBeam',t:54,x1,y1,x2:p2.x,y2:p2.y,width,dmg:b.eclipseBeamDmg||96,target});
   addDmg(b.x,b.y-b.size-10,'ECLIPSE BEAM','#5cc8ff',{sz:13,bold:true,outline:'#061433'});
   showFlash('ECLIPSE BEAM!','#5cc8ff',45);
   for(let i=0;i<16;i++)addP(b.x+rnd(-b.size*0.7,b.size*0.7),b.y+rnd(-b.size*0.7,b.size*0.7),'#ffd166',1,3);

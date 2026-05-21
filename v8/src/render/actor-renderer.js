@@ -82,6 +82,22 @@ function drawUnit(u){
   if(!u||u.hp<=0)return;
   arena_drawWithClashCamera(u.x,u.y,()=>drawUnitRaw(u));
 }
+function drawUnitHud(u){
+  if(!u||u.hp<=0||!u.isPlayer||u.isMinion||u.isGhost||u.isMirror)return;
+  if(!Number.isFinite(u.x)||!Number.isFinite(u.y))return;
+  const bob=Math.sin(Number.isFinite(u.bobPhase)?u.bobPhase:0)*1.2;
+  const y=u.y+bob;
+  const waveBoost=(arena&&arena.phase==='wave')?16:0;
+  const hudInfo=playerHudInfo(u);
+  const barW=playerHudBarWidth(u);
+  const hudMinY=ARENA_TOP+20;
+  const hpBarY=Math.max(hudMinY,y-(u.size||20)-8-waveBoost);
+  const hudOffset=playerHudOffset(u,hpBarY,barW);
+  const hudX=u.x+hudOffset.x;
+  const hudY=hpBarY+hudOffset.y;
+  drawHpBar(hudX,hudY,u.hp,u.maxHp,barW,hudInfo&&hudInfo.tank?'playerTank':'player');
+  drawStatusIcons(u,hudX,hudY-16);
+}
 function playerHudInfo(u){
   if(!u||!u.isPlayer||u.isMinion||u.isGhost||u.isMirror)return null;
   return {tank:u.arch==='tank'||u.taunt};
@@ -748,6 +764,7 @@ const drawDummyRaw=actorEnemies.drawDummyRaw;
     drawPlayerAuraUnder: wrap(arena_drawPlayerAuraUnder),
     drawPlayerAuraOver: wrap(arena_drawPlayerAuraOver),
     drawUnit: wrap(drawUnit),
+    drawUnitHud: wrap(drawUnitHud),
     drawUnitRaw: wrap(drawUnitRaw),
     drawStatusIcons: wrap(drawStatusIcons),
     drawHpBar: wrap(drawHpBar),

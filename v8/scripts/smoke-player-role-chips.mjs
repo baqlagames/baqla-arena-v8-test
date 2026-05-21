@@ -50,6 +50,7 @@ function createRecordingCanvasContext(textCalls, roundRects) {
 globalThis.Image = FakeImage;
 
 const { createActorRenderer } = await import('../src/render/actor-renderer.js');
+const { prepareUnitAttackTarget } = await import('../src/systems/unit-attack-targeting.js');
 
 const textCalls = [];
 const roundRects = [];
@@ -128,4 +129,38 @@ for (const label of roleLabels) {
   assert(!textCalls.some(call => call.text === label), `minions/ghosts/mirrors should not render ${label} role text`);
 }
 
-console.log('smoke-player-role-chips: player HUD labels removed and clustered HP bars separate');
+function bossMoveTargetFor(unit, boss) {
+  const moves = [];
+  prepareUnitAttackTarget(unit, {
+    arena: { phase: 'wave' },
+    enemies: [boss],
+    frame: 1,
+    arenaTop: 42,
+    arenaBottom: 900,
+    randomRange: (min, max) => min + (max - min) * 0.5,
+    findRangedEnemyForUnit: () => boss,
+    findEnemyForUnit: () => boss,
+    followFamiliarAnchor: noop,
+    isReachable: () => true,
+    moveToward: (_unit, x, y) => { moves.push({ x, y }); },
+    clampToArena: noop,
+    clampToLeash: noop,
+    beamFx: [],
+    groundEffects: [],
+    emitParticle: noop,
+    addDamageText: noop,
+    sound: { buff: noop },
+    shake: noop,
+  });
+  return moves[0] || null;
+}
+
+const boss = { id: 10, name: 'Astral Lantern Warden', isBoss: true, hp: 38000, maxHp: 38000, x: 250, y: 230, size: 58 };
+const bossTankMove = bossMoveTargetFor(makeUnit('tank', 20, { taunt: true, x: 250, y: 680, speed: 18, range: 42 }), boss);
+const bossMeleeMove = bossMoveTargetFor(makeUnit('melee', 21, { prefersMelee: true, x: 250, y: 690, speed: 18, range: 42 }), boss);
+assert(bossTankMove, 'tank should move toward a boss engagement slot');
+assert(bossMeleeMove, 'melee should move toward a boss engagement slot');
+assert(Math.abs(bossTankMove.x - boss.x) < 1 && bossTankMove.y > boss.y + 30, 'tank boss slot should hold center/front');
+assert(Math.abs(bossMeleeMove.x - boss.x) > 48 && bossMeleeMove.y > boss.y + 10, 'melee boss slot should prefer left/right orbit space');
+
+console.log('smoke-player-role-chips: player HUD labels removed, clustered HP bars separate, and melee/tank boss slots are readable');

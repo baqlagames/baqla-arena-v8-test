@@ -2,6 +2,23 @@ import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
 import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js';
 
+function meleeBossOrbitPoint(unit, target) {
+  const isTank = !!(unit && (unit.arch === 'tank' || unit.taunt));
+  const radius = Math.max(68, (target.size || 46) * 0.98 + (unit.size || 18) * 0.56);
+  if (isTank) {
+    return { x: target.x, y: target.y + radius * 0.56 };
+  }
+  const slots = [
+    { x: -radius * 0.88, y: radius * 0.22 },
+    { x: radius * 0.88, y: radius * 0.22 },
+    { x: -radius * 0.62, y: radius * 0.66 },
+    { x: radius * 0.62, y: radius * 0.66 },
+  ];
+  const id = Math.abs((unit.unitIdx ?? unit.id ?? 0) | 0);
+  const slot = slots[id % slots.length];
+  return { x: target.x + slot.x, y: target.y + slot.y };
+}
+
 export function prepareUnitAttackTarget(unit, {
   arena,
   enemies,
@@ -114,8 +131,11 @@ export function prepareUnitAttackTarget(unit, {
 
   const chargeSpeed = (unit._bullCharging > 0 || unit._dgCharging > 0) ? 3 : 1;
   const paladinSpeed = unit.speed * ((unit.mountTimer > 0) ? (unit.mountSpeedMult || 2.8) : chargeSpeed);
+  const meleeBossSlot = arena && arena.phase === 'wave' && !isArenaRangedActor(unit) && (target.isBoss || target.isElite)
+    ? meleeBossOrbitPoint(unit, target)
+    : null;
   if (unit.paladinHybrid && distance > 50) {
-    moveToward(unit, target.x, target.y, paladinSpeed);
+    moveToward(unit, meleeBossSlot ? meleeBossSlot.x : target.x, meleeBossSlot ? meleeBossSlot.y : target.y, paladinSpeed);
     if (distance > attackRange || unit.cd > 0) return { canAttack: false };
   } else if (distance > attackRange) {
     if (unit.familiar) {
@@ -124,7 +144,7 @@ export function prepareUnitAttackTarget(unit, {
     }
     if (unit.kind === 'mechTurret') return { canAttack: false };
     if (unit.speed > 0) {
-      moveToward(unit, target.x, target.y, paladinSpeed);
+      moveToward(unit, meleeBossSlot ? meleeBossSlot.x : target.x, meleeBossSlot ? meleeBossSlot.y : target.y, paladinSpeed);
       return { canAttack: false };
     }
 
@@ -142,6 +162,9 @@ export function prepareUnitAttackTarget(unit, {
     if (!inRangeTarget) return { canAttack: false };
     target = inRangeTarget;
     distance = inRangeDistance;
+  }
+  if (meleeBossSlot && unit.speed > 0 && Math.hypot(unit.x - meleeBossSlot.x, unit.y - meleeBossSlot.y) > 7) {
+    moveToward(unit, meleeBossSlot.x, meleeBossSlot.y, unit.speed * 0.45);
   }
 
   return { canAttack: true, target, distance };

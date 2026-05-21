@@ -6,7 +6,7 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260521-warden-pressure';
+} from './wave-lifecycle.js?v=20260521-warden-aoe';
 import { createRiftRuntime } from './rift-runtime.js';
 
 export function createStageBattleRuntime(deps = {}) {

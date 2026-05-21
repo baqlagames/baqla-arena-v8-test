@@ -112,6 +112,9 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
   logs.damageBySource[sourceName] = (logs.damageBySource[sourceName] || 0) + damage;
   if (source && source.id === 10) {
     logs.wardenDamage[target.name] = (logs.wardenDamage[target.name] || 0) + damage;
+    const key = attackType || 'basic';
+    logs.wardenDamageByAttack[key] = (logs.wardenDamageByAttack[key] || 0) + damage;
+    if (target.arch === 'melee') logs.wardenMeleeByAttack[key] = (logs.wardenMeleeByAttack[key] || 0) + damage;
     if (attackType === 'gravityToll' && target.arch === 'tank') logs.wardenTankAoE += damage;
     if (attackType === 'gravityToll' && target.arch === 'melee') logs.wardenMeleeAoE += damage;
     if (attackType === 'astralBlight') logs.wardenBlightTicks++;
@@ -377,6 +380,8 @@ function simulateStage(stage, stageIndex, seed) {
     vanishStrikes: 0,
     wardenCasts: { starfall: 0, eclipse: 0, gravity: 0, orbit: 0 },
     wardenDamage: {},
+    wardenDamageByAttack: {},
+    wardenMeleeByAttack: {},
     wardenTankAoE: 0,
     wardenMeleeAoE: 0,
     wardenShields: 0,
@@ -571,6 +576,13 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.wardenCasts.eclipse > 0, 'stage 8: Astral Warden Eclipse Beam was not exercised');
     assert(logs.wardenCasts.gravity > 0, 'stage 8: Astral Warden Gravity Toll was not exercised');
     assert(logs.wardenCasts.orbit > 0, 'stage 8: Astral Warden Lantern Orbit was not exercised');
+    assert(logs.wardenDamageByAttack.starfall > 0, 'stage 8: Starfall did not damage the squad');
+    assert(logs.wardenDamageByAttack.eclipseBeam > 0, 'stage 8: Eclipse Beam did not damage the squad');
+    assert(logs.wardenDamageByAttack.gravityToll > 0, 'stage 8: Gravity Toll did not damage the squad');
+    assert(logs.wardenDamageByAttack.lanternOrbit > 0, 'stage 8: Lantern Orbit did not damage the squad');
+    assert(logs.wardenMeleeByAttack.starfall > 0, 'stage 8: melee unit did not receive Starfall pressure');
+    assert(logs.wardenMeleeByAttack.eclipseBeam > 0, 'stage 8: melee unit did not receive Eclipse wake pressure');
+    assert(logs.wardenMeleeByAttack.gravityToll > 0, 'stage 8: melee unit did not receive Gravity pressure');
     assert(logs.wardenTankAoE > 0, 'stage 8: tank unit did not receive Warden Gravity pressure');
     assert(logs.wardenMeleeAoE > 0, 'stage 8: melee unit did not receive reduced Warden AoE pressure');
     assert(tank.minHp / tank.maxHp <= 0.84, `stage 8: tank stayed too healthy (${Math.round(100 * tank.minHp / tank.maxHp)}%)`);
@@ -598,6 +610,8 @@ function simulateStage(stage, stageIndex, seed) {
     silentHeals: logs.silentHeals,
     riftMinions: logs.riftMinions,
     wardenCasts: logs.wardenCasts,
+    wardenDamageByAttack: logs.wardenDamageByAttack,
+    wardenMeleeByAttack: logs.wardenMeleeByAttack,
     wardenTankAoE: logs.wardenTankAoE,
     wardenMeleeAoE: logs.wardenMeleeAoE,
     wardenShields: logs.wardenShields,
@@ -623,6 +637,8 @@ for (const summary of summaries) {
   const details = [
     `rift minions ${summary.riftMinions}`,
     summary.wardenCasts ? `warden casts ${Object.values(summary.wardenCasts).join('/')}` : null,
+    summary.wardenDamageByAttack ? `warden damage ${Object.entries(summary.wardenDamageByAttack).map(([k, v]) => `${k}:${v}`).join('/')}` : null,
+    summary.wardenMeleeByAttack ? `melee hits ${Object.entries(summary.wardenMeleeByAttack).map(([k, v]) => `${k}:${v}`).join('/')}` : null,
     summary.wardenTankAoE ? `tank Gravity ${summary.wardenTankAoE}` : null,
     summary.wardenMeleeAoE ? `melee Gravity ${summary.wardenMeleeAoE}` : null,
     summary.wardenShields ? `wards ${summary.wardenShields}/${summary.wardenWardBreaks}` : null,

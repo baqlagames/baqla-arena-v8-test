@@ -105,9 +105,10 @@ export const BOSSES=[
     astralWarden:true,astralStorm:true,disableGenericBossPressure:true,
     starfallCD:360,starfallFirst:120,starfallCount:4,starfallDmg:92,starfallRadius:58,
     eclipseBeamCD:450,eclipseBeamFirst:270,eclipseBeamDmg:122,eclipseBeamWidth:50,
-    gravityTollCD:540,gravityTollFirst:180,gravityTollDmg:98,gravityTollRadius:9999,gravityTollPhase:2,
+    starfallTargetLockMult:0.90,starfallFrontlineRadius:96,starfallFrontlineMult:0.62,eclipseTargetLockMult:0.90,eclipseFrontlineRadius:104,eclipseFrontlineMult:0.62,
+    gravityTollCD:540,gravityTollFirst:180,gravityTollDmg:108,gravityTollRadius:9999,gravityTollPhase:2,
     lanternOrbitCD:660,lanternOrbitFirst:180,lanternOrbitDmg:60,lanternOrbitShots:6,lanternOrbitPhase:3,
-    lanternWardAt:[0.70,0.35],lanternWardShieldPct:0.10,astralBlightDur:300,astralBlightHpPct:0.012,gravityBrandDur:300,gravityBrandHealCut:0.22,gravityTollFrontlineHpPct:0.075,gravityTollTankMult:0.70,gravityTollMeleeMult:0.82,
+    lanternWardAt:[0.70,0.35],lanternWardShieldPct:0.10,astralBlightDur:300,astralBlightHpPct:0.012,gravityBrandDur:300,gravityBrandHealCut:0.22,gravityTollFrontlineHpPct:0.085,gravityTollTankMult:0.76,gravityTollMeleeMult:0.90,
     projType:'lightning',timeEnrageAt:9000},
   // ===== STAGE 7 Ã¢â‚¬â€ WALL BOSS (Cursed Bazaar Gate) =====
   // Phase 1: barrier blocks the path. Boss untargetable, throws curses over the wall.

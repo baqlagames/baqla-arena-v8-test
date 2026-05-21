@@ -4,7 +4,7 @@ import {
   drainHealToBarrier,
   tickAerialBombs,
   updateBoss,
-} from './boss-mechanics.js?v=20260521-warden-pressure';
+} from './boss-mechanics.js?v=20260521-warden-aoe';
 
 export function createArenaBossRuntime(deps) {
   const randomRange = typeof deps.randomRange === 'function'

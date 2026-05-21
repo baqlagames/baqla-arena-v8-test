@@ -5,7 +5,7 @@ import { createGameState, STAGE_TRANSIENT_BATTLE_ARRAYS } from '../core/state.js
 import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, RESPAWN_FRAMES, GRID_COLS, GRID_ROWS, GRID_X, GRID_W, CELL_W, ARENA_MAX_UNIT_LEVEL, ARENA_ATTACK_TYPE_BY_UNIT, ARENA_INTEREST_RATE, ARENA_INTEREST_CAP, ARENA_BUILD_FIRST, ARENA_BUILD_NEXT, ARENA_BUILD_BOSS, ARENA_LEASH_FWD, ARENA_LEASH_BACK, ARENA_LEASH_SIDE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
 import { ENEMIES } from '../data/enemies.js';
-import { BOSSES } from '../data/bosses.js?v=20260521-warden-pressure';
+import { BOSSES } from '../data/bosses.js?v=20260521-warden-aoe';
 import { ARENA_ABILITIES } from '../data/abilities.js';
 import { ARENA_PERKS } from '../data/perks.js';
 import { STAGES, STAGE_HP_MULT, STAGE_DMG_MULT } from '../data/stages.js';
@@ -13,8 +13,8 @@ import { ARENA_UNIT_BRANCHES, ARENA_BASE_SIGNATURES, ARENA_BRANCH_SIGNATURES } f
 import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=20260521-player-hud';
-import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260521-warden-pressure';
+import { createActorRenderer } from '../render/actor-renderer.js?v=20260521-warden-aoe';
+import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260521-warden-aoe';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';
 import { updateArenaEnemyAi } from './combat-enemy-ai.js';
@@ -28,8 +28,8 @@ import { tickEnemyPostUpdateStatusEffects } from './combat-status-effects.js';
 import { perkSlotCount, stageBeansReward } from './perks.js';
 import { createStageFlowRuntime } from './stage-flow-runtime.js?v=20260517-grid-calibration';
 import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js';
-import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260521-warden-pressure';
-import { createArenaBossRuntime } from './arena-boss-runtime.js?v=20260521-warden-pressure';
+import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260521-warden-aoe';
+import { createArenaBossRuntime } from './arena-boss-runtime.js?v=20260521-warden-aoe';
 import { tickTimedFieldEffects } from './timed-field-effects.js';
 import { arena_stageStarCriteria, arena_stageStarRule, arena_starText } from './stage-stars.js';
 import { createRoleProgressionRuntime } from './role-progression.js';
@@ -37,23 +37,23 @@ import { createUnitPayoffRuntime } from './unit-payoff-runtime.js';
 import { createUnitAbilityRuntime } from './unit-ability-runtime.js';
 import { createUnitMinionRuntime } from './unit-minion-runtime.js';
 import { createArenaAudio } from './arena-audio.js';
-import { createStageBattleRuntime } from './stage-battle-runtime.js?v=20260521-warden-pressure';
+import { createStageBattleRuntime } from './stage-battle-runtime.js?v=20260521-warden-aoe';
 import { createArenaLayoutRuntime } from './arena-layout-runtime.js';
 import { createCombatHelperRuntime } from './combat-helper-runtime.js';
 import { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST, createArenaSpellRuntime } from './arena-spell-runtime.js';
-import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js?v=20260521-warden-pressure';
+import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js?v=20260521-warden-aoe';
 import { createPlacementEconomyRuntime } from './placement-economy-runtime.js';
 import { createScreenProgressRuntime } from './screen-progress-runtime.js';
 import { createBattleObjectiveRuntime } from './battle-objective-runtime.js?v=20260521-warden-live';
 import { createArenaScreenUiComposition } from './arena-screen-ui-composition.js';
 import { createArenaGridRuntime } from './arena-grid-runtime.js';
-import { createUnitRuntimeComposition } from './unit-runtime-composition.js';
+import { createUnitRuntimeComposition } from './unit-runtime-composition.js?v=20260521-warden-aoe';
 import { createArenaCombatEffectsRuntime } from './arena-combat-effects-runtime.js';
 import { createArenaGameStateRuntime } from './arena-game-state-runtime.js';
 import { createArenaBattleArrayRuntime } from './arena-battle-array-runtime.js';
 import { createArenaCodexComposition } from './arena-codex-composition.js';
 import { createArenaInputComposition } from './arena-input-composition.js';
-import { createBattleSceneComposition } from './battle-scene-composition.js?v=20260521-warden-clarity';
+import { createBattleSceneComposition } from './battle-scene-composition.js?v=20260521-warden-aoe';
 import { createArenaShellComposition } from './arena-shell-composition.js';
 
 export function startArena(){
@@ -728,6 +728,7 @@ const actorRenderer=createActorRenderer({
 });
 const drawFns=actorRenderer.drawFns;
 function drawUnit(...args){return actorRenderer.drawUnit(...args)}
+function drawUnitHud(...args){return actorRenderer.drawUnitHud(...args)}
 function drawVodka(...args){return actorRenderer.drawVodka(...args)}
 function drawDummy(...args){return actorRenderer.drawDummy(...args)}
 
@@ -1193,7 +1194,7 @@ const battleSceneRuntime=createBattleSceneComposition({
   drawers:{
     drawMenu,drawFlash,drawCodex,drawStageSelect,drawStageBrief,drawDeckPick,drawSpellPick,drawPerkPick,
     drawArena,drawWeather,drawWeatherForeground,drawGroundFx,arena_drawGrid,drawCastle,drawDummy,arena_specHalo,arena_isCapstoneLevel,
-    drawUnit,drawUnitOverlays,drawBeamFx,drawProjectiles,drawBombs,drawParticles,drawDmgNums,arena_drawHud,
+    drawUnit,drawUnitHud,drawUnitOverlays,drawBeamFx,drawProjectiles,drawBombs,drawParticles,drawDmgNums,arena_drawHud,
     drawSigBanner,drawWinScreen,drawLoseScreen
   }
 });
