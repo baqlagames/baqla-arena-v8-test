@@ -64,7 +64,7 @@ function makeSquad(stageN) {
   const ranged = makeUnit(8, 'Act 2 Hunter', 'ranged', 1350 + stageN * 110, 292, 725);
   const healer = makeUnit(10, 'Naana Holy', 'healer', 1200 + stageN * 105, 260, 775);
   applyUnitPassives(healer, 10, 5, { gameTickHz: GAME_TICK_HZ, signatures: {} });
-  return { tank, healer, units: [tank, melee, ranged, healer] };
+  return { tank, melee, healer, units: [tank, melee, ranged, healer] };
 }
 
 function applyHealingReceived(unit, amount) {
@@ -112,6 +112,7 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
   logs.damageBySource[sourceName] = (logs.damageBySource[sourceName] || 0) + damage;
   if (source && source.id === 10) {
     logs.wardenDamage[target.name] = (logs.wardenDamage[target.name] || 0) + damage;
+    if (attackType === 'gravityToll' && target.arch === 'tank') logs.wardenTankAoE += damage;
     if (attackType === 'gravityToll' && target.arch === 'melee') logs.wardenMeleeAoE += damage;
     if (attackType === 'astralBlight') logs.wardenBlightTicks++;
   }
@@ -359,7 +360,7 @@ function assertRiftGateAndProfile() {
 
 function simulateStage(stage, stageIndex, seed) {
   const random = rng(seed);
-  const { tank, healer, units } = makeSquad(stage.n || 1);
+  const { tank, melee, healer, units } = makeSquad(stage.n || 1);
   const enemies = [];
   const arena = { phase: 'wave', round: 1, waveElapsed: 0, scheduledRiftRound: 4, riftFiredThisRound: false, activeBarrier: null, lieutenants: [], aerialBombs: [] };
   const logs = {
@@ -376,6 +377,7 @@ function simulateStage(stage, stageIndex, seed) {
     vanishStrikes: 0,
     wardenCasts: { starfall: 0, eclipse: 0, gravity: 0, orbit: 0 },
     wardenDamage: {},
+    wardenTankAoE: 0,
     wardenMeleeAoE: 0,
     wardenShields: 0,
     wardenWardBreaks: 0,
@@ -569,7 +571,10 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.wardenCasts.eclipse > 0, 'stage 8: Astral Warden Eclipse Beam was not exercised');
     assert(logs.wardenCasts.gravity > 0, 'stage 8: Astral Warden Gravity Toll was not exercised');
     assert(logs.wardenCasts.orbit > 0, 'stage 8: Astral Warden Lantern Orbit was not exercised');
+    assert(logs.wardenTankAoE > 0, 'stage 8: tank unit did not receive Warden Gravity pressure');
     assert(logs.wardenMeleeAoE > 0, 'stage 8: melee unit did not receive reduced Warden AoE pressure');
+    assert(tank.minHp / tank.maxHp <= 0.84, `stage 8: tank stayed too healthy (${Math.round(100 * tank.minHp / tank.maxHp)}%)`);
+    assert(melee.minHp / melee.maxHp <= 0.88, `stage 8: melee stayed too healthy (${Math.round(100 * melee.minHp / melee.maxHp)}%)`);
     assert(logs.wardenShields >= 2, 'stage 8: Lantern Ward phase shields were not exercised');
     assert(logs.wardenWardBreaks >= 2, 'stage 8: Lantern Ward breaks were not exercised');
     assert(logs.wardenBlightBursts >= 2, 'stage 8: Astral Blight shield-break bursts were not exercised');
@@ -587,11 +592,13 @@ function simulateStage(stage, stageIndex, seed) {
   return {
     stage: stage.n,
     tankMin: Math.round(100 * tank.minHp / tank.maxHp),
+    meleeMin: Math.round(100 * melee.minHp / melee.maxHp),
     healerMin: Math.round(100 * healer.minHp / healer.maxHp),
     heal: logs.heal,
     silentHeals: logs.silentHeals,
     riftMinions: logs.riftMinions,
     wardenCasts: logs.wardenCasts,
+    wardenTankAoE: logs.wardenTankAoE,
     wardenMeleeAoE: logs.wardenMeleeAoE,
     wardenShields: logs.wardenShields,
     wardenWardBreaks: logs.wardenWardBreaks,
@@ -616,7 +623,8 @@ for (const summary of summaries) {
   const details = [
     `rift minions ${summary.riftMinions}`,
     summary.wardenCasts ? `warden casts ${Object.values(summary.wardenCasts).join('/')}` : null,
-    summary.wardenMeleeAoE ? `melee AoE ${summary.wardenMeleeAoE}` : null,
+    summary.wardenTankAoE ? `tank Gravity ${summary.wardenTankAoE}` : null,
+    summary.wardenMeleeAoE ? `melee Gravity ${summary.wardenMeleeAoE}` : null,
     summary.wardenShields ? `wards ${summary.wardenShields}/${summary.wardenWardBreaks}` : null,
     summary.wardenBlightTicks ? `blight ticks ${summary.wardenBlightTicks}` : null,
     summary.wardenGravityBrands ? `gravity brands ${summary.wardenGravityBrands}` : null,
@@ -624,5 +632,5 @@ for (const summary of summaries) {
     summary.meteors ? `meteors ${summary.meteors}` : null,
     summary.sonsSeen ? 'sons exercised' : null,
   ].filter(Boolean).join(', ');
-  console.log(`- Stage ${summary.stage}: tank floor ${summary.tankMin}%, healer floor ${summary.healerMin}%, tracked heal ${summary.heal}, silent aura ticks ${summary.silentHeals}, ${details}`);
+  console.log(`- Stage ${summary.stage}: tank floor ${summary.tankMin}%, melee floor ${summary.meleeMin}%, healer floor ${summary.healerMin}%, tracked heal ${summary.heal}, silent aura ticks ${summary.silentHeals}, ${details}`);
 }

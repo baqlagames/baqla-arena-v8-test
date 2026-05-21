@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260521-warden-clarity';
+import { startArena } from './systems/arena-runtime.js?v=20260521-warden-pressure';
 
 startArena();

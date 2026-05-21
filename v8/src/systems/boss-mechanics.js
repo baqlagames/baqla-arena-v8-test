@@ -630,9 +630,9 @@ function astralPlayerUnits(units){
 }
 function astralIsTank(u){return !!(u&&(u.arch==='tank'||u.taunt))}
 function astralIsMelee(u){return !!(u&&(u.arch==='melee'||u.range<=75||u.prefersMelee))}
-function astralRoleDamageMult(u){
-  if(astralIsTank(u))return 0.55;
-  if(astralIsMelee(u))return 0.65;
+function astralRoleDamageMult(b,u){
+  if(astralIsTank(u))return b.gravityTollTankMult||0.70;
+  if(astralIsMelee(u))return b.gravityTollMeleeMult||0.82;
   return 1;
 }
 function astralTargetScore(u){
@@ -775,7 +775,7 @@ function tickAstralPending(b,ctx){
           u.x+=(dx/d)*pull;u.y+=(dy/d)*pull;
           clampToArena(u);
         }
-        dealDamage(u,Math.round(p.dmg*astralRoleDamageMult(u)),b,'magic','gravityToll',{sourceLabel:'GRAVITY',sourceColor:'#9bb8ff'});
+        dealDamage(u,Math.round(p.dmg*astralRoleDamageMult(b,u)),b,'magic','gravityToll',{sourceLabel:'GRAVITY',sourceColor:'#9bb8ff'});
         if(frontliner){
           u._gravityBrandTimer=Math.max(u._gravityBrandTimer||0,b.gravityBrandDur||240);
           u._gravityBrandHealCut=b.gravityBrandHealCut||0.12;
