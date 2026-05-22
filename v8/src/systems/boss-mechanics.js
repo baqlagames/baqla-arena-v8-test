@@ -666,6 +666,31 @@ function stormScaleAt(list,index,fallback){
   if(arr.length&&Number.isFinite(arr[arr.length-1]))return arr[arr.length-1];
   return fallback;
 }
+function stormWardOverchargeStage(ward,b,ctx){
+  const frame=ctx&&Number.isFinite(ctx.frame)?ctx.frame:0;
+  const spawn=Number.isFinite(ward&&ward._stormWardSpawnFrame)?ward._stormWardSpawnFrame:(Number.isFinite(ward&&ward.spawnFrame)?ward.spawnFrame:frame);
+  const age=Math.max(0,frame-spawn);
+  if(age>=(b.stormWardOverchargeSecond||40*GAME_TICK_HZ))return 2;
+  if(age>=(b.stormWardOverchargeFirst||20*GAME_TICK_HZ))return 1;
+  return 0;
+}
+function stormWardOverchargeMult(ward,b){
+  const stage=Math.max(0,Math.min(2,ward&&ward._stormWardOverchargeStage||0));
+  return stormScaleAt(b&&b.stormWardOverchargeMults,stage,stage>=2?1.30:stage>=1?1.15:1);
+}
+function updateStormWardOvercharge(ward,b,ctx){
+  const nextStage=stormWardOverchargeStage(ward,b,ctx);
+  const prevStage=ward._stormWardOverchargeStage||0;
+  if(nextStage<=prevStage)return;
+  const { groundFx, addParticle:addP, addDamageText:addDmg }=ctx;
+  ward._stormWardOverchargeStage=nextStage;
+  const second=nextStage>=2;
+  const color=second?'#ff5533':'#ffd166';
+  const text=second?'OVERCHARGED':'WARD OVERCHARGE';
+  groundFx.push({x:ward.x,y:ward.y,r:0,maxR:Math.max(82,ward.size*3.4),life:0.58,color,enemyWarn:true,warnTimer:24,warnMax:24,label:'OVERCHARGE'});
+  addDmg(ward.x,ward.y-ward.size-16,text,color,{sz:11,bold:true,outline:second?'#3a0500':'#302000'});
+  for(let i=0;i<(second?18:12);i++)addP(ward.x+rnd(-ward.size,ward.size),ward.y+rnd(-ward.size*0.6,ward.size*0.5),color,1,3);
+}
 function nextStormWardThreshold(b){
   const thresholds=Array.isArray(b.stormWardThresholds)&&b.stormWardThresholds.length?b.stormWardThresholds:[1,0.75,0.5,0.25];
   const done=Array.isArray(b._stormWardThresholdDone)?b._stormWardThresholdDone:[];
@@ -792,7 +817,7 @@ function castStormTwinWards(b,ctx,thresholdIndex=0){
       points:15,fixedGoldReward:15,isEnemy:true,bossSupport:true,bossSupportColor:def.color,
       cd:0,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},
       spawnFrame:ctx.frame||0,entryHold:30,
-      _stormWardWave:wave,_stormWardDamageScale:hpScale,
+      _stormWardWave:wave,_stormWardDamageScale:hpScale,_stormWardSpawnFrame:ctx.frame||0,_stormWardOverchargeStage:0,
       _stormWardCastT:def.first,_stormWardCastEvery:def.every
     };
     clampBossActor(ward,ctx,{topMargin:62,bottomMargin:82});
@@ -826,7 +851,7 @@ function castStormIronSurge(ward,b,ctx){
   const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, shake }=ctx;
   const targets=stormPlayerUnits(units);
   if(!targets.length)return false;
-  const dmg=Math.round((b.ironSurgeDmg||58)*(ward._stormWardDamageScale||1));
+  const dmg=Math.round((b.ironSurgeDmg||58)*(ward._stormWardDamageScale||1)*stormWardOverchargeMult(ward,b));
   groundFx.push({x:ward.x,y:ward.y,r:0,maxR:210,life:0.52,color:'#7fc7ff',celestialAuraFx:true,label:'IRON'});
   for(const u of targets){
     beamFx.push({x1:ward.x,y1:ward.y-ward.size*0.3,x2:u.x,y2:u.y-u.size*0.2,life:20,maxLife:20,color:'#8bdfff',width:4,straight:false});
@@ -847,7 +872,7 @@ function castStormMirrorCleave(ward,b,ctx){
   const melee=players.filter(u=>stormIsMelee(u)&&!stormIsTank(u)&&Math.min(Math.hypot(u.x-ward.x,u.y-ward.y),Math.hypot(u.x-b.x,u.y-b.y))<=radius);
   const targets=[...tanks,...melee].filter((u,i,arr)=>arr.indexOf(u)===i);
   if(!targets.length)return false;
-  const dmg=Math.round((b.mirrorCleaveDmg||100)*(ward._stormWardDamageScale||1));
+  const dmg=Math.round((b.mirrorCleaveDmg||100)*(ward._stormWardDamageScale||1)*stormWardOverchargeMult(ward,b));
   groundFx.push({x:ward.x,y:ward.y,r:0,maxR:radius,life:0.46,color:'#ffd166',enemyWarn:true,warnTimer:22,warnMax:22,label:'MIRROR'});
   for(const u of targets){
     const mult=stormIsTank(u)?1:0.84;
@@ -870,6 +895,7 @@ function tickStormWards(b,ctx){
     return;
   }
   for(const ward of active){
+    updateStormWardOvercharge(ward,b,ctx);
     ward._stormWardCastT=(ward._stormWardCastT||1)-1;
     if(ward._stormWardCastT>0)continue;
     ward._stormWardCastT=ward._stormWardCastEvery||150;

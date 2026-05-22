@@ -109,6 +109,9 @@ assert.ok(wardIcons.some(icon => icon.title === 'Lantern Ward'), 'boss status ic
 const stormShieldIcons = collectStatusIcons({ isBoss: true, _stormShieldActive: true }, tickHz);
 assert.ok(stormShieldIcons.some(icon => icon.title === 'Storm Shield'), 'boss status icons should expose Vizier Storm Shield');
 
+const overchargeIcons = collectStatusIcons({ stormWard: true, _stormWardOverchargeStage: 2, color: '#ffd166' }, tickHz);
+assert.ok(overchargeIcons.some(icon => icon.title === 'Overcharged'), 'ward status icons should expose Vizier overcharge state');
+
 const brandedIcons = collectStatusIcons({ isPlayer: true, _gravityBrandTimer: 120 }, tickHz);
 assert.ok(brandedIcons.some(icon => icon.title === 'Gravity Brand'), 'player status icons should expose Gravity Brand');
 

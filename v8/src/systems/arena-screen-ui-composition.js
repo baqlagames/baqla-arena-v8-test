@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-vizier-status-icons';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-vizier-ward-overcharge';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

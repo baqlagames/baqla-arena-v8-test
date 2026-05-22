@@ -164,6 +164,7 @@ export function collectStatusIcons(t,tickHz=120){
   const sigIcon=playerSignatureIcon(t);
   if(sigIcon)icons.push(sigIcon);
   if(t.priorityTarget)icons.push({c:t.color||'#8bdfff',g:'!',title:t.preferredBy?('Priority: '+t.preferredBy):'Priority Target',pulse:true});
+  if(t.stormWard&&t._stormWardOverchargeStage>0)icons.push({c:t._stormWardOverchargeStage>=2?'#ff5533':'#ffd166',g:'O',title:t._stormWardOverchargeStage>=2?'Overcharged':'Ward Overcharge',pulse:true});
   if(t.stormWard)icons.push({c:t.color||'#8bdfff',g:t.stormWardKind==='iron'?'I':'M',title:t.name||'Storm Ward',pulse:true});
   if(t.stormMote)icons.push({c:'#8bdfff',g:'M',title:'Storm Mote',pulse:true});
   if(t._stormShieldActive)icons.push({c:'#ffd166',g:'S',title:'Storm Shield',pulse:true});

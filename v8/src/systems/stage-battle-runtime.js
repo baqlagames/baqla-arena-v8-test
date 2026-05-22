@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-vizier-status-icons';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-vizier-status-icons';
+} from './wave-lifecycle.js?v=20260522-vizier-ward-overcharge';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-vizier-ward-overcharge';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

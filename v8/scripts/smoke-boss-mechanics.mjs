@@ -324,14 +324,16 @@ function smokeStormboundVizier(ctx, boss) {
   if (boss.fixedGoldReward !== 200) throw new Error('Stormbound Vizier should award 200g when defeated');
   const vizierDef = BOSSES[13];
   if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Stormbound Vizier base damage tuning drifted');
-  if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 170 || vizierDef.courtPulseDmg !== 72) {
+  if (vizierDef.ironSurgeDmg !== 70 || vizierDef.mirrorCleaveDmg !== 120 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 170 || vizierDef.courtPulseDmg !== 56) {
     throw new Error('Stormbound Vizier role damage tuning drifted');
   }
   if (Math.abs((vizierDef.groundingPulseTankMult || 0) - 1.10) > 0.0001) throw new Error('Stormbound Vizier tank Grounding pressure tuning drifted');
   if (vizierDef.courtPulseCD !== 420 || vizierDef.courtPulseFirst !== 120) throw new Error('Stormbound Vizier Court Pulse cadence drifted');
-  if (Math.abs((vizierDef.courtPulseTankMult || 0) - 1.25) > 0.0001 || Math.abs((vizierDef.courtPulseBacklineMult || 0) - 0.82) > 0.0001) {
+  if (Math.abs((vizierDef.courtPulseTankMult || 0) - 1.18) > 0.0001 || Math.abs((vizierDef.courtPulseMeleeMult || 0) - 0.82) > 0.0001 || Math.abs((vizierDef.courtPulseBacklineMult || 0) - 0.70) > 0.0001) {
     throw new Error('Stormbound Vizier Court Pulse role tuning drifted');
   }
+  if (vizierDef.stormWardOverchargeFirst !== 1200 || vizierDef.stormWardOverchargeSecond !== 2400) throw new Error('Stormbound Vizier ward overcharge timing drifted');
+  if (JSON.stringify(vizierDef.stormWardOverchargeMults) !== JSON.stringify([1, 1.15, 1.30])) throw new Error('Stormbound Vizier ward overcharge scaling drifted');
   if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.34) > 0.0001) throw new Error('Stormbound Vizier Storm Shock damage tuning drifted');
   if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.009) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 6) throw new Error('Stormbound Vizier Storm Venom tuning drifted');
   if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Stormbound Vizier tank curse damage tuning drifted');
@@ -388,6 +390,37 @@ function smokeStormboundVizier(ctx, boss) {
   }
   if (!wardHits.some(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank') || !wardHits.some(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'melee')) {
     throw new Error('Mirror Ward did not pressure tank and non-tank melee');
+  }
+  const baseIronHit = wardHits.find(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'tank');
+  const baseMirrorHit = wardHits.find(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank');
+  const forceWardAgeCast = (ageFrames, resetStage = 0) => {
+    iron._stormWardSpawnFrame = ctx.frame - ageFrames;
+    mirror._stormWardSpawnFrame = ctx.frame - ageFrames;
+    iron._stormWardOverchargeStage = resetStage;
+    mirror._stormWardOverchargeStage = resetStage;
+    iron._stormWardCastT = 1;
+    mirror._stormWardCastT = 1;
+    const textStart = ctx.damageText.length;
+    const hitStartAtAge = ctx.damageHits.length;
+    tickBoss(ctx, boss, 2);
+    return {
+      texts: ctx.damageText.slice(textStart).map(item => item.text),
+      hits: ctx.damageHits.slice(hitStartAtAge),
+    };
+  };
+  const stage1 = forceWardAgeCast(20 * 60, 0);
+  if (!stage1.texts.includes('WARD OVERCHARGE')) throw new Error('Stormbound Vizier wards did not show 20s Ward Overcharge');
+  const stage1Iron = stage1.hits.find(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'tank');
+  const stage1Mirror = stage1.hits.find(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank');
+  if (!(stage1Iron.amount > baseIronHit.amount * 1.10 && stage1Mirror.amount > baseMirrorHit.amount * 1.10)) {
+    throw new Error('Stormbound Vizier 20s Ward Overcharge did not increase Iron/Mirror damage');
+  }
+  const stage2 = forceWardAgeCast(40 * 60, 0);
+  if (!stage2.texts.includes('OVERCHARGED')) throw new Error('Stormbound Vizier wards did not show 40s Overcharged callout');
+  const stage2Iron = stage2.hits.find(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'tank');
+  const stage2Mirror = stage2.hits.find(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank');
+  if (!(stage2Iron.amount > stage1Iron.amount * 1.08 && stage2Mirror.amount > stage1Mirror.amount * 1.08)) {
+    throw new Error('Stormbound Vizier 40s Overcharged did not further increase Iron/Mirror damage');
   }
 
   boss._stormChainCd = 0;
@@ -536,10 +569,10 @@ function assertBossReadability(ctx, boss) {
     if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
   }
   if (boss.id === 13) {
-    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'STORM VENOM', 'IRON SURGE', 'MIRROR CLEAVE', 'COURT PULSE', 'GROUNDING PULSE', 'GROUNDING', 'STORM SHOCK', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
+    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'STORM VENOM', 'IRON SURGE', 'MIRROR CLEAVE', 'WARD OVERCHARGE', 'OVERCHARGED', 'COURT PULSE', 'GROUNDING PULSE', 'GROUNDING', 'STORM SHOCK', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
       if (!texts.includes(text)) throw new Error(`Stormbound Vizier missing ${text} callout`);
     }
-    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'SHIELD', 'SILENCE', 'CURSE', 'COURT', 'GROUNDING', 'SHOCK', 'VENOM']) {
+    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'OVERCHARGE', 'SHIELD', 'SILENCE', 'CURSE', 'COURT', 'GROUNDING', 'SHOCK', 'VENOM']) {
       if (!labels.includes(label)) throw new Error(`Stormbound Vizier missing ${label} ward warning label`);
     }
     if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember damage text');

@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-vizier-status-icons';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-vizier-ward-overcharge';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);

@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-status-icons';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-ward-overcharge';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({
