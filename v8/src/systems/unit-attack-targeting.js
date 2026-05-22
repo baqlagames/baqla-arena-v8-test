@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260522-vizier-focus';
+import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260522-noheal-vfx';
 
 function meleeBossOrbitPoint(unit, target) {
   const isTank = !!(unit && (unit.arch === 'tank' || unit.taunt));

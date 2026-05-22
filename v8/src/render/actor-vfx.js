@@ -214,6 +214,19 @@ export function playerHitSourceVfxState(unit) {
   };
 }
 
+export function playerNoHealVfxState(unit) {
+  const timer = Math.max(unit && unit._stormSilenceTimer || 0, unit && unit.silenceTimer || 0);
+  if (!unit || unit.arch !== 'healer' || timer <= 0) {
+    return { active: false, pct: 0, label: '', color: '#9bb8ff' };
+  }
+  return {
+    active: true,
+    pct: clamp01(timer / 150),
+    label: 'NO HEAL',
+    color: '#9bb8ff',
+  };
+}
+
 function drawPlayerHitSourceBadge(ctx, { unit, x, y, size, frame }) {
   const state = playerHitSourceVfxState(unit);
   if (!state.active) return;
@@ -222,19 +235,19 @@ function drawPlayerHitSourceBadge(ctx, { unit, x, y, size, frame }) {
   const col = state.color;
   const dangerBoost = state.danger ? 1 : 0;
   ctx.save();
-  ctx.globalAlpha = (0.16 + 0.18 * p) * (state.danger ? 1.25 : 1);
-  ctx.fillStyle = col;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.10, size + 9 + dangerBoost * 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 0.42 * p + dangerBoost * 0.12;
-  ctx.strokeStyle = col;
-  ctx.lineWidth = state.danger ? 2.2 : 1.5;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.10, size + 11 + Math.sin(t * 2.0) * 1.5, 0, Math.PI * 2);
-  ctx.stroke();
   if (state.danger) {
-    ctx.globalAlpha = 0.62 * p;
+    ctx.globalAlpha = 0.12 + 0.14 * p;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.10, size + 8 + dangerBoost * 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.28 * p + dangerBoost * 0.08;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.7;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.10, size + 10 + Math.sin(t * 2.0) * 1.2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 0.50 * p;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.1;
     for (let i = 0; i < 4; i++) {
@@ -265,6 +278,46 @@ function drawPlayerHitSourceBadge(ctx, { unit, x, y, size, frame }) {
   ctx.textAlign = 'left';
   ctx.restore();
   unit._lastHitSourceTimer = Math.max(0, (unit._lastHitSourceTimer || 0) - 1);
+}
+
+function drawPlayerNoHealBadge(ctx, { unit, x, y, size, frame }) {
+  const state = playerNoHealVfxState(unit);
+  if (!state.active) return;
+  const t = frame * 0.14 + (unit.unitIdx || 0) * 0.4;
+  ctx.save();
+  ctx.globalAlpha = 0.22 + 0.10 * Math.sin(t * 2.0);
+  ctx.fillStyle = state.color;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.10, size + 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.70;
+  ctx.strokeStyle = '#e8f3ff';
+  ctx.lineWidth = 2.1;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.52, y - size * 0.72);
+  ctx.lineTo(x + size * 0.52, y + size * 0.28);
+  ctx.moveTo(x + size * 0.52, y - size * 0.72);
+  ctx.lineTo(x - size * 0.52, y + size * 0.28);
+  ctx.stroke();
+  const label = state.label;
+  const chipW = 52;
+  const chipY = y - size - 38;
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = 'rgba(8,17,40,0.90)';
+  ctx.beginPath();
+  ctx.roundRect(x - chipW / 2, chipY - 8, chipW, 15, 5);
+  ctx.fill();
+  ctx.strokeStyle = state.color;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.roundRect(x - chipW / 2 + 0.5, chipY - 7.5, chipW - 1, 14, 5);
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 8px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, chipY + 3);
+  ctx.textAlign = 'left';
+  ctx.restore();
 }
 
 export function unitAttackSpeedVfxState(unit) {
@@ -513,6 +566,7 @@ export function drawPlayerAuraOver(ctx, {
     ctx.stroke();
     unit._targetedMarker--;
   }
+  drawPlayerNoHealBadge(ctx, { unit, x, y, size, frame });
   drawPlayerHitSourceBadge(ctx, { unit, x, y, size, frame });
   if (haste.active) {
     ctx.globalAlpha = 0.42;

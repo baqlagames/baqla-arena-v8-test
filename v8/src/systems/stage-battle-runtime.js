@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-vizier-focus';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-vizier-focus';
+} from './wave-lifecycle.js?v=20260522-noheal-vfx';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-noheal-vfx';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

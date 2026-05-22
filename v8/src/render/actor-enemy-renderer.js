@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-focus';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-noheal-vfx';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

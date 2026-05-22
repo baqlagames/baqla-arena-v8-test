@@ -1,11 +1,11 @@
-import { ARENA_RIFT_BONUS_GOLD } from './rift-runtime.js?v=20260522-vizier-focus';
+import { ARENA_RIFT_BONUS_GOLD } from './rift-runtime.js?v=20260522-noheal-vfx';
 import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived as applyHealingReceivedBase } from './combat-healing.js';
 import { createCombatFeedbackRuntime } from './combat-feedback-runtime.js';
 import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js';
-import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js?v=20260522-vizier-focus';
+import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js?v=20260522-noheal-vfx';
 import { clampCombatActorToArena, clampCombatActorToLeash, createCombatBounds, createTargetingView, moveCombatActorToward, resolvePlayerUnitOverlaps } from './combat-positioning.js';
 import { batataCovers, batataHealingReceivedMultiplier, isBatataBacklineAlly, isZavsMeleeAlly, zavsAllyAttackSpeedFactor, zavsAllyDamageMultiplier, zavsBodyguardCovers } from './combat-protection.js';
-import { findEnemyTargetForUnit, findNearestTarget, findRangedEnemyTargetForUnit, isReachableFromLeash, isSaturatedCombatTarget, updateBossEngagementCounts } from './combat-targeting.js?v=20260522-vizier-focus';
+import { findEnemyTargetForUnit, findNearestTarget, findRangedEnemyTargetForUnit, isReachableFromLeash, isSaturatedCombatTarget, updateBossEngagementCounts } from './combat-targeting.js?v=20260522-noheal-vfx';
 import { playerCombatColor, spawnPlayerAbilityCastVfx, spawnPlayerImpactVfx, spawnPlayerProjectileCastVfx } from './combat-vfx.js';
 
 export function createCombatHelperRuntime(deps = {}) {
@@ -70,7 +70,20 @@ export function createCombatHelperRuntime(deps = {}) {
     feedbackRuntime.recordHeal(source, target, amount, overheal);
   }
 
+  function isHealingOutputSilenced(source) {
+    return !!(source && source.isPlayer && source.arch === 'healer' && ((source._stormSilenceTimer || 0) > 0 || (source.silenceTimer || 0) > 0));
+  }
+
   function trackedHeal(target, amount, source, big, alreadyAdjusted) {
+    if (isHealingOutputSilenced(source)) {
+      const now = view().frame || 0;
+      if (now - (source._noHealFeedbackFrame || -999) > 18) {
+        source._noHealFeedbackFrame = now;
+        addDamageText(source.x, source.y - (source.size || 20) - 14, 'NO HEAL', '#9bb8ff', { sz: 12, bold: true, outline: '#061433' });
+        addParticle(source.x, source.y - (source.size || 20) * 0.5, '#9bb8ff', 8, 3);
+      }
+      return 0;
+    }
     const effects = typeof deps.perkEffects === 'function' ? deps.perkEffects() || {} : {};
     const tunedAmount = source && source.isPlayer && source.arch === 'healer'
       ? Math.round(amount * (1 + (effects.healerOutputMult || 0)))

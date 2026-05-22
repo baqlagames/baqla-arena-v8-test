@@ -84,6 +84,7 @@ export function tickHealerTriage(unit, {
 }) {
   if (!unit || unit.arch !== 'healer' || unit.hp <= 0 || unit.isGhost || unit.untargetable) return;
   if (!arena || arena.phase !== 'wave') return;
+  if ((unit._stormSilenceTimer || 0) > 0 || (unit.silenceTimer || 0) > 0) return;
   if (!unit.healAmt) return;
   if (unit.healCDt > 0) {
     unit.healCDt--;

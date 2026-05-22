@@ -97,7 +97,7 @@ const groundingIcons = collectStatusIcons({ isPlayer: true, _groundingBrandTimer
 assert.ok(groundingIcons.some(icon => icon.title === 'Grounding Brand'), 'player status icons should expose Grounding Brand');
 
 const stormControlIcons = collectStatusIcons({ isPlayer: true, _stormSilenceTimer: 120, _stormCurseTimer: 120 }, tickHz);
-assert.ok(stormControlIcons.some(icon => icon.title === 'Silencing Decree'), 'player status icons should expose Vizier healer silence');
+assert.ok(stormControlIcons.some(icon => icon.title === 'No Healing'), 'player status icons should expose Vizier healer silence as no-heal');
 assert.ok(stormControlIcons.some(icon => icon.title === 'Storm Curse'), 'player status icons should expose Vizier tank curse');
 
 const blightedIcons = collectStatusIcons({ isPlayer: true, _astralBlightTimer: 120 }, tickHz);
