@@ -323,6 +323,8 @@ function smokeStormboundVizier(ctx, boss) {
   if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 185) {
     throw new Error('Stormbound Vizier role damage tuning drifted');
   }
+  if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.42) > 0.0001) throw new Error('Stormbound Vizier Storm Shock damage tuning drifted');
+  if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.012) > 0.0001 || vizierDef.stormVenomDur !== 300) throw new Error('Stormbound Vizier Storm Venom tuning drifted');
   if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.012) > 0.0001) throw new Error('Stormbound Vizier tank curse damage tuning drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];
@@ -384,14 +386,22 @@ function smokeStormboundVizier(ctx, boss) {
   boss._stormCastLock = 0;
   iron.hp = 0;
   mirror.hp = 0;
+  const groundingStart = ctx.damageHits.length;
   tickBoss(ctx, boss, 2);
   if (boss._stormShieldActive) throw new Error('Stormbound Vizier shield stayed active after both wards died');
   if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
   if (!ctx.damageText.some(item => item.text === 'STORM SHIELD BROKEN')) throw new Error('Stormbound Vizier missing shield-break callout');
   if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
+  if (!ctx.damageText.some(item => item.text === 'STORM VENOM')) throw new Error('Stormbound Vizier missing Storm Venom callout');
+  if (!ctx.units.every(unit => unit._stormVenomTimer > 0)) throw new Error('Stormbound Vizier did not apply Storm Venom to the full squad');
   tickBoss(ctx, boss, 3);
   if (!ctx.damageText.some(item => item.text === 'GROUNDING')) throw new Error('Stormbound Vizier did not pressure tank/melee with Grounding Pulse');
+  if (!ctx.damageText.some(item => item.text === 'STORM SHOCK')) throw new Error('Stormbound Vizier did not show Storm Shock backline pressure');
   if (!ctx.units[0]._groundingBrandTimer || !ctx.units[1]._groundingBrandTimer) throw new Error('Stormbound Vizier Grounding Pulse did not brand tank and melee');
+  const groundingHits = ctx.damageHits.slice(groundingStart);
+  if (!groundingHits.some(hit => hit.attackType === 'stormShock' && hit.target.arch === 'ranged') || !groundingHits.some(hit => hit.attackType === 'stormShock' && hit.target.arch === 'healer')) {
+    throw new Error('Stormbound Vizier Storm Shock did not damage ranged and healer backline');
+  }
   boss._stormCastLock = 0;
   tickBoss(ctx, boss, 3);
   if (!ctx.damageText.some(item => item.text === 'CHAIN')) throw new Error('Stormbound Vizier did not cast Chain Decree');
@@ -465,10 +475,10 @@ function assertBossReadability(ctx, boss) {
     if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
   }
   if (boss.id === 13) {
-    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'IRON SURGE', 'MIRROR CLEAVE', 'GROUNDING PULSE', 'GROUNDING', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
+    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'STORM VENOM', 'IRON SURGE', 'MIRROR CLEAVE', 'GROUNDING PULSE', 'GROUNDING', 'STORM SHOCK', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
       if (!texts.includes(text)) throw new Error(`Stormbound Vizier missing ${text} callout`);
     }
-    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'SHIELD', 'SILENCE', 'CURSE', 'GROUNDING']) {
+    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'SHIELD', 'SILENCE', 'CURSE', 'GROUNDING', 'SHOCK', 'VENOM']) {
       if (!labels.includes(label)) throw new Error(`Stormbound Vizier missing ${label} ward warning label`);
     }
     if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember damage text');

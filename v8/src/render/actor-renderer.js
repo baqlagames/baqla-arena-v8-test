@@ -1,9 +1,9 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-clean-unit-hud';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260522-clean-unit-hud';
-import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-round-bonus';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-vizier-pressure';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260522-vizier-pressure';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-vizier-pressure';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';

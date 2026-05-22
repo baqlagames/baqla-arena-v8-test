@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-round-bonus';
+import { BOSSES } from '../data/bosses.js?v=20260522-vizier-pressure';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){

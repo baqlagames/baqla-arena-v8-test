@@ -719,6 +719,28 @@ function stormExposeVizier(b,ctx){
   showFlash('JUDGMENT WINDOW!','#ffd166',55);
   shake(5);
 }
+function applyStormVenom(b,ctx){
+  const { units, beamFx, groundFx, addParticle:addP, addDamageText:addDmg }=ctx;
+  const targets=stormPlayerUnits(units);
+  if(!targets.length)return false;
+  const dur=b.stormVenomDur||5*GAME_TICK_HZ;
+  const pct=b.stormVenomHpPct||0.012;
+  const minDmg=b.stormVenomMinDmg||8;
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(170,(b.size||42)*3.4),life:0.55,color:'#58d68d',celestialAuraFx:true,label:'VENOM'});
+  for(const u of targets){
+    u._stormVenomTimer=Math.max(u._stormVenomTimer||0,dur);
+    u._stormVenomTick=GAME_TICK_HZ;
+    u._stormVenomHpPct=pct;
+    u._stormVenomMinDmg=minDmg;
+    u._stormVenomFrom=b;
+    beamFx.push({x1:b.x,y1:b.y-(b.size||40)*0.35,x2:u.x,y2:u.y-u.size*0.25,life:20,maxLife:20,color:'#58d68d',width:3.5,straight:false});
+    groundFx.push({x:u.x,y:u.y,r:0,maxR:Math.max(36,(u.size||20)*2.0),life:0.42,color:'#58d68d',enemyWarn:true,warnTimer:18,warnMax:18,label:'VENOM'});
+    addDmg(u.x,u.y-(u.size||20)-12,'STORM VENOM','#58d68d',{sz:10,bold:true,outline:'#07351f'});
+    addP(u.x,u.y,'#58d68d',8,3);
+  }
+  b._stormVenomCasts=(b._stormVenomCasts||0)+1;
+  return true;
+}
 function resolveStormWards(b,ctx){
   const { enemies, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
   if(b._stormWardResolved)return;
@@ -732,6 +754,7 @@ function resolveStormWards(b,ctx){
   showFlash('STORM SHIELD BROKEN!','#ffd166',45);
   shake(4);
   stormExposeVizier(b,ctx);
+  applyStormVenom(b,ctx);
   b._stormCycleState='boss';
   syncStormVizierCooldowns(b,ctx);
 }
@@ -928,10 +951,14 @@ function castStormChainDecree(b,ctx){
 function castStormGroundingPulse(b,ctx){
   const { units, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
   const radius=b.groundingPulseRadius||128;
-  const targets=stormPlayerUnits(units).filter(u=>Math.hypot((u.x||0)-(b.x||0),(u.y||0)-(b.y||0))<=radius);
-  if(!targets.length)return false;
+  const shockRadius=b.groundingStormShockRadius||Math.max(360,radius*3.2);
+  const players=stormPlayerUnits(units);
+  const frontTargets=players.filter(u=>(stormIsTank(u)||stormIsMelee(u))&&Math.hypot((u.x||0)-(b.x||0),(u.y||0)-(b.y||0))<=radius);
+  const shockTargets=stormBacklineUnits(units).filter(u=>Math.hypot((u.x||0)-(b.x||0),(u.y||0)-(b.y||0))<=shockRadius);
+  if(!frontTargets.length&&!shockTargets.length)return false;
   groundFx.push({x:b.x,y:b.y,r:0,maxR:radius,life:0.62,color:'#8bdfff',enemyWarn:true,warnTimer:26,warnMax:26,label:'GROUNDING'});
-  for(const u of targets){
+  if(shockTargets.length)groundFx.push({x:b.x,y:b.y,r:0,maxR:shockRadius,life:0.46,color:'#58d8ff',enemyWarn:true,warnTimer:22,warnMax:22,label:'SHOCK'});
+  for(const u of frontTargets){
     const tankish=stormIsTank(u);
     const melee=stormIsMelee(u)&&!tankish;
     const mult=tankish?1:(melee?(b.groundingPulseMeleeMult||0.72):0.85);
@@ -943,6 +970,12 @@ function castStormGroundingPulse(b,ctx){
       u._groundingBrandHealCut=b.groundingBrandHealCut||0.10;
       addDmg(u.x,u.y-(u.size||20)-20,'GROUNDING BRAND','#9bb8ff',{sz:10,bold:true,outline:'#061433'});
     }
+  }
+  for(const u of shockTargets){
+    const dmg=Math.round((b.groundingPulseDmg||88)*(b.groundingStormShockMult||0.42));
+    dealDamage(u,dmg,b,'magic','stormShock',{sourceLabel:'STORM SHOCK',sourceColor:'#58d8ff'});
+    addDmg(u.x,u.y-(u.size||20)-8,'STORM SHOCK','#58d8ff',{sz:11,bold:true,outline:'#061433'});
+    addP(u.x,u.y,'#58d8ff',6,3);
   }
   b._stormGroundingCasts=(b._stormGroundingCasts||0)+1;
   addDmg(b.x,b.y-(b.size||40)-10,'GROUNDING PULSE','#8bdfff',{sz:13,bold:true,outline:'#061433'});

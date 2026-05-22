@@ -154,6 +154,14 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
       if (target.arch === 'tank') logs.stormGroundingTank += damage;
       if (target.arch === 'melee') logs.stormGroundingMelee += damage;
     }
+    if (attackType === 'stormShock') {
+      logs.stormShock += damage;
+      if (target.arch === 'ranged' || target.arch === 'healer' || target.arch === 'caster') logs.stormShockBackline += damage;
+    }
+    if (attackType === 'stormVenom') {
+      logs.stormVenomDamage += damage;
+      logs.stormVenomTicks++;
+    }
   }
 }
 
@@ -452,6 +460,11 @@ function simulateStage(stage, stageIndex, seed) {
     stormGroundingTank: 0,
     stormGroundingMelee: 0,
     stormGroundingBrands: 0,
+    stormShock: 0,
+    stormShockBackline: 0,
+    stormVenomDamage: 0,
+    stormVenomTicks: 0,
+    stormVenomTexts: 0,
     stormSilences: 0,
     stormCurseDamage: 0,
     stormCurseTank: 0,
@@ -538,6 +551,8 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'CHAIN') logs.stormChains++;
       if (text === 'COURT REBUKE') logs.courtRebukes++;
       if (text === 'GROUNDING BRAND') logs.stormGroundingBrands++;
+      if (text === 'STORM SHOCK') logs.stormShockTexts = (logs.stormShockTexts || 0) + 1;
+      if (text === 'STORM VENOM') logs.stormVenomTexts++;
       if (text === 'SILENCED') logs.stormSilences++;
       if (text === 'STORM CURSE') logs.stormCurseTexts = (logs.stormCurseTexts || 0) + 1;
     },
@@ -714,6 +729,8 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.stormGroundingTank > 0, 'stage 10: Stormbound Vizier Grounding did not pressure the tank');
     assert(logs.stormGroundingMelee > 0, 'stage 10: Stormbound Vizier Grounding did not pressure non-tank melee');
     assert(logs.stormGroundingBrands > 0, 'stage 10: Stormbound Vizier Grounding Brand was not shown');
+    assert(logs.stormShockBackline > 0, 'stage 10: Stormbound Vizier Storm Shock did not pressure backline units');
+    assert(logs.stormVenomDamage > 0 && logs.stormVenomTicks > 0 && logs.stormVenomTexts > 0, 'stage 10: Stormbound Vizier Storm Venom was not exercised');
     assert(logs.sultanSeen, 'stage 10: Sultan was not exercised');
     assert(logs.searingBrands > 0, 'stage 10: Sultan searing brand was not exercised');
     assert(logs.meteors > 0, 'stage 10: Sultan meteor was not exercised');
@@ -754,6 +771,10 @@ function simulateStage(stage, stageIndex, seed) {
     stormGroundingTank: logs.stormGroundingTank,
     stormGroundingMelee: logs.stormGroundingMelee,
     stormGroundingBrands: logs.stormGroundingBrands,
+    stormShock: logs.stormShock,
+    stormShockBackline: logs.stormShockBackline,
+    stormVenomDamage: logs.stormVenomDamage,
+    stormVenomTicks: logs.stormVenomTicks,
     stormSilences: logs.stormSilences,
     stormCurseDamage: logs.stormCurseDamage,
     stormCurseTank: logs.stormCurseTank,
@@ -794,6 +815,8 @@ for (const summary of summaries) {
     summary.stormChains ? `chain hits ${summary.stormChains}` : null,
     summary.courtRebukes ? `court rebukes ${summary.courtRebukes}` : null,
     summary.stormGrounding ? `grounding ${summary.stormGrounding} tank:${summary.stormGroundingTank} melee:${summary.stormGroundingMelee} brands:${summary.stormGroundingBrands}` : null,
+    summary.stormShock ? `shock ${summary.stormShock} back:${summary.stormShockBackline}` : null,
+    summary.stormVenomDamage ? `venom ${summary.stormVenomDamage} ticks:${summary.stormVenomTicks}` : null,
     summary.stormSilences ? `silences ${summary.stormSilences}` : null,
     summary.stormCurseDamage ? `curse ${summary.stormCurseDamage} tank:${summary.stormCurseTank} hits:${summary.stormCurseHits} ticks:${summary.stormCurseTicks}` : null,
     summary.searingBrands ? `searing brands ${summary.searingBrands}` : null,

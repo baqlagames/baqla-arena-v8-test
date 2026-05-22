@@ -100,6 +100,9 @@ const stormControlIcons = collectStatusIcons({ isPlayer: true, _stormSilenceTime
 assert.ok(stormControlIcons.some(icon => icon.title === 'No Healing'), 'player status icons should expose Vizier healer silence as no-heal');
 assert.ok(stormControlIcons.some(icon => icon.title === 'Storm Curse'), 'player status icons should expose Vizier tank curse');
 
+const stormVenomIcons = collectStatusIcons({ isPlayer: true, _stormVenomTimer: 120 }, tickHz);
+assert.ok(stormVenomIcons.some(icon => icon.title === 'Storm Venom'), 'player status icons should expose Storm Venom');
+
 const blightedIcons = collectStatusIcons({ isPlayer: true, _astralBlightTimer: 120 }, tickHz);
 assert.ok(blightedIcons.some(icon => icon.title === 'Astral Blight'), 'player status icons should expose Astral Blight');
 

@@ -148,6 +148,7 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._groundingBrandTimer>0)icons.push({c:'#8bdfff',g:'G',title:'Grounding Brand',pulse:true});
   if(t._stormSilenceTimer>0)icons.push({c:'#9bb8ff',g:'X',title:'No Healing',pulse:true});
   if(t._stormCurseTimer>0)icons.push({c:'#9b7cff',g:'C',title:'Storm Curse',pulse:true});
+  if(t._stormVenomTimer>0)icons.push({c:'#58d68d',g:'V',title:'Storm Venom',pulse:true});
   if(t._astralBlightTimer>0)icons.push({c:'#8bdfff',g:'A',title:'Astral Blight',pulse:true});
   if(t.priorityTarget)icons.push({c:t.color||'#8bdfff',g:'!',title:t.preferredBy?('Priority: '+t.preferredBy):'Priority Target',pulse:true});
   if(t.stormWard)icons.push({c:t.color||'#8bdfff',g:t.stormWardKind==='iron'?'I':'M',title:t.name||'Storm Ward',pulse:true});

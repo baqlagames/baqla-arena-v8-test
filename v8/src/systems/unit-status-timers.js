@@ -78,6 +78,22 @@ function tickBossDebuffs(unit, {
       unit._stormCurseFrom = null;
     }
   }
+  if (unit._stormVenomTimer > 0) {
+    unit._stormVenomTimer--;
+    unit._stormVenomTick = Math.max(0, (unit._stormVenomTick || 60) - 1);
+    if (unit._stormVenomTick <= 0 && unit.hp > 0) {
+      unit._stormVenomTick = 60;
+      const dmg = Math.max(unit._stormVenomMinDmg || 8, Math.round((unit.maxHp || unit.hp || 1) * (unit._stormVenomHpPct || 0.012)));
+      dealDamage(unit, dmg, unit._stormVenomFrom || null, 'magic', 'stormVenom', { sourceLabel: 'STORM VENOM', sourceColor: '#58d68d' });
+      addDamageText(unit.x, unit.y - unit.size - 8, 'STORM VENOM', '#58d68d');
+      emitParticle(unit.x, unit.y - unit.size * 0.5, '#58d68d', 4, 2);
+    }
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.45, '#58d68d', 1, 2);
+    if (unit._stormVenomTimer <= 0) {
+      unit._stormVenomTick = 0;
+      unit._stormVenomFrom = null;
+    }
+  }
   if (unit._astralBlightTimer > 0) {
     unit._astralBlightTimer--;
     unit._astralBlightTick = Math.max(0, (unit._astralBlightTick || 60) - 1);

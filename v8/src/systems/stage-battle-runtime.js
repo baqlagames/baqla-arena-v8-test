@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-round-bonus';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-round-bonus';
+} from './wave-lifecycle.js?v=20260522-vizier-pressure';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-vizier-pressure';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});
