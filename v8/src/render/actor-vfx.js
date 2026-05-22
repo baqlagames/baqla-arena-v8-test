@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-winterglass-stall-breaker';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-winterglass-enrage-economy';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);

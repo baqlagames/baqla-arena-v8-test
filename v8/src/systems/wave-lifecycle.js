@@ -1,8 +1,23 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-stall-breaker';
+import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-enrage-economy';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 
 const WAVE_5_CLEAR_BONUS_GOLD = 25;
+const STAGE_10_EARLY_WAVE_BONUS_GOLD = 15;
+
+function stageWaveBonus(stageN,round){
+  let amount=0;
+  const labels=[];
+  if(stageN===10&&round>=1&&round<=3){
+    amount+=STAGE_10_EARLY_WAVE_BONUS_GOLD;
+    labels.push('early wave bonus');
+  }
+  if(round===5){
+    amount+=WAVE_5_CLEAR_BONUS_GOLD;
+    labels.push('wave 5 bonus');
+  }
+  return { amount, label:labels.join(' + ') };
+}
 
 export function prepareWaveStartState(arena, units){
   arena.phase='wave';
@@ -143,13 +158,15 @@ export function calculateWaveRewards(view){
   const roundBonus=Math.min(roundBonusCap,Math.round(income*0.35));
   const perfectWave=arena.king&&arena.king.hp>=arena._waveStartKingHp;
   const perfectBonus=perfectWave?Math.round(income*0.15):0;
-  const waveBonus=(arena.round||1)===5?WAVE_5_CLEAR_BONUS_GOLD:0;
+  const extraBonus=stageWaveBonus(stageN,arena.round||1);
+  const waveBonus=extraBonus.amount;
   return {
     income,
     roundBonus,
     perfectWave,
     perfectBonus,
     waveBonus,
+    waveBonusLabel:extraBonus.label,
     gold:gold+income+roundBonus+perfectBonus+waveBonus,
   };
 }
@@ -237,7 +254,7 @@ export function completeWavePhase({
   });
   setGold(reward.gold);
   if (reward.perfectWave) showFlash('PERFECT WAVE!  +' + reward.perfectBonus + 'g bonus', '#44ff88', 100);
-  showFlash('+' + reward.income + 'g income  +' + reward.roundBonus + 'g round bonus' + (reward.waveBonus ? '  +' + reward.waveBonus + 'g wave 5 bonus' : ''), '#ffd700', 80);
+  showFlash('+' + reward.income + 'g income  +' + reward.roundBonus + 'g round bonus' + (reward.waveBonus ? '  +' + reward.waveBonus + 'g ' + (reward.waveBonusLabel || 'wave bonus') : ''), '#ffd700', 80);
   if (arena.round >= totalRounds) {
     endStage(true);
     return { endedStage: true, reward };

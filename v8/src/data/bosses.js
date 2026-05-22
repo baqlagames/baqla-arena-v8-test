@@ -157,7 +157,7 @@ export const BOSSES=[
     stormVenomDur:300,stormVenomHpPct:0.0075,stormVenomMinDmg:5,
     silencingDecreeCD:840,silencingDecreeCDMin:600,silencingDecreeCDMax:840,silencingDecreeFirst:520,silencingDecreeDur:150,
     tankCurseCD:720,tankCurseFirst:420,tankCurseDur:240,tankCurseHpPct:0.014,tankCurseHealCut:0.12,stormEnrageSkillMult:1.18,stormDeepEnrageDelay:3600,stormDeepEnrageSkillMult:1.35,stormNoTankSkillMult:1.18,stormAttritionSkillMult:1.22,
-    timeEnrageAt:13650},
+    timeEnrageAt:17250},
   {id:14,name:'Sphinx Judicator',tier:'mini',act:3,color:'#d8a84a',accent:'#6f4a18',hp:19000,dmg:96,speed:0.24,atkSpd:66,range:82,size:52,armor:7,magicRes:0,armorType:'warded',points:1200,raidAoeDmg:30,spawnFromTop:true,spawnYOffset:58,entryHold:45,
     // Stage 13 mini-boss: boss-only wave 6. Solar Riddle is the DPS check;
     // Death Sentence + sun pulses are the healer/sustain check. No escorts.

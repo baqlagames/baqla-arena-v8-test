@@ -142,6 +142,7 @@ assert.equal(act2Stages.length, 5, 'expected stage 6-10 coverage');
 const summaries = act2Stages.map(simulateStageEconomy);
 const stage6 = summaries[0];
 const stage10 = summaries.find(summary => summary.stage === 10);
+const stage10EarlyRounds = stage10?.rounds.filter(round => round.round >= 1 && round.round <= 3) || [];
 const stage10Round4 = stage10?.rounds.find(round => round.round === 4);
 const lowGoldReward = calculateWaveRewards({
   arena: { round: 1, king: { hp: 100 }, _waveStartKingHp: 100 },
@@ -165,6 +166,10 @@ for (const summary of summaries) {
   const round5 = summary.rounds.find(round => round.round === 5);
   assert(round5 && round5.waveBonus === 25, `stage ${summary.stage}: round 5 should grant fixed 25g wave bonus`);
 }
+assert.equal(stage10EarlyRounds.length, 3, 'stage 10 should have three early-wave bonus rounds');
+for (const round of stage10EarlyRounds) {
+  assert.equal(round.waveBonus, 15, `stage 10 round ${round.round} should grant fixed 15g early-wave bonus`);
+}
 assert(stage6.startGold <= 170, `stage 6 start gold too high: ${stage6.startGold}`);
 assert(stage6.finalGold <= 950, `stage 6 no-spend clear gold too high: ${stage6.finalGold}`);
 assert(stage6.maxRoundGold <= 170, `stage 6 round payout spike too high: ${stage6.maxRoundGold}`);
@@ -179,7 +184,7 @@ const finalGoldCaps = new Map([
   [7, 1050],
   [8, 1250],
   [9, 1375],
-  [10, 1525],
+  [10, 1575],
 ]);
 
 let previousFinal = 0;

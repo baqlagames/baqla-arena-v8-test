@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260522-winterglass-stall-breaker';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-winterglass-stall-breaker';
+import { drawHealthBar } from './health-bars.js?v=20260522-winterglass-enrage-economy';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-winterglass-enrage-economy';
 
 export function createActorOverlayRenderer({
   ctx,

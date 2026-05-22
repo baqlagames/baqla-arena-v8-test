@@ -351,6 +351,7 @@ function smokeStormboundVizier(ctx, boss) {
   if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.0075) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 5) throw new Error('Winterglass Magistrate Frostburn tuning drifted');
   if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Winterglass Magistrate tank curse damage tuning drifted');
   if (Math.abs((vizierDef.stormEnrageSkillMult || 0) - 1.18) > 0.0001) throw new Error('Winterglass Magistrate enrage skill multiplier drifted');
+  if (vizierDef.timeEnrageAt !== 17250) throw new Error('Winterglass Magistrate enrage timer should be 17250 frames');
   if (vizierDef.stormDeepEnrageDelay !== 3600 || Math.abs((vizierDef.stormDeepEnrageSkillMult || 0) - 1.35) > 0.0001) throw new Error('Winterglass Magistrate deep enrage tuning drifted');
   if (Math.abs((vizierDef.stormNoTankSkillMult || 0) - 1.18) > 0.0001 || Math.abs((vizierDef.stormAttritionSkillMult || 0) - 1.22) > 0.0001) throw new Error('Winterglass Magistrate stall-breaker tuning drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Winterglass Magistrate wards should award 15 gold each');
