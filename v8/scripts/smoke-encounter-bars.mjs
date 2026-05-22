@@ -87,11 +87,18 @@ assert.ok(wardenIcons.some(icon => icon.title === 'Starfall Soon'), 'boss status
 const wardIcons = collectStatusIcons({ isBoss: true, hiveShield: { hp: 1200, maxHp: 2000, astralWard: true, color: '#8bdfff' } }, tickHz);
 assert.ok(wardIcons.some(icon => icon.title === 'Lantern Ward'), 'boss status icons should expose Lantern Ward shields');
 
+const stormShieldIcons = collectStatusIcons({ isBoss: true, _stormShieldActive: true }, tickHz);
+assert.ok(stormShieldIcons.some(icon => icon.title === 'Storm Shield'), 'boss status icons should expose Vizier Storm Shield');
+
 const brandedIcons = collectStatusIcons({ isPlayer: true, _gravityBrandTimer: 120 }, tickHz);
 assert.ok(brandedIcons.some(icon => icon.title === 'Gravity Brand'), 'player status icons should expose Gravity Brand');
 
 const groundingIcons = collectStatusIcons({ isPlayer: true, _groundingBrandTimer: 120 }, tickHz);
 assert.ok(groundingIcons.some(icon => icon.title === 'Grounding Brand'), 'player status icons should expose Grounding Brand');
+
+const stormControlIcons = collectStatusIcons({ isPlayer: true, _stormSilenceTimer: 120, _stormCurseTimer: 120 }, tickHz);
+assert.ok(stormControlIcons.some(icon => icon.title === 'Silencing Decree'), 'player status icons should expose Vizier healer silence');
+assert.ok(stormControlIcons.some(icon => icon.title === 'Storm Curse'), 'player status icons should expose Vizier tank curse');
 
 const blightedIcons = collectStatusIcons({ isPlayer: true, _astralBlightTimer: 120 }, tickHz);
 assert.ok(blightedIcons.some(icon => icon.title === 'Astral Blight'), 'player status icons should expose Astral Blight');

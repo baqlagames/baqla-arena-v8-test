@@ -59,39 +59,63 @@ const boss = enemy('Stormbound Vizier', 250, 420, {
   size: 50,
   hp: 26000,
   maxHp: 26000,
+  stormVizier: true,
+  _stormShieldActive: true,
 });
 
 const caster = unit('Caster', 6, 'caster', 220, 690, { attackType: 'magic' });
 const ironWard = enemy('Iron Ward', 214, 480, {
   priorityTarget: true,
   preferredBy: 'magic',
+  stormWard: true,
+  stormWardKind: 'iron',
+  _stormBoss: boss,
   armor: 16,
   magicRes: 1,
 });
 const casterPick = findEnemyTargetForUnit(caster, view([boss, ironWard]));
 assert.equal(casterPick, ironWard, 'magic caster should prefer Iron Ward over boss');
 
+const healer = unit('Healer', 10, 'healer', 260, 720, { attackType: 'magic' });
+const healerPick = findEnemyTargetForUnit(healer, view([boss, ironWard]));
+assert.equal(healerPick, ironWard, 'healer/caster family should prefer Iron Ward over shielded boss');
+
 const hunter = unit('Hunter', 8, 'ranged', 295, 700, { attackType: 'pierce' });
 const mirrorWard = enemy('Mirror Ward', 286, 480, {
   priorityTarget: true,
   preferredBy: 'physical',
+  stormWard: true,
+  stormWardKind: 'mirror',
+  _stormBoss: boss,
   armor: 1,
   magicRes: 18,
 });
 const hunterPick = findEnemyTargetForUnit(hunter, view([boss, mirrorWard]));
 assert.equal(hunterPick, mirrorWard, 'physical ranged unit should prefer Mirror Ward over boss');
 
-const stormMote = enemy('Storm Mote', 300, 510, {
+const melee = unit('Melee', 5, 'melee', 235, 665, { attackType: 'physical', prefersRanged: false });
+const meleePick = findEnemyTargetForUnit(melee, view([boss, mirrorWard]));
+assert.equal(meleePick, mirrorWard, 'physical melee should prefer Mirror Ward over shielded boss');
+
+const tank = unit('Tank', 0, 'tank', 250, 660, { attackType: 'physical', prefersRanged: false, taunt: true });
+const tankPick = findEnemyTargetForUnit(tank, view([boss, mirrorWard]));
+assert.equal(tankPick, mirrorWard, 'tank should prefer Mirror Ward over shielded boss');
+
+boss._stormShieldActive = false;
+ironWard.hp = 0;
+mirrorWard.hp = 0;
+const returnPick = findEnemyTargetForUnit(hunter, view([boss]));
+assert.equal(returnPick, boss, 'units should return to boss after wards die');
+
+const futureFlyingPriority = enemy('Future Flying Priority', 300, 510, {
   priorityTarget: true,
   preferredBy: 'ranged',
   flying: true,
   arch: 'caster',
 });
-const rangedPick = findRangedEnemyTargetForUnit(hunter, view([boss, stormMote]));
-assert.equal(rangedPick, stormMote, 'ranged unit should focus flying Storm Mote priority target');
-
-const melee = unit('Melee', 5, 'melee', 235, 665, { attackType: 'physical', prefersRanged: false });
-const meleePick = findEnemyTargetForUnit(melee, view([boss, stormMote]));
-assert.equal(meleePick, boss, 'melee should not get stuck trying to target unreachable flying motes');
+const rangedPick = findRangedEnemyTargetForUnit(hunter, view([boss, futureFlyingPriority]));
+assert.equal(rangedPick, futureFlyingPriority, 'ranged units should still handle future flying priority targets');
+const meleeFlyingPick = findEnemyTargetForUnit(melee, view([boss, futureFlyingPriority]));
+assert.equal(meleeFlyingPick, boss, 'melee should not get stuck trying to target unreachable flying priority targets');
 
 console.log('smoke-priority-targeting: ok');

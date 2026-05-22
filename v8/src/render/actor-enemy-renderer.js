@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-sequence';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-wards';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({
@@ -342,6 +342,29 @@ export function createActorEnemyRenderer({
         ctx.fillStyle = '#d8f4ff';
         ctx.fillText('WARD ' + Math.ceil(enemy.hiveShield.hp), x, Math.max(top + 6, y - size - 28));
       }
+      ctx.restore();
+    }
+
+    if (enemy._stormShieldActive) {
+      ctx.save();
+      const pulse = 0.68 + 0.32 * Math.sin(f * 0.12);
+      const r = size + 12 + Math.sin(f * 0.08) * 2;
+      ctx.strokeStyle = '#ffd166';
+      ctx.globalAlpha = 0.58 * pulse;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 0.16 * pulse;
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath();
+      ctx.arc(x, y, r - 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.82;
+      ctx.font = 'bold 8px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff0a8';
+      ctx.fillText('STORM SHIELD', x, Math.max(top + 6, y - size - 30));
       ctx.restore();
     }
 

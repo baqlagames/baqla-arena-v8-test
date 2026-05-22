@@ -88,7 +88,7 @@ const BOSS_SKILL_LABELS={
   10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
   11:{aoe:'CURSE',debuff:'HEX',spawn:'CULTIST',magicBolt:'BOLT'},
   12:{bombDrop:'BOMB',skyStrafe:'STRAFE',sandStorm:'STORM',aoe:'SAND',lunge:'DIVE',magicBolt:'BOLT'},
-  13:{twinWards:'WARDS',stormMotes:'MOTES',chainDecree:'CHAIN',groundingPulse:'GROUNDING'},
+  13:{twinWards:'WARDS',chainDecree:'CHAIN',groundingPulse:'GROUNDING',silencingDecree:'SILENCE',tankCurse:'CURSE'},
   14:{aoe:'SUN',debuff:'DEATH',meteor:'METEOR',magicBolt:'BOLT'}
 };
 
@@ -118,7 +118,9 @@ const DEFAULT_SKILL_LABELS={
   twinWards:'WARDS',
   stormMotes:'MOTES',
   chainDecree:'CHAIN',
-  groundingPulse:'GROUNDING'
+  groundingPulse:'GROUNDING',
+  silencingDecree:'SILENCE',
+  tankCurse:'CURSE'
 };
 
 const BOSS_SKILL_HINTS={
@@ -128,7 +130,7 @@ const BOSS_SKILL_HINTS={
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
   10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
   12:{bombDrop:'DODGE BOMBS',skyStrafe:'LANE STRAFE',sandStorm:'WIDE STORM',aoe:'SAND RING',lunge:'DIVE TARGET',magicBolt:'RANGED HIT'},
-  13:{twinWards:'MIXED DAMAGE',stormMotes:'FLYING ADDS',chainDecree:'CHAIN HIT',groundingPulse:'MELEE PULSE'},
+  13:{twinWards:'BREAK WARDS',chainDecree:'CHAIN HIT',groundingPulse:'MELEE PULSE',silencingDecree:'HEALER LOCK',tankCurse:'TANK DOT'},
   14:{aoe:'WIDE SUN',debuff:'DEATH MARK',meteor:'DODGE RING',magicBolt:'RANGED HIT'}
 };
 
@@ -158,7 +160,9 @@ const DEFAULT_SKILL_HINTS={
   twinWards:'BREAK WARDS',
   stormMotes:'KILL FLYERS',
   chainDecree:'HEAL CHAIN',
-  groundingPulse:'FRONTLINE HIT'
+  groundingPulse:'FRONTLINE HIT',
+  silencingDecree:'HEALER LOCK',
+  tankCurse:'TANK DOT'
 };
 
 const READABILITY_BOSS_IDS=new Set([3,4,5,6,10,11,12,13,14]);
@@ -200,6 +204,8 @@ export function bossReadableSkillPills(boss){
   add('stormMotes','stormMotesCD','#8bdfff');
   add('chainDecree','chainDecreeCD','#ffd166');
   add('groundingPulse','groundingPulseCD','#9bb8ff');
+  add('silencingDecree','silencingDecreeCD','#9bb8ff');
+  add('tankCurse','tankCurseCD','#9b7cff');
   add('royalDive','royalDiveCD','#ff5a3a');
   add('bliz','blizzardCD','#88ddff');
   add('stomp','stompCD','#7a8a9a');

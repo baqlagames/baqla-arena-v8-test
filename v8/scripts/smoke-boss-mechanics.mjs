@@ -3,6 +3,7 @@ import { ENEMIES } from '../src/data/enemies.js';
 import { ARENA_L, ARENA_R } from '../src/data/tuning.js';
 import { spawnBossById } from '../src/systems/boss-spawn.js';
 import { drainHealToBarrier, tickAerialBombs, updateBoss } from '../src/systems/boss-mechanics.js';
+import { calculateEnemyKillReward } from '../src/systems/combat-death.js';
 
 const WIDTH = 500;
 const ARENA_TOP = 42;
@@ -44,6 +45,7 @@ function makeContext() {
   const beamFx = [];
   const particles = [];
   const damageText = [];
+  const damageHits = [];
   const projectiles = [];
   const flashes = [];
   let shakes = 0;
@@ -62,9 +64,11 @@ function makeContext() {
     arenaBottom: ARENA_BOT,
     spawnLeft: SPAWN_LEFT,
     spawnRight: SPAWN_RIGHT,
-    dealDamage(target, amount) {
+    dealDamage(target, amount, source, type, attackType, opts = {}) {
       if (!target || !Number.isFinite(target.hp)) return;
-      target.hp = Math.max(0, target.hp - Math.max(0, Math.round(amount || 0)));
+      const damage = Math.max(0, Math.round(amount || 0));
+      damageHits.push({ target, source, type, attackType, label: opts.sourceLabel || '', amount: damage });
+      target.hp = Math.max(0, target.hp - damage);
     },
     addParticle(x, y, color, count = 1, size = 1) {
       particles.push({ x, y, color, count, size });
@@ -113,6 +117,7 @@ function makeContext() {
       return { particles: particles.length, damageText: damageText.length, projectiles: projectiles.length, flashes: flashes.length, shakes };
     },
     flashes,
+    damageHits,
   };
   return ctx;
 }
@@ -283,79 +288,123 @@ function smokeAstralWarden(ctx, boss) {
 function smokeStormboundVizier(ctx, boss) {
   if (boss.id !== 13) return null;
 
-  boss.twinWardsFirst = 1;
-  boss.stormWardMaxDur = 8;
-  boss.stormMotesDelay = 3;
-  boss.stormMoteLifetime = 36;
-  boss.stormCycleEvery = 60;
+  boss.hp = boss.maxHp;
+  boss.stormWardThresholds = [1, 0.75, 0.5, 0.25];
+  boss.stormExposeDur = 4;
+  boss.ironSurgeFirst = 1;
+  boss.ironSurgeEvery = 8;
+  boss.mirrorCleaveFirst = 1;
+  boss.mirrorCleaveEvery = 8;
   boss.chainDecreeFirst = 1;
   boss.groundingPulseFirst = 1;
   boss._stormVizierInit = false;
   boss._stormCycleState = null;
   boss._stormWardRefs = [];
+  boss._stormWardThresholdDone = [];
+  boss._stormWardCasts = 0;
   boss._stormCastLock = 0;
-  tickBoss(ctx, boss, 2);
-  const iron = ctx.enemies.find(enemy => enemy.name === 'Iron Ward');
-  const mirror = ctx.enemies.find(enemy => enemy.name === 'Mirror Ward');
-  if (!iron || !mirror) throw new Error('Stormbound Vizier did not summon both Twin Wards');
-  if (!iron.priorityTarget || iron.preferredBy !== 'magic') throw new Error('Iron Ward missing magic priority target metadata');
-  if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
-  if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier spawned motes while wards were active');
-
-  boss._stormChainCd = 0;
-  boss._stormGroundingCd = 0;
-  tickBoss(ctx, boss, 2);
-  if (ctx.damageText.some(item => item.text === 'CHAIN' || item.text === 'GROUNDING')) {
-    throw new Error('Stormbound Vizier should not use boss-only casts while wards are active');
-  }
-
-  tickBoss(ctx, boss, 10);
-  if (!ctx.damageText.some(item => item.text === 'COURT REBUKE')) throw new Error('Stormbound Vizier did not cast Court Rebuke when wards timed out');
-  if (boss._stormExposedTimer > 0) throw new Error('Stormbound Vizier should not expose after failed ward handling');
-  if (ctx.enemies.some(enemy => enemy.stormWard && enemy.hp > 0)) throw new Error('Stormbound Vizier failed wards should shatter after Court Rebuke');
-
-  tickBoss(ctx, boss, 5);
-  const motes = ctx.enemies.filter(enemy => enemy.name === 'Storm Mote');
-  if (!motes.length) throw new Error('Stormbound Vizier did not summon Storm Motes');
-  if (!motes.every(mote => mote.priorityTarget && mote.flying && mote.preferredBy === 'ranged')) {
-    throw new Error('Storm Motes missing flying ranged priority metadata');
-  }
-  for (const mote of motes) {
-    mote.entryHold = 0;
-    mote._stormMoteShotT = 1;
-  }
-  tickBoss(ctx, boss, 2);
-  if (!ctx.damageText.some(item => item.text === 'STORM MOTE')) throw new Error('Storm Motes did not shoot backline targets');
-
-  boss._stormChainCd = 0;
-  boss._stormGroundingCd = 0;
-  boss._stormCastLock = 0;
-  for (const mote of motes) mote.hp = 0;
+  for (const enemy of ctx.enemies) if (enemy && enemy._stormBoss === boss) enemy.hp = 0;
   ctx.units[0].x = boss.x;
   ctx.units[0].y = boss.y + 54;
   ctx.units[1].x = boss.x + 58;
   ctx.units[1].y = boss.y + 66;
+
+  tickBoss(ctx, boss, 2);
+  let iron = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Iron Ward' && enemy.hp > 0);
+  let mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
+  if (!iron || !mirror) throw new Error('Stormbound Vizier did not summon both Twin Wards');
+  if (!iron.priorityTarget || iron.preferredBy !== 'magic') throw new Error('Iron Ward missing magic priority target metadata');
+  if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
+  if (!boss._stormShieldActive) throw new Error('Stormbound Vizier did not shield while wards were active');
+  if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier should not spawn Storm Motes');
+  if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
+  const wardReward = calculateEnemyKillReward(iron, ctx.units[2], {
+    inArena: true,
+    currentStage: { n: 10 },
+    arenaState: { round: 4 },
+    campaignKillBountyMult: 0.8,
+    warmupGoldBonus: 1,
+    riftBonusGold: 0,
+    campaignStageMult: () => 1,
+    roundGoldMult: () => 1,
+    lateStageNormalGoldMult: () => 1,
+  });
+  if (wardReward !== 15) throw new Error('Stormbound Vizier ward fixed gold reward should resolve to exactly 15g');
+
+  boss._stormChainCd = 0;
+  boss._stormGroundingCd = 0;
+  iron._stormWardCastT = 1;
+  mirror._stormWardCastT = 1;
+  const hitStart = ctx.damageHits.length;
+  tickBoss(ctx, boss, 2);
+  const wardHits = ctx.damageHits.slice(hitStart);
+  if (ctx.damageText.some(item => item.text === 'CHAIN' || item.text === 'GROUNDING')) {
+    throw new Error('Stormbound Vizier should not use boss-only casts while wards are active');
+  }
+  if (!ctx.damageText.some(item => item.text === 'IRON SURGE')) throw new Error('Iron Ward did not show Iron Surge hits');
+  if (!ctx.damageText.some(item => item.text === 'MIRROR CLEAVE')) throw new Error('Mirror Ward did not show Mirror Cleave hits');
+  if (ctx.damageText.filter(item => item.text === 'IRON SURGE').length < 5) throw new Error('Iron Ward did not show visible hits on the full squad');
+  if (!wardHits.some(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'ranged') || !wardHits.some(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'healer')) {
+    throw new Error('Iron Ward did not damage ranged and healer backline');
+  }
+  if (!wardHits.some(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank') || !wardHits.some(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'melee')) {
+    throw new Error('Mirror Ward did not pressure tank and non-tank melee');
+  }
+
+  boss._stormChainCd = 0;
+  boss._stormGroundingCd = 0;
+  boss._stormSilenceCd = 999;
+  boss._stormTankCurseCd = 999;
+  boss._stormCastLock = 0;
+  iron.hp = 0;
+  mirror.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if (boss._stormShieldActive) throw new Error('Stormbound Vizier shield stayed active after both wards died');
+  if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
+  if (!ctx.damageText.some(item => item.text === 'STORM SHIELD BROKEN')) throw new Error('Stormbound Vizier missing shield-break callout');
+  if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
   tickBoss(ctx, boss, 3);
   if (!ctx.damageText.some(item => item.text === 'GROUNDING')) throw new Error('Stormbound Vizier did not pressure tank/melee with Grounding Pulse');
   if (!ctx.units[0]._groundingBrandTimer || !ctx.units[1]._groundingBrandTimer) throw new Error('Stormbound Vizier Grounding Pulse did not brand tank and melee');
   boss._stormCastLock = 0;
   tickBoss(ctx, boss, 3);
   if (!ctx.damageText.some(item => item.text === 'CHAIN')) throw new Error('Stormbound Vizier did not cast Chain Decree');
+  boss._stormCastLock = 0;
+  boss._stormSilenceCd = 0;
+  tickBoss(ctx, boss, 3);
+  if (!ctx.units[3]._stormSilenceTimer || !ctx.damageText.some(item => item.text === 'SILENCED')) throw new Error('Stormbound Vizier did not silence healer with visible feedback');
+  boss._stormCastLock = 0;
+  boss._stormTankCurseCd = 0;
+  boss._stormSilenceCd = 999;
+  tickBoss(ctx, boss, 3);
+  if (!ctx.units[0]._stormCurseTimer || !ctx.damageText.some(item => item.text === 'STORM CURSE')) throw new Error('Stormbound Vizier did not curse tank with visible feedback');
 
-  boss._stormCycleState = 'boss';
-  boss._stormCycleTimer = 1;
-  tickBoss(ctx, boss, 2);
-  const nextIron = ctx.enemies.find(enemy => enemy.name === 'Iron Ward' && enemy.hp > 0);
-  const nextMirror = ctx.enemies.find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
-  if (!nextIron || !nextMirror) throw new Error('Stormbound Vizier did not repeat Twin Wards after the boss-only window');
-  nextIron.hp = 0;
-  nextMirror.hp = 0;
-  tickBoss(ctx, boss, 2);
-  if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
-  if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
+  const expectedSizes = [26, 29, 32, 34];
+  for (const [waveIndex, hpPct] of [[1, 0.74], [2, 0.49], [3, 0.24]]) {
+    boss.hp = Math.round(boss.maxHp * hpPct);
+    boss._stormExposedTimer = 0;
+    boss._stormExposedDamageMult = 0;
+    boss._stormCastLock = 0;
+    tickBoss(ctx, boss, 2);
+    iron = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Iron Ward' && enemy.hp > 0);
+    mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
+    if (!iron || !mirror) throw new Error(`Stormbound Vizier did not spawn ward wave ${waveIndex + 1}`);
+    if (iron.size < expectedSizes[waveIndex] || mirror.size < expectedSizes[waveIndex]) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} did not grow in size`);
+    if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} did not keep 15g ward rewards`);
+    if (waveIndex < 3) {
+      iron.hp = 0;
+      mirror.hp = 0;
+      tickBoss(ctx, boss, 2);
+    }
+  }
+  if (boss._stormWardCasts < 4) throw new Error('Stormbound Vizier did not spawn all four HP-threshold ward waves');
+  tickBoss(ctx, boss, 80);
+  if (!ctx.enemies.some(enemy => enemy.stormWard && enemy.hp > 0)) throw new Error('Stormbound Vizier wards should not despawn by timer in the smoke');
 
   const texts = ctx.damageText.map(item => item.text);
   const flashes = ctx.flashes.map(item => item.text);
+  if (texts.includes('COURT REBUKE') || flashes.includes('COURT REBUKE!')) throw new Error('Stormbound Vizier should not use Court Rebuke in the ward-focused version');
+  if (texts.includes('STORM MOTE') || texts.includes('STORM MOTES') || flashes.includes('STORM MOTES!')) throw new Error('Stormbound Vizier should not use Storm Motes in the ward-focused version');
   if (texts.some(text => String(text).includes('EMBER')) || flashes.includes('EMBER CHICKS!')) {
     throw new Error('Stormbound Vizier should not use old Ember mechanics');
   }
@@ -383,10 +432,10 @@ function assertBossReadability(ctx, boss) {
     if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
   }
   if (boss.id === 13) {
-    for (const text of ['TWIN WARDS', 'COURT REBUKE', 'VIZIER EXPOSED', 'STORM MOTES', 'STORM MOTE', 'GROUNDING PULSE', 'GROUNDING', 'GROUNDING BRAND', 'CHAIN DECREE', 'CHAIN']) {
+    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'IRON SURGE', 'MIRROR CLEAVE', 'GROUNDING PULSE', 'GROUNDING', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
       if (!texts.includes(text)) throw new Error(`Stormbound Vizier missing ${text} callout`);
     }
-    for (const label of ['MAGIC', 'PHYSICAL', 'GROUNDING']) {
+    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'SHIELD', 'SILENCE', 'CURSE', 'GROUNDING']) {
       if (!labels.includes(label)) throw new Error(`Stormbound Vizier missing ${label} ward warning label`);
     }
     if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember damage text');

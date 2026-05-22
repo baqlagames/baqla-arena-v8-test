@@ -47,6 +47,7 @@ function priorityTargetScore(unit, target, distance) {
   if (preferred === family) score -= 260;
   else if (preferred === 'ranged' && isArenaRangedActor(unit)) score -= 230;
   else if (preferred === 'magic' || preferred === 'physical' || preferred === 'ranged') score += 100;
+  if (target._stormBoss && target._stormBoss._stormShieldActive) score -= 420;
   if (target.flying && isArenaRangedActor(unit)) score -= 180;
   if (target.isBoss || target.isElite) score += 160;
   return score - 480;

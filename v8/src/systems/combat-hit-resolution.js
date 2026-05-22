@@ -65,6 +65,7 @@ export function applyBossAndRecordModifiers(dmg, {
 }) {
   let next = dmg;
   if (target.ampTimer > 0) next *= (target.ampMult || 1.3);
+  if (target._stormShieldActive && (target.stormVizier || target.id === 13)) next = Math.max(1, Math.round(next * (target._stormShieldDamageMult || target.stormShieldDamageMult || 0.24)));
   if (target._stormExposedTimer > 0) next *= (target._stormExposedDamageMult || 1.35);
   if (target._corrosiveAmp && target._corrosiveTimer > 0) next = Math.round(next * (1 + target._corrosiveAmp));
   if (target.markTimer > 0) next *= (target.markMult || 1.5);

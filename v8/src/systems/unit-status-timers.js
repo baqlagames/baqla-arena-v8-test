@@ -54,6 +54,30 @@ function tickBossDebuffs(unit, {
     unit._groundingBrandTimer--;
     if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.4, unit.size * 0.4), unit.y - unit.size * 0.5, '#8bdfff', 1, 2);
   }
+  if (unit.silenceTimer > 0) {
+    unit.silenceTimer--;
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.4, unit.size * 0.4), unit.y - unit.size * 0.6, '#ffaa00', 1, 2);
+  }
+  if (unit._stormSilenceTimer > 0) {
+    unit._stormSilenceTimer--;
+    if (frame % 8 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.7, '#9bb8ff', 1, 2);
+  }
+  if (unit._stormCurseTimer > 0) {
+    unit._stormCurseTimer--;
+    unit._stormCurseTick = Math.max(0, (unit._stormCurseTick || 60) - 1);
+    if (unit._stormCurseTick <= 0 && unit.hp > 0) {
+      unit._stormCurseTick = 60;
+      const dmg = Math.max(8, Math.round((unit.maxHp || unit.hp || 1) * (unit._stormCurseHpPct || 0.01)));
+      dealDamage(unit, dmg, unit._stormCurseFrom || null, 'magic', 'stormCurse', { sourceLabel: 'STORM CURSE', sourceColor: '#9b7cff' });
+      addDamageText(unit.x, unit.y - unit.size - 8, 'STORM CURSE', '#9b7cff');
+      emitParticle(unit.x, unit.y - unit.size * 0.5, '#9b7cff', 4, 2);
+    }
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.45, '#9b7cff', 1, 2);
+    if (unit._stormCurseTimer <= 0) {
+      unit._stormCurseTick = 0;
+      unit._stormCurseFrom = null;
+    }
+  }
   if (unit._astralBlightTimer > 0) {
     unit._astralBlightTimer--;
     unit._astralBlightTick = Math.max(0, (unit._astralBlightTick || 60) - 1);

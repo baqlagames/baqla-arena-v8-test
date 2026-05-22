@@ -19,6 +19,7 @@ export function tickUnitPriestPassives(unit, {
   shake,
 }) {
   if (tickAngelForm(unit, { frame, units, projectiles, randomRange, applyHealingReceived, addHealFx, emitParticle, addDamageText })) return true;
+  if (unit._stormSilenceTimer > 0 || unit.silenceTimer > 0) return false;
   tickPrayerOfMending(unit, { frame, units, projectiles, emitParticle, addDamageText });
   tickHolyComfortAura(unit, { frame, units, groundEffects, applyHealingReceived, addHealFx, emitParticle });
   tickHolyRenew(unit, { frame, units, projectiles, groundEffects, applyHealingReceived, addHealFx, emitParticle, addDamageText });

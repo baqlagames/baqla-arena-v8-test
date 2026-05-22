@@ -651,46 +651,63 @@ function activeStormWards(b,enemies){
   const refs=Array.isArray(b._stormWardRefs)?b._stormWardRefs:[];
   return refs.filter(w=>w&&w.hp>0&&(enemies||[]).includes(w));
 }
-function activeStormMotes(b,enemies){
-  return (enemies||[]).filter(e=>e&&e.hp>0&&e.stormMote&&e._stormBoss===b);
-}
-function stormHasPriorityAdds(b,enemies){
-  return activeStormWards(b,enemies).length>0||activeStormMotes(b,enemies).length>0;
-}
+function stormHasPriorityAdds(b,enemies){return activeStormWards(b,enemies).length>0}
 function stormIsTank(u){return !!(u&&(u.arch==='tank'||u.taunt))}
 function stormIsMelee(u){return !!(u&&(u.arch==='melee'||u.prefersMelee||u.arch==='paladin'))}
 function stormBossOnlyWindow(b,ctx){
   return b&&b._stormCycleState==='boss'&&!stormHasPriorityAdds(b,ctx.enemies||[]);
 }
+function stormScaleAt(list,index,fallback){
+  const arr=Array.isArray(list)?list:[];
+  if(Number.isFinite(arr[index]))return arr[index];
+  if(arr.length&&Number.isFinite(arr[arr.length-1]))return arr[arr.length-1];
+  return fallback;
+}
+function nextStormWardThreshold(b){
+  const thresholds=Array.isArray(b.stormWardThresholds)&&b.stormWardThresholds.length?b.stormWardThresholds:[1,0.75,0.5,0.25];
+  const done=Array.isArray(b._stormWardThresholdDone)?b._stormWardThresholdDone:[];
+  for(let i=0;i<thresholds.length;i++){
+    if(!done[i])return {index:i,pct:thresholds[i]};
+  }
+  return null;
+}
+function stormSilenceCooldown(b){
+  const min=b.silencingDecreeCDMin||600;
+  const max=b.silencingDecreeCDMax||840;
+  return Math.round(rnd(min,max));
+}
 function initStormboundVizier(b,ctx){
   if(b._stormVizierInit)return;
   b._stormVizierInit=true;
   if(!b.mechCD)b.mechCD={};
-  b._stormCycleState='nextWards';
-  b._stormCycleTimer=b.twinWardsFirst||120;
+  b._stormCycleState='boss';
+  b._stormCycleTimer=0;
   b._stormChainCd=b.chainDecreeFirst||210;
   b._stormGroundingCd=b.groundingPulseFirst||300;
+  b._stormSilenceCd=b.silencingDecreeFirst||stormSilenceCooldown(b);
+  b._stormTankCurseCd=b.tankCurseFirst||420;
   b._stormWardRefs=[];
+  b._stormWardThresholdDone=[];
+  b._stormShieldActive=false;
   syncStormVizierCooldowns(b,ctx);
 }
 function syncStormVizierCooldowns(b,ctx){
   const cd=b.mechCD||(b.mechCD={});
   const hidden=9999;
-  const state=b._stormCycleState||'nextWards';
-  if(state==='nextWards'||state==='boss')cd.twinWards=Math.max(0,Math.round(b._stormCycleTimer||0));
-  else if(state==='wards')cd.twinWards=Math.max(0,Math.round(b._stormWardExpireT||0));
-  else cd.twinWards=hidden;
-  if(state==='moteDelay')cd.stormMotes=Math.max(0,Math.round(b._stormCycleTimer||0));
-  else if(state==='wards')cd.stormMotes=Math.max(1,Math.round((b._stormWardExpireT||0)+(b.stormMotesDelay||60)));
-  else if(state==='motes')cd.stormMotes=0;
-  else cd.stormMotes=hidden;
+  const active=activeStormWards(b,ctx.enemies||[]);
+  cd.twinWards=active.length?0:hidden;
+  cd.stormMotes=hidden;
   const bossWindow=stormBossOnlyWindow(b,ctx);
   cd.chainDecree=bossWindow?Math.max(0,Math.round(b._stormChainCd||0)):hidden;
   cd.groundingPulse=bossWindow?Math.max(0,Math.round(b._stormGroundingCd||0)):hidden;
+  cd.silencingDecree=Math.max(0,Math.round(b._stormSilenceCd||0));
+  cd.tankCurse=Math.max(0,Math.round(b._stormTankCurseCd||0));
 }
 function tickStormBossCooldowns(b){
   if(Number.isFinite(b._stormChainCd)&&b._stormChainCd>0)b._stormChainCd--;
   if(Number.isFinite(b._stormGroundingCd)&&b._stormGroundingCd>0)b._stormGroundingCd--;
+  if(Number.isFinite(b._stormSilenceCd)&&b._stormSilenceCd>0)b._stormSilenceCd--;
+  if(Number.isFinite(b._stormTankCurseCd)&&b._stormTankCurseCd>0)b._stormTankCurseCd--;
 }
 function stormExposeVizier(b,ctx){
   const { groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
@@ -702,47 +719,33 @@ function stormExposeVizier(b,ctx){
   showFlash('JUDGMENT WINDOW!','#ffd166',55);
   shake(5);
 }
-function castStormCourtRebuke(b,ctx,source){
-  const { units, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
-  for(const u of stormPlayerUnits(units)){
-    const tankish=u.arch==='tank'||u.taunt;
-    const dmg=Math.round((b.courtRebukeDmg||90)*(tankish?0.78:1));
-    dealDamage(u,dmg,b,'magic','courtRebuke',{sourceLabel:'COURT REBUKE',sourceColor:'#8bdfff'});
-    addP(u.x,u.y,'#8bdfff',5,3);
-  }
-  groundFx.push({x:b.x,y:b.y,r:0,maxR:220,life:0.7,color:'#3f8cff',celestialAuraFx:true});
-  addDmg(source&&Number.isFinite(source.x)?source.x:b.x,source&&Number.isFinite(source.y)?source.y-18:b.y-b.size,'COURT REBUKE','#8bdfff',{sz:13,bold:true,outline:'#061433'});
-  showFlash('COURT REBUKE!','#8bdfff',52);
-  b._stormRebukeLock=b.courtRebukeLock||96;
-  shake(8);
-}
-function resolveStormWards(b,ctx,success,source){
-  const { enemies, addParticle:addP, addDamageText:addDmg }=ctx;
+function resolveStormWards(b,ctx){
+  const { enemies, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
   if(b._stormWardResolved)return;
   b._stormWardResolved=true;
   b._stormWardWaveActive=false;
-  const active=activeStormWards(b,enemies);
-  if(success){
-    stormExposeVizier(b,ctx);
-  }else{
-    castStormCourtRebuke(b,ctx,source||active[0]||b);
-    for(const ward of active){
-      ward.hp=0;
-      ward._stormWardFailed=true;
-      addDmg(ward.x,ward.y-22,'WARD SHATTER',ward.color||'#8bdfff',{sz:10,bold:true,outline:'#061433'});
-      addP(ward.x,ward.y,ward.color||'#8bdfff',10,3);
-    }
-  }
-  b._stormCycleState='moteDelay';
-  b._stormCycleTimer=b.stormMotesDelay||60;
+  b._stormShieldActive=false;
+  b._stormShieldWave=0;
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(150,(b.size||42)*3.1),life:0.58,color:'#ffd166',celestialAuraFx:true});
+  addDmg(b.x,b.y-(b.size||40)-30,'STORM SHIELD BROKEN','#ffd166',{sz:11,bold:true,outline:'#302000'});
+  for(let i=0;i<24;i++)addP(b.x+rnd(-b.size,b.size),b.y+rnd(-b.size,b.size),'#ffd166',1,4);
+  showFlash('STORM SHIELD BROKEN!','#ffd166',45);
+  shake(4);
+  stormExposeVizier(b,ctx);
+  b._stormCycleState='boss';
   syncStormVizierCooldowns(b,ctx);
 }
-function castStormTwinWards(b,ctx){
+function castStormTwinWards(b,ctx,thresholdIndex=0){
   const { enemies, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
   if(stormHasPriorityAdds(b,enemies))return false;
+  const wave=thresholdIndex+1;
+  const hpScale=stormScaleAt(b.stormWardScales,thresholdIndex,1);
+  const sizeScale=stormScaleAt(b.stormWardSizeScales,thresholdIndex,1);
+  const wardHp=Math.max(1,Math.round((b.stormWardHp||3000)*hpScale));
+  const wardSize=Math.round(26*sizeScale);
   const defs=[
-    {kind:'iron',name:'Iron Ward',x:-62,color:'#7fc7ff',accent:'#d8f4ff',armor:16,magicRes:1,armorType:'heavy',preferredBy:'magic',label:'MAGIC'},
-    {kind:'mirror',name:'Mirror Ward',x:62,color:'#ffd166',accent:'#fff0a8',armor:1,magicRes:18,armorType:'warded',preferredBy:'physical',label:'PHYSICAL'},
+    {kind:'iron',name:'Iron Ward',x:-72,color:'#7fc7ff',accent:'#d8f4ff',armor:16,magicRes:1,armorType:'heavy',preferredBy:'magic',label:'MAGIC',first:b.ironSurgeFirst||90,every:b.ironSurgeEvery||180},
+    {kind:'mirror',name:'Mirror Ward',x:72,color:'#ffd166',accent:'#fff0a8',armor:1,magicRes:18,armorType:'warded',preferredBy:'physical',label:'PHYSICAL',first:b.mirrorCleaveFirst||72,every:b.mirrorCleaveEvery||144},
   ];
   const refs=[];
   for(const def of defs){
@@ -751,139 +754,156 @@ function castStormTwinWards(b,ctx){
       stormWard:true,stormWardKind:def.kind,_stormBoss:b,
       priorityTarget:true,preferredBy:def.preferredBy,
       act:2,arch:'ward',
-      x:b.x+def.x,y:b.y+64+rnd(-6,6),
+      x:b.x+def.x,y:b.y+68+rnd(-6,6),
       color:def.color,accent:def.accent,
-      maxHp:b.stormWardHp||3000,hp:b.stormWardHp||3000,
-      dmg:18,speed:0.08,atkSpd:96,range:72,size:24,
+      maxHp:wardHp,hp:wardHp,
+      dmg:Math.round(18*hpScale),speed:0.08,atkSpd:96,range:84,size:wardSize,
       armor:def.armor,magicRes:def.magicRes,armorType:def.armorType,projType:'lightning',
-      points:90,isEnemy:true,bossSupport:true,bossSupportColor:def.color,
+      points:15,fixedGoldReward:15,isEnemy:true,bossSupport:true,bossSupportColor:def.color,
       cd:0,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},
       spawnFrame:ctx.frame||0,entryHold:30,
-      _stormWardTimer:b.stormWardPulseDelay||420
+      _stormWardWave:wave,_stormWardDamageScale:hpScale,
+      _stormWardCastT:def.first,_stormWardCastEvery:def.every
     };
     clampBossActor(ward,ctx,{topMargin:62,bottomMargin:82});
     enemies.push(ward);
     refs.push(ward);
-    groundFx.push({x:ward.x,y:ward.y,r:0,maxR:54,life:0.7,color:def.color,enemyWarn:true,warnTimer:40,warnMax:40,label:def.label});
-    addDmg(ward.x,ward.y-34,def.name.toUpperCase(),def.color,{sz:11,bold:true,outline:'#061433'});
-    addP(ward.x,ward.y,def.color,18,4);
+    groundFx.push({x:ward.x,y:ward.y,r:0,maxR:62*sizeScale,life:0.7,color:def.color,enemyWarn:true,warnTimer:40,warnMax:40,label:def.label});
+    addDmg(ward.x,ward.y-34,def.name.toUpperCase()+' '+wave,def.color,{sz:11,bold:true,outline:'#061433'});
+    addP(ward.x,ward.y,def.color,20+wave*4,4);
   }
   b._stormWardRefs=refs;
   b._stormWardWaveActive=true;
   b._stormWardResolved=false;
   b._stormCycleState='wards';
   b._stormCycleStartedFrame=ctx.frame||0;
-  b._stormWardExpireT=b.stormWardMaxDur||600;
+  b._stormShieldActive=true;
+  b._stormShieldWave=wave;
+  b._stormShieldDamageMult=b.stormShieldDamageMult||0.24;
   b._stormWardCasts=(b._stormWardCasts||0)+1;
+  b._stormLastWardWave=wave;
   addDmg(b.x,b.y-(b.size||40)-10,'TWIN WARDS','#8bdfff',{sz:13,bold:true,outline:'#061433'});
+  addDmg(b.x,b.y-(b.size||40)-26,'STORM SHIELD','#ffd166',{sz:11,bold:true,outline:'#302000'});
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(150,(b.size||42)*3.0),life:0.72,color:'#ffd166',celestialAuraFx:true,label:'SHIELD'});
   showFlash('TWIN WARDS!','#8bdfff',55);
   shake(5);
   syncStormVizierCooldowns(b,ctx);
   return true;
 }
+function castStormIronSurge(ward,b,ctx){
+  const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, shake }=ctx;
+  const targets=stormPlayerUnits(units);
+  if(!targets.length)return false;
+  const dmg=Math.round((b.ironSurgeDmg||58)*(ward._stormWardDamageScale||1));
+  groundFx.push({x:ward.x,y:ward.y,r:0,maxR:210,life:0.52,color:'#7fc7ff',celestialAuraFx:true,label:'IRON'});
+  for(const u of targets){
+    beamFx.push({x1:ward.x,y1:ward.y-ward.size*0.3,x2:u.x,y2:u.y-u.size*0.2,life:20,maxLife:20,color:'#8bdfff',width:4,straight:false});
+    dealDamage(u,dmg,ward,'magic','ironSurge',{sourceLabel:'IRON SURGE',sourceColor:'#8bdfff'});
+    addDmg(u.x,u.y-(u.size||20)-8,'IRON SURGE','#8bdfff',{sz:10,bold:true,outline:'#061433'});
+    addP(u.x,u.y,'#8bdfff',7,3);
+  }
+  addDmg(ward.x,ward.y-ward.size-8,'IRON SURGE','#8bdfff',{sz:12,bold:true,outline:'#061433'});
+  ward._stormIronSurges=(ward._stormIronSurges||0)+1;
+  shake(3);
+  return true;
+}
+function castStormMirrorCleave(ward,b,ctx){
+  const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, shake }=ctx;
+  const radius=b.mirrorCleaveRadius||138;
+  const players=stormPlayerUnits(units);
+  const tanks=players.filter(stormIsTank);
+  const melee=players.filter(u=>stormIsMelee(u)&&!stormIsTank(u)&&Math.min(Math.hypot(u.x-ward.x,u.y-ward.y),Math.hypot(u.x-b.x,u.y-b.y))<=radius);
+  const targets=[...tanks,...melee].filter((u,i,arr)=>arr.indexOf(u)===i);
+  if(!targets.length)return false;
+  const dmg=Math.round((b.mirrorCleaveDmg||100)*(ward._stormWardDamageScale||1));
+  groundFx.push({x:ward.x,y:ward.y,r:0,maxR:radius,life:0.46,color:'#ffd166',enemyWarn:true,warnTimer:22,warnMax:22,label:'MIRROR'});
+  for(const u of targets){
+    const mult=stormIsTank(u)?1:0.84;
+    beamFx.push({x1:ward.x,y1:ward.y-ward.size*0.15,x2:u.x,y2:u.y-u.size*0.05,life:18,maxLife:18,color:'#ffd166',width:5,straight:true});
+    dealDamage(u,Math.round(dmg*mult),ward,'normal','mirrorCleave',{sourceLabel:'MIRROR CLEAVE',sourceColor:'#ffd166'});
+    addDmg(u.x,u.y-(u.size||20)-8,'MIRROR CLEAVE','#ffd166',{sz:10,bold:true,outline:'#302000'});
+    addP(u.x,u.y,'#ffd166',8,3);
+  }
+  addDmg(ward.x,ward.y-ward.size-8,'MIRROR CLEAVE','#ffd166',{sz:12,bold:true,outline:'#302000'});
+  ward._stormMirrorCleaves=(ward._stormMirrorCleaves||0)+1;
+  shake(4);
+  return true;
+}
 function tickStormWards(b,ctx){
-  const { enemies, groundFx, addDamageText:addDmg }=ctx;
-  b._stormRebukeLock=Math.max(0,(b._stormRebukeLock||0)-1);
+  const { enemies, groundFx }=ctx;
   if(b._stormCycleState!=='wards')return;
   const active=activeStormWards(b,enemies);
   if(b._stormWardWaveActive&&!b._stormWardResolved&&b._stormWardRefs&&b._stormWardRefs.length&&active.length===0){
-    resolveStormWards(b,ctx,true);
+    resolveStormWards(b,ctx);
     return;
   }
-  b._stormWardExpireT=Math.max(0,(b._stormWardExpireT||0)-1);
-  if(active.length&&b._stormWardExpireT<=0){
-    resolveStormWards(b,ctx,false,active[0]);
-    return;
-  }
-  if(active.length&&b._stormWardExpireT<=2*GAME_TICK_HZ&&(ctx.frame||0)%30===0){
-    for(const ward of active){
-      groundFx.push({x:ward.x,y:ward.y,r:0,maxR:94,life:0.32,color:ward.color||'#8bdfff',celestialAuraFx:true});
-      addDmg(ward.x,ward.y-24,'BREAK WARD',ward.color||'#8bdfff',{sz:10,bold:true,outline:'#061433'});
+  for(const ward of active){
+    ward._stormWardCastT=(ward._stormWardCastT||1)-1;
+    if(ward._stormWardCastT>0)continue;
+    ward._stormWardCastT=ward._stormWardCastEvery||150;
+    if(ward.stormWardKind==='iron')castStormIronSurge(ward,b,ctx);
+    else castStormMirrorCleave(ward,b,ctx);
+    if((ctx.frame||0)%2===0){
+      groundFx.push({x:ward.x,y:ward.y,r:0,maxR:Math.max(72,ward.size*3.2),life:0.28,color:ward.color||'#8bdfff',celestialAuraFx:true});
     }
   }
   syncStormVizierCooldowns(b,ctx);
 }
-function castStormMotes(b,ctx){
-  const { enemies, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
-  if(activeStormWards(b,enemies).length||activeStormMotes(b,enemies).length)return false;
-  const count=b.stormMoteCount||3;
-  for(let i=0;i<count;i++){
-    const a=-Math.PI*0.15+i*Math.PI/(Math.max(1,count-1))*0.30;
-    const mote={
-      name:'Storm Mote',
-      stormMote:true,_stormBoss:b,
-      priorityTarget:true,preferredBy:'ranged',
-      act:2,arch:'caster',
-      x:b.x+Math.cos(a)*72+(i-(count-1)/2)*28,
-      y:b.y+38+Math.sin(a)*28,
-      color:'#8bdfff',accent:'#ffd166',
-      maxHp:b.stormMoteHp||720,hp:b.stormMoteHp||720,
-      dmg:1,speed:0.24,atkSpd:140,range:160,size:17,
-      armor:0,magicRes:2,armorType:'unarmored',
-      flying:true,projType:'lightning',prefersBackline:true,points:60,
-      isEnemy:true,bossSupport:true,bossSupportColor:'#8bdfff',
-      cd:80,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},
-      spawnFrame:ctx.frame||0,entryHold:18,
-      despawnFrame:(ctx.frame||0)+Math.round((b.stormMoteLifetime||480)),
-      _stormMoteShotT:64+i*24,
-      _stormMoteShotEvery:b.stormMoteShotEvery||140,
-      _stormMoteDmg:b.stormMoteDmg||36
-    };
-    clampBossActor(mote,ctx,{topMargin:58,bottomMargin:80});
-    enemies.push(mote);
-    addP(mote.x,mote.y,'#8bdfff',16,3);
-    groundFx.push({x:mote.x,y:mote.y,r:0,maxR:30,life:0.35,color:'#8bdfff',flatten:true});
+function tryStormWardThreshold(b,ctx){
+  if(stormHasPriorityAdds(b,ctx.enemies||[]))return false;
+  if((b._stormExposedTimer||0)>0)return false;
+  const next=nextStormWardThreshold(b);
+  if(!next)return false;
+  const pct=(b.maxHp>0)?b.hp/b.maxHp:1;
+  if(pct>next.pct+0.002)return false;
+  const done=Array.isArray(b._stormWardThresholdDone)?b._stormWardThresholdDone:(b._stormWardThresholdDone=[]);
+  if(castStormTwinWards(b,ctx,next.index)){
+    done[next.index]=true;
+    return true;
   }
-  b._stormMoteCasts=(b._stormMoteCasts||0)+1;
-  b._stormMoteWaveActive=true;
-  b._stormCycleState='motes';
-  addDmg(b.x,b.y-(b.size||40)-10,'STORM MOTES','#8bdfff',{sz:13,bold:true,outline:'#061433'});
-  showFlash('STORM MOTES!','#8bdfff',50);
+  return false;
+}
+function castStormSilencingDecree(b,ctx){
+  const { units, beamFx, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  const healers=stormPlayerUnits(units).filter(u=>u.arch==='healer');
+  if(!healers.length)return false;
+  const target=healers.sort((a,bb)=>(a.hp/a.maxHp)-(bb.hp/bb.maxHp))[0];
+  if(!target)return false;
+  const dur=b.silencingDecreeDur||150;
+  target.silenceTimer=Math.max(target.silenceTimer||0,dur);
+  target._stormSilenceTimer=Math.max(target._stormSilenceTimer||0,dur);
+  beamFx.push({x1:b.x,y1:b.y-(b.size||40)*0.45,x2:target.x,y2:target.y-target.size*0.35,life:22,maxLife:22,color:'#9bb8ff',width:5,straight:false});
+  beamFx.push({x1:b.x,y1:b.y-(b.size||40)*0.65,x2:target.x,y2:target.y-target.size*0.7,life:14,maxLife:14,color:'#ffffff',width:2,straight:true});
+  groundFx.push({x:target.x,y:target.y,r:0,maxR:58,life:0.44,color:'#9bb8ff',enemyWarn:true,warnTimer:18,warnMax:18,label:'SILENCE'});
+  addDmg(target.x,target.y-(target.size||20)-10,'SILENCED','#9bb8ff',{sz:12,bold:true,outline:'#061433'});
+  addDmg(b.x,b.y-(b.size||40)-12,'SILENCING DECREE','#9bb8ff',{sz:13,bold:true,outline:'#061433'});
+  addP(target.x,target.y,'#9bb8ff',14,3);
+  showFlash('SILENCING DECREE!','#9bb8ff',42);
+  b._stormSilenceCasts=(b._stormSilenceCasts||0)+1;
   shake(4);
-  syncStormVizierCooldowns(b,ctx);
   return true;
 }
-function tickStormMotes(b,ctx){
-  const { units, enemies, beamFx, dealDamage, addParticle:addP, addDamageText:addDmg }=ctx;
-  const usedTargets=new Set();
-  for(const mote of activeStormMotes(b,enemies)){
-    if(Number.isFinite(mote.despawnFrame)&&(ctx.frame||0)>mote.despawnFrame){
-      mote.hp=0;
-      addP(mote.x,mote.y,'#8bdfff',8,2);
-      continue;
-    }
-    if(mote.entryHold>0)continue;
-    mote._stormMoteShotT=(mote._stormMoteShotT||0)-1;
-    if(mote._stormMoteShotT>0)continue;
-    mote._stormMoteShotT=mote._stormMoteShotEvery||140;
-    const target=stormPickTargets(units,Math.max(1,usedTargets.size+1)).find(u=>!usedTargets.has(u))||stormPickTargets(units,1)[0];
-    if(!target)continue;
-    usedTargets.add(target);
-    beamFx.push({x1:mote.x,y1:mote.y,x2:target.x,y2:target.y,life:14,maxLife:14,color:'#8bdfff',width:3,straight:false});
-    dealDamage(target,mote._stormMoteDmg||36,mote,'magic','stormMote',{sourceLabel:'STORM MOTE',sourceColor:'#8bdfff'});
-    addDmg(target.x,target.y-(target.size||20)-8,'STORM MOTE','#8bdfff',{sz:10,bold:true,outline:'#061433'});
-    addP(target.x,target.y,'#8bdfff',6,3);
-  }
-}
-function enterStormBossWindow(b,ctx){
-  const elapsed=Math.max(0,(ctx.frame||0)-(b._stormCycleStartedFrame||ctx.frame||0));
-  b._stormCycleState='boss';
-  b._stormCycleTimer=Math.max(240,(b.stormCycleEvery||1200)-elapsed);
-  syncStormVizierCooldowns(b,ctx);
-}
-function tickStormSequence(b,ctx){
-  const state=b._stormCycleState||'nextWards';
-  if(state==='nextWards'||state==='boss'){
-    b._stormCycleTimer=Math.max(0,(b._stormCycleTimer||0)-1);
-    if(b._stormCycleTimer<=0&&!stormHasPriorityAdds(b,ctx.enemies||[]))castStormTwinWards(b,ctx);
-  }else if(state==='moteDelay'){
-    b._stormCycleTimer=Math.max(0,(b._stormCycleTimer||0)-1);
-    if(b._stormCycleTimer<=0)castStormMotes(b,ctx);
-  }else if(state==='motes'&&b._stormMoteWaveActive&&activeStormMotes(b,ctx.enemies).length===0){
-    b._stormMoteWaveActive=false;
-    enterStormBossWindow(b,ctx);
-  }
-  syncStormVizierCooldowns(b,ctx);
+function castStormTankCurse(b,ctx){
+  const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  const tanks=stormPlayerUnits(units).filter(stormIsTank);
+  const target=tanks[0]||stormPlayerUnits(units)[0];
+  if(!target)return false;
+  const dmg=Math.max(8,Math.round((target.maxHp||target.hp||1)*(b.tankCurseHpPct||0.01)));
+  dealDamage(target,dmg,b,'magic','stormCurse',{sourceLabel:'STORM CURSE',sourceColor:'#7c5cff'});
+  target._stormCurseTimer=Math.max(target._stormCurseTimer||0,b.tankCurseDur||240);
+  target._stormCurseTick=60;
+  target._stormCurseHpPct=b.tankCurseHpPct||0.01;
+  target._stormCurseHealCut=b.tankCurseHealCut||0.12;
+  target._stormCurseFrom=b;
+  beamFx.push({x1:b.x,y1:b.y-(b.size||40)*0.35,x2:target.x,y2:target.y-target.size*0.2,life:20,maxLife:20,color:'#7c5cff',width:5,straight:false});
+  groundFx.push({x:target.x,y:target.y,r:0,maxR:62,life:0.5,color:'#7c5cff',enemyWarn:true,warnTimer:20,warnMax:20,label:'CURSE'});
+  addDmg(target.x,target.y-(target.size||20)-10,'STORM CURSE','#9b7cff',{sz:12,bold:true,outline:'#17082d'});
+  addDmg(b.x,b.y-(b.size||40)-12,'TANK CURSE','#9b7cff',{sz:13,bold:true,outline:'#17082d'});
+  addP(target.x,target.y,'#9b7cff',14,3);
+  showFlash('TANK CURSE!','#9b7cff',42);
+  b._stormTankCurseCasts=(b._stormTankCurseCasts||0)+1;
+  shake(4);
+  return true;
 }
 function castStormChainDecree(b,ctx){
   const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
@@ -937,11 +957,22 @@ function updateStormboundVizier(b,ctx){
     if(b._stormExposedTimer<=0)b._stormExposedDamageMult=0;
   }
   tickStormWards(b,ctx);
-  tickStormMotes(b,ctx);
   tickStormBossCooldowns(b);
-  tickStormSequence(b,ctx);
+  if(tryStormWardThreshold(b,ctx))return;
+  if(!activeStormWards(b,ctx.enemies||[]).length&&b._stormShieldActive)b._stormShieldActive=false;
+  syncStormVizierCooldowns(b,ctx);
   b._stormCastLock=Math.max(0,(b._stormCastLock||0)-1);
   if(b._stormCastLock>0)return;
+  const tryAnyCast=(timerProp,nextCd,lock,fn)=>{
+    if(Number.isFinite(b[timerProp])&&b[timerProp]>0)return false;
+    if(!fn(b,ctx))return false;
+    b[timerProp]=typeof nextCd==='function'?nextCd(b):Math.round((nextCd||600)*(b.timeEnraged?0.75:1));
+    b._stormCastLock=lock;
+    syncStormVizierCooldowns(b,ctx);
+    return true;
+  };
+  if(tryAnyCast('_stormSilenceCd',stormSilenceCooldown,54,castStormSilencingDecree))return;
+  if(tryAnyCast('_stormTankCurseCd',b.tankCurseCD||720,54,castStormTankCurse))return;
   if(!stormBossOnlyWindow(b,ctx))return;
   const tryBossCast=(timerProp,cdProp,lock,fn)=>{
     if(Number.isFinite(b[timerProp])&&b[timerProp]>0)return false;

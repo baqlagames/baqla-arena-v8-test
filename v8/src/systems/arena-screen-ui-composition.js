@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-vizier-sequence';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-vizier-wards';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

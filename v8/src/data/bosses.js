@@ -143,14 +143,17 @@ export const BOSSES=[
     projType:'normal',timeEnrageAt:12000},
   {id:13,name:'Stormbound Vizier',tier:'mini',act:2,color:'#3f8cff',accent:'#ffd166',hp:26000,dmg:124,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,raidAoeDmg:24,spawnFromTop:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
     // Stage 10 wave-4 mini-boss: auto-battle teaching fight for the Storm Djinn
-    // Court. Twin Wards and Storm Motes use priorityTarget so units swap off the
-    // boss without requiring manual movement.
+    // Court. Twin Wards are threshold priority targets so units swap off the
+    // shielded boss without requiring manual movement.
     stormVizier:true,projType:'lightning',
-    twinWardsCD:1200,twinWardsFirst:120,stormCycleEvery:1200,stormWardMaxDur:600,stormMotesDelay:60,stormWardHp:3200,stormExposeDur:240,stormExposeMult:1.35,
-    stormMotesCD:1200,stormMoteCount:3,stormMoteHp:760,stormMoteDmg:36,stormMoteShotEvery:140,stormMoteLifetime:450,
+    twinWardsCD:1200,stormWardThresholds:[1,0.75,0.50,0.25],stormWardHp:3200,stormWardScales:[1,1.18,1.35,1.55],stormWardSizeScales:[1,1.12,1.22,1.32],
+    stormShieldDamageMult:0.24,stormExposeDur:240,stormExposeMult:1.35,
+    ironSurgeEvery:180,ironSurgeFirst:90,ironSurgeDmg:58,
+    mirrorCleaveEvery:144,mirrorCleaveFirst:72,mirrorCleaveDmg:100,mirrorCleaveRadius:138,
     chainDecreeCD:500,chainDecreeFirst:190,chainDecreeDmg:78,chainDecreeCount:3,
     groundingPulseCD:360,groundingPulseFirst:300,groundingPulseDmg:170,groundingPulseRadius:128,groundingPulseMeleeMult:0.78,groundingBrandDur:240,groundingBrandHealCut:0.10,
-    courtRebukeDmg:94,courtRebukeLock:96,
+    silencingDecreeCD:840,silencingDecreeCDMin:600,silencingDecreeCDMax:840,silencingDecreeFirst:520,silencingDecreeDur:150,
+    tankCurseCD:720,tankCurseFirst:420,tankCurseDur:240,tankCurseHpPct:0.010,tankCurseHealCut:0.12,
     timeEnrageAt:10500},
   {id:14,name:'Sphinx Judicator',tier:'mini',act:3,color:'#d8a84a',accent:'#6f4a18',hp:19000,dmg:96,speed:0.24,atkSpd:66,range:82,size:52,armor:7,magicRes:0,armorType:'warded',points:1200,raidAoeDmg:30,spawnFromTop:true,spawnYOffset:58,entryHold:45,
     // Stage 13 mini-boss: boss-only wave 6. Solar Riddle is the DPS check;

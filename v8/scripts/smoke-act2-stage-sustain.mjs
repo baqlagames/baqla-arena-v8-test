@@ -77,6 +77,9 @@ function applyHealingReceived(unit, amount) {
   if (unit && unit._groundingBrandTimer > 0) {
     amount = Math.max(1, Math.round(amount * (1 - (unit._groundingBrandHealCut || 0.10))));
   }
+  if (unit && unit._stormCurseTimer > 0) {
+    amount = Math.max(1, Math.round(amount * (1 - (unit._stormCurseHealCut || 0.12))));
+  }
   return amount;
 }
 
@@ -126,10 +129,26 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
   if (stormBoss && stormBoss.id === 13) {
     const key = attackType || (source && source.stormWard ? 'ward' : source && source.stormMote ? 'stormMote' : 'basic');
     logs.stormVizierDamageByAttack[key] = (logs.stormVizierDamageByAttack[key] || 0) + damage;
-    if (attackType === 'wardPulse') logs.stormWardPulses++;
+    if (attackType === 'ironSurge') {
+      logs.stormIronSurge += damage;
+      if (target.arch === 'tank') logs.stormIronTank += damage;
+      if (target.arch === 'melee') logs.stormIronMelee += damage;
+      if (target.arch === 'ranged' || target.arch === 'healer') logs.stormIronBackline += damage;
+    }
+    if (attackType === 'mirrorCleave') {
+      logs.stormMirrorCleave += damage;
+      if (target.arch === 'tank') logs.stormMirrorTank += damage;
+      if (target.arch === 'melee') logs.stormMirrorMelee += damage;
+    }
     if (attackType === 'courtRebuke') logs.courtRebukes++;
     if (attackType === 'stormMote') logs.stormMoteHits++;
     if (attackType === 'chainDecree') logs.stormChains++;
+    if (attackType === 'stormCurse') {
+      logs.stormCurseDamage += damage;
+      if (target.arch === 'tank') logs.stormCurseTank += damage;
+      if (source && source.id === 13) logs.stormCurseHits++;
+      else logs.stormCurseTicks++;
+    }
     if (attackType === 'groundingPulse') {
       logs.stormGrounding += damage;
       if (target.arch === 'tank') logs.stormGroundingTank += damage;
@@ -417,9 +436,15 @@ function simulateStage(stage, stageIndex, seed) {
     wardenBlightBursts: 0,
     wardenBlightTicks: 0,
     wardenGravityBrands: 0,
-    stormVizierCasts: { wards: 0, motes: 0, chain: 0, rebuke: 0, expose: 0, grounding: 0 },
+    stormVizierCasts: { wards: 0, chain: 0, expose: 0, grounding: 0, shieldBreak: 0, silence: 0, curse: 0 },
     stormVizierDamageByAttack: {},
-    stormWardPulses: 0,
+    stormIronSurge: 0,
+    stormIronTank: 0,
+    stormIronMelee: 0,
+    stormIronBackline: 0,
+    stormMirrorCleave: 0,
+    stormMirrorTank: 0,
+    stormMirrorMelee: 0,
     stormMoteHits: 0,
     stormChains: 0,
     courtRebukes: 0,
@@ -427,8 +452,14 @@ function simulateStage(stage, stageIndex, seed) {
     stormGroundingTank: 0,
     stormGroundingMelee: 0,
     stormGroundingBrands: 0,
+    stormSilences: 0,
+    stormCurseDamage: 0,
+    stormCurseTank: 0,
+    stormCurseHits: 0,
+    stormCurseTicks: 0,
     stormMotesSeen: 0,
     stormWardsSeen: 0,
+    stormShieldFrames: 0,
     searingBrands: 0,
     telegraphHits: 0,
     meteors: 0,
@@ -501,11 +532,14 @@ function simulateStage(stage, stageIndex, seed) {
     addParticle: () => { logs.particles++; },
     addDamageText: (_x, _y, text) => {
       if (text === 'GRAVITY BRAND') logs.wardenGravityBrands++;
-      if (text === 'WARD PULSE') logs.stormWardPulses++;
+      if (text === 'IRON SURGE') logs.stormIronSurgeTexts = (logs.stormIronSurgeTexts || 0) + 1;
+      if (text === 'MIRROR CLEAVE') logs.stormMirrorCleaveTexts = (logs.stormMirrorCleaveTexts || 0) + 1;
       if (text === 'STORM MOTE') logs.stormMoteHits++;
       if (text === 'CHAIN') logs.stormChains++;
       if (text === 'COURT REBUKE') logs.courtRebukes++;
       if (text === 'GROUNDING BRAND') logs.stormGroundingBrands++;
+      if (text === 'SILENCED') logs.stormSilences++;
+      if (text === 'STORM CURSE') logs.stormCurseTexts = (logs.stormCurseTexts || 0) + 1;
     },
     showFlash: text => {
       if (text === 'VANISH!') logs.vanishCasts++;
@@ -518,11 +552,13 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'ASTRAL BLIGHT!') logs.wardenBlightBursts++;
       if (text === 'METEOR!') logs.meteors++;
       if (text === 'TWIN WARDS!') logs.stormVizierCasts.wards++;
-      if (text === 'STORM MOTES!') logs.stormVizierCasts.motes++;
       if (text === 'CHAIN DECREE!') logs.stormVizierCasts.chain++;
       if (text === 'COURT REBUKE!') logs.stormVizierCasts.rebuke++;
       if (text === 'JUDGMENT WINDOW!') logs.stormVizierCasts.expose++;
+      if (text === 'STORM SHIELD BROKEN!') logs.stormVizierCasts.shieldBreak++;
       if (text === 'GROUNDING PULSE!') logs.stormVizierCasts.grounding = (logs.stormVizierCasts.grounding || 0) + 1;
+      if (text === 'SILENCING DECREE!') logs.stormVizierCasts.silence++;
+      if (text === 'TANK CURSE!') logs.stormVizierCasts.curse++;
     },
     fireProjectile: (source, target, damage, opts = {}) => applyDamage(target, damage, source, ['curse', 'fire', 'lightning', 'frost'].includes(opts.projType) ? 'magic' : 'normal', logs),
     spawnEnemyByIndex: enemyIdx => spawnSupportEnemy(enemyIdx, ctx.frame),
@@ -600,6 +636,12 @@ function simulateStage(stage, stageIndex, seed) {
       tickBossBasic(boss, tank, units, logs);
       if (frame % 30 === 0 && !boss.isLieutenant) {
         let damage = 220 + (stage.n || 1) * 22;
+        const stormWards = enemies.filter(enemy => enemy && enemy.hp > 0 && enemy._stormBoss === boss && enemy.stormWard);
+        if (stormWards.length) {
+          const wardDamage = 760 + (stage.n || 1) * 28;
+          for (const ward of stormWards) ward.hp = Math.max(0, ward.hp - wardDamage);
+          damage = Math.round(damage * (boss.stormShieldDamageMult || 0.24));
+        }
         if (boss.hiveShield && boss.hiveShield.hp > 0) {
           const absorbed = Math.min(boss.hiveShield.hp, damage);
           boss.hiveShield.hp -= absorbed;
@@ -613,6 +655,7 @@ function simulateStage(stage, stageIndex, seed) {
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Son of Embers')) logs.sonsSeen = true;
     if (enemies.some(enemy => enemy && enemy.hp > 0 && (enemy.name === 'Iron Ward' || enemy.name === 'Mirror Ward'))) logs.stormWardsSeen++;
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Storm Mote')) logs.stormMotesSeen++;
+    if (miniBoss && miniBoss._stormShieldActive) logs.stormShieldFrames++;
 
     tickGroundEffects(units, logs);
     tickBombs(units, enemies, logs);
@@ -656,12 +699,18 @@ function simulateStage(stage, stageIndex, seed) {
   }
   if (stage.n === 10) {
     assert(logs.miniBossSeen, 'stage 10: Stormbound Vizier was not exercised');
-    assert(logs.stormVizierCasts.wards > 0, 'stage 10: Stormbound Vizier Twin Wards were not exercised');
-    assert(logs.stormVizierCasts.motes > 0, 'stage 10: Stormbound Vizier Storm Motes were not exercised');
+    assert(logs.stormVizierCasts.wards >= 3, 'stage 10: Stormbound Vizier HP-threshold Twin Wards were not exercised');
     assert(logs.stormVizierCasts.chain > 0 || logs.stormChains > 0, 'stage 10: Stormbound Vizier Chain Decree was not exercised');
     assert(logs.stormWardsSeen > 0, 'stage 10: Stormbound Vizier priority wards were not present');
-    assert(logs.stormMotesSeen > 0, 'stage 10: Stormbound Vizier flying motes were not present');
-    assert(logs.courtRebukes > 0 || logs.stormVizierCasts.expose > 0, 'stage 10: Stormbound Vizier Judgment/Court outcome was not exercised');
+    assert.equal(logs.stormMotesSeen, 0, 'stage 10: Stormbound Vizier should not spawn Storm Motes');
+    assert.equal(logs.courtRebukes, 0, 'stage 10: Stormbound Vizier should not cast Court Rebuke');
+    assert(logs.stormShieldFrames > 0, 'stage 10: Stormbound Vizier Storm Shield was not active during wards');
+    assert(logs.stormVizierCasts.expose > 0 && logs.stormVizierCasts.shieldBreak > 0, 'stage 10: Stormbound Vizier shield break / expose was not exercised');
+    assert(logs.stormIronTank > 0 && logs.stormIronMelee > 0 && logs.stormIronBackline > 0, 'stage 10: Iron Ward did not visibly pressure tank, melee, and backline');
+    assert(logs.stormMirrorTank > 0, 'stage 10: Mirror Ward did not pressure the tank');
+    assert(logs.stormMirrorMelee > 0, 'stage 10: Mirror Ward did not pressure non-tank melee');
+    assert(logs.stormVizierCasts.silence > 0 && logs.stormSilences > 0, 'stage 10: Stormbound Vizier healer silence was not exercised');
+    assert(logs.stormVizierCasts.curse > 0 && logs.stormCurseTank > 0, 'stage 10: Stormbound Vizier tank curse was not exercised');
     assert(logs.stormGroundingTank > 0, 'stage 10: Stormbound Vizier Grounding did not pressure the tank');
     assert(logs.stormGroundingMelee > 0, 'stage 10: Stormbound Vizier Grounding did not pressure non-tank melee');
     assert(logs.stormGroundingBrands > 0, 'stage 10: Stormbound Vizier Grounding Brand was not shown');
@@ -690,7 +739,14 @@ function simulateStage(stage, stageIndex, seed) {
     wardenGravityBrands: logs.wardenGravityBrands,
     stormVizierCasts: logs.stormVizierCasts,
     stormVizierDamageByAttack: logs.stormVizierDamageByAttack,
-    stormWardPulses: logs.stormWardPulses,
+    stormIronSurge: logs.stormIronSurge,
+    stormIronTank: logs.stormIronTank,
+    stormIronMelee: logs.stormIronMelee,
+    stormIronBackline: logs.stormIronBackline,
+    stormMirrorCleave: logs.stormMirrorCleave,
+    stormMirrorTank: logs.stormMirrorTank,
+    stormMirrorMelee: logs.stormMirrorMelee,
+    stormShieldFrames: logs.stormShieldFrames,
     stormMoteHits: logs.stormMoteHits,
     stormChains: logs.stormChains,
     courtRebukes: logs.courtRebukes,
@@ -698,6 +754,11 @@ function simulateStage(stage, stageIndex, seed) {
     stormGroundingTank: logs.stormGroundingTank,
     stormGroundingMelee: logs.stormGroundingMelee,
     stormGroundingBrands: logs.stormGroundingBrands,
+    stormSilences: logs.stormSilences,
+    stormCurseDamage: logs.stormCurseDamage,
+    stormCurseTank: logs.stormCurseTank,
+    stormCurseHits: logs.stormCurseHits,
+    stormCurseTicks: logs.stormCurseTicks,
     searingBrands: logs.searingBrands,
     meteors: logs.meteors,
     sonsSeen: logs.sonsSeen,
@@ -726,11 +787,15 @@ for (const summary of summaries) {
     summary.wardenGravityBrands ? `gravity brands ${summary.wardenGravityBrands}` : null,
     summary.stormVizierCasts ? `vizier casts ${Object.values(summary.stormVizierCasts).join('/')}` : null,
     summary.stormVizierDamageByAttack ? `vizier damage ${Object.entries(summary.stormVizierDamageByAttack).map(([k, v]) => `${k}:${v}`).join('/')}` : null,
-    summary.stormWardPulses ? `ward pulses ${summary.stormWardPulses}` : null,
+    summary.stormShieldFrames ? `shield frames ${summary.stormShieldFrames}` : null,
+    summary.stormIronSurge ? `iron ${summary.stormIronSurge} tank:${summary.stormIronTank} melee:${summary.stormIronMelee} back:${summary.stormIronBackline}` : null,
+    summary.stormMirrorCleave ? `mirror ${summary.stormMirrorCleave} tank:${summary.stormMirrorTank} melee:${summary.stormMirrorMelee}` : null,
     summary.stormMoteHits ? `mote hits ${summary.stormMoteHits}` : null,
     summary.stormChains ? `chain hits ${summary.stormChains}` : null,
     summary.courtRebukes ? `court rebukes ${summary.courtRebukes}` : null,
     summary.stormGrounding ? `grounding ${summary.stormGrounding} tank:${summary.stormGroundingTank} melee:${summary.stormGroundingMelee} brands:${summary.stormGroundingBrands}` : null,
+    summary.stormSilences ? `silences ${summary.stormSilences}` : null,
+    summary.stormCurseDamage ? `curse ${summary.stormCurseDamage} tank:${summary.stormCurseTank} hits:${summary.stormCurseHits} ticks:${summary.stormCurseTicks}` : null,
     summary.searingBrands ? `searing brands ${summary.searingBrands}` : null,
     summary.meteors ? `meteors ${summary.meteors}` : null,
     summary.sonsSeen ? 'sons exercised' : null,

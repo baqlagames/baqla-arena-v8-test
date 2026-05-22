@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-vizier-sequence';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-vizier-sequence';
+} from './wave-lifecycle.js?v=20260522-vizier-wards';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-vizier-wards';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

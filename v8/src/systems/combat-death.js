@@ -64,6 +64,7 @@ export function calculateEnemyKillReward(unit, killer, {
   lateStageNormalGoldMult,
 }) {
   if (!unit.isEnemy || !killer || !killer.isPlayer) return 0;
+  if (Number.isFinite(unit.fixedGoldReward)) return Math.max(0, Math.round(unit.fixedGoldReward));
 
   const goldMult = inArena ? campaignKillBountyMult : 0.35;
   let reward = (unit.points || 10) * goldMult;

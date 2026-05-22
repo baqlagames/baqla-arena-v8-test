@@ -54,8 +54,9 @@ const vizierThreat = buildWaveThreats({
   miniBossId: 13,
 });
 assert.equal(vizierThreat.enemies[0].name, 'Stormbound Vizier', 'stage 10 round 4 preview should name Stormbound Vizier');
-for (const expected of ['CASTER', 'FLYERS', 'BACKLINE THREAT', 'ARMOR', 'BOSS SHIELD']) {
+for (const expected of ['CASTER', 'BURST', 'BACKLINE THREAT', 'ARMOR', 'BOSS SHIELD']) {
   assert(tagKeys(vizierThreat).includes(expected), `Stormbound Vizier preview should expose ${expected}`);
 }
+assert(!tagKeys(vizierThreat).includes('FLYERS'), 'Stormbound Vizier preview should not advertise flyers after motes were removed');
 
 console.log('smoke-wave-threat-tags: ok');
