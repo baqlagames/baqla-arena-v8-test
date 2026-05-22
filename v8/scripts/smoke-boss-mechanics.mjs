@@ -317,7 +317,7 @@ function smokeStormboundVizier(ctx, boss) {
   if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
   if (!boss._stormShieldActive) throw new Error('Stormbound Vizier did not shield while wards were active');
   if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier should not spawn Storm Motes');
-  if (boss.fixedGoldReward !== 180) throw new Error('Stormbound Vizier should award 180g when defeated');
+  if (boss.fixedGoldReward !== 200) throw new Error('Stormbound Vizier should award 200g when defeated');
   const vizierDef = BOSSES[13];
   if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Stormbound Vizier base damage tuning drifted');
   if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 185) {
@@ -355,7 +355,7 @@ function smokeStormboundVizier(ctx, boss) {
     roundGoldMult: () => 1,
     lateStageNormalGoldMult: () => 1,
   });
-  if (bossReward !== 180) throw new Error('Stormbound Vizier fixed boss reward should resolve to exactly 180g');
+  if (bossReward !== 200) throw new Error('Stormbound Vizier fixed boss reward should resolve to exactly 200g');
 
   boss._stormChainCd = 0;
   boss._stormGroundingCd = 0;

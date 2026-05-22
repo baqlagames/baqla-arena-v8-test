@@ -141,7 +141,7 @@ export const BOSSES=[
     lungeCD:780,lungeDist:140,lungeDmg:120,lungePhase:1,
     magicBoltCD:540,magicBoltPhase:1,magicBoltDmg:120,magicBoltColor:'#a08a5a',
     projType:'normal',timeEnrageAt:12000},
-  {id:13,name:'Stormbound Vizier',tier:'mini',act:2,color:'#3f8cff',accent:'#ffd166',hp:26000,dmg:134,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,fixedGoldReward:180,raidAoeDmg:27,spawnFromTop:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
+  {id:13,name:'Stormbound Vizier',tier:'mini',act:2,color:'#3f8cff',accent:'#ffd166',hp:26000,dmg:134,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,fixedGoldReward:200,raidAoeDmg:27,spawnFromTop:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
     // Stage 10 wave-4 mini-boss: auto-battle teaching fight for the Storm Djinn
     // Court. Twin Wards are threshold priority targets so units swap off the
     // shielded boss without requiring manual movement.

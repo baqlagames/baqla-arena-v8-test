@@ -141,7 +141,7 @@ const stage10Round4 = stage10?.rounds.find(round => round.round === 4);
 assert(stage6.startGold <= 170, `stage 6 start gold too high: ${stage6.startGold}`);
 assert(stage6.finalGold <= 950, `stage 6 no-spend clear gold too high: ${stage6.finalGold}`);
 assert(stage6.maxRoundGold <= 170, `stage 6 round payout spike too high: ${stage6.maxRoundGold}`);
-assert(stage10Round4 && stage10Round4.killGold === 180, `stage 10 round 4 mini-boss should award 180g, got ${stage10Round4?.killGold}`);
+assert(stage10Round4 && stage10Round4.killGold === 200, `stage 10 round 4 mini-boss should award 200g, got ${stage10Round4?.killGold}`);
 assert(
   Math.floor(stage6.finalGold / LEVEL_3_CHEAP_UNIT_COST) <= 4,
   `stage 6 still funds too many cheap level-3 units: ${stage6.finalGold}g`
