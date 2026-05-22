@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-warden-micro-boost';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-castle-range';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);

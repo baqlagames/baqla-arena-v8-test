@@ -1,13 +1,13 @@
 import { startStageRun } from './stage-runner.js';
-import { createStageRunSetup } from './stage-lifecycle.js';
+import { createStageRunSetup } from './stage-lifecycle.js?v=20260522-castle-range';
 import {
   completeWavePhase,
   configureWaveSpawning,
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-warden-micro-boost';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-warden-micro-boost';
+} from './wave-lifecycle.js?v=20260522-castle-range';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-castle-range';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-warden-micro-boost';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-castle-range';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

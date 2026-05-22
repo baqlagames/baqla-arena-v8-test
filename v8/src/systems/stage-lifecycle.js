@@ -1,6 +1,8 @@
 import { STAGE_DMG_MULT } from '../data/stages.js';
 import { arena_stageStartGold } from './stage-economy.js';
 
+export const PLAYER_CASTLE_ATTACK_RANGE = 140;
+
 export function createStagePlayerCastle({ stage, stageIndex, width, arenaBottom }) {
   const stageN = (stage && stage.n) || 1;
   const kingHp = 600 + 100 * stageN;
@@ -16,7 +18,7 @@ export function createStagePlayerCastle({ stage, stageIndex, width, arenaBottom 
       size: 30,
       name: 'King',
       cd: 0,
-      range: 200,
+      range: PLAYER_CASTLE_ATTACK_RANGE,
       dmg: 25 * (STAGE_DMG_MULT[stageIndex] || 1),
       atkSpd: 60,
     },

@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-warden-micro-boost';
+import { BOSSES } from '../data/bosses.js?v=20260522-castle-range';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 

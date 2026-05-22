@@ -1,9 +1,9 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-warden-micro-boost';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260522-warden-micro-boost';
-import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-warden-micro-boost';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-castle-range';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260522-castle-range';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-castle-range';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';

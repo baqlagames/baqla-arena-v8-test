@@ -3,6 +3,9 @@
 import assert from 'node:assert/strict';
 import { arenaEngagementBands, moveActorToward } from '../src/systems/combat-targeting.js';
 import { updateArenaEnemyAi } from '../src/systems/combat-enemy-ai.js';
+import { createBattleObjectiveRuntime } from '../src/systems/battle-objective-runtime.js';
+import { createStagePlayerCastle, PLAYER_CASTLE_ATTACK_RANGE } from '../src/systems/stage-lifecycle.js';
+import { calculateWaveRewards } from '../src/systems/wave-lifecycle.js';
 
 const bounds = {
   arenaLeft: 24,
@@ -15,6 +18,55 @@ const bounds = {
   enemyCastle: null,
 };
 const bands = arenaEngagementBands(bounds);
+
+{
+  const { playerCastle: castle } = createStagePlayerCastle({
+    stage: { n: 1 },
+    stageIndex: 0,
+    width: 500,
+    arenaBottom: bounds.arenaBot,
+  });
+  assert.equal(castle.range, PLAYER_CASTLE_ATTACK_RANGE, 'king range should use the tuned last-line defense value');
+
+  const projectiles = [];
+  let enemies = [{
+    x: castle.x,
+    y: castle.y - PLAYER_CASTLE_ATTACK_RANGE - 18,
+    hp: 100,
+    maxHp: 100,
+    isEnemy: true,
+    size: 24,
+  }];
+  const objective = createBattleObjectiveRuntime({
+    view: () => ({ enemies, projectiles }),
+    distance: (a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0)),
+    randomRange: (min, max) => (min + max) / 2,
+  });
+
+  objective.updateCastle(castle);
+  assert.equal(projectiles.length, 0, 'king should not fire at enemies outside the shortened range');
+
+  enemies = [{
+    x: castle.x,
+    y: castle.y - PLAYER_CASTLE_ATTACK_RANGE + 8,
+    hp: 100,
+    maxHp: 100,
+    isEnemy: true,
+    size: 24,
+  }];
+  objective.updateCastle(castle);
+  assert.equal(projectiles.length, 1, 'king should still fire when enemies reach last-line range');
+
+  const reward = calculateWaveRewards({
+    arena: { round: 1, king: castle, _waveStartKingHp: castle.hp },
+    gold: 0,
+    stageN: 1,
+    stageIncome: () => 20,
+    roundGoldMult: () => 1,
+    roundBonusCap: 20,
+  });
+  assert.equal(reward.perfectWave, true, 'king firing should not break perfect wave while king HP is unchanged');
+}
 
 function tickEnemy(enemy, castle, units, frame) {
   updateArenaEnemyAi(enemy, {

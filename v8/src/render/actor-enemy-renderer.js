@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-warden-micro-boost';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-castle-range';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({
