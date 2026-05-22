@@ -6,7 +6,7 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-storm-vizier';
+} from './wave-lifecycle.js?v=20260522-mote-tempo';
 import { createRiftRuntime } from './rift-runtime.js';
 
 export function createStageBattleRuntime(deps = {}) {

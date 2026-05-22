@@ -147,7 +147,7 @@ export const BOSSES=[
     // boss without requiring manual movement.
     stormVizier:true,projType:'lightning',
     twinWardsCD:720,twinWardsFirst:130,stormWardHp:3200,stormWardPulseDelay:420,stormWardPulseEvery:300,stormWardPulseDmg:42,stormExposeDur:240,stormExposeMult:1.35,
-    stormMotesCD:620,stormMotesFirst:260,stormMoteCount:3,stormMoteHp:760,stormMoteDmg:42,stormMoteShotEvery:86,
+    stormMotesCD:620,stormMotesFirst:260,stormMoteCount:3,stormMoteHp:760,stormMoteDmg:36,stormMoteShotEvery:140,stormMoteLifetime:480,
     chainDecreeCD:500,chainDecreeFirst:190,chainDecreeDmg:78,chainDecreeCount:3,
     courtRebukeDmg:94,courtRebukeLock:96,
     timeEnrageAt:10500},

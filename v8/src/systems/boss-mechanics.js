@@ -774,16 +774,16 @@ function castStormMotes(b,ctx){
       y:b.y+38+Math.sin(a)*28,
       color:'#8bdfff',accent:'#ffd166',
       maxHp:b.stormMoteHp||720,hp:b.stormMoteHp||720,
-      dmg:1,speed:0.42,atkSpd:120,range:160,size:17,
+      dmg:1,speed:0.24,atkSpd:140,range:160,size:17,
       armor:0,magicRes:2,armorType:'unarmored',
       flying:true,projType:'lightning',prefersBackline:true,points:60,
       isEnemy:true,bossSupport:true,bossSupportColor:'#8bdfff',
       cd:80,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},
       spawnFrame:ctx.frame||0,entryHold:18,
-      despawnFrame:(ctx.frame||0)+Math.round(10*GAME_TICK_HZ),
-      _stormMoteShotT:40+i*12,
-      _stormMoteShotEvery:b.stormMoteShotEvery||86,
-      _stormMoteDmg:b.stormMoteDmg||42
+      despawnFrame:(ctx.frame||0)+Math.round((b.stormMoteLifetime||480)),
+      _stormMoteShotT:64+i*24,
+      _stormMoteShotEvery:b.stormMoteShotEvery||140,
+      _stormMoteDmg:b.stormMoteDmg||36
     };
     clampBossActor(mote,ctx,{topMargin:58,bottomMargin:80});
     enemies.push(mote);
@@ -798,15 +798,22 @@ function castStormMotes(b,ctx){
 }
 function tickStormMotes(b,ctx){
   const { units, enemies, beamFx, dealDamage, addParticle:addP, addDamageText:addDmg }=ctx;
+  const usedTargets=new Set();
   for(const mote of activeStormMotes(b,enemies)){
+    if(Number.isFinite(mote.despawnFrame)&&(ctx.frame||0)>mote.despawnFrame){
+      mote.hp=0;
+      addP(mote.x,mote.y,'#8bdfff',8,2);
+      continue;
+    }
     if(mote.entryHold>0)continue;
     mote._stormMoteShotT=(mote._stormMoteShotT||0)-1;
     if(mote._stormMoteShotT>0)continue;
-    mote._stormMoteShotT=mote._stormMoteShotEvery||86;
-    const target=stormPickTargets(units,1)[0];
+    mote._stormMoteShotT=mote._stormMoteShotEvery||140;
+    const target=stormPickTargets(units,Math.max(1,usedTargets.size+1)).find(u=>!usedTargets.has(u))||stormPickTargets(units,1)[0];
     if(!target)continue;
+    usedTargets.add(target);
     beamFx.push({x1:mote.x,y1:mote.y,x2:target.x,y2:target.y,life:14,maxLife:14,color:'#8bdfff',width:3,straight:false});
-    dealDamage(target,mote._stormMoteDmg||42,mote,'magic','stormMote',{sourceLabel:'STORM MOTE',sourceColor:'#8bdfff'});
+    dealDamage(target,mote._stormMoteDmg||36,mote,'magic','stormMote',{sourceLabel:'STORM MOTE',sourceColor:'#8bdfff'});
     addDmg(target.x,target.y-(target.size||20)-8,'STORM MOTE','#8bdfff',{sz:10,bold:true,outline:'#061433'});
     addP(target.x,target.y,'#8bdfff',6,3);
   }

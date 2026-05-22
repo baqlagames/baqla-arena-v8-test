@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-storm-vizier';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-mote-tempo';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

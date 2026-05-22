@@ -1,7 +1,7 @@
 import { ARENA_THREAT_TAG_COLOR, ARENA_WAVE_MECHANIC_LABELS } from '../data/waves.js';
 import { drawThreatsPanel as drawThreatPreviewPanel, threatPanelHeight as threatPanelHeightBase } from '../ui/threat-panel.js';
 import { arena_pickWaveMechanic, arena_stageOpenerQueue, arena_themedWaveQueue, arena_waveMechanicLimit } from './wave-planner.js';
-import { buildWaveThreats } from './wave-threats.js?v=20260522-storm-vizier';
+import { buildWaveThreats } from './wave-threats.js?v=20260522-mote-tempo';
 
 export function createEnemyMechanicsRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
