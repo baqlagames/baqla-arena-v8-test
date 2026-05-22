@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-warden-soften-starfall';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-warden-backline-soften';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

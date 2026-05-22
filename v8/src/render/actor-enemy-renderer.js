@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-warden-soften-starfall';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-warden-backline-soften';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

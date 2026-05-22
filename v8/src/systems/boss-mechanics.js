@@ -1087,6 +1087,7 @@ function astralPlayerUnits(units){
 }
 function astralIsTank(u){return !!(u&&(u.arch==='tank'||u.taunt))}
 function astralIsMelee(u){return !!(u&&(u.arch==='melee'||u.range<=75||u.prefersMelee))}
+function astralIsBackline(u){return !!(u&&(u.arch==='ranged'||u.arch==='caster'||u.arch==='healer'||u.prefersRanged))}
 function astralFrontlineUnits(units){
   return astralPlayerUnits(units).filter(u=>astralIsTank(u)||astralIsMelee(u));
 }
@@ -1094,6 +1095,10 @@ function astralRoleDamageMult(b,u){
   if(astralIsTank(u))return b.gravityTollTankMult||0.70;
   if(astralIsMelee(u))return b.gravityTollMeleeMult||0.82;
   return 1;
+}
+function astralSpellDamage(b,u,amount){
+  const mult=astralIsBackline(u)?(b.astralBacklineSpellMult||1):1;
+  return Math.max(1,Math.round((amount||0)*mult));
 }
 function astralPickFrontlinePressureTarget(units,excluded){
   const skip=excluded instanceof Set?excluded:new Set(excluded||[]);
@@ -1223,12 +1228,12 @@ function tickAstralPending(b,ctx){
       const hit=new Set();
       for(const u of astralPlayerUnits(units)){
         if(dist(p,u)<=p.r){
-          dealDamage(u,p.dmg,b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
+          dealDamage(u,astralSpellDamage(b,u,p.dmg),b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
           hit.add(u);
         }
       }
       if(p.target&&p.target.hp>0&&!hit.has(p.target)){
-        dealDamage(p.target,Math.round(p.dmg*(b.starfallTargetLockMult||0.90)),b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
+        dealDamage(p.target,astralSpellDamage(b,p.target,Math.round(p.dmg*(b.starfallTargetLockMult||0.90))),b,'magic','starfall',{sourceLabel:'STARFALL',sourceColor:'#8bdfff'});
         hit.add(p.target);
       }
       if(p.frontlineSplash){
@@ -1249,12 +1254,12 @@ function tickAstralPending(b,ctx){
       const hit=new Set();
       for(const u of astralPlayerUnits(units)){
         if(astralLineDistance(u.x,u.y,p.x1,p.y1,p.x2,p.y2)<=p.width){
-          dealDamage(u,p.dmg,b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
+          dealDamage(u,astralSpellDamage(b,u,p.dmg),b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
           hit.add(u);
         }
       }
       if(p.target&&p.target.hp>0&&!hit.has(p.target)){
-        dealDamage(p.target,Math.round(p.dmg*(b.eclipseTargetLockMult||0.90)),b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
+        dealDamage(p.target,astralSpellDamage(b,p.target,Math.round(p.dmg*(b.eclipseTargetLockMult||0.90))),b,'magic','eclipseBeam',{sourceLabel:'ECLIPSE',sourceColor:'#5cc8ff'});
         hit.add(p.target);
       }
       const wakeR=b.eclipseFrontlineRadius||104;
@@ -1287,7 +1292,7 @@ function tickAstralPending(b,ctx){
           u.x+=(dx/d)*pull;u.y+=(dy/d)*pull;
           clampToArena(u);
         }
-        dealDamage(u,Math.round(p.dmg*astralRoleDamageMult(b,u)),b,'magic','gravityToll',{sourceLabel:'GRAVITY',sourceColor:'#9bb8ff'});
+        dealDamage(u,astralSpellDamage(b,u,Math.round(p.dmg*astralRoleDamageMult(b,u))),b,'magic','gravityToll',{sourceLabel:'GRAVITY',sourceColor:'#9bb8ff'});
         if(frontliner){
           u._gravityBrandTimer=Math.max(u._gravityBrandTimer||0,b.gravityBrandDur||240);
           u._gravityBrandHealCut=b.gravityBrandHealCut||0.12;
@@ -1322,7 +1327,7 @@ function tickAstralOrbit(b,ctx){
       const a=(orbit.shots%3)*Math.PI*2/3+(ctx.frame||0)*0.05;
       const sx=b.x+Math.cos(a)*(b.size+24),sy=b.y+Math.sin(a)*(b.size*0.55+14);
       beamFx.push({x1:sx,y1:sy,x2:target.x,y2:target.y,life:14,maxLife:14,color:'#ffd166',width:4,straight:false});
-      dealDamage(target,orbit.dmg,b,'magic','lanternOrbit',{sourceLabel:'ORBIT',sourceColor:'#ffd166'});
+      dealDamage(target,astralSpellDamage(b,target,orbit.dmg),b,'magic','lanternOrbit',{sourceLabel:'ORBIT',sourceColor:'#ffd166'});
       addP(target.x,target.y,'#ffd166',8,3);
       addDmg(target.x,target.y-(target.size||20)-8,'ORBIT','#ffd166',{sz:11,bold:true,outline:'#3a2500'});
     }
