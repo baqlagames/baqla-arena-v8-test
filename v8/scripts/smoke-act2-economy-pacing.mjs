@@ -118,6 +118,7 @@ function simulateStageEconomy(stage) {
       income: reward.income,
       roundBonus: reward.roundBonus,
       perfectBonus: reward.perfectBonus,
+      waveBonus: reward.waveBonus,
       totalGold: gold - startGold,
       endGold: gold,
       actors: plan.queue.filter(item => item !== 'BOSS' && !(item && item.delay)).length,
@@ -160,6 +161,10 @@ const highGoldReward = calculateWaveRewards({
 });
 assert.equal(lowGoldReward.roundBonus, highGoldReward.roundBonus, 'round bonus should not depend on saved gold');
 assert.equal(lowGoldReward.gold - 0, highGoldReward.gold - 9999, 'wave-end bonus should be fixed for the same stage/round');
+for (const summary of summaries) {
+  const round5 = summary.rounds.find(round => round.round === 5);
+  assert(round5 && round5.waveBonus === 25, `stage ${summary.stage}: round 5 should grant fixed 25g wave bonus`);
+}
 assert(stage6.startGold <= 170, `stage 6 start gold too high: ${stage6.startGold}`);
 assert(stage6.finalGold <= 950, `stage 6 no-spend clear gold too high: ${stage6.finalGold}`);
 assert(stage6.maxRoundGold <= 170, `stage 6 round payout spike too high: ${stage6.maxRoundGold}`);
@@ -170,11 +175,11 @@ assert(
 );
 
 const finalGoldCaps = new Map([
-  [6, 950],
-  [7, 1025],
-  [8, 1225],
-  [9, 1350],
-  [10, 1500],
+  [6, 975],
+  [7, 1050],
+  [8, 1250],
+  [9, 1375],
+  [10, 1525],
 ]);
 
 let previousFinal = 0;
@@ -185,7 +190,7 @@ for (const summary of summaries) {
   previousFinal = summary.finalGold;
 
   for (const round of summary.rounds) {
-    const capRound = summary.stage < 10 ? 260 : 285;
+    const capRound = summary.stage < 10 ? 285 : 310;
     assert(round.totalGold <= capRound, `stage ${summary.stage} round ${round.round} paid ${round.totalGold}g`);
   }
 }

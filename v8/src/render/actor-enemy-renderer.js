@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-warden-starfall-radius';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-wave5-gold';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

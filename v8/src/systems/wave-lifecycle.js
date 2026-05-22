@@ -1,6 +1,8 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-warden-starfall-radius';
+import { BOSSES } from '../data/bosses.js?v=20260522-wave5-gold';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
+
+const WAVE_5_CLEAR_BONUS_GOLD = 25;
 
 export function prepareWaveStartState(arena, units){
   arena.phase='wave';
@@ -141,12 +143,14 @@ export function calculateWaveRewards(view){
   const roundBonus=Math.min(roundBonusCap,Math.round(income*0.35));
   const perfectWave=arena.king&&arena.king.hp>=arena._waveStartKingHp;
   const perfectBonus=perfectWave?Math.round(income*0.15):0;
+  const waveBonus=(arena.round||1)===5?WAVE_5_CLEAR_BONUS_GOLD:0;
   return {
     income,
     roundBonus,
     perfectWave,
     perfectBonus,
-    gold:gold+income+roundBonus+perfectBonus,
+    waveBonus,
+    gold:gold+income+roundBonus+perfectBonus+waveBonus,
   };
 }
 
@@ -233,7 +237,7 @@ export function completeWavePhase({
   });
   setGold(reward.gold);
   if (reward.perfectWave) showFlash('PERFECT WAVE!  +' + reward.perfectBonus + 'g bonus', '#44ff88', 100);
-  showFlash('+' + reward.income + 'g income  +' + reward.roundBonus + 'g round bonus', '#ffd700', 80);
+  showFlash('+' + reward.income + 'g income  +' + reward.roundBonus + 'g round bonus' + (reward.waveBonus ? '  +' + reward.waveBonus + 'g wave 5 bonus' : ''), '#ffd700', 80);
   if (arena.round >= totalRounds) {
     endStage(true);
     return { endedStage: true, reward };

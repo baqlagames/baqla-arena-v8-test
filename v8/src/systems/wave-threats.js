@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-warden-starfall-radius';
+import { BOSSES } from '../data/bosses.js?v=20260522-wave5-gold';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){

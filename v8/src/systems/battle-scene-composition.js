@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-warden-starfall-radius';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-wave5-gold';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

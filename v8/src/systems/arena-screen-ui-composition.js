@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-warden-starfall-radius';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-wave5-gold';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;
