@@ -318,6 +318,12 @@ function smokeStormboundVizier(ctx, boss) {
   if (!boss._stormShieldActive) throw new Error('Stormbound Vizier did not shield while wards were active');
   if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier should not spawn Storm Motes');
   if (boss.fixedGoldReward !== 180) throw new Error('Stormbound Vizier should award 180g when defeated');
+  const vizierDef = BOSSES[13];
+  if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Stormbound Vizier base damage tuning drifted');
+  if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 185) {
+    throw new Error('Stormbound Vizier role damage tuning drifted');
+  }
+  if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.012) > 0.0001) throw new Error('Stormbound Vizier tank curse damage tuning drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];
   const expectedSizeScales = [1, 1.12, 1.22, 1.32];

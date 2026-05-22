@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260522-vizier-gold';
+import { startArena } from './systems/arena-runtime.js?v=20260522-vizier-dmg';
 
 startArena();

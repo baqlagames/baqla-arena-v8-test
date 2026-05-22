@@ -1,11 +1,11 @@
-import { ARENA_RIFT_BONUS_GOLD } from './rift-runtime.js?v=20260522-vizier-gold';
+import { ARENA_RIFT_BONUS_GOLD } from './rift-runtime.js?v=20260522-vizier-dmg';
 import { addBatataShield, addGoldShield, addTaoonBloodShield, addZavsLineShield, applyHealingReceived as applyHealingReceivedBase } from './combat-healing.js';
 import { createCombatFeedbackRuntime } from './combat-feedback-runtime.js';
 import { createCombatDamageContextRuntime } from './combat-damage-context-runtime.js';
-import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js?v=20260522-vizier-gold';
+import { dealDamageRuntime, handleCombatDeath } from './combat-damage-runtime.js?v=20260522-vizier-dmg';
 import { clampCombatActorToArena, clampCombatActorToLeash, createCombatBounds, createTargetingView, moveCombatActorToward, resolvePlayerUnitOverlaps } from './combat-positioning.js';
 import { batataCovers, batataHealingReceivedMultiplier, isBatataBacklineAlly, isZavsMeleeAlly, zavsAllyAttackSpeedFactor, zavsAllyDamageMultiplier, zavsBodyguardCovers } from './combat-protection.js';
-import { findEnemyTargetForUnit, findNearestTarget, findRangedEnemyTargetForUnit, isReachableFromLeash, isSaturatedCombatTarget, updateBossEngagementCounts } from './combat-targeting.js?v=20260522-vizier-gold';
+import { findEnemyTargetForUnit, findNearestTarget, findRangedEnemyTargetForUnit, isReachableFromLeash, isSaturatedCombatTarget, updateBossEngagementCounts } from './combat-targeting.js?v=20260522-vizier-dmg';
 import { playerCombatColor, spawnPlayerAbilityCastVfx, spawnPlayerImpactVfx, spawnPlayerProjectileCastVfx } from './combat-vfx.js';
 
 export function createCombatHelperRuntime(deps = {}) {

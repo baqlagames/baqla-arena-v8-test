@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-vizier-gold';
+import { BOSSES } from '../data/bosses.js?v=20260522-vizier-dmg';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){
