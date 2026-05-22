@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260522-warden-soften-gravity';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-warden-soften-gravity';
+import { drawHealthBar } from './health-bars.js?v=20260522-warden-soften-starfall';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-warden-soften-starfall';
 
 export function createActorOverlayRenderer({
   ctx,

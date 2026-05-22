@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-warden-soften-gravity';
+import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-warden-soften-starfall';
 
 function unitRoleColor(unit){
   if(!unit)return '#d8f4ff';

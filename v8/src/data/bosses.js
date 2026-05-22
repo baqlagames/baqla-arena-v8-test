@@ -103,9 +103,9 @@ export const BOSSES=[
     // Stage 8 rework: cosmic lantern guardian with visible raid mechanics.
     // No vanish/smoke/mark; all damage comes from authored Warden casts.
     astralWarden:true,astralStorm:true,disableGenericBossPressure:true,
-    starfallCD:360,starfallFirst:120,starfallCount:4,starfallDmg:92,starfallRadius:58,
+    starfallCD:360,starfallFirst:120,starfallCount:4,starfallDmg:84,starfallRadius:58,
     eclipseBeamCD:450,eclipseBeamFirst:270,eclipseBeamDmg:122,eclipseBeamWidth:50,
-    starfallTargetLockMult:0.90,starfallFrontlineRadius:96,starfallFrontlineMult:0.62,eclipseTargetLockMult:0.90,eclipseFrontlineRadius:104,eclipseFrontlineMult:0.62,
+    starfallTargetLockMult:0.90,starfallFrontlineRadius:96,starfallFrontlineMult:0.55,eclipseTargetLockMult:0.90,eclipseFrontlineRadius:104,eclipseFrontlineMult:0.62,
     gravityTollCD:540,gravityTollFirst:180,gravityTollDmg:94,gravityTollRadius:9999,gravityTollPhase:2,
     lanternOrbitCD:660,lanternOrbitFirst:180,lanternOrbitDmg:60,lanternOrbitShots:6,lanternOrbitPhase:3,
     lanternWardAt:[0.70,0.35],lanternWardShieldPct:0.10,astralBlightDur:300,astralBlightHpPct:0.012,gravityBrandDur:300,gravityBrandHealCut:0.22,gravityTollFrontlineHpPct:0.075,gravityTollTankMult:0.76,gravityTollMeleeMult:0.90,

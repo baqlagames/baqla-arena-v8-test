@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-warden-soften-gravity';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-warden-soften-starfall';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

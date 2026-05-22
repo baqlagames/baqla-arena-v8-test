@@ -1,5 +1,5 @@
 import { SPRITE_BASE } from '../assets.js';
-import { BOSSES } from '../data/bosses.js?v=20260522-warden-soften-gravity';
+import { BOSSES } from '../data/bosses.js?v=20260522-warden-soften-starfall';
 import { drawArena25D } from './arena-25d.js';
 import { createArenaDecor, drawClassicArena } from './arena.js';
 
