@@ -364,6 +364,17 @@ function assertRiftGateAndProfile() {
   createRiftRuntime({ view: () => ({ arena: arena6, currentStage: stage6 }), randomRange: () => rolls.shift() ?? 0 }).rollStageRift();
   assert.equal(arena6.scheduledRiftRound, 4, 'rift should be able to schedule on stage 6');
 
+  const arena10 = {};
+  createRiftRuntime({ view: () => ({ arena: arena10, currentStage: { n: 10, act: 2 } }), randomRange: () => 0 }).rollStageRift();
+  assert.equal(arena10.scheduledRiftRound, 5, 'stage 10 rift should avoid the round 4 mini-boss');
+
+  const blockedArena = { phase: 'wave', round: 4, waveElapsed: 10 * GAME_TICK_HZ, scheduledRiftRound: 4, riftFiredThisRound: false };
+  createRiftRuntime({
+    view: () => ({ arena: blockedArena, currentStage: { n: 10, act: 2 }, enemies: [{ hp: 1 }] }),
+    randomRange: () => 0,
+  }).tryTriggerRift();
+  assert.equal(blockedArena.rift, undefined, 'rift should not trigger during the stage 10 round 4 mini-boss');
+
   const intro = arenaRiftStagePressureProfile(6);
   const settled = arenaRiftStagePressureProfile(10);
   assert.equal(intro.countAdjust, -1, 'stage 6 rift should use intro count smoothing');
@@ -422,6 +433,7 @@ function simulateStage(stage, stageIndex, seed) {
   const bossSustainFrames = stage.n === 10 ? 62 * GAME_TICK_HZ : 66 * GAME_TICK_HZ;
   const totalFrames = bossStart + (stage.bossId != null ? bossSustainFrames : 24 * GAME_TICK_HZ);
   const riftFrame = 40 * GAME_TICK_HZ;
+  const forcedRiftRound = stage.n === 10 ? 5 : 4;
   let mainBoss = null;
   let miniBoss = null;
   let riftTriggered = false;
@@ -527,9 +539,9 @@ function simulateStage(stage, stageIndex, seed) {
     }
 
     if (!riftTriggered && frame === riftFrame) {
-      arena.round = 4;
+      arena.round = forcedRiftRound;
       arena.waveElapsed = 10 * GAME_TICK_HZ;
-      arena.scheduledRiftRound = 4;
+      arena.scheduledRiftRound = forcedRiftRound;
       riftRuntime.tryTriggerRift();
       riftTriggered = !!arena.rift;
     }

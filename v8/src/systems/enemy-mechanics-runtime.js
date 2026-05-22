@@ -1,7 +1,7 @@
 import { ARENA_THREAT_TAG_COLOR, ARENA_WAVE_MECHANIC_LABELS } from '../data/waves.js';
 import { drawThreatsPanel as drawThreatPreviewPanel, threatPanelHeight as threatPanelHeightBase } from '../ui/threat-panel.js';
 import { arena_pickWaveMechanic, arena_stageOpenerQueue, arena_themedWaveQueue, arena_waveMechanicLimit } from './wave-planner.js';
-import { buildWaveThreats } from './wave-threats.js?v=20260522-mote-tempo';
+import { buildWaveThreats } from './wave-threats.js?v=20260522-clean-vizier-round';
 
 export function createEnemyMechanicsRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
@@ -217,14 +217,20 @@ export function createEnemyMechanicsRuntime(deps = {}) {
     } else {
       const wave = (arena.round === 1 ? arena_stageOpenerQueue(stage) : null)
         || arena_themedWaveQueue(arena.round, stage.n || 1, stage.act || 1);
-      arena.wavePreview = wave.theme + ' - ' + wave.previewName;
-      const mechanic = arena_pickWaveMechanic(stage.n || 1, arena.round || 1, false);
-      if (mechanic) arena.wavePreview += '  +  ' + mechanic.label;
-      arena._nextWaveQueue = wave.queue;
-      arena._nextWaveTheme = wave.theme;
+      const isVizierMiniBoss = ((stage.n || 0) === 10 && arena.round === 4);
+      arena._nextWaveMiniBoss = isVizierMiniBoss ? 13 : null;
+      if (isVizierMiniBoss) {
+        arena.wavePreview = 'MINI BOSS - Stormbound Vizier';
+        arena._nextWaveQueue = [];
+        arena._nextWaveTheme = 'STORM COURT';
+      } else {
+        arena.wavePreview = wave.theme + ' - ' + wave.previewName;
+        const mechanic = arena_pickWaveMechanic(stage.n || 1, arena.round || 1, false);
+        if (mechanic) arena.wavePreview += '  +  ' + mechanic.label;
+        arena._nextWaveQueue = wave.queue;
+        arena._nextWaveTheme = wave.theme;
+      }
       arena._waveGoldMult = wave.goldMult || 1;
-      arena._nextWaveMiniBoss = ((stage.n || 0) === 10 && arena.round === 4) ? 13 : null;
-      if (arena._nextWaveMiniBoss != null) arena.wavePreview = 'MINI BOSS - Stormbound Vizier + ' + arena.wavePreview;
     }
 
     arena.waveThreats = buildWaveThreats({

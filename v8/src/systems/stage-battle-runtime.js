@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-mote-tempo';
-import { createRiftRuntime } from './rift-runtime.js';
+} from './wave-lifecycle.js?v=20260522-clean-vizier-round';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-clean-vizier-round';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

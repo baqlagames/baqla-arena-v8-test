@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-mote-tempo';
+import { BOSSES } from '../data/bosses.js?v=20260522-clean-vizier-round';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 
@@ -88,9 +88,8 @@ export function buildWaveSpawnPlan(arena,stage,totalRounds){
   }
 
   if(stageN===10&&round===4){
-    plan.queue=capMiniBossEscortWave(plan.queue,3);
-    plan.queue.push({delay:300});
-    plan.queue.push({boss:13,label:'MINI BOSS - STORMBOUND VIZIER',color:'#3f8cff'});
+    plan.queue=[{boss:13,label:'MINI BOSS - STORMBOUND VIZIER',color:'#3f8cff'}];
+    plan.waveMechanic=null;
     plan.flash={text:'MINI BOSS - STORMBOUND VIZIER',color:'#3f8cff',duration:120};
   }
   return plan;

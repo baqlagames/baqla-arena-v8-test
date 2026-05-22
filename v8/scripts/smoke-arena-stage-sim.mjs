@@ -18,6 +18,7 @@ import {
   arena_waveEnemyCap,
 } from '../src/systems/wave-planner.js';
 import { buildWaveThreats } from '../src/systems/wave-threats.js';
+import { buildWaveSpawnPlan } from '../src/systems/wave-lifecycle.js';
 
 const WIDTH = 500;
 const AREA = {
@@ -45,6 +46,17 @@ function assertInside(actor, label) {
   assert(actor.y >= AREA.top && actor.y <= AREA.bottom, `${label}: y outside arena (${actor.y})`);
 }
 
+function assertVizierRoundIsClean() {
+  const stage = STAGES.find(item => item.n === 10);
+  const plan = buildWaveSpawnPlan({
+    round: 4,
+    _nextWaveQueue: [33, 38, 26],
+    _nextWaveTheme: 'STORM COURT',
+  }, stage, arena_roundsForStage(stage.n));
+  assert(plan.queue.length === 1 && plan.queue[0].boss === 13, 'stage 10 round 4 should spawn only Stormbound Vizier');
+  assert(plan.waveMechanic == null, 'stage 10 round 4 should not carry a normal wave mechanic');
+}
+
 function deterministicRandom(seed) {
   let x = seed || 1;
   return () => {
@@ -55,10 +67,9 @@ function deterministicRandom(seed) {
 
 function roundQueue(stage, round, totalRounds) {
   if (round >= totalRounds) return stage.bossId != null ? ['BOSS'] : [{ elite: stage.eliteEnemyId }];
+  if ((stage.n || 0) === 10 && round === 4) return [{ boss: 13, label: 'MINI BOSS', color: '#ff8c22' }];
   const plan = (round === 1 ? arena_stageOpenerQueue(stage) : null) || arena_themedWaveQueue(round, stage.n || 1, stage.act || 1);
   const queue = [...(plan.queue || [])];
-  const miniBossId = ((stage.n || 0) === 10 && round === 4) ? 13 : null;
-  if (miniBossId != null) queue.push({ boss: miniBossId, label: 'MINI BOSS', color: '#ff8c22' });
   return queue;
 }
 
@@ -67,8 +78,9 @@ function simulateRound(stage, stageIndex, round) {
   const queue = roundQueue(stage, round, totalRounds);
   const isBoss = round >= totalRounds;
   const numericQueue = queue.filter(item => Number.isInteger(item));
+  const hasMiniBoss = queue.some(item => item && item.boss != null);
   const cap = arena_waveEnemyCap(stage.n || 1, round);
-  assert(isBoss || numericQueue.length > 0, `stage ${stage.n} round ${round}: empty wave queue`);
+  assert(isBoss || numericQueue.length > 0 || hasMiniBoss, `stage ${stage.n} round ${round}: empty wave queue`);
   assert(numericQueue.length <= cap, `stage ${stage.n} round ${round}: queue exceeds cap`);
   for (const id of numericQueue) assert(ENEMIES[id], `stage ${stage.n} round ${round}: missing enemy ${id}`);
 
@@ -191,6 +203,7 @@ let enemies = 0;
 let bosses = 0;
 let hpBudget = 0;
 let dmgBudget = 0;
+assertVizierRoundIsClean();
 for (let i = 0; i < STAGES.length; i++) {
   const stage = STAGES[i];
   assert(BOSSES[stage.bossId] || stage.bossId == null, `stage ${stage.n}: missing boss ${stage.bossId}`);

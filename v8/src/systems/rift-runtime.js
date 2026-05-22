@@ -1,4 +1,5 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
+import { ARENA_ROUNDS_PER_STAGE } from '../data/tuning.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 
 export const ARENA_RIFT_TELEGRAPH_FRAMES = 8 * GAME_TICK_HZ;
@@ -13,6 +14,13 @@ export function arenaRiftStagePressureProfile(stageN = 1) {
   if (stageN >= ARENA_RIFT_MIN_STAGE && stageN <= 7) return { hp: 0.94, dmg: 0.92, countAdjust: -1 };
   if (stageN >= 8 && stageN <= 10) return { hp: 1.00, dmg: 0.98, countAdjust: 0 };
   return { hp: 1.00, dmg: 1.00, countAdjust: 0 };
+}
+
+function riftBlockedRoundForStage(stage = {}, round = 1) {
+  const totalRounds = stage.rounds || ARENA_ROUNDS_PER_STAGE;
+  if (round >= totalRounds) return true;
+  if ((stage.n || 0) === 10 && round === 4) return true;
+  return false;
 }
 
 export function createRiftRuntime(deps) {
@@ -34,7 +42,10 @@ export function createRiftRuntime(deps) {
     const currentStage = v.currentStage || {};
     if ((currentStage.n || 1) < ARENA_RIFT_MIN_STAGE) return;
     if (randomRange(0, 1) >= ARENA_RIFT_PER_STAGE_CHANCE) return;
-    arena.scheduledRiftRound = randomRange(0, 1) < 0.5 ? 4 : 5;
+    const candidates = [4, 5].filter(round => !riftBlockedRoundForStage(currentStage, round));
+    if (!candidates.length) return;
+    const pick = randomRange(0, 1) < 0.5 ? 0 : 1;
+    arena.scheduledRiftRound = candidates[Math.min(pick, candidates.length - 1)];
   }
 
   function tryTriggerRift() {
@@ -46,6 +57,7 @@ export function createRiftRuntime(deps) {
     if (arena.scheduledRiftRound == null) return;
     if (arena.round !== arena.scheduledRiftRound) return;
     if (arena.phase !== 'wave') return;
+    if (riftBlockedRoundForStage(v.currentStage || {}, arena.round || 1)) return;
     if (arena.waveElapsed < ARENA_RIFT_TRIGGER_MIN_FRAMES) return;
     if ((v.enemies || []).filter(enemy => enemy.hp > 0).length === 0) return;
     triggerRift();

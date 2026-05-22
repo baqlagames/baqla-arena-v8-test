@@ -22,7 +22,6 @@ import {
   arena_stageOpenerQueue,
   arena_themedWaveQueue,
 } from '../src/systems/wave-planner.js';
-import { capMiniBossEscortWave } from '../src/systems/wave-lifecycle.js';
 
 const LEVEL_3_CHEAP_UNIT_COST = 50 + 45 + 125;
 
@@ -36,9 +35,7 @@ function roundWavePlan(stage, round, totalRounds, previousWaveGoldMult) {
     || arena_themedWaveQueue(round, stage.n || 1, stage.act || 1);
   let queue = [...(wave.queue || [])];
   if ((stage.n || 0) === 10 && round === 4) {
-    queue = capMiniBossEscortWave(queue, 3);
-    queue.push({ delay: 300 });
-    queue.push({ boss: 13, label: 'MINI BOSS - STORMBOUND VIZIER', color: '#3f8cff' });
+    queue = [{ boss: 13, label: 'MINI BOSS - STORMBOUND VIZIER', color: '#3f8cff' }];
   }
   return { queue, waveGoldMult: wave.goldMult || 1, theme: wave.theme || 'WAVE' };
 }

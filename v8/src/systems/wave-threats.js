@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-mote-tempo';
+import { BOSSES } from '../data/bosses.js?v=20260522-clean-vizier-round';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){
