@@ -38,6 +38,10 @@ function canUnitTargetFlying(unit, target) {
   return isArenaRangedActor(unit) || !!(unit && (unit.paladinHybrid || unit.shadowStep || unit.canHitFlying));
 }
 
+function isShieldedStormWard(target) {
+  return !!(target && target.stormWard && !target.flying && target._stormBoss && target._stormBoss._stormShieldActive);
+}
+
 function priorityTargetScore(unit, target, distance) {
   if (!target || !target.priorityTarget) return Infinity;
   if (!canUnitTargetFlying(unit, target)) return Infinity;
@@ -249,7 +253,7 @@ export function findEnemyTargetForUnit(unit, view) {
       bestAlt = target;
     }
     const priorityScore = priorityTargetScore(unit, target, d);
-    if (priorityScore < bestPriorityScore && (!view.inArena || isReachableFromLeash(unit, target, view))) {
+    if (priorityScore < bestPriorityScore && (!view.inArena || isReachableFromLeash(unit, target, view) || isShieldedStormWard(target))) {
       bestPriorityScore = priorityScore;
       bestPriority = target;
     }
@@ -291,7 +295,7 @@ export function findRangedEnemyTargetForUnit(unit, view) {
     if (enemy.hp <= 0 || enemy.charmed) continue;
     if (enemy.untargetable || enemy.isBarrier) continue;
     const priorityScore = priorityTargetScore(unit, enemy, dist(unit, enemy));
-    if (priorityScore < bestPriorityScore && (!view.inArena || isReachableFromLeash(unit, enemy, view))) {
+    if (priorityScore < bestPriorityScore && (!view.inArena || isReachableFromLeash(unit, enemy, view) || isShieldedStormWard(enemy))) {
       bestPriorityScore = priorityScore;
       bestPriority = enemy;
     }

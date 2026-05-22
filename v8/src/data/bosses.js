@@ -146,7 +146,7 @@ export const BOSSES=[
     // Court. Twin Wards are threshold priority targets so units swap off the
     // shielded boss without requiring manual movement.
     stormVizier:true,projType:'lightning',
-    twinWardsCD:1200,stormWardThresholds:[1,0.75,0.50,0.25],stormWardHp:3200,stormWardScales:[1,1.18,1.35,1.55],stormWardSizeScales:[1,1.12,1.22,1.32],
+    twinWardsCD:1200,stormWardThresholds:[1,0.75,0.50,0.25],stormWardHp:3200,stormWardScales:[1,1.05,1.10,1.15],stormWardSizeScales:[1,1.12,1.22,1.32],
     stormShieldDamageMult:0.24,stormExposeDur:240,stormExposeMult:1.35,
     ironSurgeEvery:180,ironSurgeFirst:90,ironSurgeDmg:58,
     mirrorCleaveEvery:144,mirrorCleaveFirst:72,mirrorCleaveDmg:100,mirrorCleaveRadius:138,
@@ -154,7 +154,7 @@ export const BOSSES=[
     groundingPulseCD:360,groundingPulseFirst:300,groundingPulseDmg:170,groundingPulseRadius:128,groundingPulseMeleeMult:0.78,groundingBrandDur:240,groundingBrandHealCut:0.10,
     silencingDecreeCD:840,silencingDecreeCDMin:600,silencingDecreeCDMax:840,silencingDecreeFirst:520,silencingDecreeDur:150,
     tankCurseCD:720,tankCurseFirst:420,tankCurseDur:240,tankCurseHpPct:0.010,tankCurseHealCut:0.12,
-    timeEnrageAt:10500},
+    timeEnrageAt:13650},
   {id:14,name:'Sphinx Judicator',tier:'mini',act:3,color:'#d8a84a',accent:'#6f4a18',hp:19000,dmg:96,speed:0.24,atkSpd:66,range:82,size:52,armor:7,magicRes:0,armorType:'warded',points:1200,raidAoeDmg:30,spawnFromTop:true,spawnYOffset:58,entryHold:45,
     // Stage 13 mini-boss: boss-only wave 6. Solar Riddle is the DPS check;
     // Death Sentence + sun pulses are the healer/sustain check. No escorts.

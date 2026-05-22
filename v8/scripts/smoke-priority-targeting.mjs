@@ -64,7 +64,7 @@ const boss = enemy('Stormbound Vizier', 250, 420, {
 });
 
 const caster = unit('Caster', 6, 'caster', 220, 690, { attackType: 'magic' });
-const ironWard = enemy('Iron Ward', 214, 480, {
+const ironWard = enemy('Iron Ward', 188, 480, {
   priorityTarget: true,
   preferredBy: 'magic',
   stormWard: true,
@@ -73,14 +73,6 @@ const ironWard = enemy('Iron Ward', 214, 480, {
   armor: 16,
   magicRes: 1,
 });
-const casterPick = findEnemyTargetForUnit(caster, view([boss, ironWard]));
-assert.equal(casterPick, ironWard, 'magic caster should prefer Iron Ward over boss');
-
-const healer = unit('Healer', 10, 'healer', 260, 720, { attackType: 'magic' });
-const healerPick = findEnemyTargetForUnit(healer, view([boss, ironWard]));
-assert.equal(healerPick, ironWard, 'healer/caster family should prefer Iron Ward over shielded boss');
-
-const hunter = unit('Hunter', 8, 'ranged', 295, 700, { attackType: 'pierce' });
 const mirrorWard = enemy('Mirror Ward', 286, 480, {
   priorityTarget: true,
   preferredBy: 'physical',
@@ -90,16 +82,37 @@ const mirrorWard = enemy('Mirror Ward', 286, 480, {
   armor: 1,
   magicRes: 18,
 });
-const hunterPick = findEnemyTargetForUnit(hunter, view([boss, mirrorWard]));
+const casterPick = findEnemyTargetForUnit(caster, view([boss, ironWard, mirrorWard]));
+assert.equal(casterPick, ironWard, 'magic caster should prefer Iron Ward over boss and Mirror Ward');
+
+const healer = unit('Healer', 10, 'healer', 260, 720, { attackType: 'magic' });
+const healerPick = findEnemyTargetForUnit(healer, view([boss, ironWard, mirrorWard]));
+assert.equal(healerPick, ironWard, 'healer/caster family should prefer Iron Ward over shielded boss and Mirror Ward');
+
+const hunter = unit('Hunter', 8, 'ranged', 295, 700, { attackType: 'pierce' });
+const hunterPick = findEnemyTargetForUnit(hunter, view([boss, ironWard, mirrorWard]));
 assert.equal(hunterPick, mirrorWard, 'physical ranged unit should prefer Mirror Ward over boss');
 
 const melee = unit('Melee', 5, 'melee', 235, 665, { attackType: 'physical', prefersRanged: false });
-const meleePick = findEnemyTargetForUnit(melee, view([boss, mirrorWard]));
+const meleePick = findEnemyTargetForUnit(melee, view([boss, ironWard, mirrorWard]));
 assert.equal(meleePick, mirrorWard, 'physical melee should prefer Mirror Ward over shielded boss');
 
 const tank = unit('Tank', 0, 'tank', 250, 660, { attackType: 'physical', prefersRanged: false, taunt: true });
-const tankPick = findEnemyTargetForUnit(tank, view([boss, mirrorWard]));
+const tankPick = findEnemyTargetForUnit(tank, view([boss, ironWard, mirrorWard]));
 assert.equal(tankPick, mirrorWard, 'tank should prefer Mirror Ward over shielded boss');
+
+mirrorWard.hp = 0;
+const meleeFallbackPick = findEnemyTargetForUnit(melee, view([boss, ironWard, mirrorWard]));
+assert.equal(meleeFallbackPick, ironWard, 'melee should swap to remaining Iron Ward before shielded boss when Mirror Ward dies');
+const tankFallbackPick = findEnemyTargetForUnit(tank, view([boss, ironWard, mirrorWard]));
+assert.equal(tankFallbackPick, ironWard, 'tank should swap to remaining Iron Ward before shielded boss when Mirror Ward dies');
+
+mirrorWard.hp = 1000;
+ironWard.hp = 0;
+const casterFallbackPick = findEnemyTargetForUnit(caster, view([boss, ironWard, mirrorWard]));
+assert.equal(casterFallbackPick, mirrorWard, 'caster should swap to remaining Mirror Ward before shielded boss when Iron Ward dies');
+const healerFallbackPick = findEnemyTargetForUnit(healer, view([boss, ironWard, mirrorWard]));
+assert.equal(healerFallbackPick, mirrorWard, 'healer should swap to remaining Mirror Ward before shielded boss when Iron Ward dies');
 
 boss._stormShieldActive = false;
 ironWard.hp = 0;

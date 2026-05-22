@@ -318,6 +318,13 @@ function smokeStormboundVizier(ctx, boss) {
   if (!boss._stormShieldActive) throw new Error('Stormbound Vizier did not shield while wards were active');
   if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier should not spawn Storm Motes');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
+  const expectedHpScales = [1, 1.05, 1.10, 1.15];
+  const expectedSizeScales = [1, 1.12, 1.22, 1.32];
+  const expectedBaseHp = Math.round((boss.stormWardHp || 3000) * expectedHpScales[0]);
+  if (iron.maxHp !== expectedBaseHp || mirror.maxHp !== expectedBaseHp) throw new Error('Stormbound Vizier first ward wave should use base HP scaling');
+  if (Math.abs((iron._stormWardDamageScale || 0) - expectedHpScales[0]) > 0.001 || Math.abs((mirror._stormWardDamageScale || 0) - expectedHpScales[0]) > 0.001) {
+    throw new Error('Stormbound Vizier first ward wave should use base damage scaling');
+  }
   const wardReward = calculateEnemyKillReward(iron, ctx.units[2], {
     inArena: true,
     currentStage: { n: 10 },
@@ -390,6 +397,13 @@ function smokeStormboundVizier(ctx, boss) {
     mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
     if (!iron || !mirror) throw new Error(`Stormbound Vizier did not spawn ward wave ${waveIndex + 1}`);
     if (iron.size < expectedSizes[waveIndex] || mirror.size < expectedSizes[waveIndex]) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} did not grow in size`);
+    const expectedHp = Math.round((boss.stormWardHp || 3000) * expectedHpScales[waveIndex]);
+    if (iron.maxHp !== expectedHp || mirror.maxHp !== expectedHp) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} used wrong HP scaling`);
+    if (Math.abs((iron._stormWardDamageScale || 0) - expectedHpScales[waveIndex]) > 0.001 || Math.abs((mirror._stormWardDamageScale || 0) - expectedHpScales[waveIndex]) > 0.001) {
+      throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} used wrong damage scaling`);
+    }
+    const expectedMinSize = Math.round(26 * expectedSizeScales[waveIndex]);
+    if (iron.size !== expectedMinSize || mirror.size !== expectedMinSize) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} changed size scaling`);
     if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} did not keep 15g ward rewards`);
     if (waveIndex < 3) {
       iron.hp = 0;
