@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260522-winterglass-deep-enrage';
+import { startArena } from './systems/arena-runtime.js?v=20260522-winterglass-stall-breaker';
 
 startArena();

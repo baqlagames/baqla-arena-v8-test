@@ -352,6 +352,7 @@ function smokeStormboundVizier(ctx, boss) {
   if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Winterglass Magistrate tank curse damage tuning drifted');
   if (Math.abs((vizierDef.stormEnrageSkillMult || 0) - 1.18) > 0.0001) throw new Error('Winterglass Magistrate enrage skill multiplier drifted');
   if (vizierDef.stormDeepEnrageDelay !== 3600 || Math.abs((vizierDef.stormDeepEnrageSkillMult || 0) - 1.35) > 0.0001) throw new Error('Winterglass Magistrate deep enrage tuning drifted');
+  if (Math.abs((vizierDef.stormNoTankSkillMult || 0) - 1.18) > 0.0001 || Math.abs((vizierDef.stormAttritionSkillMult || 0) - 1.22) > 0.0001) throw new Error('Winterglass Magistrate stall-breaker tuning drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Winterglass Magistrate wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];
   const expectedSizeScales = [1, 1.12, 1.22, 1.32];
@@ -504,6 +505,11 @@ function smokeStormboundVizier(ctx, boss) {
     boss._stormChainCd = 999;
     boss._stormExposedTimer = 0;
     boss._stormDeepEnraged = false;
+    boss._winterglassNoTankPursuit = false;
+    boss._winterglassAttritionPressure = false;
+    boss._winterglassPursuitAnnounced = false;
+    boss._winterglassAttritionAnnounced = false;
+    boss.spawnFrame = ctx.frame;
   };
   const castTotal = (attackType, enraged, setup, deepEnraged = false) => {
     forceVizierBossWindow();
@@ -532,6 +538,31 @@ function smokeStormboundVizier(ctx, boss) {
   boss.spawnFrame = ctx.frame - (boss.timeEnrageAt + boss.stormDeepEnrageDelay + 2);
   tickBoss(ctx, boss, 2);
   if (!boss._stormDeepEnraged || !ctx.damageText.some(item => item.text === 'DEEP ENRAGE')) throw new Error('Winterglass Magistrate did not trigger deep enrage 30s after normal enrage');
+  boss.spawnFrame = ctx.frame;
+  boss._stormDeepEnraged = false;
+  const mixedUnits = ctx.units;
+  const normalCurse = castTotal('rimeCurse', true, () => { boss._stormTankCurseCd = 0; });
+  ctx.units = [
+    makeUnit(20, 'tank', 235, 660, { maxHp: 32000, size: 26 }),
+    makeUnit(21, 'healer', 260, 740, { maxHp: 17000 }),
+    makeUnit(22, 'healer', 292, 760, { maxHp: 17000 }),
+  ];
+  const attritionCurse = castTotal('rimeCurse', true, () => { boss._stormTankCurseCd = 0; });
+  if (!boss._winterglassAttritionPressure || !ctx.damageText.some(item => item.text === 'FROST PRESSURE')) throw new Error('Winterglass Magistrate did not detect tank/healer attrition stall');
+  if (!(attritionCurse > normalCurse * 1.02)) throw new Error('Winterglass Magistrate attrition pressure did not boost stalled tank curse');
+  ctx.units = [
+    makeUnit(23, 'tank', 235, 660, { maxHp: 32000, size: 26 }),
+    makeUnit(24, 'tank', 270, 690, { maxHp: 32000, size: 26, taunt: true }),
+  ];
+  castTotal('rimeCurse', true, () => { boss._stormTankCurseCd = 0; });
+  if (!boss._winterglassAttritionPressure) throw new Error('Winterglass Magistrate did not detect two-tank attrition stall');
+  ctx.units = [
+    makeUnit(25, 'healer', 260, 740, { maxHp: 17000 }),
+    makeUnit(26, 'ranged', 292, 760, { maxHp: 18000, prefersRanged: true }),
+  ];
+  castTotal('iceChain', false, () => { boss._stormChainCd = 0; });
+  if (!boss._winterglassNoTankPursuit || !ctx.damageText.some(item => item.text === 'NO TANK - PURSUIT')) throw new Error('Winterglass Magistrate did not detect no-tank pursuit state');
+  ctx.units = mixedUnits;
   boss.timeEnraged = false;
 
   const expectedSizes = [26, 29, 32, 34];

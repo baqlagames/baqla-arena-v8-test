@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-winterglass-deep-enrage';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-winterglass-stall-breaker';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

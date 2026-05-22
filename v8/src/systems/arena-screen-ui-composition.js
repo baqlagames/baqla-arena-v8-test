@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-winterglass-deep-enrage';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-winterglass-stall-breaker';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

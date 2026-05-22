@@ -632,6 +632,10 @@ function stormPlayerUnits(units){
 function stormBacklineUnits(units){
   return stormPlayerUnits(units).filter(u=>u.arch==='ranged'||u.arch==='caster'||u.arch==='healer'||u.prefersRanged);
 }
+function stormHasDamageRole(u){
+  if(!u||stormIsTank(u)||u.arch==='healer')return false;
+  return !!(u.arch==='melee'||u.arch==='ranged'||u.arch==='caster'||u.prefersMelee||u.prefersRanged);
+}
 function stormPickTargets(units,count){
   const picked=[];
   const pools=[stormBacklineUnits(units),stormPlayerUnits(units)];
@@ -657,10 +661,41 @@ function stormIsMelee(u){return !!(u&&(u.arch==='melee'||u.prefersMelee||u.arch=
 function stormBossOnlyWindow(b,ctx){
   return b&&b._stormCycleState==='boss'&&!stormHasPriorityAdds(b,ctx.enemies||[]);
 }
+function updateWinterglassStallPressure(b,ctx){
+  if(!b||!(b.stormVizier||b.id===13))return;
+  const players=stormPlayerUnits(ctx.units||[]);
+  const tanks=players.filter(stormIsTank);
+  const healers=players.filter(u=>u&&u.arch==='healer');
+  const damageRoles=players.filter(stormHasDamageRole);
+  const noTank=players.length>0&&tanks.length===0;
+  const attrition=b.timeEnraged&&players.length>0&&players.length<=3&&damageRoles.length===0&&((tanks.length>=1&&healers.length>=1)||tanks.length>=2);
+  const { addDamageText:addDmg=()=>{}, showFlash=()=>{}, groundFx=[], addParticle:addP=()=>{} }=ctx;
+  b._winterglassNoTankPursuit=noTank;
+  b._winterglassAttritionPressure=attrition;
+  if(noTank&&!b._winterglassPursuitAnnounced){
+    b._winterglassPursuitAnnounced=true;
+    addDmg(b.x,b.y-(b.size||40)-34,'NO TANK - PURSUIT','#d8f8ff',{sz:13,bold:true,outline:'#061433'});
+    groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(120,(b.size||42)*2.4),life:0.6,color:'#d8f8ff',enemyWarn:true,warnTimer:24,warnMax:24,label:'PURSUIT'});
+    showFlash('NO TANK - PURSUIT!','#d8f8ff',60);
+    for(let i=0;i<18;i++)addP(b.x+rnd(-b.size,b.size),b.y+rnd(-b.size,b.size),'#d8f8ff',1,4);
+  }
+  if(!noTank)b._winterglassPursuitAnnounced=false;
+  if(attrition&&!b._winterglassAttritionAnnounced){
+    b._winterglassAttritionAnnounced=true;
+    addDmg(b.x,b.y-(b.size||40)-44,'FROST PRESSURE','#9fdcff',{sz:13,bold:true,outline:'#061433'});
+    groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(150,(b.size||42)*3.0),life:0.65,color:'#9fdcff',enemyWarn:true,warnTimer:26,warnMax:26,label:'PRESSURE'});
+    showFlash('FROST PRESSURE!','#9fdcff',65);
+    for(let i=0;i<22;i++)addP(b.x+rnd(-b.size,b.size),b.y+rnd(-b.size,b.size),'#9fdcff',1,4);
+  }
+  if(!attrition)b._winterglassAttritionAnnounced=false;
+}
 function stormSkillDamageMult(b){
-  if(!b||!b.timeEnraged)return 1;
-  if(b._stormDeepEnraged)return b.stormDeepEnrageSkillMult||1.35;
-  return b.stormEnrageSkillMult||1.18;
+  if(!b)return 1;
+  let mult=1;
+  if(b.timeEnraged)mult=b._stormDeepEnraged?(b.stormDeepEnrageSkillMult||1.35):(b.stormEnrageSkillMult||1.18);
+  if(b._winterglassNoTankPursuit)mult=Math.max(mult,b.stormNoTankSkillMult||1.18);
+  if(b._winterglassAttritionPressure)mult=Math.max(mult,b.stormAttritionSkillMult||1.22);
+  return mult;
 }
 function stormScaleAt(list,index,fallback){
   const arr=Array.isArray(list)?list:[];
@@ -1059,6 +1094,7 @@ function castStormCourtPulse(b,ctx){
 }
 function updateStormboundVizier(b,ctx){
   initStormboundVizier(b,ctx);
+  updateWinterglassStallPressure(b,ctx);
   if(b._stormExposedTimer>0){
     b._stormExposedTimer--;
     if(b._stormExposedTimer<=0)b._stormExposedDamageMult=0;
