@@ -767,8 +767,8 @@ function castStormTwinWards(b,ctx,thresholdIndex=0){
   const wardHp=Math.max(1,Math.round((b.stormWardHp||3000)*hpScale));
   const wardSize=Math.round(26*sizeScale);
   const defs=[
-    {kind:'iron',name:'Iron Ward',x:-72,color:'#7fc7ff',accent:'#d8f4ff',armor:16,magicRes:1,armorType:'heavy',preferredBy:'magic',label:'MAGIC',first:b.ironSurgeFirst||90,every:b.ironSurgeEvery||180},
-    {kind:'mirror',name:'Mirror Ward',x:72,color:'#ffd166',accent:'#fff0a8',armor:1,magicRes:18,armorType:'warded',preferredBy:'physical',label:'PHYSICAL',first:b.mirrorCleaveFirst||72,every:b.mirrorCleaveEvery||144},
+    {kind:'iron',name:'Iron Ward',x:-96,color:'#7fc7ff',accent:'#d8f4ff',armor:16,magicRes:1,armorType:'heavy',preferredBy:'magic',label:'MAGIC',first:b.ironSurgeFirst||90,every:b.ironSurgeEvery||180},
+    {kind:'mirror',name:'Mirror Ward',x:96,color:'#ffd166',accent:'#fff0a8',armor:1,magicRes:18,armorType:'warded',preferredBy:'physical',label:'PHYSICAL',first:b.mirrorCleaveFirst||72,every:b.mirrorCleaveEvery||144},
   ];
   const refs=[];
   for(const def of defs){
@@ -777,7 +777,7 @@ function castStormTwinWards(b,ctx,thresholdIndex=0){
       stormWard:true,stormWardKind:def.kind,_stormBoss:b,
       priorityTarget:true,preferredBy:def.preferredBy,
       act:2,arch:'ward',
-      x:b.x+def.x,y:b.y+68+rnd(-6,6),
+      x:b.x+def.x,y:b.y+18+rnd(-4,4),
       color:def.color,accent:def.accent,
       maxHp:wardHp,hp:wardHp,
       dmg:Math.round(18*hpScale),speed:0.08,atkSpd:96,range:84,size:wardSize,
@@ -789,6 +789,8 @@ function castStormTwinWards(b,ctx,thresholdIndex=0){
       _stormWardCastT:def.first,_stormWardCastEvery:def.every
     };
     clampBossActor(ward,ctx,{topMargin:62,bottomMargin:82});
+    ward._stormHoldX=ward.x;
+    ward._stormHoldY=ward.y;
     enemies.push(ward);
     refs.push(ward);
     groundFx.push({x:ward.x,y:ward.y,r:0,maxR:62*sizeScale,life:0.7,color:def.color,enemyWarn:true,warnTimer:40,warnMax:40,label:def.label});

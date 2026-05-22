@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-pressure';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-anchor';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

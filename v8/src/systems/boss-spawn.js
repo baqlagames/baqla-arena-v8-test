@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-vizier-pressure';
+import { BOSSES } from '../data/bosses.js?v=20260522-vizier-anchor';
 import { UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 
@@ -201,7 +201,9 @@ export function spawnBossById({
   });
   const spawnMin = laneLeft + 55;
   const spawnMax = Math.max(spawnMin + 1, laneRight - 55);
-  const spawnX = template.spawnFromTop
+  const spawnX = template.fixedSpawnCenter
+    ? (laneLeft + laneRight) / 2
+    : template.spawnFromTop
     ? spawnMin + randomFloat() * (spawnMax - spawnMin)
     : width / 2;
   const paintedSpawnY = Number.isFinite(spawnY) && inArena ? spawnY : null;
@@ -247,6 +249,11 @@ export function spawnBossById({
       topMargin: 58,
       bottomMargin: 82,
     });
+  }
+
+  if (template.stormVizier || template.fixedSpawnCenter) {
+    boss._stormHoldX = boss.x;
+    boss._stormHoldY = boss.y;
   }
 
   if (template.hasBarrier) {

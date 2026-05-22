@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { clamp, dist } from '../core/math.js';
-import { tickEnemyActionStatusEffects } from './combat-status-effects.js?v=9d6b186-combat-feedback';
+import { tickEnemyActionStatusEffects } from './combat-status-effects.js';
 import { arenaEngagementBands, effectiveArenaAttackRange } from './combat-targeting.js';
 
 export function updateArenaEnemyAi(enemy, {
@@ -106,6 +106,8 @@ export function updateArenaEnemyAi(enemy, {
     shake,
   });
 
+  const holdStationary = shouldHoldStormVizierStation(enemy, { arenaPhase, units });
+
   const targetInfo = chooseEnemyTarget(enemy, {
     arenaPhase,
     units,
@@ -124,7 +126,7 @@ export function updateArenaEnemyAi(enemy, {
   })) return;
 
   if (!bestTarget) {
-    moveToward(enemy, enemy.x, arenaBottom - 50, enemy.speed);
+    if (!holdStationary) moveToward(enemy, enemy.x, arenaBottom - 50, enemy.speed);
     return;
   }
 
@@ -153,7 +155,7 @@ export function updateArenaEnemyAi(enemy, {
 
   if (bestDistance > attackRange && !enemy._snipeReady) {
     const approach = enemyApproachPoint(enemy, bestTarget, { arenaTop, arenaBottom, arenaPhase });
-    moveToward(enemy, approach.x, approach.y, enemy.speed);
+    if (!holdStationary) moveToward(enemy, approach.x, approach.y, enemy.speed);
   }
   if ((bestDistance <= attackRange || enemy._snipeReady) && enemy.cd <= 0) {
     performEnemyBasicAttack(enemy, bestTarget, {
@@ -192,6 +194,18 @@ export function updateArenaEnemyAi(enemy, {
     sound,
   });
   enemy.bobPhase += 0.08;
+}
+
+function shouldHoldStormVizierStation(enemy, { arenaPhase, units }) {
+  if (!arenaPhase || !enemy) return false;
+  if (!(enemy.stormVizier || enemy.id === 13 || enemy.stormWard || enemy._stormBoss)) return false;
+  const livePlayer = (units || []).some(unit => unit && unit.hp > 0 && unit.isPlayer && !unit.isMinion && !unit.isGhost && !unit.isMirror && !unit.untargetable);
+  if (!livePlayer) return false;
+  if (!Number.isFinite(enemy._stormHoldX)) enemy._stormHoldX = enemy.x;
+  if (!Number.isFinite(enemy._stormHoldY)) enemy._stormHoldY = enemy.y;
+  enemy.x = enemy._stormHoldX;
+  enemy.y = enemy._stormHoldY;
+  return true;
 }
 
 function enemyApproachPoint(enemy, target, { arenaTop, arenaBottom, arenaPhase }) {

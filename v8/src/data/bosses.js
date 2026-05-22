@@ -141,7 +141,7 @@ export const BOSSES=[
     lungeCD:780,lungeDist:140,lungeDmg:120,lungePhase:1,
     magicBoltCD:540,magicBoltPhase:1,magicBoltDmg:120,magicBoltColor:'#a08a5a',
     projType:'normal',timeEnrageAt:12000},
-  {id:13,name:'Stormbound Vizier',tier:'mini',act:2,color:'#3f8cff',accent:'#ffd166',hp:26000,dmg:134,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,fixedGoldReward:200,raidAoeDmg:27,spawnFromTop:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
+  {id:13,name:'Stormbound Vizier',tier:'mini',act:2,color:'#3f8cff',accent:'#ffd166',hp:26000,dmg:134,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,fixedGoldReward:200,raidAoeDmg:27,spawnFromTop:true,fixedSpawnCenter:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
     // Stage 10 wave-4 mini-boss: auto-battle teaching fight for the Storm Djinn
     // Court. Twin Wards are threshold priority targets so units swap off the
     // shielded boss without requiring manual movement.
@@ -151,8 +151,8 @@ export const BOSSES=[
     ironSurgeEvery:180,ironSurgeFirst:90,ironSurgeDmg:64,
     mirrorCleaveEvery:144,mirrorCleaveFirst:72,mirrorCleaveDmg:110,mirrorCleaveRadius:138,
     chainDecreeCD:500,chainDecreeFirst:190,chainDecreeDmg:86,chainDecreeCount:3,
-    groundingPulseCD:360,groundingPulseFirst:300,groundingPulseDmg:185,groundingPulseRadius:128,groundingPulseMeleeMult:0.78,groundingStormShockRadius:680,groundingStormShockMult:0.42,groundingBrandDur:240,groundingBrandHealCut:0.10,
-    stormVenomDur:300,stormVenomHpPct:0.012,stormVenomMinDmg:8,
+    groundingPulseCD:360,groundingPulseFirst:300,groundingPulseDmg:170,groundingPulseRadius:128,groundingPulseMeleeMult:0.78,groundingStormShockRadius:680,groundingStormShockMult:0.34,groundingBrandDur:240,groundingBrandHealCut:0.10,
+    stormVenomDur:300,stormVenomHpPct:0.009,stormVenomMinDmg:6,
     silencingDecreeCD:840,silencingDecreeCDMin:600,silencingDecreeCDMax:840,silencingDecreeFirst:520,silencingDecreeDur:150,
     tankCurseCD:720,tankCurseFirst:420,tankCurseDur:240,tankCurseHpPct:0.012,tankCurseHealCut:0.12,
     timeEnrageAt:13650},

@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260522-vizier-pressure';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-vizier-pressure';
+import { drawHealthBar } from './health-bars.js?v=20260522-vizier-anchor';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-vizier-anchor';
 
 export function createActorOverlayRenderer({
   ctx,

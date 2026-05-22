@@ -313,6 +313,9 @@ function smokeStormboundVizier(ctx, boss) {
   let iron = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Iron Ward' && enemy.hp > 0);
   let mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
   if (!iron || !mirror) throw new Error('Stormbound Vizier did not summon both Twin Wards');
+  if (!Number.isFinite(boss._stormHoldX) || !Number.isFinite(boss._stormHoldY)) throw new Error('Stormbound Vizier did not anchor its spawn position');
+  if (Math.abs(iron.y - boss.y) > 42 || Math.abs(mirror.y - boss.y) > 42) throw new Error('Stormbound Vizier wards should spawn in side slots near the boss, not below the frontline');
+  if (iron.x >= boss.x || mirror.x <= boss.x || Math.abs(iron.x - boss.x) < 70 || Math.abs(mirror.x - boss.x) < 70) throw new Error('Stormbound Vizier wards should occupy clear left/right side slots');
   if (!iron.priorityTarget || iron.preferredBy !== 'magic') throw new Error('Iron Ward missing magic priority target metadata');
   if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
   if (!boss._stormShieldActive) throw new Error('Stormbound Vizier did not shield while wards were active');
@@ -320,11 +323,11 @@ function smokeStormboundVizier(ctx, boss) {
   if (boss.fixedGoldReward !== 200) throw new Error('Stormbound Vizier should award 200g when defeated');
   const vizierDef = BOSSES[13];
   if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Stormbound Vizier base damage tuning drifted');
-  if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 185) {
+  if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 170) {
     throw new Error('Stormbound Vizier role damage tuning drifted');
   }
-  if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.42) > 0.0001) throw new Error('Stormbound Vizier Storm Shock damage tuning drifted');
-  if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.012) > 0.0001 || vizierDef.stormVenomDur !== 300) throw new Error('Stormbound Vizier Storm Venom tuning drifted');
+  if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.34) > 0.0001) throw new Error('Stormbound Vizier Storm Shock damage tuning drifted');
+  if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.009) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 6) throw new Error('Stormbound Vizier Storm Venom tuning drifted');
   if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.012) > 0.0001) throw new Error('Stormbound Vizier tank curse damage tuning drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];

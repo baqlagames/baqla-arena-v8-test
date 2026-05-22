@@ -90,4 +90,50 @@ function tickEnemy(enemy, castle, units, frame) {
   assert(castle._castleHitFx > 0, 'castle damage should mark the hit impact VFX timer');
 }
 
+{
+  const castle = {
+    x: 250,
+    y: 790,
+    hp: 900,
+    maxHp: 900,
+    isPlayer: true,
+    isKing: true,
+    size: 30,
+    name: 'King',
+  };
+  const liveUnits = [
+    { x: 250, y: 650, hp: 500, maxHp: 500, isPlayer: true, arch: 'tank', taunt: true, size: 24 },
+    { x: 300, y: 680, hp: 350, maxHp: 350, isPlayer: true, arch: 'healer', size: 20 },
+  ];
+  const vizier = {
+    id: 13,
+    name: 'Stormbound Vizier',
+    stormVizier: true,
+    x: 250,
+    y: 280,
+    hp: 26000,
+    maxHp: 26000,
+    dmg: 120,
+    speed: 12,
+    atkSpd: 20,
+    range: 96,
+    size: 50,
+    isEnemy: true,
+    isBoss: true,
+    arch: 'caster',
+    cd: 0,
+    bobPhase: 0,
+  };
+  const startX = vizier.x;
+  const startY = vizier.y;
+  for (let frame = 0; frame < 60; frame++) tickEnemy(vizier, castle, liveUnits, frame);
+  assert(Math.hypot(vizier.x - startX, vizier.y - startY) < 0.1, `Stormbound Vizier should hold its boss arena position while player units live (${vizier.x},${vizier.y})`);
+  assert.equal(castle.hp, castle.maxHp, 'stationary Vizier should not drift down to damage the castle while player units live');
+
+  for (const unit of liveUnits) unit.hp = 0;
+  for (let frame = 60; frame < 150; frame++) tickEnemy(vizier, castle, liveUnits, frame);
+  assert(vizier.target === castle, 'Stormbound Vizier should switch to the castle after all real player units die');
+  assert(vizier.y > startY + 130, `released Stormbound Vizier should march toward the castle after wipe (${vizier.y})`);
+}
+
 console.log('Enemy castle fallback smoke passed: melee enemies advance and damage the king after the squad is wiped.');
