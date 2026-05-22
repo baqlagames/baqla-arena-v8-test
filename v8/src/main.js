@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260522-winterglass-soften';
+import { startArena } from './systems/arena-runtime.js?v=20260522-winterglass-deep-enrage';
 
 startArena();

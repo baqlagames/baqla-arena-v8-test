@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-soften';
+import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-deep-enrage';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){

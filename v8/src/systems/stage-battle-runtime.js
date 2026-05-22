@@ -1,13 +1,13 @@
 import { startStageRun } from './stage-runner.js';
-import { createStageRunSetup } from './stage-lifecycle.js?v=20260522-winterglass-soften';
+import { createStageRunSetup } from './stage-lifecycle.js?v=20260522-winterglass-deep-enrage';
 import {
   completeWavePhase,
   configureWaveSpawning,
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-winterglass-soften';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-winterglass-soften';
+} from './wave-lifecycle.js?v=20260522-winterglass-deep-enrage';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-winterglass-deep-enrage';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

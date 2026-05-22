@@ -21,7 +21,7 @@ import { tickUnitHunterPassives } from './unit-hunter-ticks.js';
 import { tickUnitPlagueAndJazarPassives } from './unit-plague-jazar-ticks.js';
 import { tickUnitPriestPassives } from './unit-priest-ticks.js';
 import { tickUnitRummanPassives } from './unit-rumman-ticks.js';
-import { prepareUnitAttackTarget } from './unit-attack-targeting.js?v=20260522-winterglass-soften';
+import { prepareUnitAttackTarget } from './unit-attack-targeting.js?v=20260522-winterglass-deep-enrage';
 import { tickUnitSignatureBuffTimers } from './unit-signature-buff-timers.js';
 import { tickUnitMeteorAndSignature } from './unit-signature-ticks.js';
 import { createUnitPassiveRuntime } from './unit-passive-runtime.js';

@@ -9,7 +9,7 @@ import {
   drawPlayerAuraOver as renderDrawPlayerAuraOver,
   drawPlayerAuraUnder as renderDrawPlayerAuraUnder,
   playerVfxColor as renderPlayerVfxColor,
-} from './actor-vfx.js?v=20260522-winterglass-soften';
+} from './actor-vfx.js?v=20260522-winterglass-deep-enrage';
 import { projectileColor } from '../systems/combat-projectiles.js';
 
 export function createActorSpriteHelpers({

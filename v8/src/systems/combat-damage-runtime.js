@@ -5,7 +5,7 @@ import { createEnemyKillRewardEvent, resolveDeathPresentation, startSummonerCool
 import { applyArenaDeathReactionHooks, applyDeathBoom, tryAngelOfMercySave, tryArdentDefenderSave, tryArenaDeathBranchHooks, tryCheatDeathSave, tryGhostOnDeath } from './combat-death-hooks.js';
 import { applyPlayerSpecialDefenses, applyPreShieldPlayerReactions, applySoulLinkRedirect, triggerGalacticGuardian, triggerPrayerOfMending, tryGuardianSpiritSave } from './combat-defense-reactions.js';
 import { applyIronSkinReduction, applyPlayerProtectionReductions, stopPlayerDefenseGates } from './combat-defense-procs.js';
-import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=20260522-winterglass-soften';
+import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=20260522-winterglass-deep-enrage';
 import { applyArenaIncomingScalarModifiers, applyPostDefenseDamageModifiers } from './combat-modifiers.js';
 import { WARMUP_GOLD_BONUS } from './enemy-spawn.js';
 import { arena_campaignKillBountyStageMult, arena_lateStageNormalGoldMult, arena_roundGoldMult } from './stage-economy.js';

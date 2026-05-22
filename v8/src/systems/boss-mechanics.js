@@ -658,7 +658,9 @@ function stormBossOnlyWindow(b,ctx){
   return b&&b._stormCycleState==='boss'&&!stormHasPriorityAdds(b,ctx.enemies||[]);
 }
 function stormSkillDamageMult(b){
-  return b&&b.timeEnraged?(b.stormEnrageSkillMult||1.18):1;
+  if(!b||!b.timeEnraged)return 1;
+  if(b._stormDeepEnraged)return b.stormDeepEnrageSkillMult||1.35;
+  return b.stormEnrageSkillMult||1.18;
 }
 function stormScaleAt(list,index,fallback){
   const arr=Array.isArray(list)?list:[];
@@ -1615,6 +1617,15 @@ export function updateBoss(b,ctx){
     for(let i=0;i<80;i++)addP(b.x,b.y,'#ff0040',1,6);
   }
   // 20% HP desperation Ã¢â‚¬â€ small final boost
+  if((b.stormVizier||b.id===13)&&b.timeEnraged&&!b._stormDeepEnraged&&bossLifeFrames>bossEnrageAt+(b.stormDeepEnrageDelay||30*GAME_TICK_HZ)){
+    b._stormDeepEnraged=true;
+    showFlash('DEEP ENRAGE!  WINTERGLASS INTENSIFIES','#d8f8ff',150);
+    addDmg(b.x,b.y-b.size-34,'DEEP ENRAGE','#d8f8ff',{sz:15,bold:true,outline:'#061433'});
+    groundFx.push({x:b.x,y:b.y,r:0,maxR:b.size+136,life:0.8,color:'#d8f8ff',enemyWarn:true,warnTimer:36,warnMax:36,label:'DEEP ENRAGE'});
+    groundFx.push({x:b.x,y:b.y,r:0,maxR:b.size+176,life:0.45,color:'#ff5533',celestialAuraFx:true});
+    shake(16);
+    for(let i=0;i<64;i++)addP(b.x+rnd(-b.size,b.size),b.y+rnd(-b.size,b.size),'#d8f8ff',1,6);
+  }
   if(!b.desperate && b.hp/b.maxHp<0.2){
     b.desperate=true;
     b._phaseFlashTimer=60;

@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260522-winterglass-soften';
+import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260522-winterglass-deep-enrage';
 
 function meleeBossOrbitPoint(unit, target) {
   const isTank = !!(unit && (unit.arch === 'tank' || unit.taunt));

@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-winterglass-soften';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-winterglass-deep-enrage';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

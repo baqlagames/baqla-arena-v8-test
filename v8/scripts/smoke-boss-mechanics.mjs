@@ -351,6 +351,7 @@ function smokeStormboundVizier(ctx, boss) {
   if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.0075) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 5) throw new Error('Winterglass Magistrate Frostburn tuning drifted');
   if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Winterglass Magistrate tank curse damage tuning drifted');
   if (Math.abs((vizierDef.stormEnrageSkillMult || 0) - 1.18) > 0.0001) throw new Error('Winterglass Magistrate enrage skill multiplier drifted');
+  if (vizierDef.stormDeepEnrageDelay !== 3600 || Math.abs((vizierDef.stormDeepEnrageSkillMult || 0) - 1.35) > 0.0001) throw new Error('Winterglass Magistrate deep enrage tuning drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Winterglass Magistrate wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];
   const expectedSizeScales = [1, 1.12, 1.22, 1.32];
@@ -502,10 +503,12 @@ function smokeStormboundVizier(ctx, boss) {
     boss._stormGroundingCd = 999;
     boss._stormChainCd = 999;
     boss._stormExposedTimer = 0;
+    boss._stormDeepEnraged = false;
   };
-  const castTotal = (attackType, enraged, setup) => {
+  const castTotal = (attackType, enraged, setup, deepEnraged = false) => {
     forceVizierBossWindow();
     boss.timeEnraged = enraged;
+    boss._stormDeepEnraged = deepEnraged;
     setup();
     const start = ctx.damageHits.length;
     tickBoss(ctx, boss, 3);
@@ -520,6 +523,15 @@ function smokeStormboundVizier(ctx, boss) {
   assertEnrageSkillBoost('permafrost', () => { boss._stormGroundingCd = 0; });
   assertEnrageSkillBoost('iceChain', () => { boss._stormChainCd = 0; });
   assertEnrageSkillBoost('rimeCurse', () => { boss._stormTankCurseCd = 0; });
+  const normalWhiteout = castTotal('whiteoutPulse', true, () => { boss._stormCourtPulseCd = 0; });
+  const deepWhiteout = castTotal('whiteoutPulse', true, () => { boss._stormCourtPulseCd = 0; }, true);
+  if (!(deepWhiteout > normalWhiteout * 1.10)) throw new Error('Winterglass Magistrate deep enrage did not further boost Whiteout damage');
+  forceVizierBossWindow();
+  boss.timeEnraged = true;
+  boss._stormDeepEnraged = false;
+  boss.spawnFrame = ctx.frame - (boss.timeEnrageAt + boss.stormDeepEnrageDelay + 2);
+  tickBoss(ctx, boss, 2);
+  if (!boss._stormDeepEnraged || !ctx.damageText.some(item => item.text === 'DEEP ENRAGE')) throw new Error('Winterglass Magistrate did not trigger deep enrage 30s after normal enrage');
   boss.timeEnraged = false;
 
   const expectedSizes = [26, 29, 32, 34];

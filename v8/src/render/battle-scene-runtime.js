@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-winterglass-soften';
+import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-winterglass-deep-enrage';
 
 function unitRoleColor(unit){
   if(!unit)return '#d8f4ff';
