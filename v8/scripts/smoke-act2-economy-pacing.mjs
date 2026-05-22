@@ -6,10 +6,10 @@ import { ENEMIES } from '../src/data/enemies.js';
 import { BOSSES } from '../src/data/bosses.js';
 import {
   ARENA_CAMPAIGN_KILL_BOUNTY_MULT,
-  ARENA_INTEREST_CAP,
-  ARENA_INTEREST_RATE,
+  ARENA_ROUND_BONUS_CAP,
 } from '../src/data/tuning.js';
 import { calculateEnemyKillReward } from '../src/systems/combat-death.js';
+import { calculateWaveRewards } from '../src/systems/wave-lifecycle.js';
 import {
   arena_campaignKillBountyStageMult,
   arena_lateStageNormalGoldMult,
@@ -100,20 +100,24 @@ function simulateStageEconomy(stage) {
     }, 0);
     gold += killGold;
 
-    const roundMult = arena_roundGoldMult(round, stage.n || 1);
-    const income = Math.max(1, Math.round(arena_stageIncome(stage.n || 1) * roundMult));
-    const interest = Math.min(ARENA_INTEREST_CAP, Math.round(gold * ARENA_INTEREST_RATE * roundMult));
-    const perfectBonus = Math.round(income * 0.15);
-    gold += income + interest + perfectBonus;
+    const reward = calculateWaveRewards({
+      arena: { round, king: { hp: 1 }, _waveStartKingHp: 1 },
+      gold,
+      stageN: stage.n || 1,
+      stageIncome: arena_stageIncome,
+      roundGoldMult: arena_roundGoldMult,
+      roundBonusCap: ARENA_ROUND_BONUS_CAP,
+    });
+    gold = reward.gold;
 
     rounds.push({
       round,
       theme: plan.theme,
       startGold,
       killGold,
-      income,
-      interest,
-      perfectBonus,
+      income: reward.income,
+      roundBonus: reward.roundBonus,
+      perfectBonus: reward.perfectBonus,
       totalGold: gold - startGold,
       endGold: gold,
       actors: plan.queue.filter(item => item !== 'BOSS' && !(item && item.delay)).length,
@@ -138,6 +142,24 @@ const summaries = act2Stages.map(simulateStageEconomy);
 const stage6 = summaries[0];
 const stage10 = summaries.find(summary => summary.stage === 10);
 const stage10Round4 = stage10?.rounds.find(round => round.round === 4);
+const lowGoldReward = calculateWaveRewards({
+  arena: { round: 1, king: { hp: 100 }, _waveStartKingHp: 100 },
+  gold: 0,
+  stageN: 10,
+  stageIncome: arena_stageIncome,
+  roundGoldMult: arena_roundGoldMult,
+  roundBonusCap: ARENA_ROUND_BONUS_CAP,
+});
+const highGoldReward = calculateWaveRewards({
+  arena: { round: 1, king: { hp: 100 }, _waveStartKingHp: 100 },
+  gold: 9999,
+  stageN: 10,
+  stageIncome: arena_stageIncome,
+  roundGoldMult: arena_roundGoldMult,
+  roundBonusCap: ARENA_ROUND_BONUS_CAP,
+});
+assert.equal(lowGoldReward.roundBonus, highGoldReward.roundBonus, 'round bonus should not depend on saved gold');
+assert.equal(lowGoldReward.gold - 0, highGoldReward.gold - 9999, 'wave-end bonus should be fixed for the same stage/round');
 assert(stage6.startGold <= 170, `stage 6 start gold too high: ${stage6.startGold}`);
 assert(stage6.finalGold <= 950, `stage 6 no-spend clear gold too high: ${stage6.finalGold}`);
 assert(stage6.maxRoundGold <= 170, `stage 6 round payout spike too high: ${stage6.maxRoundGold}`);

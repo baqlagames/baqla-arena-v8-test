@@ -354,7 +354,6 @@ export function drawPlayerAuraUnder(ctx, { unit, x, y, size, frame }) {
   const haste = unitAttackSpeedVfxState(unit);
   const t = frame * 0.055 + (unit.unitIdx || 0) * 0.7 + (unit.bobPhase || 0);
   const isMinor = !!(unit.isMinion || unit.isMirror || unit.isGhost);
-  const level = unit.cellLevel || unit.level || 1;
   ctx.save();
   if (unit.spawnFrame != null) {
     const age = frame - unit.spawnFrame;
@@ -373,122 +372,21 @@ export function drawPlayerAuraUnder(ctx, { unit, x, y, size, frame }) {
       ctx.fill();
     }
   }
-  if (!isMinor) {
-    ctx.globalAlpha = 0.10 + 0.04 * Math.sin(t);
-    ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.70, size * 1.05, size * 0.26, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  if (!isMinor && level >= 3) {
-    const lvCol = level >= 5 ? '#ffd700' : level >= 4 ? '#a855f7' : '#3aa0ff';
-    ctx.globalAlpha = level >= 5 ? 0.32 + 0.10 * Math.sin(t * 1.4) : 0.20;
-    ctx.strokeStyle = lvCol;
-    ctx.lineWidth = level >= 5 ? 2.2 : 1.4;
-    ctx.setLineDash(level >= 5 ? [8, 5] : [4, 6]);
-    ctx.lineDashOffset = -frame * (level >= 5 ? 0.55 : 0.25);
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.78, size * (level >= 5 ? 1.36 : 1.18), size * (level >= 5 ? 0.34 : 0.28), 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  if (haste.active) {
-    ctx.globalAlpha = 0.20 + 0.12 * Math.sin(t * 2.2);
+  if (!isMinor && haste.active) {
+    ctx.globalAlpha = 0.12 + 0.08 * Math.sin(t * 2.2);
     ctx.strokeStyle = haste.color;
-    ctx.lineWidth = 1.8;
+    ctx.lineWidth = 1.4;
     ctx.setLineDash([7, 5]);
     ctx.lineDashOffset = -frame * (0.7 + haste.intensity * 0.35);
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.74, size * 1.22, size * 0.30, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.74, size * 1.12, size * 0.26, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.globalAlpha = 0.10 + 0.05 * haste.intensity;
+    ctx.globalAlpha = 0.055 + 0.03 * haste.intensity;
     ctx.fillStyle = haste.color;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.72, size * 1.18, size * 0.28, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.72, size * 1.06, size * 0.24, 0, 0, Math.PI * 2);
     ctx.fill();
-  }
-  if (unit.arch === 'tank' || unit.taunt) {
-    ctx.globalAlpha = 0.24 + 0.06 * Math.sin(t);
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.82, size * 1.10, size * 0.22, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = 0.18;
-    for (let i = -1; i <= 1; i++) {
-      ctx.beginPath();
-      ctx.moveTo(x + i * size * 0.34, y + size * 0.62);
-      ctx.lineTo(x + i * size * 0.20, y + size * 0.88);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 0.16;
-    ctx.fillStyle = '#fff2bd';
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.76, size * 0.52, size * 0.14, 0, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (unit.arch === 'healer') {
-    ctx.globalAlpha = 0.20 + 0.08 * Math.sin(t);
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([5, 5]);
-    ctx.lineDashOffset = -frame * 0.28;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.70, size * 1.05, size * 0.25, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    for (let i = 0; i < 3; i++) {
-      const a = t + i * Math.PI * 2 / 3;
-      ctx.globalAlpha = 0.24;
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      ctx.ellipse(x + Math.cos(a) * size * 0.75, y + size * 0.66 + Math.sin(a) * size * 0.13, size * 0.12, size * 0.05, a, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  } else if (unit.arch === 'ranged' || unit.arch === 'caster' || unit.range > 100) {
-    ctx.globalAlpha = 0.20;
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.3;
-    ctx.setLineDash([4, 6]);
-    ctx.lineDashOffset = -frame * 0.45;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.73, size * 0.92, size * 0.20, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.globalAlpha = 0.18;
-    ctx.beginPath();
-    ctx.moveTo(x - size * 0.55, y + size * 0.68);
-    ctx.lineTo(x + size * 0.55, y + size * 0.68);
-    ctx.stroke();
-  } else if (unit.arch === 'melee' || unit.stealth) {
-    ctx.globalAlpha = 0.20;
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(x - size * (0.70 + i * 0.10), y + size * (0.42 + i * 0.10));
-      ctx.lineTo(x - size * (1.08 + i * 0.14), y + size * (0.50 + i * 0.10));
-      ctx.stroke();
-    }
-  }
-  if (unit.attackType === 'magic' || unit.projType === 'curse' || unit.projType === 'voidShard') {
-    ctx.globalAlpha = 0.17 + 0.06 * Math.sin(t);
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.3;
-    ctx.setLineDash([3, 5]);
-    ctx.lineDashOffset = frame * 0.25;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.54, size * 0.78, size * 0.20, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  if (isMinor) {
-    ctx.globalAlpha = 0.14;
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.72, size * 0.82, size * 0.16, 0, 0, Math.PI * 2);
-    ctx.stroke();
   }
   ctx.restore();
 }
@@ -583,99 +481,7 @@ export function drawPlayerAuraOver(ctx, {
     }
     if (frame % 16 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y - randomRange(0, size * 0.75), haste.color, 1, 2);
   }
-  if (unit.arch === 'healer') {
-    ctx.globalAlpha = 0.50 + 0.18 * Math.sin(t);
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.4;
-    const px = x + size * 0.42;
-    const py = y - size * 0.78;
-    ctx.beginPath();
-    ctx.moveTo(px - 3, py);
-    ctx.lineTo(px + 3, py);
-    ctx.moveTo(px, py - 3);
-    ctx.lineTo(px, py + 3);
-    ctx.stroke();
-    if (frame % 18 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.45, size * 0.45), y - randomRange(2, size * 0.8), col, 1, 2);
-    if (unit._lastHealTarget && unit._lastHealTarget.hp > 0 && unit._lastHealTarget !== unit) {
-      ctx.globalAlpha = 0.22 + 0.08 * Math.sin(t);
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 1.2;
-      ctx.setLineDash([5, 5]);
-      ctx.lineDashOffset = -frame * 0.35;
-      ctx.beginPath();
-      ctx.moveTo(x, y - size * 0.30);
-      ctx.lineTo(unit._lastHealTarget.x, unit._lastHealTarget.y - (unit._lastHealTarget.size || size) * 0.25);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-  }
-  if (unit.arch === 'tank' || unit.taunt) {
-    ctx.globalAlpha = 0.42 + 0.16 * Math.sin(t * 1.3);
-    ctx.strokeStyle = '#fff2bd';
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.moveTo(x - size * 0.48, y - size * 0.15);
-    ctx.lineTo(x - size * 0.12, y - size * 0.34);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x + size * 0.16, y + size * 0.05);
-    ctx.lineTo(x + size * 0.54, y - size * 0.08);
-    ctx.stroke();
-    if (unit.taunt && frame % 24 === 0) emitParticle(emitParticleFn, x, y + size * 0.20, col, 1, 2.5);
-  }
-  if (unit.arch === 'ranged' || unit.range > 120) {
-    ctx.globalAlpha = 0.36;
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.2;
-    const yy = y - size * 0.62;
-    ctx.beginPath();
-    ctx.moveTo(x - size * 0.34, yy);
-    ctx.lineTo(x - size * 0.18, yy);
-    ctx.moveTo(x + size * 0.18, yy);
-    ctx.lineTo(x + size * 0.34, yy);
-    ctx.stroke();
-  }
-  if (unit.arch === 'caster' || unit.attackType === 'magic' || unit.projType === 'fire' || unit.projType === 'frost' || unit.projType === 'lightning') {
-    ctx.globalAlpha = 0.30;
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([3, 4]);
-    ctx.lineDashOffset = frame * 0.32;
-    ctx.beginPath();
-    ctx.ellipse(x, y - size * 0.12, size * 0.90, size * 0.30, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  if (unit.arch === 'melee' || unit.stealth) {
-    ctx.globalAlpha = 0.34;
-    ctx.strokeStyle = unit.stealth ? '#ff4d88' : col;
-    ctx.lineWidth = 1.3;
-    for (let i = 0; i < 2; i++) {
-      const a = t * 1.4 + i * Math.PI;
-      ctx.beginPath();
-      ctx.arc(x + Math.cos(a) * size * 0.12, y - size * 0.12, size * (0.70 + i * 0.18), a - 0.62, a + 0.18);
-      ctx.stroke();
-    }
-  }
   drawPlayerSignatureCue(ctx, { unit, x, y, size, frame });
-  if (unit.arch === 'paladin' || unit.projType === 'holy' || unit.attackType === 'holy') {
-    ctx.globalAlpha = 0.34 + 0.12 * Math.sin(t);
-    ctx.strokeStyle = '#ffe066';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(x, y - size * 0.92, size * 0.50, size * 0.10, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  if (unit.attackType === 'magic' || unit.projType === 'curse' || unit.projType === 'voidShard' || unit.projType === 'lightning') {
-    for (let i = 0; i < 3; i++) {
-      const a = t + i * Math.PI * 2 / 3;
-      ctx.globalAlpha = 0.38;
-      ctx.fillStyle = i === 0 ? '#ffffff' : col;
-      ctx.beginPath();
-      ctx.arc(x + Math.cos(a) * size * 0.68, y - size * 0.32 + Math.sin(a) * size * 0.17, 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
   if (unit.stealth && unit.stealthHits === 0) {
     ctx.globalAlpha = 0.26 + 0.12 * Math.sin(t * 1.8);
     ctx.strokeStyle = '#d8b4fe';

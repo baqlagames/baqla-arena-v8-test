@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-vizier-200g';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-vizier-200g';
+} from './wave-lifecycle.js?v=20260522-round-bonus';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-round-bonus';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});
@@ -145,8 +145,7 @@ export function createStageBattleRuntime(deps = {}) {
       totalRounds: deps.currentStageRounds(),
       stageIncome: deps.stageIncome,
       roundGoldMult: deps.roundGoldMult,
-      interestCap: deps.interestCap,
-      interestRate: deps.interestRate,
+      roundBonusCap: deps.roundBonusCap,
       buildNext: deps.buildNext,
       buildBoss: deps.buildBoss,
       finishRoundStats: deps.finishRoundStats,

@@ -146,9 +146,7 @@ export const ARENA_BASE_INCOME=12;
 
 export const ARENA_INCOME_PER_STAGE=3;
 
-export const ARENA_INTEREST_RATE=0.05;
-
-export const ARENA_INTEREST_CAP=20;
+export const ARENA_ROUND_BONUS_CAP=20;
 
 export const ARENA_KILL_BOUNTY_MULT=0.18;
 

@@ -50,24 +50,24 @@ function healthBarPalette(kind,pct){
 
 export function drawHealthBar(ctx, view){
   let {x,y,hp,maxHp,width,kind='player'}=view;
-  const h=kind==='boss'?8:kind==='playerTank'?9:7;
+  const h=kind==='boss'?8:kind==='playerTank'?10:7;
   if(!Number.isFinite(x)||!Number.isFinite(y))return;
-  width=Number.isFinite(width)?Math.max(18,width):44;
+  width=Math.round(Number.isFinite(width)?Math.max(18,width):44);
   hp=Number.isFinite(hp)?hp:0;
   maxHp=Number.isFinite(maxHp)&&maxHp>0?maxHp:1;
   ctx.save();
   const pct=Math.max(0,Math.min(1,hp/maxHp));
   const pal=healthBarPalette(kind,pct);
   const low=pct<=0.28;
-  const bx=x-width/2,by=y;
+  const bx=Math.round(x-width/2),by=Math.round(y);
   ctx.shadowColor=low?'rgba(255,56,56,0.20)':'rgba(0,0,0,0.45)';
   ctx.shadowBlur=low?6:3;ctx.shadowOffsetY=1;
   ctx.fillStyle=pal.shell;
   ctx.beginPath();ctx.roundRect(bx-3,by-2,width+6,h+4,6);ctx.fill();
   if(kind==='boss'||kind==='playerTank'){
-    ctx.shadowColor=pal.glow;ctx.shadowBlur=7;ctx.shadowOffsetY=0;
-    ctx.strokeStyle=pal.stroke;ctx.lineWidth=kind==='playerTank'?1.5:1.25;
-    ctx.beginPath();ctx.roundRect(bx-3,by-2.5,width+6,h+5,6);ctx.stroke();
+    ctx.shadowColor=pal.glow;ctx.shadowBlur=kind==='playerTank'?4:7;ctx.shadowOffsetY=0;
+    ctx.strokeStyle=pal.stroke;ctx.lineWidth=kind==='playerTank'?1.25:1.25;
+    ctx.beginPath();ctx.roundRect(bx-2.5,by-1.5,width+5,h+3,5.5);ctx.stroke();
   }
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   ctx.fillStyle=pal.track;
@@ -85,17 +85,12 @@ export function drawHealthBar(ctx, view){
       ctx.fillRect(bx+Math.max(0,width*pct)-1,by,1,h);
     }
   }
-  if(kind==='playerTank'){
-    ctx.fillStyle='rgba(92,200,255,0.76)';
-    ctx.fillRect(bx-2,by+1,2,Math.max(2,h-2));
-    ctx.fillRect(bx+width,by+1,2,Math.max(2,h-2));
-  }
   if(low&&kind!=='player'){
     ctx.fillStyle='rgba(255,255,255,0.30)';
     ctx.fillRect(bx+2,by+2,Math.min(8,width-4),1);
   }
   ctx.strokeStyle=pal.stroke;ctx.lineWidth=1;
-  ctx.beginPath();ctx.roundRect(bx-0.5,by-0.5,width+1,h+1,4);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(bx+0.5,by+0.5,width-1,h-1,3.5);ctx.stroke();
   ctx.restore();
 }
 

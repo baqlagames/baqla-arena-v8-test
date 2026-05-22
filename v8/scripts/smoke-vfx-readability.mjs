@@ -192,6 +192,20 @@ assert.equal(playerSignatureVfxState(capstoneUnit).capstone, true, 'level 5 sign
 assert.equal(playerHitSourceVfxState(hitSourceUnit).danger, true, 'high-impact source labels should expose danger VFX state');
 assert.equal(playerNoHealVfxState(silencedHealer).label, 'NO HEAL', 'silenced healers should expose explicit no-heal VFX state');
 
+const quietAuraCtx = makeCtx();
+const quietTank = player(0, { arch: 'tank', taunt: true, signature: null });
+drawPlayerAuraUnder(quietAuraCtx, { unit: quietTank, x: quietTank.x, y: quietTank.y, size: quietTank.size, frame: 120 });
+drawPlayerAuraOver(quietAuraCtx, {
+  unit: quietTank,
+  x: quietTank.x,
+  y: quietTank.y,
+  size: quietTank.size,
+  frame: 120,
+  emitParticle: () => {},
+  randomRange: (min, max) => (min + max) / 2,
+});
+assert(!quietAuraCtx.calls.includes('ellipse'), 'idle player units should not draw persistent role/level oval rings');
+
 const casterIntent = enemyIntentVfxState(enemy(38, { cd: 3, atkSpd: 80, chainBoltCD: 300 }));
 assert.equal(casterIntent.active, true, 'dangerous enemy roles should expose intent VFX state');
 assert.equal(casterIntent.imminent, true, 'nearly-ready enemy attacks should expose imminent intent VFX');

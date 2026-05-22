@@ -1,9 +1,9 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-vizier-200g';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js';
-import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-vizier-200g';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-clean-unit-hud';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260522-clean-unit-hud';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-round-bonus';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';
@@ -103,7 +103,7 @@ function playerHudInfo(u){
 function playerHudBarWidth(u){
   const info=playerHudInfo(u);
   if(!info)return (u&&u.size?u.size:20)+14;
-  return info.tank?Math.max(50,(u.size||20)+24):(u.size||20)+14;
+  return info.tank?Math.max(58,(u.size||20)+30):(u.size||20)+14;
 }
 function playerHudBaseY(u,y){
   if(!u)return 0;

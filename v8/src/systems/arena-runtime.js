@@ -2,10 +2,10 @@ import { SPRITE_BASE } from '../assets.js';
 import { dist, clamp, rnd } from '../core/math.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { createGameState, STAGE_TRANSIENT_BATTLE_ARRAYS } from '../core/state.js';
-import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, RESPAWN_FRAMES, GRID_COLS, GRID_ROWS, GRID_X, GRID_W, CELL_W, ARENA_MAX_UNIT_LEVEL, ARENA_ATTACK_TYPE_BY_UNIT, ARENA_INTEREST_RATE, ARENA_INTEREST_CAP, ARENA_BUILD_FIRST, ARENA_BUILD_NEXT, ARENA_BUILD_BOSS, ARENA_LEASH_FWD, ARENA_LEASH_BACK, ARENA_LEASH_SIDE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
+import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, RESPAWN_FRAMES, GRID_COLS, GRID_ROWS, GRID_X, GRID_W, CELL_W, ARENA_MAX_UNIT_LEVEL, ARENA_ATTACK_TYPE_BY_UNIT, ARENA_ROUND_BONUS_CAP, ARENA_BUILD_FIRST, ARENA_BUILD_NEXT, ARENA_BUILD_BOSS, ARENA_LEASH_FWD, ARENA_LEASH_BACK, ARENA_LEASH_SIDE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
 import { ENEMIES } from '../data/enemies.js';
-import { BOSSES } from '../data/bosses.js?v=20260522-vizier-200g';
+import { BOSSES } from '../data/bosses.js?v=20260522-round-bonus';
 import { ARENA_ABILITIES } from '../data/abilities.js';
 import { ARENA_PERKS } from '../data/perks.js';
 import { STAGES, STAGE_HP_MULT, STAGE_DMG_MULT } from '../data/stages.js';
@@ -13,8 +13,8 @@ import { ARENA_UNIT_BRANCHES, ARENA_BASE_SIGNATURES, ARENA_BRANCH_SIGNATURES } f
 import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=20260522-vizier-200g';
-import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260522-vizier-200g';
+import { createActorRenderer } from '../render/actor-renderer.js?v=20260522-clean-unit-hud';
+import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260522-round-bonus';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';
 import { updateArenaEnemyAi } from './combat-enemy-ai.js';
@@ -28,8 +28,8 @@ import { tickEnemyPostUpdateStatusEffects } from './combat-status-effects.js';
 import { perkSlotCount, stageBeansReward } from './perks.js';
 import { createStageFlowRuntime } from './stage-flow-runtime.js?v=20260517-grid-calibration';
 import { arena_lateRoundEnemyMult, arena_lateStageNormalDamageMult, arena_lateStageNormalDurabilityMult, arena_lateStageRoleHpMult, arena_roundGoldMult, arena_roundsForStage, arena_stageIncome } from './stage-economy.js';
-import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260522-vizier-200g';
-import { createArenaBossRuntime } from './arena-boss-runtime.js?v=20260522-vizier-200g';
+import { spawnBossById as spawnBossByIdFromData } from './boss-spawn.js?v=20260522-round-bonus';
+import { createArenaBossRuntime } from './arena-boss-runtime.js?v=20260522-round-bonus';
 import { tickTimedFieldEffects } from './timed-field-effects.js';
 import { arena_stageStarCriteria, arena_stageStarRule, arena_starText } from './stage-stars.js';
 import { createRoleProgressionRuntime } from './role-progression.js';
@@ -37,17 +37,17 @@ import { createUnitPayoffRuntime } from './unit-payoff-runtime.js';
 import { createUnitAbilityRuntime } from './unit-ability-runtime.js';
 import { createUnitMinionRuntime } from './unit-minion-runtime.js';
 import { createArenaAudio } from './arena-audio.js';
-import { createStageBattleRuntime } from './stage-battle-runtime.js?v=20260522-vizier-200g';
+import { createStageBattleRuntime } from './stage-battle-runtime.js?v=20260522-round-bonus';
 import { createArenaLayoutRuntime } from './arena-layout-runtime.js';
-import { createCombatHelperRuntime } from './combat-helper-runtime.js?v=20260522-vizier-200g';
+import { createCombatHelperRuntime } from './combat-helper-runtime.js?v=20260522-round-bonus';
 import { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST, createArenaSpellRuntime } from './arena-spell-runtime.js';
-import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js?v=20260522-vizier-200g';
+import { createEnemyMechanicsRuntime } from './enemy-mechanics-runtime.js?v=20260522-round-bonus';
 import { createPlacementEconomyRuntime } from './placement-economy-runtime.js';
 import { createScreenProgressRuntime } from './screen-progress-runtime.js';
 import { createBattleObjectiveRuntime } from './battle-objective-runtime.js?v=20260521-warden-live';
-import { createArenaScreenUiComposition } from './arena-screen-ui-composition.js?v=20260522-vizier-200g';
+import { createArenaScreenUiComposition } from './arena-screen-ui-composition.js?v=20260522-round-bonus';
 import { createArenaGridRuntime } from './arena-grid-runtime.js';
-import { createUnitRuntimeComposition } from './unit-runtime-composition.js?v=20260522-vizier-200g';
+import { createUnitRuntimeComposition } from './unit-runtime-composition.js?v=20260522-round-bonus';
 import { createArenaCombatEffectsRuntime } from './arena-combat-effects-runtime.js';
 import { createArenaGameStateRuntime } from './arena-game-state-runtime.js';
 import { createArenaBattleArrayRuntime } from './arena-battle-array-runtime.js';
@@ -1076,8 +1076,7 @@ const stageBattleRuntime=createStageBattleRuntime({
   playWaveStart:()=>SFX.waveStart(),
   stageIncome:arena_stageIncome,
   roundGoldMult:arena_roundGoldMult,
-  interestCap:ARENA_INTEREST_CAP,
-  interestRate:ARENA_INTEREST_RATE,
+  roundBonusCap:ARENA_ROUND_BONUS_CAP,
   buildNext:ARENA_BUILD_NEXT,
   buildBoss:ARENA_BUILD_BOSS,
   finishRoundStats:arena_statsFinishRound,

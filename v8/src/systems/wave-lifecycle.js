@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-vizier-200g';
+import { BOSSES } from '../data/bosses.js?v=20260522-round-bonus';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 
@@ -134,20 +134,19 @@ export function calculateWaveRewards(view){
     stageN,
     stageIncome,
     roundGoldMult,
-    interestCap,
-    interestRate
+    roundBonusCap,
   }=view;
   const mult=roundGoldMult(arena.round||1,stageN);
   const income=Math.max(1,Math.round(stageIncome(stageN)*mult));
-  const interest=Math.min(interestCap,Math.round(gold*interestRate*mult));
+  const roundBonus=Math.min(roundBonusCap,Math.round(income*0.35));
   const perfectWave=arena.king&&arena.king.hp>=arena._waveStartKingHp;
   const perfectBonus=perfectWave?Math.round(income*0.15):0;
   return {
     income,
-    interest,
+    roundBonus,
     perfectWave,
     perfectBonus,
-    gold:gold+income+interest+perfectBonus,
+    gold:gold+income+roundBonus+perfectBonus,
   };
 }
 
@@ -208,8 +207,7 @@ export function completeWavePhase({
   totalRounds,
   stageIncome,
   roundGoldMult,
-  interestCap,
-  interestRate,
+  roundBonusCap,
   buildNext,
   buildBoss,
   finishRoundStats,
@@ -231,12 +229,11 @@ export function completeWavePhase({
     stageN,
     stageIncome,
     roundGoldMult,
-    interestCap,
-    interestRate,
+    roundBonusCap,
   });
   setGold(reward.gold);
   if (reward.perfectWave) showFlash('PERFECT WAVE!  +' + reward.perfectBonus + 'g bonus', '#44ff88', 100);
-  showFlash('+' + reward.income + 'g income  +' + reward.interest + 'g interest', '#ffd700', 80);
+  showFlash('+' + reward.income + 'g income  +' + reward.roundBonus + 'g round bonus', '#ffd700', 80);
   if (arena.round >= totalRounds) {
     endStage(true);
     return { endedStage: true, reward };

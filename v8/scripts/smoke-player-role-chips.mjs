@@ -114,7 +114,7 @@ for (const label of roleLabels) {
   assert(!textCalls.some(call => call.text === label), `player HUD should not render ${label} role text`);
 }
 
-const tankTrack = roundRects.find(rect => Math.abs(rect.w - 52) < 0.1 && Math.abs(rect.h - 9) < 0.1);
+const tankTrack = roundRects.find(rect => Math.abs(rect.w - 58) < 0.1 && Math.abs(rect.h - 10) < 0.1);
 const meleeTrack = roundRects.find(rect => Math.abs(rect.w - 36) < 0.1 && Math.abs(rect.h - 7) < 0.1);
 assert(tankTrack, 'tank player HP bar should use the wider/taller tank track');
 assert(meleeTrack, 'melee player HP bar should keep the compact player track');
@@ -128,7 +128,7 @@ assert(meleeTrack.y <= units[1].y - units[1].size * 3.3, 'melee wave HP bar shou
 roundRects.length = 0;
 viewState.arena = { phase: 'build' };
 for (const unit of units) renderer.drawUnitHud(unit);
-const buildTankTrack = roundRects.find(rect => Math.abs(rect.w - 52) < 0.1 && Math.abs(rect.h - 9) < 0.1);
+const buildTankTrack = roundRects.find(rect => Math.abs(rect.w - 58) < 0.1 && Math.abs(rect.h - 10) < 0.1);
 const buildMeleeTrack = roundRects.find(rect => Math.abs(rect.w - 36) < 0.1 && Math.abs(rect.h - 7) < 0.1);
 assert(buildTankTrack, 'tank build HP bar should render');
 assert(buildMeleeTrack, 'melee build HP bar should render');
