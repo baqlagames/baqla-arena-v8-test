@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js';
+import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-clean-shield-vfx';
 
 function unitRoleColor(unit){
   if(!unit)return '#d8f4ff';
@@ -484,7 +484,8 @@ export function createBattleSceneRuntime(deps) {
       ctx.fillText('M',u.x,u.y-u.size-4);
       ctx.restore();
     }
-    // arena unit-state visual indicators (shield bubbles, last stand aura, etc.)
+    // Arena unit-state visual indicators. Player shield absorbs use status icons
+    // plus hit/break flashes; persistent bubbles were too noisy in boss piles.
     for(const u of units){
       if(!u.isPlayer||u.hp<=0)continue;
       drawUnitShieldVfx(ctx,{unit:u,x:u.x,y:u.y,size:u.size,frame});

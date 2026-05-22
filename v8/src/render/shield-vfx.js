@@ -173,24 +173,29 @@ export function drawActorShieldVfx(ctx, {
   y = unit && unit.y,
   size = unit && unit.size || 16,
   frame = 0,
+  showActiveShields = true,
 } = {}) {
   if (!unit || !ctx) return;
-  const shields = activeShieldsFor(unit);
-  for (let i = 0; i < shields.length; i++) {
-    const shield = shields[i];
-    drawShieldBubble(ctx, {
-      x,
-      y: y - size * 0.12,
-      size,
-      frame,
-      type: shield.type,
-      color: shield.color || shieldColorForType(shield.type, unit._lastShieldColor),
-      pct: shield.pct,
-      index: i,
-    });
+  if (showActiveShields) {
+    const shields = activeShieldsFor(unit);
+    for (let i = 0; i < shields.length; i++) {
+      const shield = shields[i];
+      drawShieldBubble(ctx, {
+        x,
+        y: y - size * 0.12,
+        size,
+        frame,
+        type: shield.type,
+        color: shield.color || shieldColorForType(shield.type, unit._lastShieldColor),
+        pct: shield.pct,
+        index: i,
+      });
+    }
   }
   drawShieldHitFx(ctx, { unit, x, y: y - size * 0.12, size, frame });
   drawShieldBreakFx(ctx, { unit, x, y: y - size * 0.12, size, frame });
 }
 
-export const drawUnitShieldVfx = drawActorShieldVfx;
+export function drawUnitShieldVfx(ctx, options = {}) {
+  drawActorShieldVfx(ctx, { ...options, showActiveShields: false });
+}

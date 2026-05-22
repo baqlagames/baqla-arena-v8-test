@@ -27,6 +27,28 @@ function createNoopCanvasContext() {
   });
 }
 
+function createRecordingCanvasContext() {
+  const calls = {};
+  const ctx = createNoopCanvasContext();
+  return new Proxy(ctx, {
+    get(target, prop) {
+      if (prop === 'calls') return calls;
+      if (prop in target && typeof target[prop] !== 'function') return target[prop];
+      if (prop === 'measureText') return text => ({ width: String(text || '').length * 7 });
+      if (prop === 'createLinearGradient' || prop === 'createRadialGradient') return () => ({ addColorStop: noop });
+      return (...args) => {
+        calls[prop] = (calls[prop] || 0) + 1;
+        const value = target[prop];
+        return typeof value === 'function' ? value(...args) : undefined;
+      };
+    },
+    set(target, prop, value) {
+      target[prop] = value;
+      return true;
+    },
+  });
+}
+
 const particles = [];
 const groundEffects = [];
 const texts = [];
@@ -64,6 +86,18 @@ const ctx = createNoopCanvasContext();
 drawUnitShieldVfx(ctx, { unit, x: unit.x, y: unit.y, size: unit.size, frame: 24 });
 assert(unit._shieldHitFx.timer < unit._shieldHitFx.maxTimer, 'draw should tick hit fx');
 assert(unit._shieldBreakFx.timer < unit._shieldBreakFx.maxTimer, 'draw should tick break fx');
+
+const activeOnlyUnit = {
+  x: 120,
+  y: 220,
+  size: 24,
+  maxHp: 800,
+  hp: 700,
+  _goldShield: { amt: 80, max: 120, timer: 90, maxTimer: 120 },
+};
+const playerShieldCtx = createRecordingCanvasContext();
+drawUnitShieldVfx(playerShieldCtx, { unit: activeOnlyUnit, x: activeOnlyUnit.x, y: activeOnlyUnit.y, size: activeOnlyUnit.size, frame: 25 });
+assert(!playerShieldCtx.calls.arc, 'player active shield should not draw a persistent bubble');
 
 const enemy = {
   x: 180,
