@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-wave5-gold';
+import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-warden-micro-boost';
 
 function unitRoleColor(unit){
   if(!unit)return '#d8f4ff';

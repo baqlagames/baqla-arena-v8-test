@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260522-wave5-gold';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-wave5-gold';
+import { drawHealthBar } from './health-bars.js?v=20260522-warden-micro-boost';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-warden-micro-boost';
 
 export function createActorOverlayRenderer({
   ctx,

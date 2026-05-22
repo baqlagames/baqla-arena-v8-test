@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-wave5-gold';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-warden-micro-boost';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;
