@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260522-winterglass-magistrate';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-winterglass-magistrate';
+import { drawHealthBar } from './health-bars.js?v=20260522-winterglass-soften';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-winterglass-soften';
 
 export function createActorOverlayRenderer({
   ctx,

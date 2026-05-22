@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-winterglass-magistrate';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-winterglass-soften';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

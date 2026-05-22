@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-magistrate';
+import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-soften';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 

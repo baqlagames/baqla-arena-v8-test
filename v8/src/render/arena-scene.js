@@ -1,5 +1,5 @@
 import { SPRITE_BASE } from '../assets.js';
-import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-magistrate';
+import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-soften';
 import { drawArena25D } from './arena-25d.js';
 import { createArenaDecor, drawClassicArena } from './arena.js';
 

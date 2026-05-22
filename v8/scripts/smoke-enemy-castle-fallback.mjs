@@ -179,9 +179,18 @@ function tickEnemy(enemy, castle, units, frame) {
   const startX = vizier.x;
   const startY = vizier.y;
   for (let frame = 0; frame < 60; frame++) tickEnemy(vizier, castle, liveUnits, frame);
-  assert(Math.hypot(vizier.x - startX, vizier.y - startY) < 0.1, `Winterglass Magistrate should hold its boss arena position while player units live (${vizier.x},${vizier.y})`);
-  assert.equal(castle.hp, castle.maxHp, 'stationary Vizier should not drift down to damage the castle while player units live');
+  assert(Math.hypot(vizier.x - startX, vizier.y - startY) < 0.1, `Winterglass Magistrate should hold its boss arena position while a tank lives (${vizier.x},${vizier.y})`);
+  assert.equal(castle.hp, castle.maxHp, 'stationary Vizier should not drift down to damage the castle while a tank lives');
 
+  liveUnits[0].hp = 0;
+  for (let frame = 60; frame < 95; frame++) tickEnemy(vizier, castle, liveUnits, frame);
+  assert(vizier.target === liveUnits[1], 'Winterglass Magistrate should chase surviving backline once the tank dies');
+  assert(vizier.y > startY + 60, `released Winterglass Magistrate should move toward backline after tank death (${vizier.y})`);
+
+  vizier.x = startX;
+  vizier.y = startY;
+  vizier._stormHoldX = startX;
+  vizier._stormHoldY = startY;
   for (const unit of liveUnits) unit.hp = 0;
   for (let frame = 60; frame < 150; frame++) tickEnemy(vizier, castle, liveUnits, frame);
   assert(vizier.target === castle, 'Winterglass Magistrate should switch to the castle after all real player units die');

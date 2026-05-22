@@ -337,18 +337,18 @@ function smokeStormboundVizier(ctx, boss) {
   if (boss.fixedGoldReward !== 200) throw new Error('Winterglass Magistrate should award 200g when defeated');
   const vizierDef = BOSSES[13];
   if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Winterglass Magistrate base damage tuning drifted');
-  if (vizierDef.ironSurgeDmg !== 70 || vizierDef.mirrorCleaveDmg !== 120 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 170 || vizierDef.courtPulseDmg !== 56) {
+  if (vizierDef.ironSurgeDmg !== 66 || vizierDef.mirrorCleaveDmg !== 120 || vizierDef.chainDecreeDmg !== 80 || vizierDef.groundingPulseDmg !== 170 || vizierDef.courtPulseDmg !== 52) {
     throw new Error('Winterglass Magistrate role damage tuning drifted');
   }
   if (Math.abs((vizierDef.groundingPulseTankMult || 0) - 1.10) > 0.0001) throw new Error('Winterglass Magistrate tank Grounding pressure tuning drifted');
   if (vizierDef.courtPulseCD !== 420 || vizierDef.courtPulseFirst !== 120) throw new Error('Winterglass Magistrate Whiteout Pulse cadence drifted');
-  if (Math.abs((vizierDef.courtPulseTankMult || 0) - 1.18) > 0.0001 || Math.abs((vizierDef.courtPulseMeleeMult || 0) - 0.82) > 0.0001 || Math.abs((vizierDef.courtPulseBacklineMult || 0) - 0.70) > 0.0001) {
+  if (Math.abs((vizierDef.courtPulseTankMult || 0) - 1.18) > 0.0001 || Math.abs((vizierDef.courtPulseMeleeMult || 0) - 0.82) > 0.0001 || Math.abs((vizierDef.courtPulseBacklineMult || 0) - 0.64) > 0.0001) {
     throw new Error('Winterglass Magistrate Whiteout Pulse role tuning drifted');
   }
   if (vizierDef.stormWardOverchargeFirst !== 1200 || vizierDef.stormWardOverchargeSecond !== 2400) throw new Error('Winterglass Magistrate ward overcharge timing drifted');
   if (JSON.stringify(vizierDef.stormWardOverchargeMults) !== JSON.stringify([1, 1.15, 1.30])) throw new Error('Winterglass Magistrate ward overcharge scaling drifted');
   if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.34) > 0.0001) throw new Error('Winterglass Magistrate Frost Shock damage tuning drifted');
-  if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.009) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 6) throw new Error('Winterglass Magistrate Frostburn tuning drifted');
+  if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.0075) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 5) throw new Error('Winterglass Magistrate Frostburn tuning drifted');
   if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Winterglass Magistrate tank curse damage tuning drifted');
   if (Math.abs((vizierDef.stormEnrageSkillMult || 0) - 1.18) > 0.0001) throw new Error('Winterglass Magistrate enrage skill multiplier drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Winterglass Magistrate wards should award 15 gold each');

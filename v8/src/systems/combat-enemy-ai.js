@@ -199,8 +199,13 @@ export function updateArenaEnemyAi(enemy, {
 function shouldHoldStormVizierStation(enemy, { arenaPhase, units }) {
   if (!arenaPhase || !enemy) return false;
   if (!(enemy.stormVizier || enemy.id === 13 || enemy.stormWard || enemy._stormBoss)) return false;
-  const livePlayer = (units || []).some(unit => unit && unit.hp > 0 && unit.isPlayer && !unit.isMinion && !unit.isGhost && !unit.isMirror && !unit.untargetable);
+  const livePlayers = (units || []).filter(unit => unit && unit.hp > 0 && unit.isPlayer && !unit.isMinion && !unit.isGhost && !unit.isMirror && !unit.untargetable);
+  const livePlayer = livePlayers.length > 0;
   if (!livePlayer) return false;
+  if (enemy.id === 13 || enemy.winterglassMagistrate || enemy.stormVizier) {
+    const liveTank = livePlayers.some(unit => unit.arch === 'tank' || unit.taunt);
+    if (!liveTank) return false;
+  }
   if (!Number.isFinite(enemy._stormHoldX)) enemy._stormHoldX = enemy.x;
   if (!Number.isFinite(enemy._stormHoldY)) enemy._stormHoldY = enemy.y;
   enemy.x = enemy._stormHoldX;
