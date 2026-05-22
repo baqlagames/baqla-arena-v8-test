@@ -25,7 +25,7 @@ export const STAGES=[
     waves:[[10,2,5],[22,2,7],[36,2,4],[52,2,6],[70,2,5]]},
   {n:9,name:'Storm Skies',act:2,type:'normal',layout:'arena',weather:'storm',castleHp:1300,enemyCastleHp:2400,crystalNode:true,eliteEnemyId:6,
     waves:[[10,2,5],[22,2,4],[36,2,7],[52,2,6]]},
-  {n:10,name:'Sultan\'s Palace',act:2,type:'vs',layout:'arena',weather:'storm',castleHp:1500,enemyCastleHp:0,bossId:4,crystalNode:true,
+  {n:10,name:'Winterglass Palace',act:2,type:'vs',layout:'arena',weather:'blizzard',castleHp:1500,enemyCastleHp:0,bossId:4,crystalNode:true,
     waves:[[10,2,4],[22,1,5],[36,2,6],[52,2,7]]},
   // ACT 3 Ã¢â‚¬â€ DESERT CROSSING (elites: scorpion / vulture / mummy)
   {n:11,name:'Dune Edge',act:3,type:'normal',layout:'lanes',weather:'clear',castleHp:1500,enemyCastleHp:2000,crystalNode:true,eliteEnemyId:8,

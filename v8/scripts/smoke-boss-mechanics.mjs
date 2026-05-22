@@ -322,40 +322,42 @@ function smokeStormboundVizier(ctx, boss) {
   ctx.units[1].y = boss.y + 66;
 
   tickBoss(ctx, boss, 2);
-  let iron = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Iron Ward' && enemy.hp > 0);
-  let mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
-  if (!iron || !mirror) throw new Error('Stormbound Vizier did not summon both Twin Wards');
-  if (!Number.isFinite(boss._stormHoldX) || !Number.isFinite(boss._stormHoldY)) throw new Error('Stormbound Vizier did not anchor its spawn position');
-  if (Math.abs(iron.y - boss.y) > 42 || Math.abs(mirror.y - boss.y) > 42) throw new Error('Stormbound Vizier wards should spawn in side slots near the boss, not below the frontline');
-  if (iron.x >= boss.x || mirror.x <= boss.x || Math.abs(iron.x - boss.x) < 70 || Math.abs(mirror.x - boss.x) < 70) throw new Error('Stormbound Vizier wards should occupy clear left/right side slots');
-  if (!iron.priorityTarget || iron.preferredBy !== 'magic') throw new Error('Iron Ward missing magic priority target metadata');
-  if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
-  if (!boss._stormShieldActive) throw new Error('Stormbound Vizier did not shield while wards were active');
-  if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier should not spawn Storm Motes');
-  if (boss.fixedGoldReward !== 200) throw new Error('Stormbound Vizier should award 200g when defeated');
+  let iron = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Frostglass Prism' && enemy.hp > 0);
+  let mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirrorice Bulwark' && enemy.hp > 0);
+  if (!iron || !mirror) throw new Error('Winterglass Magistrate did not summon both Winterglass Crystals');
+  if (!ctx.flashes.some(flash => flash.text === 'WINTERGLASS ARRIVAL!')) throw new Error('Winterglass Magistrate did not play its frost arrival cue');
+  if (!ctx.groundFx.some(fx => fx && fx.label === 'FROST') || !ctx.groundFx.some(fx => fx && fx.label === 'WINTER')) throw new Error('Winterglass Magistrate arrival did not seed frost warning visuals');
+  if (!Number.isFinite(boss._stormHoldX) || !Number.isFinite(boss._stormHoldY)) throw new Error('Winterglass Magistrate did not anchor its spawn position');
+  if (Math.abs(iron.y - boss.y) > 42 || Math.abs(mirror.y - boss.y) > 42) throw new Error('Winterglass Magistrate wards should spawn in side slots near the boss, not below the frontline');
+  if (iron.x >= boss.x || mirror.x <= boss.x || Math.abs(iron.x - boss.x) < 70 || Math.abs(mirror.x - boss.x) < 70) throw new Error('Winterglass Magistrate wards should occupy clear left/right side slots');
+  if (!iron.priorityTarget || iron.preferredBy !== 'magic') throw new Error('Frostglass Prism missing magic priority target metadata');
+  if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirrorice Bulwark missing physical priority target metadata');
+  if (!boss._stormShieldActive) throw new Error('Winterglass Magistrate did not shield while wards were active');
+  if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Winterglass Magistrate should not spawn Storm Motes');
+  if (boss.fixedGoldReward !== 200) throw new Error('Winterglass Magistrate should award 200g when defeated');
   const vizierDef = BOSSES[13];
-  if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Stormbound Vizier base damage tuning drifted');
+  if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Winterglass Magistrate base damage tuning drifted');
   if (vizierDef.ironSurgeDmg !== 70 || vizierDef.mirrorCleaveDmg !== 120 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 170 || vizierDef.courtPulseDmg !== 56) {
-    throw new Error('Stormbound Vizier role damage tuning drifted');
+    throw new Error('Winterglass Magistrate role damage tuning drifted');
   }
-  if (Math.abs((vizierDef.groundingPulseTankMult || 0) - 1.10) > 0.0001) throw new Error('Stormbound Vizier tank Grounding pressure tuning drifted');
-  if (vizierDef.courtPulseCD !== 420 || vizierDef.courtPulseFirst !== 120) throw new Error('Stormbound Vizier Court Pulse cadence drifted');
+  if (Math.abs((vizierDef.groundingPulseTankMult || 0) - 1.10) > 0.0001) throw new Error('Winterglass Magistrate tank Grounding pressure tuning drifted');
+  if (vizierDef.courtPulseCD !== 420 || vizierDef.courtPulseFirst !== 120) throw new Error('Winterglass Magistrate Whiteout Pulse cadence drifted');
   if (Math.abs((vizierDef.courtPulseTankMult || 0) - 1.18) > 0.0001 || Math.abs((vizierDef.courtPulseMeleeMult || 0) - 0.82) > 0.0001 || Math.abs((vizierDef.courtPulseBacklineMult || 0) - 0.70) > 0.0001) {
-    throw new Error('Stormbound Vizier Court Pulse role tuning drifted');
+    throw new Error('Winterglass Magistrate Whiteout Pulse role tuning drifted');
   }
-  if (vizierDef.stormWardOverchargeFirst !== 1200 || vizierDef.stormWardOverchargeSecond !== 2400) throw new Error('Stormbound Vizier ward overcharge timing drifted');
-  if (JSON.stringify(vizierDef.stormWardOverchargeMults) !== JSON.stringify([1, 1.15, 1.30])) throw new Error('Stormbound Vizier ward overcharge scaling drifted');
-  if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.34) > 0.0001) throw new Error('Stormbound Vizier Storm Shock damage tuning drifted');
-  if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.009) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 6) throw new Error('Stormbound Vizier Storm Venom tuning drifted');
-  if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Stormbound Vizier tank curse damage tuning drifted');
-  if (Math.abs((vizierDef.stormEnrageSkillMult || 0) - 1.18) > 0.0001) throw new Error('Stormbound Vizier enrage skill multiplier drifted');
-  if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
+  if (vizierDef.stormWardOverchargeFirst !== 1200 || vizierDef.stormWardOverchargeSecond !== 2400) throw new Error('Winterglass Magistrate ward overcharge timing drifted');
+  if (JSON.stringify(vizierDef.stormWardOverchargeMults) !== JSON.stringify([1, 1.15, 1.30])) throw new Error('Winterglass Magistrate ward overcharge scaling drifted');
+  if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.34) > 0.0001) throw new Error('Winterglass Magistrate Frost Shock damage tuning drifted');
+  if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.009) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 6) throw new Error('Winterglass Magistrate Frostburn tuning drifted');
+  if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Winterglass Magistrate tank curse damage tuning drifted');
+  if (Math.abs((vizierDef.stormEnrageSkillMult || 0) - 1.18) > 0.0001) throw new Error('Winterglass Magistrate enrage skill multiplier drifted');
+  if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Winterglass Magistrate wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];
   const expectedSizeScales = [1, 1.12, 1.22, 1.32];
   const expectedBaseHp = Math.round((boss.stormWardHp || 3000) * expectedHpScales[0]);
-  if (iron.maxHp !== expectedBaseHp || mirror.maxHp !== expectedBaseHp) throw new Error('Stormbound Vizier first ward wave should use base HP scaling');
+  if (iron.maxHp !== expectedBaseHp || mirror.maxHp !== expectedBaseHp) throw new Error('Winterglass Magistrate first ward wave should use base HP scaling');
   if (Math.abs((iron._stormWardDamageScale || 0) - expectedHpScales[0]) > 0.001 || Math.abs((mirror._stormWardDamageScale || 0) - expectedHpScales[0]) > 0.001) {
-    throw new Error('Stormbound Vizier first ward wave should use base damage scaling');
+    throw new Error('Winterglass Magistrate first ward wave should use base damage scaling');
   }
   const wardReward = calculateEnemyKillReward(iron, ctx.units[2], {
     inArena: true,
@@ -368,7 +370,7 @@ function smokeStormboundVizier(ctx, boss) {
     roundGoldMult: () => 1,
     lateStageNormalGoldMult: () => 1,
   });
-  if (wardReward !== 15) throw new Error('Stormbound Vizier ward fixed gold reward should resolve to exactly 15g');
+  if (wardReward !== 15) throw new Error('Winterglass Magistrate ward fixed gold reward should resolve to exactly 15g');
   const bossReward = calculateEnemyKillReward(boss, ctx.units[2], {
     inArena: true,
     currentStage: { n: 10 },
@@ -380,7 +382,7 @@ function smokeStormboundVizier(ctx, boss) {
     roundGoldMult: () => 1,
     lateStageNormalGoldMult: () => 1,
   });
-  if (bossReward !== 200) throw new Error('Stormbound Vizier fixed boss reward should resolve to exactly 200g');
+  if (bossReward !== 200) throw new Error('Winterglass Magistrate fixed boss reward should resolve to exactly 200g');
 
   boss._stormChainCd = 0;
   boss._stormGroundingCd = 0;
@@ -390,20 +392,20 @@ function smokeStormboundVizier(ctx, boss) {
   const hitStart = ctx.damageHits.length;
   tickBoss(ctx, boss, 2);
   const wardHits = ctx.damageHits.slice(hitStart);
-  if (ctx.damageText.some(item => item.text === 'CHAIN' || item.text === 'GROUNDING' || item.text === 'COURT PULSE')) {
-    throw new Error('Stormbound Vizier should not use boss-only casts while wards are active');
+  if (ctx.damageText.some(item => item.text === 'ICE CHAIN' || item.text === 'PERMAFROST' || item.text === 'WHITEOUT PULSE')) {
+    throw new Error('Winterglass Magistrate should not use boss-only casts while wards are active');
   }
-  if (!ctx.damageText.some(item => item.text === 'IRON SURGE')) throw new Error('Iron Ward did not show Iron Surge hits');
-  if (!ctx.damageText.some(item => item.text === 'MIRROR CLEAVE')) throw new Error('Mirror Ward did not show Mirror Cleave hits');
-  if (ctx.damageText.filter(item => item.text === 'IRON SURGE').length < 5) throw new Error('Iron Ward did not show visible hits on the full squad');
-  if (!wardHits.some(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'ranged') || !wardHits.some(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'healer')) {
-    throw new Error('Iron Ward did not damage ranged and healer backline');
+  if (!ctx.damageText.some(item => item.text === 'RIME SURGE')) throw new Error('Frostglass Prism did not show Rime Surge hits');
+  if (!ctx.damageText.some(item => item.text === 'GLACIAL CLEAVE')) throw new Error('Mirrorice Bulwark did not show Glacial Cleave hits');
+  if (ctx.damageText.filter(item => item.text === 'RIME SURGE').length < 5) throw new Error('Frostglass Prism did not show visible hits on the full squad');
+  if (!wardHits.some(hit => hit.attackType === 'rimeSurge' && hit.target.arch === 'ranged') || !wardHits.some(hit => hit.attackType === 'rimeSurge' && hit.target.arch === 'healer')) {
+    throw new Error('Frostglass Prism did not damage ranged and healer backline');
   }
-  if (!wardHits.some(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank') || !wardHits.some(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'melee')) {
-    throw new Error('Mirror Ward did not pressure tank and non-tank melee');
+  if (!wardHits.some(hit => hit.attackType === 'glacialCleave' && hit.target.arch === 'tank') || !wardHits.some(hit => hit.attackType === 'glacialCleave' && hit.target.arch === 'melee')) {
+    throw new Error('Mirrorice Bulwark did not pressure tank and non-tank melee');
   }
-  const baseIronHit = wardHits.find(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'tank');
-  const baseMirrorHit = wardHits.find(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank');
+  const baseIronHit = wardHits.find(hit => hit.attackType === 'rimeSurge' && hit.target.arch === 'tank');
+  const baseMirrorHit = wardHits.find(hit => hit.attackType === 'glacialCleave' && hit.target.arch === 'tank');
   const forceWardAgeCast = (ageFrames, resetStage = 0) => {
     iron._stormWardSpawnFrame = ctx.frame - ageFrames;
     mirror._stormWardSpawnFrame = ctx.frame - ageFrames;
@@ -420,18 +422,18 @@ function smokeStormboundVizier(ctx, boss) {
     };
   };
   const stage1 = forceWardAgeCast(20 * 60, 0);
-  if (!stage1.texts.includes('WARD OVERCHARGE')) throw new Error('Stormbound Vizier wards did not show 20s Ward Overcharge');
-  const stage1Iron = stage1.hits.find(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'tank');
-  const stage1Mirror = stage1.hits.find(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank');
+  if (!stage1.texts.includes('CRYSTAL OVERCHARGE')) throw new Error('Winterglass Magistrate wards did not show 20s Crystal Overcharge');
+  const stage1Iron = stage1.hits.find(hit => hit.attackType === 'rimeSurge' && hit.target.arch === 'tank');
+  const stage1Mirror = stage1.hits.find(hit => hit.attackType === 'glacialCleave' && hit.target.arch === 'tank');
   if (!(stage1Iron.amount > baseIronHit.amount * 1.10 && stage1Mirror.amount > baseMirrorHit.amount * 1.10)) {
-    throw new Error('Stormbound Vizier 20s Ward Overcharge did not increase Iron/Mirror damage');
+    throw new Error('Winterglass Magistrate 20s Crystal Overcharge did not increase Iron/Mirror damage');
   }
   const stage2 = forceWardAgeCast(40 * 60, 0);
-  if (!stage2.texts.includes('OVERCHARGED')) throw new Error('Stormbound Vizier wards did not show 40s Overcharged callout');
-  const stage2Iron = stage2.hits.find(hit => hit.attackType === 'ironSurge' && hit.target.arch === 'tank');
-  const stage2Mirror = stage2.hits.find(hit => hit.attackType === 'mirrorCleave' && hit.target.arch === 'tank');
+  if (!stage2.texts.includes('DEEP FREEZE')) throw new Error('Winterglass Magistrate wards did not show 40s Deep Freeze callout');
+  const stage2Iron = stage2.hits.find(hit => hit.attackType === 'rimeSurge' && hit.target.arch === 'tank');
+  const stage2Mirror = stage2.hits.find(hit => hit.attackType === 'glacialCleave' && hit.target.arch === 'tank');
   if (!(stage2Iron.amount > stage1Iron.amount * 1.08 && stage2Mirror.amount > stage1Mirror.amount * 1.08)) {
-    throw new Error('Stormbound Vizier 40s Overcharged did not further increase Iron/Mirror damage');
+    throw new Error('Winterglass Magistrate 40s Deep Freeze did not further increase Iron/Mirror damage');
   }
 
   boss._stormChainCd = 0;
@@ -444,48 +446,48 @@ function smokeStormboundVizier(ctx, boss) {
   mirror.hp = 0;
   const bossWindowStart = ctx.damageHits.length;
   tickBoss(ctx, boss, 2);
-  if (boss._stormShieldActive) throw new Error('Stormbound Vizier shield stayed active after both wards died');
-  if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
-  if (!ctx.damageText.some(item => item.text === 'STORM SHIELD BROKEN')) throw new Error('Stormbound Vizier missing shield-break callout');
-  if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
-  if (!ctx.damageText.some(item => item.text === 'STORM VENOM')) throw new Error('Stormbound Vizier missing Storm Venom callout');
-  if (!ctx.units.every(unit => unit._stormVenomTimer > 0)) throw new Error('Stormbound Vizier did not apply Storm Venom to the full squad');
-  if (!ctx.damageText.some(item => item.text === 'COURT PULSE')) throw new Error('Stormbound Vizier did not use Court Pulse in the boss-only window');
-  const courtHits = ctx.damageHits.slice(bossWindowStart).filter(hit => hit.attackType === 'courtPulse');
+  if (boss._stormShieldActive) throw new Error('Winterglass Magistrate shield stayed active after both wards died');
+  if (!(boss._stormExposedTimer > 0)) throw new Error('Winterglass Magistrate did not expose after wards broke');
+  if (!ctx.damageText.some(item => item.text === 'WINTERGLASS BARRIER BROKEN')) throw new Error('Winterglass Magistrate missing shield-break callout');
+  if (!ctx.damageText.some(item => item.text === 'MAGISTRATE EXPOSED')) throw new Error('Winterglass Magistrate missing Judgment Window callout');
+  if (!ctx.damageText.some(item => item.text === 'FROSTBURN')) throw new Error('Winterglass Magistrate missing Frostburn callout');
+  if (!ctx.units.every(unit => unit._stormVenomTimer > 0)) throw new Error('Winterglass Magistrate did not apply Frostburn to the full squad');
+  if (!ctx.damageText.some(item => item.text === 'WHITEOUT PULSE')) throw new Error('Winterglass Magistrate did not use Whiteout Pulse in the boss-only window');
+  const courtHits = ctx.damageHits.slice(bossWindowStart).filter(hit => hit.attackType === 'whiteoutPulse');
   if (!courtHits.some(hit => hit.target.arch === 'tank') || !courtHits.some(hit => hit.target.arch === 'melee') || !courtHits.some(hit => hit.target.arch === 'ranged') || !courtHits.some(hit => hit.target.arch === 'healer')) {
-    throw new Error('Stormbound Vizier Court Pulse did not hit tank, melee, ranged, and healer units');
+    throw new Error('Winterglass Magistrate Whiteout Pulse did not hit tank, melee, ranged, and healer units');
   }
   const courtTank = courtHits.filter(hit => hit.target.arch === 'tank').reduce((sum, hit) => sum + hit.amount, 0);
   const courtBacklineMax = Math.max(...courtHits.filter(hit => hit.target.arch === 'ranged' || hit.target.arch === 'healer').map(hit => hit.amount));
-  if (!(courtTank > courtBacklineMax)) throw new Error('Stormbound Vizier Court Pulse should pressure tank more than backline units');
+  if (!(courtTank > courtBacklineMax)) throw new Error('Winterglass Magistrate Whiteout Pulse should pressure tank more than backline units');
   boss._stormCastLock = 0;
   boss._stormCourtPulseCd = 999;
   boss._stormGroundingCd = 0;
   boss._stormChainCd = 999;
   const groundingStart = ctx.damageHits.length;
   tickBoss(ctx, boss, 3);
-  if (!ctx.damageText.some(item => item.text === 'GROUNDING')) throw new Error('Stormbound Vizier did not pressure tank/melee with Grounding Pulse');
-  if (!ctx.damageText.some(item => item.text === 'STORM SHOCK')) throw new Error('Stormbound Vizier did not show Storm Shock backline pressure');
-  if (!ctx.units[0]._groundingBrandTimer || !ctx.units[1]._groundingBrandTimer) throw new Error('Stormbound Vizier Grounding Pulse did not brand tank and melee');
+  if (!ctx.damageText.some(item => item.text === 'PERMAFROST')) throw new Error('Winterglass Magistrate did not pressure tank/melee with Permafrost Ring');
+  if (!ctx.damageText.some(item => item.text === 'FROST SHOCK')) throw new Error('Winterglass Magistrate did not show Frost Shock backline pressure');
+  if (!ctx.units[0]._groundingBrandTimer || !ctx.units[1]._groundingBrandTimer) throw new Error('Winterglass Magistrate Permafrost Ring did not brand tank and melee');
   const groundingHits = ctx.damageHits.slice(groundingStart);
-  if (!groundingHits.some(hit => hit.attackType === 'stormShock' && hit.target.arch === 'ranged') || !groundingHits.some(hit => hit.attackType === 'stormShock' && hit.target.arch === 'healer')) {
-    throw new Error('Stormbound Vizier Storm Shock did not damage ranged and healer backline');
+  if (!groundingHits.some(hit => hit.attackType === 'frostShock' && hit.target.arch === 'ranged') || !groundingHits.some(hit => hit.attackType === 'frostShock' && hit.target.arch === 'healer')) {
+    throw new Error('Winterglass Magistrate Frost Shock did not damage ranged and healer backline');
   }
   boss._stormCastLock = 0;
   boss._stormCourtPulseCd = 999;
   boss._stormGroundingCd = 999;
   boss._stormChainCd = 0;
   tickBoss(ctx, boss, 3);
-  if (!ctx.damageText.some(item => item.text === 'CHAIN')) throw new Error('Stormbound Vizier did not cast Chain Decree');
+  if (!ctx.damageText.some(item => item.text === 'ICE CHAIN')) throw new Error('Winterglass Magistrate did not cast Ice Chain');
   boss._stormCastLock = 0;
   boss._stormSilenceCd = 0;
   tickBoss(ctx, boss, 3);
-  if (!ctx.units[3]._stormSilenceTimer || !ctx.damageText.some(item => item.text === 'SILENCED')) throw new Error('Stormbound Vizier did not silence healer with visible feedback');
+  if (!ctx.units[3]._stormSilenceTimer || !ctx.damageText.some(item => item.text === 'FROZEN VOICE')) throw new Error('Winterglass Magistrate did not silence healer with visible feedback');
   boss._stormCastLock = 0;
   boss._stormTankCurseCd = 0;
   boss._stormSilenceCd = 999;
   tickBoss(ctx, boss, 3);
-  if (!ctx.units[0]._stormCurseTimer || !ctx.damageText.some(item => item.text === 'STORM CURSE')) throw new Error('Stormbound Vizier did not curse tank with visible feedback');
+  if (!ctx.units[0]._stormCurseTimer || !ctx.damageText.some(item => item.text === 'RIME CURSE')) throw new Error('Winterglass Magistrate did not curse tank with visible feedback');
 
   const forceVizierBossWindow = () => {
     boss._stormCycleState = 'boss';
@@ -512,12 +514,12 @@ function smokeStormboundVizier(ctx, boss) {
   const assertEnrageSkillBoost = (attackType, setup) => {
     const normal = castTotal(attackType, false, setup);
     const enraged = castTotal(attackType, true, setup);
-    if (!(normal > 0 && enraged > normal * 1.15)) throw new Error(`Stormbound Vizier enrage did not boost ${attackType} skill damage`);
+    if (!(normal > 0 && enraged > normal * 1.15)) throw new Error(`Winterglass Magistrate enrage did not boost ${attackType} skill damage`);
   };
-  assertEnrageSkillBoost('courtPulse', () => { boss._stormCourtPulseCd = 0; });
-  assertEnrageSkillBoost('groundingPulse', () => { boss._stormGroundingCd = 0; });
-  assertEnrageSkillBoost('chainDecree', () => { boss._stormChainCd = 0; });
-  assertEnrageSkillBoost('stormCurse', () => { boss._stormTankCurseCd = 0; });
+  assertEnrageSkillBoost('whiteoutPulse', () => { boss._stormCourtPulseCd = 0; });
+  assertEnrageSkillBoost('permafrost', () => { boss._stormGroundingCd = 0; });
+  assertEnrageSkillBoost('iceChain', () => { boss._stormChainCd = 0; });
+  assertEnrageSkillBoost('rimeCurse', () => { boss._stormTankCurseCd = 0; });
   boss.timeEnraged = false;
 
   const expectedSizes = [26, 29, 32, 34];
@@ -527,36 +529,36 @@ function smokeStormboundVizier(ctx, boss) {
     boss._stormExposedDamageMult = 0;
     boss._stormCastLock = 0;
     tickBoss(ctx, boss, 2);
-    iron = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Iron Ward' && enemy.hp > 0);
-    mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
-    if (!iron || !mirror) throw new Error(`Stormbound Vizier did not spawn ward wave ${waveIndex + 1}`);
-    if (iron.size < expectedSizes[waveIndex] || mirror.size < expectedSizes[waveIndex]) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} did not grow in size`);
+    iron = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Frostglass Prism' && enemy.hp > 0);
+    mirror = (boss._stormWardRefs || []).find(enemy => enemy.name === 'Mirrorice Bulwark' && enemy.hp > 0);
+    if (!iron || !mirror) throw new Error(`Winterglass Magistrate did not spawn ward wave ${waveIndex + 1}`);
+    if (iron.size < expectedSizes[waveIndex] || mirror.size < expectedSizes[waveIndex]) throw new Error(`Winterglass Magistrate ward wave ${waveIndex + 1} did not grow in size`);
     const expectedHp = Math.round((boss.stormWardHp || 3000) * expectedHpScales[waveIndex]);
-    if (iron.maxHp !== expectedHp || mirror.maxHp !== expectedHp) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} used wrong HP scaling`);
+    if (iron.maxHp !== expectedHp || mirror.maxHp !== expectedHp) throw new Error(`Winterglass Magistrate ward wave ${waveIndex + 1} used wrong HP scaling`);
     if (Math.abs((iron._stormWardDamageScale || 0) - expectedHpScales[waveIndex]) > 0.001 || Math.abs((mirror._stormWardDamageScale || 0) - expectedHpScales[waveIndex]) > 0.001) {
-      throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} used wrong damage scaling`);
+      throw new Error(`Winterglass Magistrate ward wave ${waveIndex + 1} used wrong damage scaling`);
     }
     const expectedMinSize = Math.round(26 * expectedSizeScales[waveIndex]);
-    if (iron.size !== expectedMinSize || mirror.size !== expectedMinSize) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} changed size scaling`);
-    if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error(`Stormbound Vizier ward wave ${waveIndex + 1} did not keep 15g ward rewards`);
+    if (iron.size !== expectedMinSize || mirror.size !== expectedMinSize) throw new Error(`Winterglass Magistrate ward wave ${waveIndex + 1} changed size scaling`);
+    if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error(`Winterglass Magistrate ward wave ${waveIndex + 1} did not keep 15g ward rewards`);
     if (waveIndex < 3) {
       iron.hp = 0;
       mirror.hp = 0;
       tickBoss(ctx, boss, 2);
     }
   }
-  if (boss._stormWardCasts < 4) throw new Error('Stormbound Vizier did not spawn all four HP-threshold ward waves');
+  if (boss._stormWardCasts < 4) throw new Error('Winterglass Magistrate did not spawn all four HP-threshold ward waves');
   tickBoss(ctx, boss, 80);
-  if (!ctx.enemies.some(enemy => enemy.stormWard && enemy.hp > 0)) throw new Error('Stormbound Vizier wards should not despawn by timer in the smoke');
+  if (!ctx.enemies.some(enemy => enemy.stormWard && enemy.hp > 0)) throw new Error('Winterglass Magistrate wards should not despawn by timer in the smoke');
 
   const texts = ctx.damageText.map(item => item.text);
   const flashes = ctx.flashes.map(item => item.text);
-  if (texts.includes('COURT REBUKE') || flashes.includes('COURT REBUKE!')) throw new Error('Stormbound Vizier should not use Court Rebuke in the ward-focused version');
-  if (texts.includes('STORM MOTE') || texts.includes('STORM MOTES') || flashes.includes('STORM MOTES!')) throw new Error('Stormbound Vizier should not use Storm Motes in the ward-focused version');
+  if (texts.includes('COURT REBUKE') || flashes.includes('COURT REBUKE!')) throw new Error('Winterglass Magistrate should not use Court Rebuke in the ward-focused version');
+  if (texts.includes('STORM MOTE') || texts.includes('STORM MOTES') || flashes.includes('STORM MOTES!')) throw new Error('Winterglass Magistrate should not use Storm Motes in the ward-focused version');
   if (texts.some(text => String(text).includes('EMBER')) || flashes.includes('EMBER CHICKS!')) {
-    throw new Error('Stormbound Vizier should not use old Ember mechanics');
+    throw new Error('Winterglass Magistrate should not use old Ember mechanics');
   }
-  return 'stormbound-vizier';
+  return 'winterglass-magistrate';
 }
 
 function assertBossReadability(ctx, boss) {
@@ -580,14 +582,14 @@ function assertBossReadability(ctx, boss) {
     if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
   }
   if (boss.id === 13) {
-    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'STORM VENOM', 'IRON SURGE', 'MIRROR CLEAVE', 'WARD OVERCHARGE', 'OVERCHARGED', 'COURT PULSE', 'GROUNDING PULSE', 'GROUNDING', 'STORM SHOCK', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
-      if (!texts.includes(text)) throw new Error(`Stormbound Vizier missing ${text} callout`);
+    for (const text of ['WINTERGLASS CRYSTALS', 'WINTERGLASS BARRIER', 'WINTERGLASS BARRIER BROKEN', 'MAGISTRATE EXPOSED', 'FROSTBURN', 'RIME SURGE', 'GLACIAL CLEAVE', 'CRYSTAL OVERCHARGE', 'DEEP FREEZE', 'WHITEOUT PULSE', 'WHITEOUT', 'PERMAFROST RING', 'PERMAFROST', 'FROST SHOCK', 'FROSTBITE BRAND', 'FROZEN VOICE', 'RIME CURSE', 'ICE CHAIN']) {
+      if (!texts.includes(text)) throw new Error(`Winterglass Magistrate missing ${text} callout`);
     }
-    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'OVERCHARGE', 'SHIELD', 'SILENCE', 'CURSE', 'COURT', 'GROUNDING', 'SHOCK', 'VENOM']) {
-      if (!labels.includes(label)) throw new Error(`Stormbound Vizier missing ${label} ward warning label`);
+    for (const label of ['MAGIC', 'PHYSICAL', 'RIME', 'GLACIAL', 'CRYSTAL', 'DEEP', 'BARRIER', 'VOICE', 'CURSE', 'RING', 'SHOCK', 'FROSTBURN', 'WHITEOUT']) {
+      if (!labels.includes(label)) throw new Error(`Winterglass Magistrate missing ${label} ward warning label`);
     }
-    if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember damage text');
-    if (ctx.flashes.some(flash => String(flash.text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember flash text');
+    if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Winterglass Magistrate should not use old Ember damage text');
+    if (ctx.flashes.some(flash => String(flash.text).includes('EMBER'))) throw new Error('Winterglass Magistrate should not use old Ember flash text');
   }
   if (boss.id === 6) {
     if (!labels.includes('SUN')) throw new Error('Pharaoh missing Sun danger-ring label');

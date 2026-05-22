@@ -141,11 +141,11 @@ export const BOSSES=[
     lungeCD:780,lungeDist:140,lungeDmg:120,lungePhase:1,
     magicBoltCD:540,magicBoltPhase:1,magicBoltDmg:120,magicBoltColor:'#a08a5a',
     projType:'normal',timeEnrageAt:12000},
-  {id:13,name:'Stormbound Vizier',tier:'mini',act:2,color:'#3f8cff',accent:'#ffd166',hp:26000,dmg:134,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,fixedGoldReward:200,raidAoeDmg:27,spawnFromTop:true,fixedSpawnCenter:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
-    // Stage 10 wave-4 mini-boss: auto-battle teaching fight for the Storm Djinn
-    // Court. Twin Wards are threshold priority targets so units swap off the
-    // shielded boss without requiring manual movement.
-    stormVizier:true,projType:'lightning',
+  {id:13,name:'Winterglass Magistrate',tier:'mini',act:2,color:'#9fdcff',accent:'#eef8ff',hp:26000,dmg:134,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,fixedGoldReward:200,raidAoeDmg:27,spawnFromTop:true,fixedSpawnCenter:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
+    // Stage 10 wave-4 mini-boss: frost court teaching fight. Threshold
+    // crystals are priority targets so units swap off the shielded boss
+    // without requiring manual movement.
+    winterglassMagistrate:true,frostBoss:true,stormVizier:true,projType:'frost',
     twinWardsCD:1200,stormWardThresholds:[1,0.75,0.50,0.25],stormWardHp:3200,stormWardScales:[1,1.05,1.10,1.15],stormWardSizeScales:[1,1.12,1.22,1.32],
     stormShieldDamageMult:0.24,stormExposeDur:240,stormExposeMult:1.35,
     ironSurgeEvery:180,ironSurgeFirst:90,ironSurgeDmg:70,

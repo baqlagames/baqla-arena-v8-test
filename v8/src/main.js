@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260522-castle-range';
+import { startArena } from './systems/arena-runtime.js?v=20260522-winterglass-magistrate';
 
 startArena();

@@ -44,6 +44,60 @@ function makeLightningForks(width,arenaTop,arenaBot){
   return forks;
 }
 
+function ensureWinterglassSnow(particles,width,height){
+  if(!particles)return;
+  if(!Array.isArray(particles.snowflakes))particles.snowflakes=[];
+  while(particles.snowflakes.filter(flake=>flake&&flake.winterglass).length<95){
+    particles.snowflakes.push({x:Math.random()*width,y:Math.random()*height,vx:-0.8+Math.random()*1.6,vy:1.7+Math.random()*2.3,sz:2+Math.random()*2.8,winterglass:true});
+  }
+}
+
+function drawWinterglassArrival(ctx,view){
+  const boss=view.bossRef;
+  if(!boss||boss.hp<=0||!boss.winterglassMagistrate)return;
+  const {width,arenaTop,arenaBot}=view;
+  if(boss._winterglassArrivalTimer>0){
+    const t=boss._winterglassArrivalTimer/120;
+    ctx.fillStyle='rgba(200,240,255,'+(0.18*t).toFixed(3)+')';
+    ctx.fillRect(0,arenaTop,width,arenaBot-arenaTop);
+    boss._winterglassArrivalTimer--;
+  }
+}
+
+function drawWinterglassForeground(ctx,view){
+  const boss=view.bossRef;
+  if(!boss||boss.hp<=0||!boss.winterglassMagistrate)return;
+  const {width,height,arenaTop}=view;
+  const particles=view.particles||{};
+  ensureWinterglassSnow(particles,width,height);
+  ctx.save();
+  ctx.fillStyle='rgba(216,248,255,0.78)';
+  ctx.strokeStyle='rgba(159,220,255,0.42)';
+  ctx.lineWidth=1;
+  for(const flake of particles.snowflakes||[]){
+    if(!flake.winterglass)continue;
+    ctx.globalAlpha=0.45+Math.min(0.35,(flake.sz||2)*0.08);
+    ctx.beginPath();
+    ctx.arc(flake.x,flake.y,flake.sz||2,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(flake.x-(flake.sz||2)*1.6,flake.y);
+    ctx.lineTo(flake.x+(flake.sz||2)*1.6,flake.y);
+    ctx.moveTo(flake.x,flake.y-(flake.sz||2)*1.6);
+    ctx.lineTo(flake.x,flake.y+(flake.sz||2)*1.6);
+    ctx.stroke();
+    flake.x+=flake.vx||0;
+    flake.y+=flake.vy||2;
+    if(flake.y>height){
+      flake.y=arenaTop-12;
+      flake.x=Math.random()*width;
+    }
+    if(flake.x<-10)flake.x=width+8;
+    if(flake.x>width+10)flake.x=-8;
+  }
+  ctx.restore();
+}
+
 function drawAstralStorm(ctx,view){
   const storm=view.astralStorm;
   if(!storm||!storm.active)return;
@@ -167,9 +221,11 @@ export function drawWeatherOverlay(ctx,view){
     ctx.fillStyle='rgba(212,168,87,0.06)';
     ctx.fillRect(0,arenaTop,width,arenaBot-arenaTop);
   }
+  drawWinterglassArrival(ctx,view);
   drawAstralStorm(ctx,view);
 }
 
 export function drawWeatherForegroundOverlay(ctx,view){
+  drawWinterglassForeground(ctx,view);
   drawAstralStormForeground(ctx,view);
 }

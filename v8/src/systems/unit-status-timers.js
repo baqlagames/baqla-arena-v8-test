@@ -68,11 +68,11 @@ function tickBossDebuffs(unit, {
     if (unit._stormCurseTick <= 0 && unit.hp > 0) {
       unit._stormCurseTick = 60;
       const dmg = Math.max(8, Math.round((unit.maxHp || unit.hp || 1) * (unit._stormCurseHpPct || 0.01)));
-      dealDamage(unit, dmg, unit._stormCurseFrom || null, 'magic', 'stormCurse', { sourceLabel: 'STORM CURSE', sourceColor: '#9b7cff' });
-      addDamageText(unit.x, unit.y - unit.size - 8, 'STORM CURSE', '#9b7cff');
-      emitParticle(unit.x, unit.y - unit.size * 0.5, '#9b7cff', 4, 2);
+      dealDamage(unit, dmg, unit._stormCurseFrom || null, 'magic', 'rimeCurse', { sourceLabel: 'RIME CURSE', sourceColor: '#9fdcff' });
+      addDamageText(unit.x, unit.y - unit.size - 8, 'RIME CURSE', '#9fdcff');
+      emitParticle(unit.x, unit.y - unit.size * 0.5, '#9fdcff', 4, 2);
     }
-    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.45, '#9b7cff', 1, 2);
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.45, '#9fdcff', 1, 2);
     if (unit._stormCurseTimer <= 0) {
       unit._stormCurseTick = 0;
       unit._stormCurseFrom = null;
@@ -84,11 +84,11 @@ function tickBossDebuffs(unit, {
     if (unit._stormVenomTick <= 0 && unit.hp > 0) {
       unit._stormVenomTick = 60;
       const dmg = Math.max(unit._stormVenomMinDmg || 8, Math.round((unit.maxHp || unit.hp || 1) * (unit._stormVenomHpPct || 0.012)));
-      dealDamage(unit, dmg, unit._stormVenomFrom || null, 'magic', 'stormVenom', { sourceLabel: 'STORM VENOM', sourceColor: '#58d68d' });
-      addDamageText(unit.x, unit.y - unit.size - 8, 'STORM VENOM', '#58d68d');
-      emitParticle(unit.x, unit.y - unit.size * 0.5, '#58d68d', 4, 2);
+      dealDamage(unit, dmg, unit._stormVenomFrom || null, 'magic', 'frostburn', { sourceLabel: 'FROSTBURN', sourceColor: '#d8f8ff' });
+      addDamageText(unit.x, unit.y - unit.size - 8, 'FROSTBURN', '#d8f8ff');
+      emitParticle(unit.x, unit.y - unit.size * 0.5, '#d8f8ff', 4, 2);
     }
-    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.45, '#58d68d', 1, 2);
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.45, '#d8f8ff', 1, 2);
     if (unit._stormVenomTimer <= 0) {
       unit._stormVenomTick = 0;
       unit._stormVenomFrom = null;

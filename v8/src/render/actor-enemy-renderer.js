@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-castle-range';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-winterglass-magistrate';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({
@@ -349,22 +349,22 @@ export function createActorEnemyRenderer({
       ctx.save();
       const pulse = 0.68 + 0.32 * Math.sin(f * 0.12);
       const r = size + 12 + Math.sin(f * 0.08) * 2;
-      ctx.strokeStyle = '#ffd166';
+      ctx.strokeStyle = '#d8f8ff';
       ctx.globalAlpha = 0.58 * pulse;
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 0.16 * pulse;
-      ctx.fillStyle = '#ffd166';
+      ctx.fillStyle = '#d8f8ff';
       ctx.beginPath();
       ctx.arc(x, y, r - 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 0.82;
       ctx.font = 'bold 8px Segoe UI';
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#fff0a8';
-      ctx.fillText('STORM SHIELD', x, Math.max(top + 6, y - size - 30));
+      ctx.fillStyle = '#eef8ff';
+      ctx.fillText('WINTERGLASS BARRIER', x, Math.max(top + 6, y - size - 30));
       ctx.restore();
     }
 

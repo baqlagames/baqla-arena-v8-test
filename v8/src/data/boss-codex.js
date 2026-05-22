@@ -27,6 +27,19 @@ export const BOSS_CODEX_ENTRIES = [
     ],
   },
   {
+    bossId: 13,
+    stage: 10,
+    title: 'Winterglass Magistrate',
+    subtitle: 'Crystals, whiteout, frostburn',
+    color: '#9fdcff',
+    tags: ['FROST', 'CASTER', 'BURST', 'BACKLINE THREAT', 'BOSS SHIELD'],
+    mechanics: [
+      ['Winterglass Crystals', 'Break Frostglass Prism and Mirrorice Bulwark to drop the boss barrier.'],
+      ['Whiteout Pulse', 'Boss-only windows send visible ice lances into the whole team.'],
+      ['Frostburn', 'Breaking both crystals exposes the Magistrate but leaves a short team DoT.'],
+    ],
+  },
+  {
     bossId: 4,
     stage: 10,
     title: 'Sultan of Embers',

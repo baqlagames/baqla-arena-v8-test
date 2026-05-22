@@ -40,6 +40,8 @@ const sultanThreat = buildWaveThreats({
   isBoss: true,
   stage: STAGES[9],
 });
+assert.equal(STAGES[9].name, 'Winterglass Palace', 'stage 10 should use the Winterglass Palace presentation');
+assert.equal(STAGES[9].weather, 'blizzard', 'stage 10 should use blizzard weather');
 for (const expected of ['BURST', 'CASTER', 'POISON']) {
   assert(tagKeys(sultanThreat).includes(expected), `Sultan boss preview should expose ${expected}`);
 }
@@ -50,13 +52,13 @@ const vizierThreat = buildWaveThreats({
   isBoss: false,
   stage: STAGES[9],
   queue: [33, 38, 26],
-  theme: 'STORM_COURT',
+  theme: 'WINTERGLASS_COURT',
   miniBossId: 13,
 });
-assert.equal(vizierThreat.enemies[0].name, 'Stormbound Vizier', 'stage 10 round 4 preview should name Stormbound Vizier');
-for (const expected of ['CASTER', 'BURST', 'BACKLINE THREAT', 'ARMOR', 'BOSS SHIELD']) {
-  assert(tagKeys(vizierThreat).includes(expected), `Stormbound Vizier preview should expose ${expected}`);
+assert.equal(vizierThreat.enemies[0].name, 'Winterglass Magistrate', 'stage 10 round 4 preview should name Winterglass Magistrate');
+for (const expected of ['FROST', 'CASTER', 'BURST', 'BACKLINE THREAT', 'ARMOR', 'BOSS SHIELD']) {
+  assert(tagKeys(vizierThreat).includes(expected), `Winterglass Magistrate preview should expose ${expected}`);
 }
-assert(!tagKeys(vizierThreat).includes('FLYERS'), 'Stormbound Vizier preview should not advertise flyers after motes were removed');
+assert(!tagKeys(vizierThreat).includes('FLYERS'), 'Winterglass Magistrate preview should not advertise flyers after motes were removed');
 
 console.log('smoke-wave-threat-tags: ok');

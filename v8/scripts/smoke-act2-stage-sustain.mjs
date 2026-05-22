@@ -129,42 +129,42 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
   if (stormBoss && stormBoss.id === 13) {
     const key = attackType || (source && source.stormWard ? 'ward' : source && source.stormMote ? 'stormMote' : 'basic');
     logs.stormVizierDamageByAttack[key] = (logs.stormVizierDamageByAttack[key] || 0) + damage;
-    if (attackType === 'ironSurge') {
+    if (attackType === 'rimeSurge') {
       logs.stormIronSurge += damage;
       if (target.arch === 'tank') logs.stormIronTank += damage;
       if (target.arch === 'melee') logs.stormIronMelee += damage;
       if (target.arch === 'ranged' || target.arch === 'healer') logs.stormIronBackline += damage;
     }
-    if (attackType === 'mirrorCleave') {
+    if (attackType === 'glacialCleave') {
       logs.stormMirrorCleave += damage;
       if (target.arch === 'tank') logs.stormMirrorTank += damage;
       if (target.arch === 'melee') logs.stormMirrorMelee += damage;
     }
     if (attackType === 'courtRebuke') logs.courtRebukes++;
     if (attackType === 'stormMote') logs.stormMoteHits++;
-    if (attackType === 'chainDecree') logs.stormChains++;
-    if (attackType === 'stormCurse') {
+    if (attackType === 'iceChain') logs.stormChains++;
+    if (attackType === 'rimeCurse') {
       logs.stormCurseDamage += damage;
       if (target.arch === 'tank') logs.stormCurseTank += damage;
       if (source && source.id === 13) logs.stormCurseHits++;
       else logs.stormCurseTicks++;
     }
-    if (attackType === 'groundingPulse') {
+    if (attackType === 'permafrost') {
       logs.stormGrounding += damage;
       if (target.arch === 'tank') logs.stormGroundingTank += damage;
       if (target.arch === 'melee') logs.stormGroundingMelee += damage;
     }
-    if (attackType === 'stormShock') {
+    if (attackType === 'frostShock') {
       logs.stormShock += damage;
       if (target.arch === 'ranged' || target.arch === 'healer' || target.arch === 'caster') logs.stormShockBackline += damage;
     }
-    if (attackType === 'courtPulse') {
+    if (attackType === 'whiteoutPulse') {
       logs.stormCourtPulse += damage;
       if (target.arch === 'tank') logs.stormCourtTank += damage;
       if (target.arch === 'melee') logs.stormCourtMelee += damage;
       if (target.arch === 'ranged' || target.arch === 'healer' || target.arch === 'caster') logs.stormCourtBackline += damage;
     }
-    if (attackType === 'stormVenom') {
+    if (attackType === 'frostburn') {
       logs.stormVenomDamage += damage;
       logs.stormVenomTicks++;
     }
@@ -556,17 +556,17 @@ function simulateStage(stage, stageIndex, seed) {
     addParticle: () => { logs.particles++; },
     addDamageText: (_x, _y, text) => {
       if (text === 'GRAVITY BRAND') logs.wardenGravityBrands++;
-      if (text === 'IRON SURGE') logs.stormIronSurgeTexts = (logs.stormIronSurgeTexts || 0) + 1;
-      if (text === 'MIRROR CLEAVE') logs.stormMirrorCleaveTexts = (logs.stormMirrorCleaveTexts || 0) + 1;
+      if (text === 'RIME SURGE') logs.stormIronSurgeTexts = (logs.stormIronSurgeTexts || 0) + 1;
+      if (text === 'GLACIAL CLEAVE') logs.stormMirrorCleaveTexts = (logs.stormMirrorCleaveTexts || 0) + 1;
       if (text === 'STORM MOTE') logs.stormMoteHits++;
-      if (text === 'CHAIN') logs.stormChains++;
+      if (text === 'ICE CHAIN') logs.stormChains++;
       if (text === 'COURT REBUKE') logs.courtRebukes++;
-      if (text === 'GROUNDING BRAND') logs.stormGroundingBrands++;
-      if (text === 'STORM SHOCK') logs.stormShockTexts = (logs.stormShockTexts || 0) + 1;
-      if (text === 'COURT PULSE') logs.stormCourtPulseTexts++;
-      if (text === 'STORM VENOM') logs.stormVenomTexts++;
-      if (text === 'SILENCED') logs.stormSilences++;
-      if (text === 'STORM CURSE') logs.stormCurseTexts = (logs.stormCurseTexts || 0) + 1;
+      if (text === 'FROSTBITE BRAND') logs.stormGroundingBrands++;
+      if (text === 'FROST SHOCK') logs.stormShockTexts = (logs.stormShockTexts || 0) + 1;
+      if (text === 'WHITEOUT PULSE') logs.stormCourtPulseTexts++;
+      if (text === 'FROSTBURN') logs.stormVenomTexts++;
+      if (text === 'FROZEN VOICE') logs.stormSilences++;
+      if (text === 'RIME CURSE') logs.stormCurseTexts = (logs.stormCurseTexts || 0) + 1;
     },
     showFlash: text => {
       if (text === 'VANISH!') logs.vanishCasts++;
@@ -578,15 +578,15 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'WARD BROKEN!') logs.wardenWardBreaks++;
       if (text === 'ASTRAL BLIGHT!') logs.wardenBlightBursts++;
       if (text === 'METEOR!') logs.meteors++;
-      if (text === 'TWIN WARDS!') logs.stormVizierCasts.wards++;
-      if (text === 'CHAIN DECREE!') logs.stormVizierCasts.chain++;
+      if (text === 'WINTERGLASS CRYSTALS!') logs.stormVizierCasts.wards++;
+      if (text === 'ICE CHAIN!') logs.stormVizierCasts.chain++;
       if (text === 'COURT REBUKE!') logs.stormVizierCasts.rebuke++;
-      if (text === 'JUDGMENT WINDOW!') logs.stormVizierCasts.expose++;
-      if (text === 'STORM SHIELD BROKEN!') logs.stormVizierCasts.shieldBreak++;
-      if (text === 'GROUNDING PULSE!') logs.stormVizierCasts.grounding = (logs.stormVizierCasts.grounding || 0) + 1;
-      if (text === 'COURT PULSE!') logs.stormVizierCasts.courtPulse = (logs.stormVizierCasts.courtPulse || 0) + 1;
-      if (text === 'SILENCING DECREE!') logs.stormVizierCasts.silence++;
-      if (text === 'TANK CURSE!') logs.stormVizierCasts.curse++;
+      if (text === 'MAGISTRATE EXPOSED!') logs.stormVizierCasts.expose++;
+      if (text === 'WINTERGLASS BARRIER BROKEN!') logs.stormVizierCasts.shieldBreak++;
+      if (text === 'PERMAFROST RING!') logs.stormVizierCasts.grounding = (logs.stormVizierCasts.grounding || 0) + 1;
+      if (text === 'WHITEOUT PULSE!') logs.stormVizierCasts.courtPulse = (logs.stormVizierCasts.courtPulse || 0) + 1;
+      if (text === 'FROZEN VOICE!') logs.stormVizierCasts.silence++;
+      if (text === 'RIME CURSE!') logs.stormVizierCasts.curse++;
     },
     fireProjectile: (source, target, damage, opts = {}) => applyDamage(target, damage, source, ['curse', 'fire', 'lightning', 'frost'].includes(opts.projType) ? 'magic' : 'normal', logs),
     spawnEnemyByIndex: enemyIdx => spawnSupportEnemy(enemyIdx, ctx.frame),
@@ -681,7 +681,7 @@ function simulateStage(stage, stageIndex, seed) {
       }
     }
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Son of Embers')) logs.sonsSeen = true;
-    if (enemies.some(enemy => enemy && enemy.hp > 0 && (enemy.name === 'Iron Ward' || enemy.name === 'Mirror Ward'))) logs.stormWardsSeen++;
+    if (enemies.some(enemy => enemy && enemy.hp > 0 && (enemy.name === 'Frostglass Prism' || enemy.name === 'Mirrorice Bulwark'))) logs.stormWardsSeen++;
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Storm Mote')) logs.stormMotesSeen++;
     if (miniBoss && miniBoss._stormShieldActive) logs.stormShieldFrames++;
 
@@ -726,27 +726,27 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.wardenGravityBrands > 0, 'stage 8: Gravity Brand was not applied to tank/melee units');
   }
   if (stage.n === 10) {
-    assert(logs.miniBossSeen, 'stage 10: Stormbound Vizier was not exercised');
-    assert(logs.stormVizierCasts.wards >= 3, 'stage 10: Stormbound Vizier HP-threshold Twin Wards were not exercised');
-    assert(logs.stormVizierCasts.chain > 0 || logs.stormChains > 0, 'stage 10: Stormbound Vizier Chain Decree was not exercised');
-    assert(logs.stormWardsSeen > 0, 'stage 10: Stormbound Vizier priority wards were not present');
-    assert.equal(logs.stormMotesSeen, 0, 'stage 10: Stormbound Vizier should not spawn Storm Motes');
-    assert.equal(logs.courtRebukes, 0, 'stage 10: Stormbound Vizier should not cast Court Rebuke');
-    assert(logs.stormShieldFrames > 0, 'stage 10: Stormbound Vizier Storm Shield was not active during wards');
-    assert(logs.stormVizierCasts.expose > 0 && logs.stormVizierCasts.shieldBreak > 0, 'stage 10: Stormbound Vizier shield break / expose was not exercised');
-    assert(logs.stormIronTank > 0 && logs.stormIronMelee > 0 && logs.stormIronBackline > 0, 'stage 10: Iron Ward did not visibly pressure tank, melee, and backline');
-    assert(logs.stormMirrorTank > 0, 'stage 10: Mirror Ward did not pressure the tank');
-    assert(logs.stormMirrorMelee > 0, 'stage 10: Mirror Ward did not pressure non-tank melee');
-    assert(logs.stormVizierCasts.silence > 0 && logs.stormSilences > 0, 'stage 10: Stormbound Vizier healer silence was not exercised');
-    assert(logs.stormVizierCasts.curse > 0 && logs.stormCurseTank > 0, 'stage 10: Stormbound Vizier tank curse was not exercised');
-    assert(logs.stormGroundingTank > 0, 'stage 10: Stormbound Vizier Grounding did not pressure the tank');
-    assert(logs.stormGroundingMelee > 0, 'stage 10: Stormbound Vizier Grounding did not pressure non-tank melee');
-    assert(logs.stormGroundingBrands > 0, 'stage 10: Stormbound Vizier Grounding Brand was not shown');
-    assert(logs.stormShockBackline > 0, 'stage 10: Stormbound Vizier Storm Shock did not pressure backline units');
-    assert(logs.stormVizierCasts.courtPulse > 0 && logs.stormCourtPulseTexts > 0, 'stage 10: Stormbound Vizier Court Pulse was not shown');
-    assert(logs.stormCourtTank > 0 && logs.stormCourtMelee > 0 && logs.stormCourtBackline > 0, 'stage 10: Stormbound Vizier Court Pulse did not pressure tank, melee, and backline units');
-    assert(logs.stormCourtTank > logs.stormCourtBackline / 2, 'stage 10: Stormbound Vizier Court Pulse tank pressure was too soft relative to backline');
-    assert(logs.stormVenomDamage > 0 && logs.stormVenomTicks > 0 && logs.stormVenomTexts > 0, 'stage 10: Stormbound Vizier Storm Venom was not exercised');
+    assert(logs.miniBossSeen, 'stage 10: Winterglass Magistrate was not exercised');
+    assert(logs.stormVizierCasts.wards >= 3, 'stage 10: Winterglass Magistrate HP-threshold Winterglass Crystals were not exercised');
+    assert(logs.stormVizierCasts.chain > 0 || logs.stormChains > 0, 'stage 10: Winterglass Magistrate Ice Chain was not exercised');
+    assert(logs.stormWardsSeen > 0, 'stage 10: Winterglass Magistrate priority wards were not present');
+    assert.equal(logs.stormMotesSeen, 0, 'stage 10: Winterglass Magistrate should not spawn Storm Motes');
+    assert.equal(logs.courtRebukes, 0, 'stage 10: Winterglass Magistrate should not cast Court Rebuke');
+    assert(logs.stormShieldFrames > 0, 'stage 10: Winterglass Magistrate Winterglass Barrier was not active during wards');
+    assert(logs.stormVizierCasts.expose > 0 && logs.stormVizierCasts.shieldBreak > 0, 'stage 10: Winterglass Magistrate shield break / expose was not exercised');
+    assert(logs.stormIronTank > 0 && logs.stormIronMelee > 0 && logs.stormIronBackline > 0, 'stage 10: Frostglass Prism did not visibly pressure tank, melee, and backline');
+    assert(logs.stormMirrorTank > 0, 'stage 10: Mirrorice Bulwark did not pressure the tank');
+    assert(logs.stormMirrorMelee > 0, 'stage 10: Mirrorice Bulwark did not pressure non-tank melee');
+    assert(logs.stormVizierCasts.silence > 0 && logs.stormSilences > 0, 'stage 10: Winterglass Magistrate healer silence was not exercised');
+    assert(logs.stormVizierCasts.curse > 0 && logs.stormCurseTank > 0, 'stage 10: Winterglass Magistrate tank curse was not exercised');
+    assert(logs.stormGroundingTank > 0, 'stage 10: Winterglass Magistrate Permafrost did not pressure the tank');
+    assert(logs.stormGroundingMelee > 0, 'stage 10: Winterglass Magistrate Permafrost did not pressure non-tank melee');
+    assert(logs.stormGroundingBrands > 0, 'stage 10: Winterglass Magistrate Frostbite Brand was not shown');
+    assert(logs.stormShockBackline > 0, 'stage 10: Winterglass Magistrate Frost Shock did not pressure backline units');
+    assert(logs.stormVizierCasts.courtPulse > 0 && logs.stormCourtPulseTexts > 0, 'stage 10: Winterglass Magistrate Whiteout Pulse was not shown');
+    assert(logs.stormCourtTank > 0 && logs.stormCourtMelee > 0 && logs.stormCourtBackline > 0, 'stage 10: Winterglass Magistrate Whiteout Pulse did not pressure tank, melee, and backline units');
+    assert(logs.stormCourtTank > logs.stormCourtBackline / 2, 'stage 10: Winterglass Magistrate Whiteout Pulse tank pressure was too soft relative to backline');
+    assert(logs.stormVenomDamage > 0 && logs.stormVenomTicks > 0 && logs.stormVenomTexts > 0, 'stage 10: Winterglass Magistrate Frostburn was not exercised');
     assert(logs.sultanSeen, 'stage 10: Sultan was not exercised');
     assert(logs.searingBrands > 0, 'stage 10: Sultan searing brand was not exercised');
     assert(logs.meteors > 0, 'stage 10: Sultan meteor was not exercised');

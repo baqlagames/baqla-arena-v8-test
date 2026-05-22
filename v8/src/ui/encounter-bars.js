@@ -88,7 +88,7 @@ const BOSS_SKILL_LABELS={
   10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
   11:{aoe:'CURSE',debuff:'HEX',spawn:'CULTIST',magicBolt:'BOLT'},
   12:{bombDrop:'BOMB',skyStrafe:'STRAFE',sandStorm:'STORM',aoe:'SAND',lunge:'DIVE',magicBolt:'BOLT'},
-  13:{twinWards:'WARDS',chainDecree:'CHAIN',groundingPulse:'GROUNDING',courtPulse:'COURT',silencingDecree:'SILENCE',tankCurse:'CURSE'},
+  13:{twinWards:'CRYSTALS',chainDecree:'CHAIN',groundingPulse:'RING',courtPulse:'WHITEOUT',silencingDecree:'VOICE',tankCurse:'CURSE'},
   14:{aoe:'SUN',debuff:'DEATH',meteor:'METEOR',magicBolt:'BOLT'}
 };
 
@@ -118,9 +118,9 @@ const DEFAULT_SKILL_LABELS={
   twinWards:'WARDS',
   stormMotes:'MOTES',
   chainDecree:'CHAIN',
-  groundingPulse:'GROUNDING',
-  courtPulse:'COURT',
-  silencingDecree:'SILENCE',
+  groundingPulse:'RING',
+  courtPulse:'WHITEOUT',
+  silencingDecree:'VOICE',
   tankCurse:'CURSE'
 };
 
@@ -131,7 +131,7 @@ const BOSS_SKILL_HINTS={
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
   10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
   12:{bombDrop:'DODGE BOMBS',skyStrafe:'LANE STRAFE',sandStorm:'WIDE STORM',aoe:'SAND RING',lunge:'DIVE TARGET',magicBolt:'RANGED HIT'},
-  13:{twinWards:'BREAK WARDS',chainDecree:'CHAIN HIT',groundingPulse:'MELEE PULSE',courtPulse:'RAID PULSE',silencingDecree:'HEALER LOCK',tankCurse:'TANK DOT'},
+  13:{twinWards:'BREAK CRYSTALS',chainDecree:'ICE CHAIN',groundingPulse:'PERMAFROST',courtPulse:'RAID WHITEOUT',silencingDecree:'HEALER LOCK',tankCurse:'TANK DOT'},
   14:{aoe:'WIDE SUN',debuff:'DEATH MARK',meteor:'DODGE RING',magicBolt:'RANGED HIT'}
 };
 
@@ -160,9 +160,9 @@ const DEFAULT_SKILL_HINTS={
   lanternOrbit:'BACKLINE',
   twinWards:'BREAK WARDS',
   stormMotes:'KILL FLYERS',
-  chainDecree:'HEAL CHAIN',
+  chainDecree:'ICE CHAIN',
   groundingPulse:'FRONTLINE HIT',
-  courtPulse:'RAID PULSE',
+  courtPulse:'RAID WHITEOUT',
   silencingDecree:'HEALER LOCK',
   tankCurse:'TANK DOT'
 };
@@ -202,13 +202,13 @@ export function bossReadableSkillPills(boss){
   add('magicBolt','magicBoltCD','#aa88ff');
   add('emberVolley','emberVolleyCD','#ff8c22');
   add('emberDecree','emberDecreeCD','#ffb238');
-  add('twinWards','twinWardsCD','#8bdfff');
+  add('twinWards','twinWardsCD','#d8f8ff');
   add('stormMotes','stormMotesCD','#8bdfff');
-  add('chainDecree','chainDecreeCD','#ffd166');
-  add('groundingPulse','groundingPulseCD','#9bb8ff');
-  add('courtPulse','courtPulseCD','#5cc8ff');
-  add('silencingDecree','silencingDecreeCD','#9bb8ff');
-  add('tankCurse','tankCurseCD','#9b7cff');
+  add('chainDecree','chainDecreeCD','#9fdcff');
+  add('groundingPulse','groundingPulseCD','#d8f8ff');
+  add('courtPulse','courtPulseCD','#d8f8ff');
+  add('silencingDecree','silencingDecreeCD','#d8f8ff');
+  add('tankCurse','tankCurseCD','#9fdcff');
   add('royalDive','royalDiveCD','#ff5a3a');
   add('bliz','blizzardCD','#88ddff');
   add('stomp','stompCD','#7a8a9a');

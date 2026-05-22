@@ -13,13 +13,13 @@ function imminentBossSkillIcon(t,tickHz){
     ['eclipseBeam','eclipseBeamCD','#5cc8ff','E','Eclipse Soon'],
     ['gravityToll','gravityTollCD','#9bb8ff','G','Gravity Soon'],
     ['lanternOrbit','lanternOrbitCD','#ffd166','O','Orbit Soon'],
-    ['twinWards','twinWardsCD','#8bdfff','W','Twin Wards Soon'],
+    ['twinWards','twinWardsCD','#d8f8ff','C','Crystals Soon'],
     ['stormMotes','stormMotesCD','#8bdfff','M','Storm Motes Soon'],
-    ['chainDecree','chainDecreeCD','#ffd166','C','Chain Decree Soon'],
-    ['groundingPulse','groundingPulseCD','#9bb8ff','G','Grounding Soon'],
-    ['courtPulse','courtPulseCD','#5cc8ff','P','Court Pulse Soon'],
-    ['silencingDecree','silencingDecreeCD','#9bb8ff','X','Silence Soon'],
-    ['tankCurse','tankCurseCD','#9b7cff','C','Tank Curse Soon'],
+    ['chainDecree','chainDecreeCD','#9fdcff','C','Ice Chain Soon'],
+    ['groundingPulse','groundingPulseCD','#d8f8ff','R','Permafrost Ring Soon'],
+    ['courtPulse','courtPulseCD','#d8f8ff','W','Whiteout Soon'],
+    ['silencingDecree','silencingDecreeCD','#d8f8ff','V','Frozen Voice Soon'],
+    ['tankCurse','tankCurseCD','#9fdcff','C','Rime Curse Soon'],
     ['burrow','burrowCD','#8b6f3d','B','Burrow Soon'],
     ['lunge','lungeCD','#ff4444','L','Lunge Soon'],
     ['royalDive','royalDiveCD','#ff5a3a','D','Dive Soon'],
@@ -156,19 +156,19 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._healReductionTimer>0)icons.push({c:'#ff4400',g:'Ã¢Ë†â€™',title:'Heal Reduction'});
   if(t._searingBrandTimer>0)icons.push({c:'#ff6a22',g:'B',title:'Searing Brand'});
   if(t._gravityBrandTimer>0)icons.push({c:'#9bb8ff',g:'G',title:'Gravity Brand',pulse:true});
-  if(t._groundingBrandTimer>0)icons.push({c:'#8bdfff',g:'G',title:'Grounding Brand',pulse:true});
-  if(t._stormSilenceTimer>0)icons.push({c:'#9bb8ff',g:'X',title:'No Healing',pulse:true});
-  if(t._stormCurseTimer>0)icons.push({c:'#9b7cff',g:'C',title:'Storm Curse',pulse:true});
-  if(t._stormVenomTimer>0)icons.push({c:'#58d68d',g:'V',title:'Storm Venom',pulse:true});
+  if(t._groundingBrandTimer>0)icons.push({c:'#d8f8ff',g:'F',title:'Frostbite Brand',pulse:true});
+  if(t._stormSilenceTimer>0)icons.push({c:'#d8f8ff',g:'V',title:'Frozen Voice',pulse:true});
+  if(t._stormCurseTimer>0)icons.push({c:'#9fdcff',g:'C',title:'Rime Curse',pulse:true});
+  if(t._stormVenomTimer>0)icons.push({c:'#d8f8ff',g:'F',title:'Frostburn',pulse:true});
   if(t._astralBlightTimer>0)icons.push({c:'#8bdfff',g:'A',title:'Astral Blight',pulse:true});
   const sigIcon=playerSignatureIcon(t);
   if(sigIcon)icons.push(sigIcon);
   if(t.priorityTarget)icons.push({c:t.color||'#8bdfff',g:'!',title:t.preferredBy?('Priority: '+t.preferredBy):'Priority Target',pulse:true});
-  if(t.stormWard&&t._stormWardOverchargeStage>0)icons.push({c:t._stormWardOverchargeStage>=2?'#ff5533':'#ffd166',g:'O',title:t._stormWardOverchargeStage>=2?'Overcharged':'Ward Overcharge',pulse:true});
-  if(t.stormWard)icons.push({c:t.color||'#8bdfff',g:t.stormWardKind==='iron'?'I':'M',title:t.name||'Storm Ward',pulse:true});
+  if(t.stormWard&&t._stormWardOverchargeStage>0)icons.push({c:t._stormWardOverchargeStage>=2?'#d8f8ff':'#9fdcff',g:'O',title:t._stormWardOverchargeStage>=2?'Deep Freeze':'Crystal Overcharge',pulse:true});
+  if(t.stormWard)icons.push({c:t.color||'#d8f8ff',g:t.stormWardKind==='iron'?'P':'B',title:t.name||'Winterglass Crystal',pulse:true});
   if(t.stormMote)icons.push({c:'#8bdfff',g:'M',title:'Storm Mote',pulse:true});
-  if(t._stormShieldActive)icons.push({c:'#ffd166',g:'S',title:'Storm Shield',pulse:true});
-  if(t._stormExposedTimer>0)icons.push({c:'#ffd166',g:'E',title:'Judgment Window',pulse:true});
+  if(t._stormShieldActive)icons.push({c:'#d8f8ff',g:'B',title:'Winterglass Barrier',pulse:true});
+  if(t._stormExposedTimer>0)icons.push({c:'#d8f8ff',g:'E',title:'Magistrate Exposed',pulse:true});
   if(t._royalStingTimer>0)icons.push({c:'#ffdd44',g:'S',title:'Royal Sting'});
   if(t.timeEnraged)icons.push({c:'#ff2200',g:'!',title:'Boss Enraged',pulse:true});
   if(t.royalCarapaceTimer>0)icons.push({c:'#ffdd44',g:'C',title:'Carapace Casting',pulse:true});

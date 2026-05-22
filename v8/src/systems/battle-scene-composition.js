@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-castle-range';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-winterglass-magistrate';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

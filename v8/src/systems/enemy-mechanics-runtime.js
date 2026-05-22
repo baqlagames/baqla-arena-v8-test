@@ -1,7 +1,7 @@
 import { ARENA_THREAT_TAG_COLOR, ARENA_WAVE_MECHANIC_LABELS } from '../data/waves.js';
 import { drawThreatsPanel as drawThreatPreviewPanel, threatPanelHeight as threatPanelHeightBase } from '../ui/threat-panel.js';
 import { arena_pickWaveMechanic, arena_stageOpenerQueue, arena_themedWaveQueue, arena_waveMechanicLimit } from './wave-planner.js';
-import { buildWaveThreats } from './wave-threats.js?v=20260522-castle-range';
+import { buildWaveThreats } from './wave-threats.js?v=20260522-winterglass-magistrate';
 
 export function createEnemyMechanicsRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
@@ -220,9 +220,9 @@ export function createEnemyMechanicsRuntime(deps = {}) {
       const isVizierMiniBoss = ((stage.n || 0) === 10 && arena.round === 4);
       arena._nextWaveMiniBoss = isVizierMiniBoss ? 13 : null;
       if (isVizierMiniBoss) {
-        arena.wavePreview = 'MINI BOSS - Stormbound Vizier';
+        arena.wavePreview = 'MINI BOSS - Winterglass Magistrate';
         arena._nextWaveQueue = [];
-        arena._nextWaveTheme = 'STORM COURT';
+        arena._nextWaveTheme = 'WINTERGLASS COURT';
       } else {
         arena.wavePreview = wave.theme + ' - ' + wave.previewName;
         const mechanic = arena_pickWaveMechanic(stage.n || 1, arena.round || 1, false);

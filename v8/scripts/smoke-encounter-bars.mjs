@@ -86,7 +86,7 @@ assert.ok(wardenIcons.some(icon => icon.title === 'Starfall Soon'), 'boss status
 
 const vizier = {
   id: 13,
-  name: 'Stormbound Vizier',
+  name: 'Winterglass Magistrate',
   twinWardsCD: 1200,
   chainDecreeCD: 500,
   groundingPulseCD: 360,
@@ -95,35 +95,35 @@ const vizier = {
   tankCurseCD: 720,
   mechCD: { twinWards: 9999, chainDecree: 260, groundingPulse: 220, courtPulse: 90, silencingDecree: 520, tankCurse: 640 },
 };
-assert.equal(bossReadableSkillLabel(vizier, 'courtPulse'), 'COURT', 'Vizier Court Pulse should use readable label');
-assert.equal(bossReadableSkillHint(vizier, 'courtPulse'), 'RAID PULSE', 'Vizier Court Pulse should expose raid-pulse hint');
-assert.ok(bossReadableSkillPills(vizier).some(skill => skill.key === 'courtPulse' && skill.name === 'COURT'), 'Vizier skill pills should include Court Pulse');
+assert.equal(bossReadableSkillLabel(vizier, 'courtPulse'), 'WHITEOUT', 'Winterglass Magistrate Whiteout Pulse should use readable label');
+assert.equal(bossReadableSkillHint(vizier, 'courtPulse'), 'RAID WHITEOUT', 'Winterglass Magistrate Whiteout Pulse should expose raid-whiteout hint');
+assert.ok(bossReadableSkillPills(vizier).some(skill => skill.key === 'courtPulse' && skill.name === 'WHITEOUT'), 'Winterglass Magistrate skill pills should include Whiteout Pulse');
 const vizierUrgent = bossUrgentSkillHudState(vizier, tickHz);
-assert.equal(vizierUrgent.label, 'COURT', 'Vizier urgent mechanic should pick imminent Court Pulse');
+assert.equal(vizierUrgent.label, 'WHITEOUT', 'Winterglass Magistrate urgent mechanic should pick imminent Whiteout Pulse');
 const vizierIcons = collectStatusIcons({ isBoss: true, mechCD: { courtPulse: 80 }, courtPulseCD: 420 }, tickHz);
-assert.ok(vizierIcons.some(icon => icon.title === 'Court Pulse Soon'), 'boss status icons should expose Vizier Court Pulse warnings');
+assert.ok(vizierIcons.some(icon => icon.title === 'Whiteout Soon'), 'boss status icons should expose Winterglass Whiteout warnings');
 
 const wardIcons = collectStatusIcons({ isBoss: true, hiveShield: { hp: 1200, maxHp: 2000, astralWard: true, color: '#8bdfff' } }, tickHz);
 assert.ok(wardIcons.some(icon => icon.title === 'Lantern Ward'), 'boss status icons should expose Lantern Ward shields');
 
 const stormShieldIcons = collectStatusIcons({ isBoss: true, _stormShieldActive: true }, tickHz);
-assert.ok(stormShieldIcons.some(icon => icon.title === 'Storm Shield'), 'boss status icons should expose Vizier Storm Shield');
+assert.ok(stormShieldIcons.some(icon => icon.title === 'Winterglass Barrier'), 'boss status icons should expose Winterglass Barrier');
 
 const overchargeIcons = collectStatusIcons({ stormWard: true, _stormWardOverchargeStage: 2, color: '#ffd166' }, tickHz);
-assert.ok(overchargeIcons.some(icon => icon.title === 'Overcharged'), 'ward status icons should expose Vizier overcharge state');
+assert.ok(overchargeIcons.some(icon => icon.title === 'Deep Freeze'), 'ward status icons should expose Vizier overcharge state');
 
 const brandedIcons = collectStatusIcons({ isPlayer: true, _gravityBrandTimer: 120 }, tickHz);
 assert.ok(brandedIcons.some(icon => icon.title === 'Gravity Brand'), 'player status icons should expose Gravity Brand');
 
 const groundingIcons = collectStatusIcons({ isPlayer: true, _groundingBrandTimer: 120 }, tickHz);
-assert.ok(groundingIcons.some(icon => icon.title === 'Grounding Brand'), 'player status icons should expose Grounding Brand');
+assert.ok(groundingIcons.some(icon => icon.title === 'Frostbite Brand'), 'player status icons should expose Frostbite Brand');
 
 const stormControlIcons = collectStatusIcons({ isPlayer: true, _stormSilenceTimer: 120, _stormCurseTimer: 120 }, tickHz);
-assert.ok(stormControlIcons.some(icon => icon.title === 'No Healing'), 'player status icons should expose Vizier healer silence as no-heal');
-assert.ok(stormControlIcons.some(icon => icon.title === 'Storm Curse'), 'player status icons should expose Vizier tank curse');
+assert.ok(stormControlIcons.some(icon => icon.title === 'Frozen Voice'), 'player status icons should expose Winterglass healer silence');
+assert.ok(stormControlIcons.some(icon => icon.title === 'Rime Curse'), 'player status icons should expose Winterglass tank curse');
 
 const stormVenomIcons = collectStatusIcons({ isPlayer: true, _stormVenomTimer: 120 }, tickHz);
-assert.ok(stormVenomIcons.some(icon => icon.title === 'Storm Venom'), 'player status icons should expose Storm Venom');
+assert.ok(stormVenomIcons.some(icon => icon.title === 'Frostburn'), 'player status icons should expose Frostburn');
 
 const signatureIcons = collectStatusIcons({ isPlayer: true, signature: { t: 100, cd: 100 } }, tickHz);
 assert.ok(signatureIcons.some(icon => icon.title === 'Signature Ready'), 'player status icons should expose signature readiness');

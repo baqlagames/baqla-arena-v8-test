@@ -51,9 +51,9 @@ function assertVizierRoundIsClean() {
   const plan = buildWaveSpawnPlan({
     round: 4,
     _nextWaveQueue: [33, 38, 26],
-    _nextWaveTheme: 'STORM COURT',
+    _nextWaveTheme: 'WINTERGLASS COURT',
   }, stage, arena_roundsForStage(stage.n));
-  assert(plan.queue.length === 1 && plan.queue[0].boss === 13, 'stage 10 round 4 should spawn only Stormbound Vizier');
+  assert(plan.queue.length === 1 && plan.queue[0].boss === 13, 'stage 10 round 4 should spawn only Winterglass Magistrate');
   assert(plan.waveMechanic == null, 'stage 10 round 4 should not carry a normal wave mechanic');
 }
 
@@ -67,7 +67,7 @@ function deterministicRandom(seed) {
 
 function roundQueue(stage, round, totalRounds) {
   if (round >= totalRounds) return stage.bossId != null ? ['BOSS'] : [{ elite: stage.eliteEnemyId }];
-  if ((stage.n || 0) === 10 && round === 4) return [{ boss: 13, label: 'MINI BOSS', color: '#ff8c22' }];
+  if ((stage.n || 0) === 10 && round === 4) return [{ boss: 13, label: 'MINI BOSS', color: '#9fdcff' }];
   const plan = (round === 1 ? arena_stageOpenerQueue(stage) : null) || arena_themedWaveQueue(round, stage.n || 1, stage.act || 1);
   const queue = [...(plan.queue || [])];
   return queue;

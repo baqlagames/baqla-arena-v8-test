@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-castle-range';
+import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-magistrate';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 
@@ -90,9 +90,9 @@ export function buildWaveSpawnPlan(arena,stage,totalRounds){
   }
 
   if(stageN===10&&round===4){
-    plan.queue=[{boss:13,label:'MINI BOSS - STORMBOUND VIZIER',color:'#3f8cff'}];
+    plan.queue=[{boss:13,label:'MINI BOSS - WINTERGLASS MAGISTRATE',color:'#9fdcff'}];
     plan.waveMechanic=null;
-    plan.flash={text:'MINI BOSS - STORMBOUND VIZIER',color:'#3f8cff',duration:120};
+    plan.flash={text:'MINI BOSS - WINTERGLASS MAGISTRATE',color:'#9fdcff',duration:120};
   }
   return plan;
 }

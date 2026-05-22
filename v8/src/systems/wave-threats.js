@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-castle-range';
+import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-magistrate';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){
@@ -32,6 +32,7 @@ function deriveEnemyTags(enemies){
   const tags=[];
   for(const enemy of enemies||[]){
     if(!enemy)continue;
+    if(enemy.projType==='frost'||enemy.projType==='ice'||enemy.slowOnHit)pushThreatTag(tags,'FROST','Chill magic');
     if(enemy.flying)pushThreatTag(tags,'FLYERS','Air targets');
     if(enemyHasArmor(enemy))pushThreatTag(tags,'ARMOR','Heavy or warded');
     if(enemyHasBurst(enemy))pushThreatTag(tags,'BURST','Spike damage');
@@ -57,6 +58,7 @@ function bossHasCasterPressure(boss){
 function deriveBossTags(boss){
   const tags=[];
   if(!boss)return tags;
+  if(boss.frostBoss||boss.projType==='frost'||boss.projType==='ice'||boss.blizzardCD)pushThreatTag(tags,'FROST','Frost pressure');
   if(boss.isAerial||boss.flying)pushThreatTag(tags,'FLYERS','Air phase');
   if(bossHasArmor(boss))pushThreatTag(tags,'ARMOR','Durable boss');
   if(bossHasBurst(boss))pushThreatTag(tags,'BURST','Spike mechanic');

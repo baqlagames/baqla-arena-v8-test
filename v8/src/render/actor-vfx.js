@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-castle-range';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-winterglass-magistrate';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);
