@@ -84,6 +84,25 @@ assert.ok(earlyBossIcons.some(icon => icon.title === 'Bolt Soon'), 'boss status 
 const wardenIcons = collectStatusIcons({ isBoss: true, mechCD: { starfall: 80 }, starfallCD: 420 }, tickHz);
 assert.ok(wardenIcons.some(icon => icon.title === 'Starfall Soon'), 'boss status icons should expose Warden mechanic warnings');
 
+const vizier = {
+  id: 13,
+  name: 'Stormbound Vizier',
+  twinWardsCD: 1200,
+  chainDecreeCD: 500,
+  groundingPulseCD: 360,
+  courtPulseCD: 420,
+  silencingDecreeCD: 840,
+  tankCurseCD: 720,
+  mechCD: { twinWards: 9999, chainDecree: 260, groundingPulse: 220, courtPulse: 90, silencingDecree: 520, tankCurse: 640 },
+};
+assert.equal(bossReadableSkillLabel(vizier, 'courtPulse'), 'COURT', 'Vizier Court Pulse should use readable label');
+assert.equal(bossReadableSkillHint(vizier, 'courtPulse'), 'RAID PULSE', 'Vizier Court Pulse should expose raid-pulse hint');
+assert.ok(bossReadableSkillPills(vizier).some(skill => skill.key === 'courtPulse' && skill.name === 'COURT'), 'Vizier skill pills should include Court Pulse');
+const vizierUrgent = bossUrgentSkillHudState(vizier, tickHz);
+assert.equal(vizierUrgent.label, 'COURT', 'Vizier urgent mechanic should pick imminent Court Pulse');
+const vizierIcons = collectStatusIcons({ isBoss: true, mechCD: { courtPulse: 80 }, courtPulseCD: 420 }, tickHz);
+assert.ok(vizierIcons.some(icon => icon.title === 'Court Pulse Soon'), 'boss status icons should expose Vizier Court Pulse warnings');
+
 const wardIcons = collectStatusIcons({ isBoss: true, hiveShield: { hp: 1200, maxHp: 2000, astralWard: true, color: '#8bdfff' } }, tickHz);
 assert.ok(wardIcons.some(icon => icon.title === 'Lantern Ward'), 'boss status icons should expose Lantern Ward shields');
 
@@ -102,6 +121,11 @@ assert.ok(stormControlIcons.some(icon => icon.title === 'Storm Curse'), 'player 
 
 const stormVenomIcons = collectStatusIcons({ isPlayer: true, _stormVenomTimer: 120 }, tickHz);
 assert.ok(stormVenomIcons.some(icon => icon.title === 'Storm Venom'), 'player status icons should expose Storm Venom');
+
+const signatureIcons = collectStatusIcons({ isPlayer: true, signature: { t: 100, cd: 100 } }, tickHz);
+assert.ok(signatureIcons.some(icon => icon.title === 'Signature Ready'), 'player status icons should expose signature readiness');
+const signatureCastIcons = collectStatusIcons({ isPlayer: true, signature: { t: 80, cd: 100 }, signatureCastFx: 8, accent: '#8bdfff' }, tickHz);
+assert.ok(signatureCastIcons.some(icon => icon.title === 'Signature Casting'), 'player status icons should expose signature casting');
 
 const blightedIcons = collectStatusIcons({ isPlayer: true, _astralBlightTimer: 120 }, tickHz);
 assert.ok(blightedIcons.some(icon => icon.title === 'Astral Blight'), 'player status icons should expose Astral Blight');

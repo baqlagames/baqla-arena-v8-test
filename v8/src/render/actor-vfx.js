@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-clean-shield-vfx';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-vizier-status-icons';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);
@@ -481,7 +481,8 @@ export function drawPlayerAuraOver(ctx, {
     }
     if (frame % 16 === 0) emitParticle(emitParticleFn, x + randomRange(-size * 0.55, size * 0.55), y - randomRange(0, size * 0.75), haste.color, 1, 2);
   }
-  drawPlayerSignatureCue(ctx, { unit, x, y, size, frame });
+  // Signature readiness is shown in the HP status-icon row; keep the battlefield
+  // body free of persistent readiness rings so clustered units stay readable.
   if (unit.stealth && unit.stealthHits === 0) {
     ctx.globalAlpha = 0.26 + 0.12 * Math.sin(t * 1.8);
     ctx.strokeStyle = '#d8b4fe';

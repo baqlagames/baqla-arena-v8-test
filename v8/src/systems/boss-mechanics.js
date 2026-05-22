@@ -657,6 +657,9 @@ function stormIsMelee(u){return !!(u&&(u.arch==='melee'||u.prefersMelee||u.arch=
 function stormBossOnlyWindow(b,ctx){
   return b&&b._stormCycleState==='boss'&&!stormHasPriorityAdds(b,ctx.enemies||[]);
 }
+function stormSkillDamageMult(b){
+  return b&&b.timeEnraged?(b.stormEnrageSkillMult||1.18):1;
+}
 function stormScaleAt(list,index,fallback){
   const arr=Array.isArray(list)?list:[];
   if(Number.isFinite(arr[index]))return arr[index];
@@ -684,6 +687,7 @@ function initStormboundVizier(b,ctx){
   b._stormCycleTimer=0;
   b._stormChainCd=b.chainDecreeFirst||210;
   b._stormGroundingCd=b.groundingPulseFirst||300;
+  b._stormCourtPulseCd=b.courtPulseFirst||120;
   b._stormSilenceCd=b.silencingDecreeFirst||stormSilenceCooldown(b);
   b._stormTankCurseCd=b.tankCurseFirst||420;
   b._stormWardRefs=[];
@@ -700,12 +704,14 @@ function syncStormVizierCooldowns(b,ctx){
   const bossWindow=stormBossOnlyWindow(b,ctx);
   cd.chainDecree=bossWindow?Math.max(0,Math.round(b._stormChainCd||0)):hidden;
   cd.groundingPulse=bossWindow?Math.max(0,Math.round(b._stormGroundingCd||0)):hidden;
+  cd.courtPulse=bossWindow?Math.max(0,Math.round(b._stormCourtPulseCd||0)):hidden;
   cd.silencingDecree=Math.max(0,Math.round(b._stormSilenceCd||0));
   cd.tankCurse=Math.max(0,Math.round(b._stormTankCurseCd||0));
 }
 function tickStormBossCooldowns(b){
   if(Number.isFinite(b._stormChainCd)&&b._stormChainCd>0)b._stormChainCd--;
   if(Number.isFinite(b._stormGroundingCd)&&b._stormGroundingCd>0)b._stormGroundingCd--;
+  if(Number.isFinite(b._stormCourtPulseCd)&&b._stormCourtPulseCd>0)b._stormCourtPulseCd--;
   if(Number.isFinite(b._stormSilenceCd)&&b._stormSilenceCd>0)b._stormSilenceCd--;
   if(Number.isFinite(b._stormTankCurseCd)&&b._stormTankCurseCd>0)b._stormTankCurseCd--;
 }
@@ -756,6 +762,7 @@ function resolveStormWards(b,ctx){
   stormExposeVizier(b,ctx);
   applyStormVenom(b,ctx);
   b._stormCycleState='boss';
+  b._stormCourtPulseCd=b.courtPulseFirst||120;
   syncStormVizierCooldowns(b,ctx);
 }
 function castStormTwinWards(b,ctx,thresholdIndex=0){
@@ -913,11 +920,13 @@ function castStormTankCurse(b,ctx){
   const tanks=stormPlayerUnits(units).filter(stormIsTank);
   const target=tanks[0]||stormPlayerUnits(units)[0];
   if(!target)return false;
-  const dmg=Math.max(8,Math.round((target.maxHp||target.hp||1)*(b.tankCurseHpPct||0.01)));
+  const skillMult=stormSkillDamageMult(b);
+  const pct=(b.tankCurseHpPct||0.01)*skillMult;
+  const dmg=Math.max(8,Math.round((target.maxHp||target.hp||1)*pct));
   dealDamage(target,dmg,b,'magic','stormCurse',{sourceLabel:'STORM CURSE',sourceColor:'#7c5cff'});
   target._stormCurseTimer=Math.max(target._stormCurseTimer||0,b.tankCurseDur||240);
   target._stormCurseTick=60;
-  target._stormCurseHpPct=b.tankCurseHpPct||0.01;
+  target._stormCurseHpPct=pct;
   target._stormCurseHealCut=b.tankCurseHealCut||0.12;
   target._stormCurseFrom=b;
   beamFx.push({x1:b.x,y1:b.y-(b.size||40)*0.35,x2:target.x,y2:target.y-target.size*0.2,life:20,maxLife:20,color:'#7c5cff',width:5,straight:false});
@@ -938,7 +947,7 @@ function castStormChainDecree(b,ctx){
   targets.forEach((t,i)=>{
     const mult=i===0?1:0.84;
     beamFx.push({x1:from.x,y1:from.y,x2:t.x,y2:t.y,life:18,maxLife:18,color:i%2?'#ffd166':'#8bdfff',width:4,straight:false});
-    dealDamage(t,Math.round((b.chainDecreeDmg||76)*mult),b,'magic','chainDecree',{sourceLabel:'CHAIN',sourceColor:'#8bdfff'});
+    dealDamage(t,Math.round((b.chainDecreeDmg||76)*mult*stormSkillDamageMult(b)),b,'magic','chainDecree',{sourceLabel:'CHAIN',sourceColor:'#8bdfff'});
     addDmg(t.x,t.y-(t.size||20)-8,'CHAIN','#8bdfff',{sz:11,bold:true,outline:'#061433'});
     addP(t.x,t.y,'#8bdfff',8,3);
     from=t;
@@ -954,6 +963,7 @@ function castStormGroundingPulse(b,ctx){
   const { units, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
   const radius=b.groundingPulseRadius||128;
   const shockRadius=b.groundingStormShockRadius||Math.max(360,radius*3.2);
+  const skillMult=stormSkillDamageMult(b);
   const players=stormPlayerUnits(units);
   const frontTargets=players.filter(u=>(stormIsTank(u)||stormIsMelee(u))&&Math.hypot((u.x||0)-(b.x||0),(u.y||0)-(b.y||0))<=radius);
   const shockTargets=stormBacklineUnits(units).filter(u=>Math.hypot((u.x||0)-(b.x||0),(u.y||0)-(b.y||0))<=shockRadius);
@@ -963,8 +973,8 @@ function castStormGroundingPulse(b,ctx){
   for(const u of frontTargets){
     const tankish=stormIsTank(u);
     const melee=stormIsMelee(u)&&!tankish;
-    const mult=tankish?1:(melee?(b.groundingPulseMeleeMult||0.72):0.85);
-    dealDamage(u,Math.round((b.groundingPulseDmg||88)*mult),b,'magic','groundingPulse',{sourceLabel:'GROUNDING',sourceColor:'#8bdfff'});
+    const mult=tankish?(b.groundingPulseTankMult||1):(melee?(b.groundingPulseMeleeMult||0.72):0.85);
+    dealDamage(u,Math.round((b.groundingPulseDmg||88)*mult*skillMult),b,'magic','groundingPulse',{sourceLabel:'GROUNDING',sourceColor:'#8bdfff'});
     addDmg(u.x,u.y-(u.size||20)-8,'GROUNDING','#8bdfff',{sz:11,bold:true,outline:'#061433'});
     addP(u.x,u.y,'#8bdfff',7,3);
     if(tankish||melee){
@@ -974,7 +984,7 @@ function castStormGroundingPulse(b,ctx){
     }
   }
   for(const u of shockTargets){
-    const dmg=Math.round((b.groundingPulseDmg||88)*(b.groundingStormShockMult||0.42));
+    const dmg=Math.round((b.groundingPulseDmg||88)*(b.groundingStormShockMult||0.42)*skillMult);
     dealDamage(u,dmg,b,'magic','stormShock',{sourceLabel:'STORM SHOCK',sourceColor:'#58d8ff'});
     addDmg(u.x,u.y-(u.size||20)-8,'STORM SHOCK','#58d8ff',{sz:11,bold:true,outline:'#061433'});
     addP(u.x,u.y,'#58d8ff',6,3);
@@ -982,6 +992,30 @@ function castStormGroundingPulse(b,ctx){
   b._stormGroundingCasts=(b._stormGroundingCasts||0)+1;
   addDmg(b.x,b.y-(b.size||40)-10,'GROUNDING PULSE','#8bdfff',{sz:13,bold:true,outline:'#061433'});
   showFlash('GROUNDING PULSE!','#8bdfff',42);
+  shake(5);
+  return true;
+}
+function castStormCourtPulse(b,ctx){
+  const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  const targets=stormPlayerUnits(units);
+  if(!targets.length)return false;
+  const radius=Math.max(220,(b.size||42)*4.5);
+  const base=(b.courtPulseDmg||72)*stormSkillDamageMult(b);
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:radius,life:0.58,color:'#5cc8ff',enemyWarn:true,warnTimer:24,warnMax:24,label:'COURT'});
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(88,(b.size||42)*1.9),life:0.5,color:'#ffd166',celestialAuraFx:true});
+  for(const u of targets){
+    const tankish=stormIsTank(u);
+    const melee=stormIsMelee(u)&&!tankish;
+    const mult=tankish?(b.courtPulseTankMult||1.25):(melee?(b.courtPulseMeleeMult||0.95):(b.courtPulseBacklineMult||0.82));
+    const dmg=Math.max(1,Math.round(base*mult));
+    beamFx.push({x1:b.x,y1:b.y-(b.size||40)*0.55,x2:u.x,y2:u.y-u.size*0.25,life:20,maxLife:20,color:tankish?'#ffd166':'#5cc8ff',width:tankish?5:3.5,straight:false});
+    dealDamage(u,dmg,b,'magic','courtPulse',{sourceLabel:'COURT PULSE',sourceColor:'#5cc8ff'});
+    addDmg(u.x,u.y-(u.size||20)-8,'COURT PULSE','#5cc8ff',{sz:11,bold:true,outline:'#061433'});
+    addP(u.x,u.y,tankish?'#ffd166':'#5cc8ff',7,3);
+  }
+  b._stormCourtPulseCasts=(b._stormCourtPulseCasts||0)+1;
+  addDmg(b.x,b.y-(b.size||40)-10,'COURT PULSE','#5cc8ff',{sz:13,bold:true,outline:'#061433'});
+  showFlash('COURT PULSE!','#5cc8ff',45);
   shake(5);
   return true;
 }
@@ -1017,6 +1051,7 @@ function updateStormboundVizier(b,ctx){
     syncStormVizierCooldowns(b,ctx);
     return true;
   };
+  if(tryBossCast('_stormCourtPulseCd','courtPulseCD',60,castStormCourtPulse))return;
   if(tryBossCast('_stormGroundingCd','groundingPulseCD',54,castStormGroundingPulse))return;
   tryBossCast('_stormChainCd','chainDecreeCD',72,castStormChainDecree);
 }
@@ -1527,7 +1562,14 @@ export function updateBoss(b,ctx){
     b._enrageProgress=1;
     b.dmg=Math.round(b.dmg*1.25);
     b.atkSpd=Math.max(20,Math.round(b.atkSpd*0.7));
-    showFlash('BOSS ENRAGED!  +25% DMG, +30% SPEED','#ff0040',150);
+    if(b.stormVizier||b.id===13){
+      showFlash('VIZIER ENRAGED!  STORM SKILLS EMPOWERED','#ff0040',150);
+      addDmg(b.x,b.y-b.size-26,'VIZIER ENRAGED','#ff5533',{sz:15,bold:true,outline:'#3a0500'});
+      groundFx.push({x:b.x,y:b.y,r:0,maxR:b.size+96,life:0.72,color:'#ff5533',enemyWarn:true,warnTimer:32,warnMax:32,label:'ENRAGE'});
+      groundFx.push({x:b.x,y:b.y,r:0,maxR:b.size+132,life:0.42,color:'#ffd166',celestialAuraFx:true});
+    }else{
+      showFlash('BOSS ENRAGED!  +25% DMG, +30% SPEED','#ff0040',150);
+    }
     shake(20);
     for(let i=0;i<80;i++)addP(b.x,b.y,'#ff0040',1,6);
   }

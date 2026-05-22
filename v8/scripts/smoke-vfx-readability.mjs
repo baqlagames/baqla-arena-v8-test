@@ -192,6 +192,18 @@ assert.equal(playerSignatureVfxState(capstoneUnit).capstone, true, 'level 5 sign
 assert.equal(playerHitSourceVfxState(hitSourceUnit).danger, true, 'high-impact source labels should expose danger VFX state');
 assert.equal(playerNoHealVfxState(silencedHealer).label, 'NO HEAL', 'silenced healers should expose explicit no-heal VFX state');
 
+const signatureAuraCtx = makeCtx();
+drawPlayerAuraOver(signatureAuraCtx, {
+  unit: readyUnit,
+  x: readyUnit.x,
+  y: readyUnit.y,
+  size: readyUnit.size,
+  frame: 120,
+  emitParticle: () => {},
+  randomRange: (min, max) => (min + max) / 2,
+});
+assert(!signatureAuraCtx.calls.includes('arc') && !signatureAuraCtx.calls.includes('ellipse'), 'signature readiness should not draw persistent body rings');
+
 const quietAuraCtx = makeCtx();
 const quietTank = player(0, { arch: 'tank', taunt: true, signature: null });
 drawPlayerAuraUnder(quietAuraCtx, { unit: quietTank, x: quietTank.x, y: quietTank.y, size: quietTank.size, frame: 120 });

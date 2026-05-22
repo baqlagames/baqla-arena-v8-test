@@ -297,6 +297,7 @@ function smokeStormboundVizier(ctx, boss) {
   boss.mirrorCleaveEvery = 8;
   boss.chainDecreeFirst = 1;
   boss.groundingPulseFirst = 1;
+  boss.courtPulseFirst = 1;
   boss._stormVizierInit = false;
   boss._stormCycleState = null;
   boss._stormWardRefs = [];
@@ -323,12 +324,18 @@ function smokeStormboundVizier(ctx, boss) {
   if (boss.fixedGoldReward !== 200) throw new Error('Stormbound Vizier should award 200g when defeated');
   const vizierDef = BOSSES[13];
   if (vizierDef.dmg !== 134 || vizierDef.raidAoeDmg !== 27) throw new Error('Stormbound Vizier base damage tuning drifted');
-  if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 170) {
+  if (vizierDef.ironSurgeDmg !== 64 || vizierDef.mirrorCleaveDmg !== 110 || vizierDef.chainDecreeDmg !== 86 || vizierDef.groundingPulseDmg !== 170 || vizierDef.courtPulseDmg !== 72) {
     throw new Error('Stormbound Vizier role damage tuning drifted');
+  }
+  if (Math.abs((vizierDef.groundingPulseTankMult || 0) - 1.10) > 0.0001) throw new Error('Stormbound Vizier tank Grounding pressure tuning drifted');
+  if (vizierDef.courtPulseCD !== 420 || vizierDef.courtPulseFirst !== 120) throw new Error('Stormbound Vizier Court Pulse cadence drifted');
+  if (Math.abs((vizierDef.courtPulseTankMult || 0) - 1.25) > 0.0001 || Math.abs((vizierDef.courtPulseBacklineMult || 0) - 0.82) > 0.0001) {
+    throw new Error('Stormbound Vizier Court Pulse role tuning drifted');
   }
   if (Math.abs((vizierDef.groundingStormShockMult || 0) - 0.34) > 0.0001) throw new Error('Stormbound Vizier Storm Shock damage tuning drifted');
   if (Math.abs((vizierDef.stormVenomHpPct || 0) - 0.009) > 0.0001 || vizierDef.stormVenomDur !== 300 || vizierDef.stormVenomMinDmg !== 6) throw new Error('Stormbound Vizier Storm Venom tuning drifted');
-  if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.012) > 0.0001) throw new Error('Stormbound Vizier tank curse damage tuning drifted');
+  if (Math.abs((vizierDef.tankCurseHpPct || 0) - 0.014) > 0.0001) throw new Error('Stormbound Vizier tank curse damage tuning drifted');
+  if (Math.abs((vizierDef.stormEnrageSkillMult || 0) - 1.18) > 0.0001) throw new Error('Stormbound Vizier enrage skill multiplier drifted');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];
   const expectedSizeScales = [1, 1.12, 1.22, 1.32];
@@ -364,12 +371,13 @@ function smokeStormboundVizier(ctx, boss) {
 
   boss._stormChainCd = 0;
   boss._stormGroundingCd = 0;
+  boss._stormCourtPulseCd = 0;
   iron._stormWardCastT = 1;
   mirror._stormWardCastT = 1;
   const hitStart = ctx.damageHits.length;
   tickBoss(ctx, boss, 2);
   const wardHits = ctx.damageHits.slice(hitStart);
-  if (ctx.damageText.some(item => item.text === 'CHAIN' || item.text === 'GROUNDING')) {
+  if (ctx.damageText.some(item => item.text === 'CHAIN' || item.text === 'GROUNDING' || item.text === 'COURT PULSE')) {
     throw new Error('Stormbound Vizier should not use boss-only casts while wards are active');
   }
   if (!ctx.damageText.some(item => item.text === 'IRON SURGE')) throw new Error('Iron Ward did not show Iron Surge hits');
@@ -384,12 +392,13 @@ function smokeStormboundVizier(ctx, boss) {
 
   boss._stormChainCd = 0;
   boss._stormGroundingCd = 0;
+  boss._stormCourtPulseCd = 0;
   boss._stormSilenceCd = 999;
   boss._stormTankCurseCd = 999;
   boss._stormCastLock = 0;
   iron.hp = 0;
   mirror.hp = 0;
-  const groundingStart = ctx.damageHits.length;
+  const bossWindowStart = ctx.damageHits.length;
   tickBoss(ctx, boss, 2);
   if (boss._stormShieldActive) throw new Error('Stormbound Vizier shield stayed active after both wards died');
   if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
@@ -397,6 +406,19 @@ function smokeStormboundVizier(ctx, boss) {
   if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
   if (!ctx.damageText.some(item => item.text === 'STORM VENOM')) throw new Error('Stormbound Vizier missing Storm Venom callout');
   if (!ctx.units.every(unit => unit._stormVenomTimer > 0)) throw new Error('Stormbound Vizier did not apply Storm Venom to the full squad');
+  if (!ctx.damageText.some(item => item.text === 'COURT PULSE')) throw new Error('Stormbound Vizier did not use Court Pulse in the boss-only window');
+  const courtHits = ctx.damageHits.slice(bossWindowStart).filter(hit => hit.attackType === 'courtPulse');
+  if (!courtHits.some(hit => hit.target.arch === 'tank') || !courtHits.some(hit => hit.target.arch === 'melee') || !courtHits.some(hit => hit.target.arch === 'ranged') || !courtHits.some(hit => hit.target.arch === 'healer')) {
+    throw new Error('Stormbound Vizier Court Pulse did not hit tank, melee, ranged, and healer units');
+  }
+  const courtTank = courtHits.filter(hit => hit.target.arch === 'tank').reduce((sum, hit) => sum + hit.amount, 0);
+  const courtBacklineMax = Math.max(...courtHits.filter(hit => hit.target.arch === 'ranged' || hit.target.arch === 'healer').map(hit => hit.amount));
+  if (!(courtTank > courtBacklineMax)) throw new Error('Stormbound Vizier Court Pulse should pressure tank more than backline units');
+  boss._stormCastLock = 0;
+  boss._stormCourtPulseCd = 999;
+  boss._stormGroundingCd = 0;
+  boss._stormChainCd = 999;
+  const groundingStart = ctx.damageHits.length;
   tickBoss(ctx, boss, 3);
   if (!ctx.damageText.some(item => item.text === 'GROUNDING')) throw new Error('Stormbound Vizier did not pressure tank/melee with Grounding Pulse');
   if (!ctx.damageText.some(item => item.text === 'STORM SHOCK')) throw new Error('Stormbound Vizier did not show Storm Shock backline pressure');
@@ -406,6 +428,9 @@ function smokeStormboundVizier(ctx, boss) {
     throw new Error('Stormbound Vizier Storm Shock did not damage ranged and healer backline');
   }
   boss._stormCastLock = 0;
+  boss._stormCourtPulseCd = 999;
+  boss._stormGroundingCd = 999;
+  boss._stormChainCd = 0;
   tickBoss(ctx, boss, 3);
   if (!ctx.damageText.some(item => item.text === 'CHAIN')) throw new Error('Stormbound Vizier did not cast Chain Decree');
   boss._stormCastLock = 0;
@@ -417,6 +442,39 @@ function smokeStormboundVizier(ctx, boss) {
   boss._stormSilenceCd = 999;
   tickBoss(ctx, boss, 3);
   if (!ctx.units[0]._stormCurseTimer || !ctx.damageText.some(item => item.text === 'STORM CURSE')) throw new Error('Stormbound Vizier did not curse tank with visible feedback');
+
+  const forceVizierBossWindow = () => {
+    boss._stormCycleState = 'boss';
+    boss._stormShieldActive = false;
+    boss._stormWardWaveActive = false;
+    boss._stormWardResolved = true;
+    boss._stormWardRefs = [];
+    boss._stormCastLock = 0;
+    boss._stormSilenceCd = 999;
+    boss._stormTankCurseCd = 999;
+    boss._stormCourtPulseCd = 999;
+    boss._stormGroundingCd = 999;
+    boss._stormChainCd = 999;
+    boss._stormExposedTimer = 0;
+  };
+  const castTotal = (attackType, enraged, setup) => {
+    forceVizierBossWindow();
+    boss.timeEnraged = enraged;
+    setup();
+    const start = ctx.damageHits.length;
+    tickBoss(ctx, boss, 3);
+    return ctx.damageHits.slice(start).filter(hit => hit.attackType === attackType).reduce((sum, hit) => sum + hit.amount, 0);
+  };
+  const assertEnrageSkillBoost = (attackType, setup) => {
+    const normal = castTotal(attackType, false, setup);
+    const enraged = castTotal(attackType, true, setup);
+    if (!(normal > 0 && enraged > normal * 1.15)) throw new Error(`Stormbound Vizier enrage did not boost ${attackType} skill damage`);
+  };
+  assertEnrageSkillBoost('courtPulse', () => { boss._stormCourtPulseCd = 0; });
+  assertEnrageSkillBoost('groundingPulse', () => { boss._stormGroundingCd = 0; });
+  assertEnrageSkillBoost('chainDecree', () => { boss._stormChainCd = 0; });
+  assertEnrageSkillBoost('stormCurse', () => { boss._stormTankCurseCd = 0; });
+  boss.timeEnraged = false;
 
   const expectedSizes = [26, 29, 32, 34];
   for (const [waveIndex, hpPct] of [[1, 0.74], [2, 0.49], [3, 0.24]]) {
@@ -478,10 +536,10 @@ function assertBossReadability(ctx, boss) {
     if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
   }
   if (boss.id === 13) {
-    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'STORM VENOM', 'IRON SURGE', 'MIRROR CLEAVE', 'GROUNDING PULSE', 'GROUNDING', 'STORM SHOCK', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
+    for (const text of ['TWIN WARDS', 'STORM SHIELD', 'STORM SHIELD BROKEN', 'VIZIER EXPOSED', 'STORM VENOM', 'IRON SURGE', 'MIRROR CLEAVE', 'COURT PULSE', 'GROUNDING PULSE', 'GROUNDING', 'STORM SHOCK', 'GROUNDING BRAND', 'SILENCING DECREE', 'SILENCED', 'TANK CURSE', 'STORM CURSE', 'CHAIN DECREE', 'CHAIN']) {
       if (!texts.includes(text)) throw new Error(`Stormbound Vizier missing ${text} callout`);
     }
-    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'SHIELD', 'SILENCE', 'CURSE', 'GROUNDING', 'SHOCK', 'VENOM']) {
+    for (const label of ['MAGIC', 'PHYSICAL', 'IRON', 'MIRROR', 'SHIELD', 'SILENCE', 'CURSE', 'COURT', 'GROUNDING', 'SHOCK', 'VENOM']) {
       if (!labels.includes(label)) throw new Error(`Stormbound Vizier missing ${label} ward warning label`);
     }
     if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember damage text');

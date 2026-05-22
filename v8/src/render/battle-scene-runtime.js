@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-clean-shield-vfx';
+import { drawUnitShieldVfx } from './shield-vfx.js?v=20260522-vizier-status-icons';
 
 function unitRoleColor(unit){
   if(!unit)return '#d8f4ff';

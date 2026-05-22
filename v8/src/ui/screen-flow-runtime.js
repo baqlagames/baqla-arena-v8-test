@@ -1,7 +1,7 @@
 import { drawMenuScreen } from './menu.js';
 import { drawDeckPickerScreen, drawSpellPickerScreen } from './pickers.js';
 import { drawPerkPickerScreen } from './perk-picker.js';
-import { drawLoseResultScreen, drawWinResultScreen } from './results.js?v=9d6b186-combat-feedback';
+import { drawLoseResultScreen, drawWinResultScreen } from './results.js';
 import { drawStageBriefScreen } from './stage-brief.js';
 import { drawStageSelectScreen } from './stage-select.js';
 import { drawAnimatedStarResult as drawAnimatedStarResultBase, drawStageStarPanel as drawStageStarPanelBase } from './stars.js';

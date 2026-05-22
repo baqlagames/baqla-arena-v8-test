@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-clean-shield-vfx';
+import { BOSSES } from '../data/bosses.js?v=20260522-vizier-status-icons';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){

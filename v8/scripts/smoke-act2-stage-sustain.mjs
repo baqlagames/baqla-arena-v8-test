@@ -158,6 +158,12 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
       logs.stormShock += damage;
       if (target.arch === 'ranged' || target.arch === 'healer' || target.arch === 'caster') logs.stormShockBackline += damage;
     }
+    if (attackType === 'courtPulse') {
+      logs.stormCourtPulse += damage;
+      if (target.arch === 'tank') logs.stormCourtTank += damage;
+      if (target.arch === 'melee') logs.stormCourtMelee += damage;
+      if (target.arch === 'ranged' || target.arch === 'healer' || target.arch === 'caster') logs.stormCourtBackline += damage;
+    }
     if (attackType === 'stormVenom') {
       logs.stormVenomDamage += damage;
       logs.stormVenomTicks++;
@@ -444,7 +450,7 @@ function simulateStage(stage, stageIndex, seed) {
     wardenBlightBursts: 0,
     wardenBlightTicks: 0,
     wardenGravityBrands: 0,
-    stormVizierCasts: { wards: 0, chain: 0, expose: 0, grounding: 0, shieldBreak: 0, silence: 0, curse: 0 },
+    stormVizierCasts: { wards: 0, chain: 0, expose: 0, grounding: 0, courtPulse: 0, shieldBreak: 0, silence: 0, curse: 0 },
     stormVizierDamageByAttack: {},
     stormIronSurge: 0,
     stormIronTank: 0,
@@ -462,6 +468,11 @@ function simulateStage(stage, stageIndex, seed) {
     stormGroundingBrands: 0,
     stormShock: 0,
     stormShockBackline: 0,
+    stormCourtPulse: 0,
+    stormCourtTank: 0,
+    stormCourtMelee: 0,
+    stormCourtBackline: 0,
+    stormCourtPulseTexts: 0,
     stormVenomDamage: 0,
     stormVenomTicks: 0,
     stormVenomTexts: 0,
@@ -552,6 +563,7 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'COURT REBUKE') logs.courtRebukes++;
       if (text === 'GROUNDING BRAND') logs.stormGroundingBrands++;
       if (text === 'STORM SHOCK') logs.stormShockTexts = (logs.stormShockTexts || 0) + 1;
+      if (text === 'COURT PULSE') logs.stormCourtPulseTexts++;
       if (text === 'STORM VENOM') logs.stormVenomTexts++;
       if (text === 'SILENCED') logs.stormSilences++;
       if (text === 'STORM CURSE') logs.stormCurseTexts = (logs.stormCurseTexts || 0) + 1;
@@ -572,6 +584,7 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'JUDGMENT WINDOW!') logs.stormVizierCasts.expose++;
       if (text === 'STORM SHIELD BROKEN!') logs.stormVizierCasts.shieldBreak++;
       if (text === 'GROUNDING PULSE!') logs.stormVizierCasts.grounding = (logs.stormVizierCasts.grounding || 0) + 1;
+      if (text === 'COURT PULSE!') logs.stormVizierCasts.courtPulse = (logs.stormVizierCasts.courtPulse || 0) + 1;
       if (text === 'SILENCING DECREE!') logs.stormVizierCasts.silence++;
       if (text === 'TANK CURSE!') logs.stormVizierCasts.curse++;
     },
@@ -730,6 +743,9 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.stormGroundingMelee > 0, 'stage 10: Stormbound Vizier Grounding did not pressure non-tank melee');
     assert(logs.stormGroundingBrands > 0, 'stage 10: Stormbound Vizier Grounding Brand was not shown');
     assert(logs.stormShockBackline > 0, 'stage 10: Stormbound Vizier Storm Shock did not pressure backline units');
+    assert(logs.stormVizierCasts.courtPulse > 0 && logs.stormCourtPulseTexts > 0, 'stage 10: Stormbound Vizier Court Pulse was not shown');
+    assert(logs.stormCourtTank > 0 && logs.stormCourtMelee > 0 && logs.stormCourtBackline > 0, 'stage 10: Stormbound Vizier Court Pulse did not pressure tank, melee, and backline units');
+    assert(logs.stormCourtTank > logs.stormCourtBackline / 2, 'stage 10: Stormbound Vizier Court Pulse tank pressure was too soft relative to backline');
     assert(logs.stormVenomDamage > 0 && logs.stormVenomTicks > 0 && logs.stormVenomTexts > 0, 'stage 10: Stormbound Vizier Storm Venom was not exercised');
     assert(logs.sultanSeen, 'stage 10: Sultan was not exercised');
     assert(logs.searingBrands > 0, 'stage 10: Sultan searing brand was not exercised');
@@ -773,6 +789,10 @@ function simulateStage(stage, stageIndex, seed) {
     stormGroundingBrands: logs.stormGroundingBrands,
     stormShock: logs.stormShock,
     stormShockBackline: logs.stormShockBackline,
+    stormCourtPulse: logs.stormCourtPulse,
+    stormCourtTank: logs.stormCourtTank,
+    stormCourtMelee: logs.stormCourtMelee,
+    stormCourtBackline: logs.stormCourtBackline,
     stormVenomDamage: logs.stormVenomDamage,
     stormVenomTicks: logs.stormVenomTicks,
     stormSilences: logs.stormSilences,
@@ -816,6 +836,7 @@ for (const summary of summaries) {
     summary.courtRebukes ? `court rebukes ${summary.courtRebukes}` : null,
     summary.stormGrounding ? `grounding ${summary.stormGrounding} tank:${summary.stormGroundingTank} melee:${summary.stormGroundingMelee} brands:${summary.stormGroundingBrands}` : null,
     summary.stormShock ? `shock ${summary.stormShock} back:${summary.stormShockBackline}` : null,
+    summary.stormCourtPulse ? `court pulse ${summary.stormCourtPulse} tank:${summary.stormCourtTank} melee:${summary.stormCourtMelee} back:${summary.stormCourtBackline}` : null,
     summary.stormVenomDamage ? `venom ${summary.stormVenomDamage} ticks:${summary.stormVenomTicks}` : null,
     summary.stormSilences ? `silences ${summary.stormSilences}` : null,
     summary.stormCurseDamage ? `curse ${summary.stormCurseDamage} tank:${summary.stormCurseTank} hits:${summary.stormCurseHits} ticks:${summary.stormCurseTicks}` : null,

@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { ARENA_LEASH_BACK, ARENA_LEASH_FWD, ARENA_LEASH_SIDE } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { ARENA_LEASH_BACK, ARENA_LEASH_FWD, ARENA_LEASH_SIDE } from '../data/tuning.js';
 import { limitBurstLanding } from './combat-targeting.js';
 
 export function tickUnitActionTimers(unit, {

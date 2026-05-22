@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-clean-shield-vfx';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-vizier-status-icons';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

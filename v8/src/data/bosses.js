@@ -151,10 +151,11 @@ export const BOSSES=[
     ironSurgeEvery:180,ironSurgeFirst:90,ironSurgeDmg:64,
     mirrorCleaveEvery:144,mirrorCleaveFirst:72,mirrorCleaveDmg:110,mirrorCleaveRadius:138,
     chainDecreeCD:500,chainDecreeFirst:190,chainDecreeDmg:86,chainDecreeCount:3,
-    groundingPulseCD:360,groundingPulseFirst:300,groundingPulseDmg:170,groundingPulseRadius:128,groundingPulseMeleeMult:0.78,groundingStormShockRadius:680,groundingStormShockMult:0.34,groundingBrandDur:240,groundingBrandHealCut:0.10,
+    groundingPulseCD:360,groundingPulseFirst:300,groundingPulseDmg:170,groundingPulseRadius:128,groundingPulseTankMult:1.10,groundingPulseMeleeMult:0.78,groundingStormShockRadius:680,groundingStormShockMult:0.34,groundingBrandDur:240,groundingBrandHealCut:0.10,
+    courtPulseCD:420,courtPulseFirst:120,courtPulseDmg:72,courtPulseTankMult:1.25,courtPulseMeleeMult:0.95,courtPulseBacklineMult:0.82,
     stormVenomDur:300,stormVenomHpPct:0.009,stormVenomMinDmg:6,
     silencingDecreeCD:840,silencingDecreeCDMin:600,silencingDecreeCDMax:840,silencingDecreeFirst:520,silencingDecreeDur:150,
-    tankCurseCD:720,tankCurseFirst:420,tankCurseDur:240,tankCurseHpPct:0.012,tankCurseHealCut:0.12,
+    tankCurseCD:720,tankCurseFirst:420,tankCurseDur:240,tankCurseHpPct:0.014,tankCurseHealCut:0.12,stormEnrageSkillMult:1.18,
     timeEnrageAt:13650},
   {id:14,name:'Sphinx Judicator',tier:'mini',act:3,color:'#d8a84a',accent:'#6f4a18',hp:19000,dmg:96,speed:0.24,atkSpd:66,range:82,size:52,armor:7,magicRes:0,armorType:'warded',points:1200,raidAoeDmg:30,spawnFromTop:true,spawnYOffset:58,entryHold:45,
     // Stage 13 mini-boss: boss-only wave 6. Solar Riddle is the DPS check;

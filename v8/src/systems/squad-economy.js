@@ -5,7 +5,7 @@ import {
   ARENA_UPGRADE_COSTS,
   ARENA_UPGRADE_MULT_BY_BRANCH,
   ARENA_UPGRADE_MULT_BY_UNIT,
-} from '../data/tuning.js?v=9d6b186-combat-feedback';
+} from '../data/tuning.js';
 
 export function arena_isCapstoneLevel(level) {
   return (level || 1) >= ARENA_MAX_UNIT_LEVEL;

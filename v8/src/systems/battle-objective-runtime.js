@@ -1,4 +1,4 @@
-import { createWeatherParticles, drawWeatherForegroundOverlay, drawWeatherOverlay } from '../render/weather.js?v=20260522-clean-shield-vfx';
+import { createWeatherParticles, drawWeatherForegroundOverlay, drawWeatherOverlay } from '../render/weather.js?v=20260522-vizier-status-icons';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 
 export function createBattleObjectiveRuntime(deps = {}) {

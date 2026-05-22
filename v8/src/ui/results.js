@@ -1,6 +1,6 @@
 // Victory/defeat and combat report screen composition.
 
-import { drawStatsColumn } from './stats-column.js?v=9d6b186-combat-feedback';
+import { drawStatsColumn } from './stats-column.js';
 import { fitCanvasText } from '../render/primitives.js';
 
 export function resultButtonRects(width,height){

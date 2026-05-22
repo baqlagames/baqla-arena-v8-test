@@ -17,6 +17,7 @@ function imminentBossSkillIcon(t,tickHz){
     ['stormMotes','stormMotesCD','#8bdfff','M','Storm Motes Soon'],
     ['chainDecree','chainDecreeCD','#ffd166','C','Chain Decree Soon'],
     ['groundingPulse','groundingPulseCD','#9bb8ff','G','Grounding Soon'],
+    ['courtPulse','courtPulseCD','#5cc8ff','P','Court Pulse Soon'],
     ['silencingDecree','silencingDecreeCD','#9bb8ff','X','Silence Soon'],
     ['tankCurse','tankCurseCD','#9b7cff','C','Tank Curse Soon'],
     ['burrow','burrowCD','#8b6f3d','B','Burrow Soon'],
@@ -37,6 +38,16 @@ function imminentBossSkillIcon(t,tickHz){
     if(!best||value<best.value)best={value,c,g,title};
   }
   return best?{c:best.c,g:best.g,title:best.title,pulse:true}:null;
+}
+
+function playerSignatureIcon(t){
+  if(!t||!t.isPlayer||!t.signature||!Number.isFinite(t.signature.cd)||t.signature.cd<=0)return null;
+  const pct=Math.max(0,Math.min(1,(t.signature.t||0)/t.signature.cd));
+  const color=t.accent||t.color||'#ffd700';
+  if((t.signatureCastFx||0)>0)return {c:color,g:'S',title:'Signature Casting',pulse:true};
+  if(pct>=1)return {c:'#ffd700',g:'S',title:'Signature Ready',pulse:true};
+  if(pct>=0.7)return {c:color,g:'S',title:'Signature Charging'};
+  return null;
 }
 
 export function collectStatusIcons(t,tickHz=120){
@@ -150,6 +161,8 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._stormCurseTimer>0)icons.push({c:'#9b7cff',g:'C',title:'Storm Curse',pulse:true});
   if(t._stormVenomTimer>0)icons.push({c:'#58d68d',g:'V',title:'Storm Venom',pulse:true});
   if(t._astralBlightTimer>0)icons.push({c:'#8bdfff',g:'A',title:'Astral Blight',pulse:true});
+  const sigIcon=playerSignatureIcon(t);
+  if(sigIcon)icons.push(sigIcon);
   if(t.priorityTarget)icons.push({c:t.color||'#8bdfff',g:'!',title:t.preferredBy?('Priority: '+t.preferredBy):'Priority Target',pulse:true});
   if(t.stormWard)icons.push({c:t.color||'#8bdfff',g:t.stormWardKind==='iron'?'I':'M',title:t.name||'Storm Ward',pulse:true});
   if(t.stormMote)icons.push({c:'#8bdfff',g:'M',title:'Storm Mote',pulse:true});

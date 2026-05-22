@@ -1,4 +1,4 @@
-import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js?v=9d6b186-combat-feedback';
+import { HP_MULT_ENEMY, UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { STAGE_HP_MULT, STAGE_DMG_MULT } from '../data/stages.js';
 import { ENEMIES } from '../data/enemies.js';
 import { GAME_TICK_HZ } from '../core/constants.js';
