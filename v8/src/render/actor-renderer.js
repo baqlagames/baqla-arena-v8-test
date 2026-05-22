@@ -1,9 +1,9 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-clean-vizier-round';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-player-hp-clearance';
 import { createActorSpriteHelpers } from './actor-sprite-helpers.js';
-import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-clean-vizier-round';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-player-hp-clearance';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';
@@ -87,11 +87,9 @@ function drawUnitHud(u){
   if(!Number.isFinite(u.x)||!Number.isFinite(u.y))return;
   const bob=Math.sin(Number.isFinite(u.bobPhase)?u.bobPhase:0)*1.2;
   const y=u.y+bob;
-  const waveBoost=(arena&&arena.phase==='wave')?16:0;
   const hudInfo=playerHudInfo(u);
   const barW=playerHudBarWidth(u);
-  const hudMinY=ARENA_TOP+20;
-  const hpBarY=Math.max(hudMinY,y-(u.size||20)-8-waveBoost);
+  const hpBarY=playerHudBaseY(u,y);
   const hudOffset=playerHudOffset(u,hpBarY,barW);
   const hudX=u.x+hudOffset.x;
   const hudY=hpBarY+hudOffset.y;
@@ -107,18 +105,23 @@ function playerHudBarWidth(u){
   if(!info)return (u&&u.size?u.size:20)+14;
   return info.tank?Math.max(50,(u.size||20)+24):(u.size||20)+14;
 }
-function naturalPlayerHudY(u,waveBoost){
+function playerHudBaseY(u,y){
   if(!u)return 0;
+  const s=Math.max(16,u.size||20);
+  const inWave=arena&&arena.phase==='wave';
+  const clearance=inWave?Math.max(56,s*2.35+16):Math.max(38,s*1.65+10);
+  return Math.max(ARENA_TOP+20,(Number.isFinite(y)?y:((u.y||0)+Math.sin(Number.isFinite(u.bobPhase)?u.bobPhase:0)*1.2))-clearance);
+}
+function naturalPlayerHudY(u){
   const bob=Math.sin(Number.isFinite(u.bobPhase)?u.bobPhase:0)*1.2;
-  return Math.max(ARENA_TOP+20,(u.y||0)+bob-(u.size||20)-8-waveBoost);
+  return playerHudBaseY(u,(u.y||0)+bob);
 }
 function playerHudOffset(u,baseY,barW){
   const info=playerHudInfo(u);
   if(!(arena&&arena.phase==='wave')||!info)return {x:0,y:0};
-  const waveBoost=16;
   const close=(units||[]).filter(other=>{
     if(!other||other.hp<=0||!playerHudInfo(other))return false;
-    const otherY=naturalPlayerHudY(other,waveBoost);
+    const otherY=naturalPlayerHudY(other);
     const otherW=playerHudBarWidth(other);
     const overlapX=Math.abs((other.x||0)-(u.x||0))<(barW+otherW)/2+10;
     return overlapX&&Math.abs(otherY-baseY)<20;
@@ -128,7 +131,7 @@ function playerHudOffset(u,baseY,barW){
   const spacing=Math.max(34,Math.min(54,barW+14));
   const slot=idx-(close.length-1)/2;
   const x=slot*spacing;
-  const y=(idx%2===0?-5:6)+(info.tank?-4:0);
+  const y=(idx%2===0?-10:-3)+(info.tank?-5:0);
   return {x,y};
 }
 function drawUnitRaw(u){
@@ -617,11 +620,9 @@ function drawUnitRaw(u){
   // Player HP/status bars render in the foreground HUD pass so boss bodies and
   // weather cannot cover them.
   arena_drawSpecAccessory(u);
-  const _waveBoost=(arena&&arena.phase==='wave')?16:0;
   const _hudInfo=playerHudInfo(u);
   const _barW=playerHudBarWidth(u);
-  const _hudMinY=ARENA_TOP+20;
-  const _hpBarY=Math.max(_hudMinY,y-u.size-8-_waveBoost);
+  const _hpBarY=playerHudBaseY(u,y);
   const _hudOffset=playerHudOffset(u,_hpBarY,_barW);
   const _hudX=u.x+_hudOffset.x;
   const _hudY=_hpBarY+_hudOffset.y;

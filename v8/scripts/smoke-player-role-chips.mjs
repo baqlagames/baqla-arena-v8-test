@@ -107,6 +107,7 @@ function makeUnit(arch, id, extra = {}) {
 }
 
 for (const unit of units) renderer.drawUnitRaw(unit);
+for (const unit of units) renderer.drawUnitHud(unit);
 
 const roleLabels = ['TANK', 'MELEE', 'HEAL', 'RANGE', 'CAST'];
 for (const label of roleLabels) {
@@ -121,6 +122,8 @@ assert(meleeTrack, 'melee player HP bar should keep the compact player track');
 const tankCenter = tankTrack.x + tankTrack.w / 2;
 const meleeCenter = meleeTrack.x + meleeTrack.w / 2;
 assert(Math.abs(tankCenter - meleeCenter) >= 30, 'clustered tank/melee HP bars should separate horizontally');
+assert(tankTrack.y <= units[0].y - units[0].size * 2.7, 'tank HP bar should clear the tall player sprite');
+assert(meleeTrack.y <= units[1].y - units[1].size * 2.7, 'melee HP bar should clear the tall player sprite');
 
 renderer.drawUnitRaw(makeUnit('melee', 5, { isMinion: true }));
 renderer.drawUnitRaw(makeUnit('ranged', 6, { isGhost: true }));
