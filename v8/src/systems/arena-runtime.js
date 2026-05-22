@@ -13,7 +13,7 @@ import { ARENA_UNIT_BRANCHES, ARENA_BASE_SIGNATURES, ARENA_BRANCH_SIGNATURES } f
 import { createButtonDrawers } from '../ui/buttons.js';
 import { canvasEventPoint, pointInRect as uiPointInRect } from '../ui/input.js';
 import { createCardRowRuntime } from '../ui/card-row-runtime.js';
-import { createActorRenderer } from '../render/actor-renderer.js?v=20260522-storm-vizier';
+import { createActorRenderer } from '../render/actor-renderer.js?v=20260522-hud-dedupe';
 import { createArenaSceneRenderer } from '../render/arena-scene.js?v=20260522-storm-vizier';
 import { installCleanCanvasText } from '../render/text.js';
 import { createSpecAccessoryRenderer } from '../render/spec-accessories.js';

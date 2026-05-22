@@ -614,8 +614,8 @@ function drawUnitRaw(u){
     }
   }
   // Phase 3 Ã¢â‚¬â€ per-spec accessory overlay (book / shield / wings / claws etc.)
-  // Drawn AFTER the main sprite so accessories layer on top, BEFORE the HP bar
-  // so the bar renders on top of everything else.
+  // Player HP/status bars render in the foreground HUD pass so boss bodies and
+  // weather cannot cover them.
   arena_drawSpecAccessory(u);
   const _waveBoost=(arena&&arena.phase==='wave')?16:0;
   const _hudInfo=playerHudInfo(u);
@@ -625,8 +625,6 @@ function drawUnitRaw(u){
   const _hudOffset=playerHudOffset(u,_hpBarY,_barW);
   const _hudX=u.x+_hudOffset.x;
   const _hudY=_hpBarY+_hudOffset.y;
-  drawHpBar(_hudX,_hudY,u.hp,u.maxHp,_barW,_hudInfo&&_hudInfo.tank?'playerTank':'player');
-  drawStatusIcons(u,_hudX,_hudY-16);
   // Summon CD ring on Foul/Sabbar
   if(u.summonCDt>0){
     const totalCD=(u.kind==='bear'||u.kind==='wolf'||u.kind==='raptor'||u.kind==='spiritBeast'||u.kind==='flameSprite')?600:720;
