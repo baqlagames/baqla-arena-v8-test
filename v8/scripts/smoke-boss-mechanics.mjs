@@ -317,6 +317,7 @@ function smokeStormboundVizier(ctx, boss) {
   if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
   if (!boss._stormShieldActive) throw new Error('Stormbound Vizier did not shield while wards were active');
   if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier should not spawn Storm Motes');
+  if (boss.fixedGoldReward !== 180) throw new Error('Stormbound Vizier should award 180g when defeated');
   if (iron.fixedGoldReward !== 15 || mirror.fixedGoldReward !== 15) throw new Error('Stormbound Vizier wards should award 15 gold each');
   const expectedHpScales = [1, 1.05, 1.10, 1.15];
   const expectedSizeScales = [1, 1.12, 1.22, 1.32];
@@ -337,6 +338,18 @@ function smokeStormboundVizier(ctx, boss) {
     lateStageNormalGoldMult: () => 1,
   });
   if (wardReward !== 15) throw new Error('Stormbound Vizier ward fixed gold reward should resolve to exactly 15g');
+  const bossReward = calculateEnemyKillReward(boss, ctx.units[2], {
+    inArena: true,
+    currentStage: { n: 10 },
+    arenaState: { round: 4 },
+    campaignKillBountyMult: 0.2,
+    warmupGoldBonus: 1,
+    riftBonusGold: 0,
+    campaignStageMult: () => 1,
+    roundGoldMult: () => 1,
+    lateStageNormalGoldMult: () => 1,
+  });
+  if (bossReward !== 180) throw new Error('Stormbound Vizier fixed boss reward should resolve to exactly 180g');
 
   boss._stormChainCd = 0;
   boss._stormGroundingCd = 0;

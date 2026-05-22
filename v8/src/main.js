@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260522-noheal-vfx';
+import { startArena } from './systems/arena-runtime.js?v=20260522-vizier-gold';
 
 startArena();
