@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-storm-vizier';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({
@@ -33,9 +33,73 @@ export function createActorEnemyRenderer({
     return bossSprites.drawBossBody(enemy, x, y, size);
   }
 
+  function drawStormWard(enemy, x, y, size) {
+    const f = frame();
+    const col = enemy.color || '#8bdfff';
+    const acc = enemy.accent || '#ffd166';
+    const pulse = 0.72 + 0.28 * Math.sin(f * 0.12 + (enemy.bobPhase || 0));
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.ellipse(0, size * 0.74, size * 0.62, size * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2.5;
+    ctx.globalAlpha = 0.55 + 0.25 * pulse;
+    ctx.beginPath(); ctx.arc(0, -size * 0.04, size * 0.68, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = enemy.stormWardKind === 'iron' ? '#102a44' : '#3a2c08';
+    ctx.strokeStyle = '#061433';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.72);
+    ctx.lineTo(size * 0.46, -size * 0.12);
+    ctx.lineTo(size * 0.28, size * 0.58);
+    ctx.lineTo(-size * 0.28, size * 0.58);
+    ctx.lineTo(-size * 0.46, -size * 0.12);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = col;
+    ctx.globalAlpha = 0.86;
+    ctx.beginPath(); ctx.ellipse(0, -size * 0.08, size * 0.20, size * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = acc;
+    ctx.beginPath(); ctx.arc(0, -size * 0.52, size * 0.09 * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = acc;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-size * 0.36, -size * 0.18); ctx.lineTo(size * 0.36, -size * 0.18); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawStormMote(enemy, x, y, size) {
+    const f = frame();
+    const pulse = 0.68 + 0.32 * Math.sin(f * 0.18 + (enemy.bobPhase || 0));
+    ctx.save();
+    ctx.translate(x, y - Math.sin(f * 0.10 + (enemy.bobPhase || 0)) * 4);
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.beginPath(); ctx.ellipse(0, size * 0.84, size * 0.48, size * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(139,223,255,' + (0.22 + 0.15 * pulse) + ')';
+    ctx.beginPath(); ctx.arc(0, 0, size * 0.82, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#8bdfff';
+    ctx.strokeStyle = '#061433';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, size * 0.34 * pulse, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 3; i++) {
+      const a = f * 0.06 + i * Math.PI * 2 / 3;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * size * 0.22, Math.sin(a) * size * 0.18);
+      ctx.lineTo(Math.cos(a + 0.40) * size * 0.78, Math.sin(a + 0.40) * size * 0.44);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawEnemyBody(enemy, x, y, size) {
     const f = frame();
     if (enemy.isBoss) return drawBossBody(enemy, x, y, size);
+    if (enemy.stormWard) return drawStormWard(enemy, x, y, size);
+    if (enemy.stormMote) return drawStormMote(enemy, x, y, size);
     if (enemy.isElite) {
       ctx.save();
       ctx.strokeStyle = '#ffd700';

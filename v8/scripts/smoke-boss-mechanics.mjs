@@ -280,6 +280,58 @@ function smokeAstralWarden(ctx, boss) {
   return 'astral-warden';
 }
 
+function smokeStormboundVizier(ctx, boss) {
+  if (boss.id !== 13) return null;
+
+  boss.mechCD = { twinWards: 0, stormMotes: 999, chainDecree: 999 };
+  boss._stormCastLock = 0;
+  tickBoss(ctx, boss, 2);
+  const iron = ctx.enemies.find(enemy => enemy.name === 'Iron Ward');
+  const mirror = ctx.enemies.find(enemy => enemy.name === 'Mirror Ward');
+  if (!iron || !mirror) throw new Error('Stormbound Vizier did not summon both Twin Wards');
+  if (!iron.priorityTarget || iron.preferredBy !== 'magic') throw new Error('Iron Ward missing magic priority target metadata');
+  if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
+
+  iron._stormWardTimer = 1;
+  mirror._stormWardTimer = 1;
+  tickBoss(ctx, boss, 2);
+  if (!ctx.damageText.some(item => item.text === 'WARD PULSE')) throw new Error('Stormbound Vizier wards did not pulse when left alive');
+  if (!ctx.damageText.some(item => item.text === 'COURT REBUKE')) throw new Error('Stormbound Vizier did not cast Court Rebuke after ward pressure');
+
+  iron.hp = 0;
+  mirror.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
+  if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
+
+  boss.mechCD = { twinWards: 999, stormMotes: 0, chainDecree: 999 };
+  boss._stormCastLock = 0;
+  tickBoss(ctx, boss, 2);
+  const motes = ctx.enemies.filter(enemy => enemy.name === 'Storm Mote');
+  if (!motes.length) throw new Error('Stormbound Vizier did not summon Storm Motes');
+  if (!motes.every(mote => mote.priorityTarget && mote.flying && mote.preferredBy === 'ranged')) {
+    throw new Error('Storm Motes missing flying ranged priority metadata');
+  }
+  for (const mote of motes) {
+    mote.entryHold = 0;
+    mote._stormMoteShotT = 1;
+  }
+  tickBoss(ctx, boss, 2);
+  if (!ctx.damageText.some(item => item.text === 'STORM MOTE')) throw new Error('Storm Motes did not shoot backline targets');
+
+  boss.mechCD = { twinWards: 999, stormMotes: 999, chainDecree: 0 };
+  boss._stormCastLock = 0;
+  tickBoss(ctx, boss, 2);
+  if (!ctx.damageText.some(item => item.text === 'CHAIN')) throw new Error('Stormbound Vizier did not cast Chain Decree');
+
+  const texts = ctx.damageText.map(item => item.text);
+  const flashes = ctx.flashes.map(item => item.text);
+  if (texts.some(text => String(text).includes('EMBER')) || flashes.includes('EMBER CHICKS!')) {
+    throw new Error('Stormbound Vizier should not use old Ember mechanics');
+  }
+  return 'stormbound-vizier';
+}
+
 function assertBossReadability(ctx, boss) {
   const texts = (ctx.damageText || []).map(item => item.text);
   const labels = (ctx.groundFx || []).map(item => item && item.label).filter(Boolean);
@@ -299,6 +351,16 @@ function assertBossReadability(ctx, boss) {
     }
     if (texts.includes('AMBUSH PRIMED')) throw new Error('Astral Lantern Warden should not use old ambush callout');
     if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
+  }
+  if (boss.id === 13) {
+    for (const text of ['TWIN WARDS', 'WARD PULSE', 'COURT REBUKE', 'VIZIER EXPOSED', 'STORM MOTES', 'STORM MOTE', 'CHAIN DECREE', 'CHAIN']) {
+      if (!texts.includes(text)) throw new Error(`Stormbound Vizier missing ${text} callout`);
+    }
+    for (const label of ['MAGIC', 'PHYSICAL']) {
+      if (!labels.includes(label)) throw new Error(`Stormbound Vizier missing ${label} ward warning label`);
+    }
+    if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember damage text');
+    if (ctx.flashes.some(flash => String(flash.text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember flash text');
   }
   if (boss.id === 6) {
     if (!labels.includes('SUN')) throw new Error('Pharaoh missing Sun danger-ring label');
@@ -369,6 +431,8 @@ function smokeBoss(bossTemplate) {
   for (const hpPct of [0.9, 0.5, 0.25]) forcePhase(ctx, boss, hpPct);
   const astralNote = smokeAstralWarden(ctx, boss);
   if (astralNote) notes.push(astralNote);
+  const stormNote = smokeStormboundVizier(ctx, boss);
+  if (stormNote) notes.push(stormNote);
   assertBossReadability(ctx, boss);
 
   const carapaceNote = smokeRoyalCarapace(ctx, boss);

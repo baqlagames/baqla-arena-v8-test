@@ -625,6 +625,236 @@ function bossDarkWind(b,ctx){
   }}
   showFlash('DARK WIND!','#440044',60);shake(10);
 }
+
+function stormPlayerUnits(units){
+  return (units||[]).filter(u=>u&&u.hp>0&&u.isPlayer&&!u.isMinion&&!u.isGhost&&!u.untargetable&&!u.divineShield);
+}
+function stormBacklineUnits(units){
+  return stormPlayerUnits(units).filter(u=>u.arch==='ranged'||u.arch==='caster'||u.arch==='healer'||u.prefersRanged);
+}
+function stormPickTargets(units,count){
+  const picked=[];
+  const pools=[stormBacklineUnits(units),stormPlayerUnits(units)];
+  for(const pool of pools){
+    for(const u of pool.sort((a,b)=>{
+      const ap=(a.maxHp>0)?a.hp/a.maxHp:1,bp=(b.maxHp>0)?b.hp/b.maxHp:1;
+      return ap-bp;
+    })){
+      if(picked.includes(u))continue;
+      picked.push(u);
+      if(picked.length>=count)return picked;
+    }
+  }
+  return picked;
+}
+function activeStormWards(b,enemies){
+  const refs=Array.isArray(b._stormWardRefs)?b._stormWardRefs:[];
+  return refs.filter(w=>w&&w.hp>0&&(enemies||[]).includes(w));
+}
+function activeStormMotes(b,enemies){
+  return (enemies||[]).filter(e=>e&&e.hp>0&&e.stormMote&&e._stormBoss===b);
+}
+function initStormboundVizier(b,ctx){
+  if(b._stormVizierInit)return;
+  b._stormVizierInit=true;
+  if(!b.mechCD)b.mechCD={};
+  if(b.mechCD.twinWards==null)b.mechCD.twinWards=b.twinWardsFirst||140;
+  if(b.mechCD.stormMotes==null)b.mechCD.stormMotes=b.stormMotesFirst||260;
+  if(b.mechCD.chainDecree==null)b.mechCD.chainDecree=b.chainDecreeFirst||210;
+  b._stormWardRefs=[];
+}
+function tickStormCooldowns(b){
+  const cd=b.mechCD||(b.mechCD={});
+  for(const key of ['twinWards','stormMotes','chainDecree']){
+    if(Number.isFinite(cd[key])&&cd[key]>0)cd[key]--;
+  }
+}
+function stormExposeVizier(b,ctx){
+  const { groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  b._stormExposedTimer=Math.max(b._stormExposedTimer||0,b.stormExposeDur||240);
+  b._stormExposedDamageMult=b.stormExposeMult||1.35;
+  addDmg(b.x,b.y-(b.size||40)-16,'VIZIER EXPOSED','#ffd166',{sz:13,bold:true,outline:'#302000'});
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(160,(b.size||42)*3.2),life:0.65,color:'#ffd166',celestialAuraFx:true});
+  for(let i=0;i<28;i++)addP(b.x+rnd(-b.size,b.size),b.y+rnd(-b.size,b.size),'#ffd166',1,4);
+  showFlash('JUDGMENT WINDOW!','#ffd166',55);
+  shake(5);
+}
+function castStormCourtRebuke(b,ctx,source){
+  const { units, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  for(const u of stormPlayerUnits(units)){
+    const tankish=u.arch==='tank'||u.taunt;
+    const dmg=Math.round((b.courtRebukeDmg||90)*(tankish?0.78:1));
+    dealDamage(u,dmg,b,'magic','courtRebuke',{sourceLabel:'COURT REBUKE',sourceColor:'#8bdfff'});
+    addP(u.x,u.y,'#8bdfff',5,3);
+  }
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:220,life:0.7,color:'#3f8cff',celestialAuraFx:true});
+  addDmg(source&&Number.isFinite(source.x)?source.x:b.x,source&&Number.isFinite(source.y)?source.y-18:b.y-b.size,'COURT REBUKE','#8bdfff',{sz:13,bold:true,outline:'#061433'});
+  showFlash('COURT REBUKE!','#8bdfff',52);
+  b._stormRebukeLock=b.courtRebukeLock||96;
+  shake(8);
+}
+function castStormTwinWards(b,ctx){
+  const { enemies, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  if(activeStormWards(b,enemies).length)return false;
+  const defs=[
+    {kind:'iron',name:'Iron Ward',x:-62,color:'#7fc7ff',accent:'#d8f4ff',armor:16,magicRes:1,armorType:'heavy',preferredBy:'magic',label:'MAGIC'},
+    {kind:'mirror',name:'Mirror Ward',x:62,color:'#ffd166',accent:'#fff0a8',armor:1,magicRes:18,armorType:'warded',preferredBy:'physical',label:'PHYSICAL'},
+  ];
+  const refs=[];
+  for(const def of defs){
+    const ward={
+      name:def.name,
+      stormWard:true,stormWardKind:def.kind,_stormBoss:b,
+      priorityTarget:true,preferredBy:def.preferredBy,
+      act:2,arch:'ward',
+      x:b.x+def.x,y:b.y+64+rnd(-6,6),
+      color:def.color,accent:def.accent,
+      maxHp:b.stormWardHp||3000,hp:b.stormWardHp||3000,
+      dmg:18,speed:0.08,atkSpd:96,range:72,size:24,
+      armor:def.armor,magicRes:def.magicRes,armorType:def.armorType,projType:'lightning',
+      points:90,isEnemy:true,bossSupport:true,bossSupportColor:def.color,
+      cd:0,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},
+      spawnFrame:ctx.frame||0,entryHold:30,
+      _stormWardTimer:b.stormWardPulseDelay||420
+    };
+    clampBossActor(ward,ctx,{topMargin:62,bottomMargin:82});
+    enemies.push(ward);
+    refs.push(ward);
+    groundFx.push({x:ward.x,y:ward.y,r:0,maxR:54,life:0.7,color:def.color,enemyWarn:true,warnTimer:40,warnMax:40,label:def.label});
+    addDmg(ward.x,ward.y-34,def.name.toUpperCase(),def.color,{sz:11,bold:true,outline:'#061433'});
+    addP(ward.x,ward.y,def.color,18,4);
+  }
+  b._stormWardRefs=refs;
+  b._stormWardWaveActive=true;
+  b._stormWardResolved=false;
+  b._stormWardCasts=(b._stormWardCasts||0)+1;
+  addDmg(b.x,b.y-(b.size||40)-10,'TWIN WARDS','#8bdfff',{sz:13,bold:true,outline:'#061433'});
+  showFlash('TWIN WARDS!','#8bdfff',55);
+  shake(5);
+  return true;
+}
+function tickStormWards(b,ctx){
+  const { units, enemies, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  b._stormRebukeLock=Math.max(0,(b._stormRebukeLock||0)-1);
+  const active=activeStormWards(b,enemies);
+  if(b._stormWardWaveActive&&!b._stormWardResolved&&b._stormWardRefs&&b._stormWardRefs.length&&active.length===0){
+    b._stormWardResolved=true;
+    b._stormWardWaveActive=false;
+    stormExposeVizier(b,ctx);
+  }
+  for(const ward of active){
+    ward._stormWardTimer=(ward._stormWardTimer==null?b.stormWardPulseDelay||420:ward._stormWardTimer)-1;
+    if(ward._stormWardTimer>0)continue;
+    ward._stormWardTimer=b.stormWardPulseEvery||300;
+    for(const u of stormPlayerUnits(units)){
+      dealDamage(u,b.stormWardPulseDmg||42,ward,'magic','wardPulse',{sourceLabel:'WARD PULSE',sourceColor:ward.color||'#8bdfff'});
+      addP(u.x,u.y,ward.color||'#8bdfff',3,2);
+    }
+    groundFx.push({x:ward.x,y:ward.y,r:0,maxR:120,life:0.55,color:ward.color||'#8bdfff',celestialAuraFx:true});
+    addDmg(ward.x,ward.y-24,'WARD PULSE',ward.color||'#8bdfff',{sz:11,bold:true,outline:'#061433'});
+    if(b._stormRebukeLock<=0)castStormCourtRebuke(b,ctx,ward);
+    else if((ctx.frame||0)!==b._stormLastPulseFlashFrame){
+      b._stormLastPulseFlashFrame=ctx.frame||0;
+      showFlash('WARD PULSE','#8bdfff',28);
+      shake(4);
+    }
+  }
+}
+function castStormMotes(b,ctx){
+  const { enemies, groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  const count=b.stormMoteCount||3;
+  for(let i=0;i<count;i++){
+    const a=-Math.PI*0.15+i*Math.PI/(Math.max(1,count-1))*0.30;
+    const mote={
+      name:'Storm Mote',
+      stormMote:true,_stormBoss:b,
+      priorityTarget:true,preferredBy:'ranged',
+      act:2,arch:'caster',
+      x:b.x+Math.cos(a)*72+(i-(count-1)/2)*28,
+      y:b.y+38+Math.sin(a)*28,
+      color:'#8bdfff',accent:'#ffd166',
+      maxHp:b.stormMoteHp||720,hp:b.stormMoteHp||720,
+      dmg:1,speed:0.42,atkSpd:120,range:160,size:17,
+      armor:0,magicRes:2,armorType:'unarmored',
+      flying:true,projType:'lightning',prefersBackline:true,points:60,
+      isEnemy:true,bossSupport:true,bossSupportColor:'#8bdfff',
+      cd:80,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},
+      spawnFrame:ctx.frame||0,entryHold:18,
+      despawnFrame:(ctx.frame||0)+Math.round(10*GAME_TICK_HZ),
+      _stormMoteShotT:40+i*12,
+      _stormMoteShotEvery:b.stormMoteShotEvery||86,
+      _stormMoteDmg:b.stormMoteDmg||42
+    };
+    clampBossActor(mote,ctx,{topMargin:58,bottomMargin:80});
+    enemies.push(mote);
+    addP(mote.x,mote.y,'#8bdfff',16,3);
+    groundFx.push({x:mote.x,y:mote.y,r:0,maxR:30,life:0.35,color:'#8bdfff',flatten:true});
+  }
+  b._stormMoteCasts=(b._stormMoteCasts||0)+1;
+  addDmg(b.x,b.y-(b.size||40)-10,'STORM MOTES','#8bdfff',{sz:13,bold:true,outline:'#061433'});
+  showFlash('STORM MOTES!','#8bdfff',50);
+  shake(4);
+  return true;
+}
+function tickStormMotes(b,ctx){
+  const { units, enemies, beamFx, dealDamage, addParticle:addP, addDamageText:addDmg }=ctx;
+  for(const mote of activeStormMotes(b,enemies)){
+    if(mote.entryHold>0)continue;
+    mote._stormMoteShotT=(mote._stormMoteShotT||0)-1;
+    if(mote._stormMoteShotT>0)continue;
+    mote._stormMoteShotT=mote._stormMoteShotEvery||86;
+    const target=stormPickTargets(units,1)[0];
+    if(!target)continue;
+    beamFx.push({x1:mote.x,y1:mote.y,x2:target.x,y2:target.y,life:14,maxLife:14,color:'#8bdfff',width:3,straight:false});
+    dealDamage(target,mote._stormMoteDmg||42,mote,'magic','stormMote',{sourceLabel:'STORM MOTE',sourceColor:'#8bdfff'});
+    addDmg(target.x,target.y-(target.size||20)-8,'STORM MOTE','#8bdfff',{sz:10,bold:true,outline:'#061433'});
+    addP(target.x,target.y,'#8bdfff',6,3);
+  }
+}
+function castStormChainDecree(b,ctx){
+  const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  const targets=stormPickTargets(units,b.chainDecreeCount||3);
+  if(!targets.length)return false;
+  let from={x:b.x,y:b.y-(b.size||40)*0.45};
+  targets.forEach((t,i)=>{
+    const mult=i===0?1:0.84;
+    beamFx.push({x1:from.x,y1:from.y,x2:t.x,y2:t.y,life:18,maxLife:18,color:i%2?'#ffd166':'#8bdfff',width:4,straight:false});
+    dealDamage(t,Math.round((b.chainDecreeDmg||76)*mult),b,'magic','chainDecree',{sourceLabel:'CHAIN',sourceColor:'#8bdfff'});
+    addDmg(t.x,t.y-(t.size||20)-8,'CHAIN','#8bdfff',{sz:11,bold:true,outline:'#061433'});
+    addP(t.x,t.y,'#8bdfff',8,3);
+    from=t;
+  });
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:150,life:0.45,color:'#8bdfff',flatten:true});
+  b._stormChainCasts=(b._stormChainCasts||0)+1;
+  addDmg(b.x,b.y-(b.size||40)-10,'CHAIN DECREE','#8bdfff',{sz:13,bold:true,outline:'#061433'});
+  showFlash('CHAIN DECREE!','#8bdfff',45);
+  shake(5);
+  return true;
+}
+function updateStormboundVizier(b,ctx){
+  initStormboundVizier(b,ctx);
+  if(b._stormExposedTimer>0){
+    b._stormExposedTimer--;
+    if(b._stormExposedTimer<=0)b._stormExposedDamageMult=0;
+  }
+  tickStormWards(b,ctx);
+  tickStormMotes(b,ctx);
+  tickStormCooldowns(b);
+  b._stormCastLock=Math.max(0,(b._stormCastLock||0)-1);
+  if(b._stormCastLock>0)return;
+  const ready=key=>!Number.isFinite(b.mechCD[key])||b.mechCD[key]<=0;
+  const tryCast=(key,cdProp,lock,fn)=>{
+    if(!ready(key))return false;
+    if(!fn(b,ctx))return false;
+    b.mechCD[key]=Math.round((b[cdProp]||600)*(b.timeEnraged?0.75:1));
+    b._stormCastLock=lock;
+    return true;
+  };
+  if(tryCast('twinWards','twinWardsCD',100,castStormTwinWards))return;
+  if(tryCast('stormMotes','stormMotesCD',72,castStormMotes))return;
+  tryCast('chainDecree','chainDecreeCD',72,castStormChainDecree);
+}
+
 function astralPlayerUnits(units){
   return (units||[]).filter(u=>u&&u.hp>0&&u.isPlayer&&!u.isGhost&&!u.untargetable&&!u.divineShield);
 }
@@ -1150,6 +1380,10 @@ export function updateBoss(b,ctx){
     updateAstralWarden(b,ctx);
     return;
   }
+  if(b.stormVizier||b.id===13){
+    updateStormboundVizier(b,ctx);
+    return;
+  }
   // === Run all phase-gated abilities ===
   // Aerial bosses (Storm Roc) skip ground abilities while flying Ã¢â‚¬â€ they fire
   // bombDrop / skyStrafe / sandStorm instead. Once landed, ground abilities
@@ -1185,35 +1419,6 @@ export function updateBoss(b,ctx){
   safeBossAbility(b,'storm','stormCD',b.stormPhase||1,bossPlagueStorm,ctx);
   safeBossAbility(b,'wind','windCD',b.windPhase||1,bossDarkWind,ctx);
   // === One-shot mechanics ===
-  // Ember Crow Prince: at low HP, calls two weak fire-crow chicks as a distraction.
-  // Chick damage is authored separately so boss buffs do not secretly buff them.
-  if(b.chicksAt&&!b.chicksSummoned&&b.hp<b.maxHp*b.chicksAt){
-    b.chicksSummoned=true;
-    const count=b.chicksCount||2;
-    for(let i=0;i<count;i++){
-      const chickHp=Math.max(220,Math.round(b.maxHp*(b.chickHpPct||0.05)));
-      const chick={
-        name:'Ember Chick',
-        act:2,arch:'ranged',
-        x:b.x+(i-(count-1)/2)*42,y:b.y+34+rnd(-8,8),
-        color:'#ff8c22',accent:'#ffcf66',
-        maxHp:chickHp,hp:chickHp,
-        dmg:Math.max(8,Math.round(b.chickDmg||b.dmg*(b.chickDmgMult||0.24))),
-        speed:0.46,atkSpd:b.chickAtkSpd||104,range:b.chickRange||120,size:Math.max(14,b.size*0.40),
-        armor:0,magicRes:2,armorType:'unarmored',
-        flying:true,projType:'fire',prefersBackline:true,points:80,
-        ignoreHornetAura:true,
-        isEnemy:true,cd:0,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},spawnFrame:frame,
-        entryHold:b.chickEntryHold||45
-      };
-      clampBossActor(chick,ctx,{topMargin:52,bottomMargin:64});
-      enemies.push(chick);
-      addP(chick.x,chick.y,'#ff8c22',18,4);
-    }
-    groundFx.push({x:b.x,y:b.y,r:0,maxR:90,life:0.5,color:'#ff8c22'});
-    showFlash('EMBER CHICKS!','#ff8c22',90);
-    shake(10);
-  }
   // Sultan: Sons of Embers at 25%. Explicit construction (NOT spread of BOSSES[4])
   // so each son gets ONE ability (meteor) Ã¢â‚¬â€ without this, sons inherit Sultan's
   // sonsAt/spawnCD/aoeCD and cascade their own sons + Inferno Pulses + Cinder Pact.

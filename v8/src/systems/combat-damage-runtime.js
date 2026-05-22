@@ -5,7 +5,7 @@ import { createEnemyKillRewardEvent, resolveDeathPresentation, startSummonerCool
 import { applyArenaDeathReactionHooks, applyDeathBoom, tryAngelOfMercySave, tryArdentDefenderSave, tryArenaDeathBranchHooks, tryCheatDeathSave, tryGhostOnDeath } from './combat-death-hooks.js';
 import { applyPlayerSpecialDefenses, applyPreShieldPlayerReactions, applySoulLinkRedirect, triggerGalacticGuardian, triggerPrayerOfMending, tryGuardianSpiritSave } from './combat-defense-reactions.js';
 import { applyIronSkinReduction, applyPlayerProtectionReductions, stopPlayerDefenseGates } from './combat-defense-procs.js';
-import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=8cc7d77-combat-readability';
+import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=20260522-storm-vizier';
 import { applyArenaIncomingScalarModifiers, applyPostDefenseDamageModifiers } from './combat-modifiers.js';
 import { WARMUP_GOLD_BONUS } from './enemy-spawn.js';
 import { arena_campaignKillBountyStageMult, arena_lateStageNormalGoldMult, arena_roundGoldMult } from './stage-economy.js';
@@ -16,6 +16,16 @@ function recordPrevented(ctx, target, attacker, before, after, kind) {
   ctx.recordPrevented(target, attacker, prevented, { kind });
   if (target && target.isPlayer) {
     target._tankBlockFx = Math.max(target._tankBlockFx || 0, target.arch === 'tank' || target.taunt ? 18 : 12);
+  }
+}
+
+function clearStormVizierSupport(ctx, target) {
+  if (!target || !(target.stormVizier || target.id === 13) || !Array.isArray(ctx.enemies)) return;
+  for (const enemy of ctx.enemies) {
+    if (!enemy || enemy._stormBoss !== target || enemy.hp <= 0) continue;
+    enemy.hp = 0;
+    enemy._clearedWithBoss = true;
+    if (typeof ctx.emitParticle === 'function') ctx.emitParticle(enemy.x, enemy.y, enemy.color || '#8bdfff', 8, 2);
   }
 }
 
@@ -458,6 +468,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
 
 export function handleCombatDeath(ctx, target, killer) {
   target.hp = 0;
+  clearStormVizierSupport(ctx, target);
   const inArena = ctx.state === 'battle' && ctx.arena && ctx.arena.phase;
   const dealDamage = (...args) => dealDamageRuntime(ctx, ...args);
   applyArenaDeathReactionHooks(target, killer, {

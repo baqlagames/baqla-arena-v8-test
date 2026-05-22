@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260521-warden-aoe';
+import { BOSSES } from '../data/bosses.js?v=20260522-storm-vizier';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 
@@ -90,8 +90,8 @@ export function buildWaveSpawnPlan(arena,stage,totalRounds){
   if(stageN===10&&round===4){
     plan.queue=capMiniBossEscortWave(plan.queue,3);
     plan.queue.push({delay:300});
-    plan.queue.push({boss:13,label:'MINI BOSS - EMBER CROW PRINCE',color:'#ff7a22'});
-    plan.flash={text:'MINI BOSS - EMBER CROW PRINCE',color:'#ff7a22',duration:120};
+    plan.queue.push({boss:13,label:'MINI BOSS - STORMBOUND VIZIER',color:'#3f8cff'});
+    plan.flash={text:'MINI BOSS - STORMBOUND VIZIER',color:'#3f8cff',duration:120};
   }
   return plan;
 }

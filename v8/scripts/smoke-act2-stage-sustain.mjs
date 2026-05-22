@@ -119,6 +119,15 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
     if (attackType === 'gravityToll' && target.arch === 'melee') logs.wardenMeleeAoE += damage;
     if (attackType === 'astralBlight') logs.wardenBlightTicks++;
   }
+  const stormBoss = source && (source.id === 13 ? source : source._stormBoss);
+  if (stormBoss && stormBoss.id === 13) {
+    const key = attackType || (source && source.stormWard ? 'ward' : source && source.stormMote ? 'stormMote' : 'basic');
+    logs.stormVizierDamageByAttack[key] = (logs.stormVizierDamageByAttack[key] || 0) + damage;
+    if (attackType === 'wardPulse') logs.stormWardPulses++;
+    if (attackType === 'courtRebuke') logs.courtRebukes++;
+    if (attackType === 'stormMote') logs.stormMoteHits++;
+    if (attackType === 'chainDecree') logs.stormChains++;
+  }
 }
 
 function makeEnemy(template, stageIndex, frame, random) {
@@ -389,6 +398,14 @@ function simulateStage(stage, stageIndex, seed) {
     wardenBlightBursts: 0,
     wardenBlightTicks: 0,
     wardenGravityBrands: 0,
+    stormVizierCasts: { wards: 0, motes: 0, chain: 0, rebuke: 0, expose: 0 },
+    stormVizierDamageByAttack: {},
+    stormWardPulses: 0,
+    stormMoteHits: 0,
+    stormChains: 0,
+    courtRebukes: 0,
+    stormMotesSeen: 0,
+    stormWardsSeen: 0,
     searingBrands: 0,
     telegraphHits: 0,
     meteors: 0,
@@ -460,6 +477,10 @@ function simulateStage(stage, stageIndex, seed) {
     addParticle: () => { logs.particles++; },
     addDamageText: (_x, _y, text) => {
       if (text === 'GRAVITY BRAND') logs.wardenGravityBrands++;
+      if (text === 'WARD PULSE') logs.stormWardPulses++;
+      if (text === 'STORM MOTE') logs.stormMoteHits++;
+      if (text === 'CHAIN') logs.stormChains++;
+      if (text === 'COURT REBUKE') logs.courtRebukes++;
     },
     showFlash: text => {
       if (text === 'VANISH!') logs.vanishCasts++;
@@ -471,6 +492,11 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'WARD BROKEN!') logs.wardenWardBreaks++;
       if (text === 'ASTRAL BLIGHT!') logs.wardenBlightBursts++;
       if (text === 'METEOR!') logs.meteors++;
+      if (text === 'TWIN WARDS!') logs.stormVizierCasts.wards++;
+      if (text === 'STORM MOTES!') logs.stormVizierCasts.motes++;
+      if (text === 'CHAIN DECREE!') logs.stormVizierCasts.chain++;
+      if (text === 'COURT REBUKE!') logs.stormVizierCasts.rebuke++;
+      if (text === 'JUDGMENT WINDOW!') logs.stormVizierCasts.expose++;
     },
     fireProjectile: (source, target, damage, opts = {}) => applyDamage(target, damage, source, ['curse', 'fire', 'lightning', 'frost'].includes(opts.projType) ? 'magic' : 'normal', logs),
     spawnEnemyByIndex: enemyIdx => spawnSupportEnemy(enemyIdx, ctx.frame),
@@ -526,7 +552,10 @@ function simulateStage(stage, stageIndex, seed) {
       enemies.push(miniBoss);
       logs.miniBossSeen = true;
     }
-    if (miniBoss && miniBoss.hp > 0 && frame === bossStart - 1) miniBoss.hp = 0;
+    if (miniBoss && miniBoss.hp > 0 && frame === bossStart - 1) {
+      miniBoss.hp = 0;
+      for (const enemy of enemies) if (enemy && enemy._stormBoss === miniBoss) enemy.hp = 0;
+    }
 
     if (!mainBoss && stage.bossId != null && frame === bossStart) {
       mainBoss = spawnBoss(BOSSES[stage.bossId], frame, 150);
@@ -552,6 +581,8 @@ function simulateStage(stage, stageIndex, seed) {
       }
     }
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Son of Embers')) logs.sonsSeen = true;
+    if (enemies.some(enemy => enemy && enemy.hp > 0 && (enemy.name === 'Iron Ward' || enemy.name === 'Mirror Ward'))) logs.stormWardsSeen++;
+    if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Storm Mote')) logs.stormMotesSeen++;
 
     tickGroundEffects(units, logs);
     tickBombs(units, enemies, logs);
@@ -594,7 +625,13 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.wardenGravityBrands > 0, 'stage 8: Gravity Brand was not applied to tank/melee units');
   }
   if (stage.n === 10) {
-    assert(logs.miniBossSeen, 'stage 10: Ember Crow Prince was not exercised');
+    assert(logs.miniBossSeen, 'stage 10: Stormbound Vizier was not exercised');
+    assert(logs.stormVizierCasts.wards > 0, 'stage 10: Stormbound Vizier Twin Wards were not exercised');
+    assert(logs.stormVizierCasts.motes > 0, 'stage 10: Stormbound Vizier Storm Motes were not exercised');
+    assert(logs.stormVizierCasts.chain > 0 || logs.stormChains > 0, 'stage 10: Stormbound Vizier Chain Decree was not exercised');
+    assert(logs.stormWardsSeen > 0, 'stage 10: Stormbound Vizier priority wards were not present');
+    assert(logs.stormMotesSeen > 0, 'stage 10: Stormbound Vizier flying motes were not present');
+    assert(logs.courtRebukes > 0 || logs.stormVizierCasts.expose > 0, 'stage 10: Stormbound Vizier Judgment/Court outcome was not exercised');
     assert(logs.sultanSeen, 'stage 10: Sultan was not exercised');
     assert(logs.searingBrands > 0, 'stage 10: Sultan searing brand was not exercised');
     assert(logs.meteors > 0, 'stage 10: Sultan meteor was not exercised');
@@ -618,6 +655,12 @@ function simulateStage(stage, stageIndex, seed) {
     wardenWardBreaks: logs.wardenWardBreaks,
     wardenBlightTicks: logs.wardenBlightTicks,
     wardenGravityBrands: logs.wardenGravityBrands,
+    stormVizierCasts: logs.stormVizierCasts,
+    stormVizierDamageByAttack: logs.stormVizierDamageByAttack,
+    stormWardPulses: logs.stormWardPulses,
+    stormMoteHits: logs.stormMoteHits,
+    stormChains: logs.stormChains,
+    courtRebukes: logs.courtRebukes,
     searingBrands: logs.searingBrands,
     meteors: logs.meteors,
     sonsSeen: logs.sonsSeen,
@@ -644,6 +687,12 @@ for (const summary of summaries) {
     summary.wardenShields ? `wards ${summary.wardenShields}/${summary.wardenWardBreaks}` : null,
     summary.wardenBlightTicks ? `blight ticks ${summary.wardenBlightTicks}` : null,
     summary.wardenGravityBrands ? `gravity brands ${summary.wardenGravityBrands}` : null,
+    summary.stormVizierCasts ? `vizier casts ${Object.values(summary.stormVizierCasts).join('/')}` : null,
+    summary.stormVizierDamageByAttack ? `vizier damage ${Object.entries(summary.stormVizierDamageByAttack).map(([k, v]) => `${k}:${v}`).join('/')}` : null,
+    summary.stormWardPulses ? `ward pulses ${summary.stormWardPulses}` : null,
+    summary.stormMoteHits ? `mote hits ${summary.stormMoteHits}` : null,
+    summary.stormChains ? `chain hits ${summary.stormChains}` : null,
+    summary.courtRebukes ? `court rebukes ${summary.courtRebukes}` : null,
     summary.searingBrands ? `searing brands ${summary.searingBrands}` : null,
     summary.meteors ? `meteors ${summary.meteors}` : null,
     summary.sonsSeen ? 'sons exercised' : null,

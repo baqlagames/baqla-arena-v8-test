@@ -88,7 +88,7 @@ const BOSS_SKILL_LABELS={
   10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
   11:{aoe:'CURSE',debuff:'HEX',spawn:'CULTIST',magicBolt:'BOLT'},
   12:{bombDrop:'BOMB',skyStrafe:'STRAFE',sandStorm:'STORM',aoe:'SAND',lunge:'DIVE',magicBolt:'BOLT'},
-  13:{magicBolt:'BOLT',emberVolley:'VOLLEY',emberDecree:'DECREE'},
+  13:{twinWards:'WARDS',stormMotes:'MOTES',chainDecree:'CHAIN'},
   14:{aoe:'SUN',debuff:'DEATH',meteor:'METEOR',magicBolt:'BOLT'}
 };
 
@@ -114,7 +114,10 @@ const DEFAULT_SKILL_LABELS={
   starfall:'STARFALL',
   eclipseBeam:'ECLIPSE',
   gravityToll:'GRAVITY',
-  lanternOrbit:'ORBIT'
+  lanternOrbit:'ORBIT',
+  twinWards:'WARDS',
+  stormMotes:'MOTES',
+  chainDecree:'CHAIN'
 };
 
 const BOSS_SKILL_HINTS={
@@ -124,7 +127,7 @@ const BOSS_SKILL_HINTS={
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
   10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
   12:{bombDrop:'DODGE BOMBS',skyStrafe:'LANE STRAFE',sandStorm:'WIDE STORM',aoe:'SAND RING',lunge:'DIVE TARGET',magicBolt:'RANGED HIT'},
-  13:{magicBolt:'RANGED HIT',emberVolley:'SPREAD SHOTS',emberDecree:'STACK/DODGE'},
+  13:{twinWards:'MIXED DAMAGE',stormMotes:'FLYING ADDS',chainDecree:'CHAIN HIT'},
   14:{aoe:'WIDE SUN',debuff:'DEATH MARK',meteor:'DODGE RING',magicBolt:'RANGED HIT'}
 };
 
@@ -150,7 +153,10 @@ const DEFAULT_SKILL_HINTS={
   starfall:'DODGE RINGS',
   eclipseBeam:'LINE BEAM',
   gravityToll:'RAID PULSE',
-  lanternOrbit:'BACKLINE'
+  lanternOrbit:'BACKLINE',
+  twinWards:'BREAK WARDS',
+  stormMotes:'KILL FLYERS',
+  chainDecree:'HEAL CHAIN'
 };
 
 const READABILITY_BOSS_IDS=new Set([3,4,5,6,10,11,12,13,14]);
@@ -188,6 +194,9 @@ export function bossReadableSkillPills(boss){
   add('magicBolt','magicBoltCD','#aa88ff');
   add('emberVolley','emberVolleyCD','#ff8c22');
   add('emberDecree','emberDecreeCD','#ffb238');
+  add('twinWards','twinWardsCD','#8bdfff');
+  add('stormMotes','stormMotesCD','#8bdfff');
+  add('chainDecree','chainDecreeCD','#ffd166');
   add('royalDive','royalDiveCD','#ff5a3a');
   add('bliz','blizzardCD','#88ddff');
   add('stomp','stompCD','#7a8a9a');

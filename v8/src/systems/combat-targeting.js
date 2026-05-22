@@ -1,4 +1,5 @@
 import { dist } from '../core/math.js';
+import { ARENA_ATTACK_TYPE_BY_UNIT } from '../data/tuning.js';
 
 const MOVE_SPEED_SCALE = 0.55;
 const ENEMY_SPEED_SCALE = 0.85;
@@ -20,6 +21,35 @@ export function arenaEngagementBands(bounds = {}) {
 
 export function isArenaRangedActor(actor) {
   return !!actor && (actor.prefersRanged || actor.arch === 'ranged' || actor.arch === 'caster' || actor.arch === 'healer' || (actor.range || 0) > 90);
+}
+
+function unitAttackFamily(unit) {
+  if (!unit) return 'physical';
+  const id = unit.unitIdx ?? unit.id;
+  const type = String(unit.attackType || ARENA_ATTACK_TYPE_BY_UNIT[id] || unit.projType || '').toLowerCase();
+  if (['magic', 'fire', 'frost', 'ice', 'curse', 'holy', 'shadow', 'lightning', 'bolt', 'void'].some(key => type.includes(key))) return 'magic';
+  if (unit.arch === 'caster' || unit.arch === 'healer') return 'magic';
+  if (type === 'pierce' || type === 'physical' || unit.arch === 'ranged' || unit.arch === 'melee' || unit.arch === 'tank') return 'physical';
+  return 'physical';
+}
+
+function canUnitTargetFlying(unit, target) {
+  if (!target || !target.flying) return true;
+  return isArenaRangedActor(unit) || !!(unit && (unit.paladinHybrid || unit.shadowStep || unit.canHitFlying));
+}
+
+function priorityTargetScore(unit, target, distance) {
+  if (!target || !target.priorityTarget) return Infinity;
+  if (!canUnitTargetFlying(unit, target)) return Infinity;
+  let score = distance;
+  const preferred = target.preferredBy || '';
+  const family = unitAttackFamily(unit);
+  if (preferred === family) score -= 260;
+  else if (preferred === 'ranged' && isArenaRangedActor(unit)) score -= 230;
+  else if (preferred === 'magic' || preferred === 'physical' || preferred === 'ranged') score += 100;
+  if (target.flying && isArenaRangedActor(unit)) score -= 180;
+  if (target.isBoss || target.isElite) score += 160;
+  return score - 480;
 }
 
 export function effectiveArenaAttackRange(actor, bounds = {}) {
@@ -203,6 +233,8 @@ export function findEnemyTargetForUnit(unit, view) {
   let bestAltD = Infinity;
   let bestReach = null;
   let bestReachScore = Infinity;
+  let bestPriority = null;
+  let bestPriorityScore = Infinity;
   const meleeForwardBias = view.inArena && !unit.prefersRanged;
 
   for (const target of candidates) {
@@ -215,7 +247,13 @@ export function findEnemyTargetForUnit(unit, view) {
       bestAltD = d;
       bestAlt = target;
     }
+    const priorityScore = priorityTargetScore(unit, target, d);
+    if (priorityScore < bestPriorityScore && (!view.inArena || isReachableFromLeash(unit, target, view))) {
+      bestPriorityScore = priorityScore;
+      bestPriority = target;
+    }
     if (view.inArena && isReachableFromLeash(unit, target, view)) {
+      if (target.flying && !canUnitTargetFlying(unit, target)) continue;
       let score = d;
       if (meleeForwardBias && target.y != null && unit.homeY != null) {
         const forwardness = unit.homeY - target.y;
@@ -230,11 +268,13 @@ export function findEnemyTargetForUnit(unit, view) {
   }
 
   if (view.inArena) {
+    if (bestPriority) return bestPriority;
     if (bestReach) return bestReach;
     if (best && best.flying && !unit.prefersRanged) return null;
     return best || null;
   }
 
+  if (bestPriority) return bestPriority;
   if (best && isSaturatedCombatTarget(best, view.maxBossEngage) && bestAlt && bestAlt !== best) return bestAlt;
   return best;
 }
@@ -244,9 +284,16 @@ export function findRangedEnemyTargetForUnit(unit, view) {
   let bestD = Infinity;
   let bestReach = null;
   let bestReachD = Infinity;
+  let bestPriority = null;
+  let bestPriorityScore = Infinity;
   for (const enemy of view.enemies) {
     if (enemy.hp <= 0 || enemy.charmed) continue;
     if (enemy.untargetable || enemy.isBarrier) continue;
+    const priorityScore = priorityTargetScore(unit, enemy, dist(unit, enemy));
+    if (priorityScore < bestPriorityScore && (!view.inArena || isReachableFromLeash(unit, enemy, view))) {
+      bestPriorityScore = priorityScore;
+      bestPriority = enemy;
+    }
     if (enemy.arch !== 'ranged' && enemy.arch !== 'caster') continue;
     const d = dist(unit, enemy);
     if (d < bestD) {
@@ -259,8 +306,10 @@ export function findRangedEnemyTargetForUnit(unit, view) {
     }
   }
   if (view.inArena) {
+    if (bestPriority) return bestPriority;
     if (bestReach) return bestReach;
     return findEnemyTargetForUnit(unit, view);
   }
+  if (bestPriority) return bestPriority;
   return best || findEnemyTargetForUnit(unit, view);
 }

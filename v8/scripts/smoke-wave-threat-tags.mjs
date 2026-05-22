@@ -44,4 +44,18 @@ for (const expected of ['BURST', 'CASTER', 'POISON']) {
   assert(tagKeys(sultanThreat).includes(expected), `Sultan boss preview should expose ${expected}`);
 }
 
+const vizierThreat = buildWaveThreats({
+  round: 4,
+  total: 6,
+  isBoss: false,
+  stage: STAGES[9],
+  queue: [33, 38, 26],
+  theme: 'STORM_COURT',
+  miniBossId: 13,
+});
+assert.equal(vizierThreat.enemies[0].name, 'Stormbound Vizier', 'stage 10 round 4 preview should name Stormbound Vizier');
+for (const expected of ['CASTER', 'FLYERS', 'BACKLINE THREAT', 'ARMOR', 'BOSS SHIELD']) {
+  assert(tagKeys(vizierThreat).includes(expected), `Stormbound Vizier preview should expose ${expected}`);
+}
+
 console.log('smoke-wave-threat-tags: ok');

@@ -38,7 +38,7 @@ function roundWavePlan(stage, round, totalRounds, previousWaveGoldMult) {
   if ((stage.n || 0) === 10 && round === 4) {
     queue = capMiniBossEscortWave(queue, 3);
     queue.push({ delay: 300 });
-    queue.push({ boss: 13, label: 'MINI BOSS - EMBER CROW PRINCE', color: '#ff7a22' });
+    queue.push({ boss: 13, label: 'MINI BOSS - STORMBOUND VIZIER', color: '#3f8cff' });
   }
   return { queue, waveGoldMult: wave.goldMult || 1, theme: wave.theme || 'WAVE' };
 }

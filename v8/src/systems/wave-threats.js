@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260521-warden-aoe';
+import { BOSSES } from '../data/bosses.js?v=20260522-storm-vizier';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){
@@ -47,11 +47,11 @@ function bossHasArmor(boss){
 }
 
 function bossHasBurst(boss){
-  return !!(boss&&(boss.vanishCD||boss.meteorCD||boss.lungeCD||boss.burrowCD||boss.stompCD||boss.diveCD||boss.starfallCD||boss.eclipseBeamCD||boss.gravityTollCD||boss.debuffType==='deathMark'));
+  return !!(boss&&(boss.vanishCD||boss.meteorCD||boss.lungeCD||boss.burrowCD||boss.stompCD||boss.diveCD||boss.starfallCD||boss.eclipseBeamCD||boss.gravityTollCD||boss.chainDecreeCD||boss.courtRebukeDmg||boss.debuffType==='deathMark'));
 }
 
 function bossHasCasterPressure(boss){
-  return !!(boss&&(boss.magicBoltCD||boss.aoeCD||boss.stormCD||boss.cawCD||boss.starfallCD||boss.eclipseBeamCD||boss.projType==='curse'||boss.projType==='fire'||boss.projType==='frost'||boss.projType==='lightning'));
+  return !!(boss&&(boss.magicBoltCD||boss.aoeCD||boss.stormCD||boss.cawCD||boss.starfallCD||boss.eclipseBeamCD||boss.twinWardsCD||boss.stormMotesCD||boss.chainDecreeCD||boss.projType==='curse'||boss.projType==='fire'||boss.projType==='frost'||boss.projType==='lightning'));
 }
 
 function deriveBossTags(boss){
@@ -62,8 +62,9 @@ function deriveBossTags(boss){
   if(bossHasBurst(boss))pushThreatTag(tags,'BURST','Spike mechanic');
   if(boss.poisonOnHit||boss.poisonDmg||boss.debuffType==='poison'||boss.royalStingPoisonDmg)pushThreatTag(tags,'POISON','Damage over time');
   if(bossHasCasterPressure(boss))pushThreatTag(tags,'CASTER','Spell pressure');
-  if(boss.royalCarapaceAt||boss.hasBarrier||boss.iceBlockCD||boss.lanternWardAt)pushThreatTag(tags,'BOSS SHIELD','Break or reveal');
-  if(boss.prefersBackline||boss.magicBoltBackline||boss.diveCD||boss.skyStrafeCD||boss.starfallCD||boss.lanternOrbitCD)pushThreatTag(tags,'BACKLINE THREAT','Back row pressure');
+  if(boss.stormMotesCD||boss.stormMoteCount)pushThreatTag(tags,'FLYERS','Priority air adds');
+  if(boss.royalCarapaceAt||boss.hasBarrier||boss.iceBlockCD||boss.lanternWardAt||boss.twinWardsCD||boss.stormWardHp)pushThreatTag(tags,'BOSS SHIELD','Break or reveal');
+  if(boss.prefersBackline||boss.magicBoltBackline||boss.diveCD||boss.skyStrafeCD||boss.starfallCD||boss.lanternOrbitCD||boss.stormMotesCD||boss.chainDecreeCD)pushThreatTag(tags,'BACKLINE THREAT','Back row pressure');
   return tags.slice(0,6);
 }
 

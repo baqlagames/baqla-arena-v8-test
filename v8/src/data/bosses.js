@@ -141,16 +141,15 @@ export const BOSSES=[
     lungeCD:780,lungeDist:140,lungeDmg:120,lungePhase:1,
     magicBoltCD:540,magicBoltPhase:1,magicBoltDmg:120,magicBoltColor:'#a08a5a',
     projType:'normal',timeEnrageAt:12000},
-  {id:13,name:'Ember Crow Prince',tier:'mini',act:2,color:'#e85a20',accent:'#ffb238',hp:25000,dmg:136,speed:0.26,atkSpd:68,range:78,size:46,armor:4,magicRes:8,armorType:'warded',points:900,raidAoeDmg:26,spawnFromTop:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
-    // Stage 10 wave-4 mini-boss: grounded tank check. No flying/backline dive,
-    // so physical tanks can engage it and it cannot teleport into the back row.
-    projType:'fire',poisonOnHit:true,poisonDmg:5,poisonDur:180,
-    hornetAura:110,hornetAuraMult:1.08,
-    magicBoltCD:500,magicBoltPhase:1,magicBoltDmg:94,magicBoltColor:'#ff8c22',magicBoltBackline:true,
-    emberVolleyCD:500,emberVolleyPhase:1,emberVolleyCount:3,emberVolleyDmgMult:0.56,
-    emberDecreeCD:760,emberDecreePhase:1,emberDecreeDmg:74,emberDecreeTankDmg:69,emberDecreeRadius:44,emberDecreeCount:2,
-    searingBrandEvery:5,searingBrandHpPct:0.045,searingBrandHealCut:0.08,searingBrandDur:340,
-    chicksAt:0.45,chicksCount:2,chickHpPct:0.05,chickDmg:36,chickDmgMult:0.24,chickAtkSpd:104,chickRange:120,chickEntryHold:45,
+  {id:13,name:'Stormbound Vizier',tier:'mini',act:2,color:'#3f8cff',accent:'#ffd166',hp:26000,dmg:124,speed:0.22,atkSpd:70,range:96,size:50,armor:4,magicRes:9,armorType:'warded',points:900,raidAoeDmg:24,spawnFromTop:true,spawnYOffset:42,entryHold:60,lateRoundScale:false,
+    // Stage 10 wave-4 mini-boss: auto-battle teaching fight for the Storm Djinn
+    // Court. Twin Wards and Storm Motes use priorityTarget so units swap off the
+    // boss without requiring manual movement.
+    stormVizier:true,projType:'lightning',
+    twinWardsCD:720,twinWardsFirst:130,stormWardHp:3200,stormWardPulseDelay:420,stormWardPulseEvery:300,stormWardPulseDmg:42,stormExposeDur:240,stormExposeMult:1.35,
+    stormMotesCD:620,stormMotesFirst:260,stormMoteCount:3,stormMoteHp:760,stormMoteDmg:42,stormMoteShotEvery:86,
+    chainDecreeCD:500,chainDecreeFirst:190,chainDecreeDmg:78,chainDecreeCount:3,
+    courtRebukeDmg:94,courtRebukeLock:96,
     timeEnrageAt:10500},
   {id:14,name:'Sphinx Judicator',tier:'mini',act:3,color:'#d8a84a',accent:'#6f4a18',hp:19000,dmg:96,speed:0.24,atkSpd:66,range:82,size:52,armor:7,magicRes:0,armorType:'warded',points:1200,raidAoeDmg:30,spawnFromTop:true,spawnYOffset:58,entryHold:45,
     // Stage 13 mini-boss: boss-only wave 6. Solar Riddle is the DPS check;

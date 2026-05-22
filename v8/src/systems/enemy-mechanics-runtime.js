@@ -1,7 +1,7 @@
 import { ARENA_THREAT_TAG_COLOR, ARENA_WAVE_MECHANIC_LABELS } from '../data/waves.js';
 import { drawThreatsPanel as drawThreatPreviewPanel, threatPanelHeight as threatPanelHeightBase } from '../ui/threat-panel.js';
 import { arena_pickWaveMechanic, arena_stageOpenerQueue, arena_themedWaveQueue, arena_waveMechanicLimit } from './wave-planner.js';
-import { buildWaveThreats } from './wave-threats.js?v=20260521-warden-aoe';
+import { buildWaveThreats } from './wave-threats.js?v=20260522-storm-vizier';
 
 export function createEnemyMechanicsRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
@@ -224,7 +224,7 @@ export function createEnemyMechanicsRuntime(deps = {}) {
       arena._nextWaveTheme = wave.theme;
       arena._waveGoldMult = wave.goldMult || 1;
       arena._nextWaveMiniBoss = ((stage.n || 0) === 10 && arena.round === 4) ? 13 : null;
-      if (arena._nextWaveMiniBoss != null) arena.wavePreview = 'MINI BOSS - Ember Crow Prince + ' + arena.wavePreview;
+      if (arena._nextWaveMiniBoss != null) arena.wavePreview = 'MINI BOSS - Stormbound Vizier + ' + arena.wavePreview;
     }
 
     arena.waveThreats = buildWaveThreats({
