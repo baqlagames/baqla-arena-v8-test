@@ -88,7 +88,7 @@ const BOSS_SKILL_LABELS={
   10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
   11:{aoe:'CURSE',debuff:'HEX',spawn:'CULTIST',magicBolt:'BOLT'},
   12:{bombDrop:'BOMB',skyStrafe:'STRAFE',sandStorm:'STORM',aoe:'SAND',lunge:'DIVE',magicBolt:'BOLT'},
-  13:{twinWards:'WARDS',stormMotes:'MOTES',chainDecree:'CHAIN'},
+  13:{twinWards:'WARDS',stormMotes:'MOTES',chainDecree:'CHAIN',groundingPulse:'GROUNDING'},
   14:{aoe:'SUN',debuff:'DEATH',meteor:'METEOR',magicBolt:'BOLT'}
 };
 
@@ -117,7 +117,8 @@ const DEFAULT_SKILL_LABELS={
   lanternOrbit:'ORBIT',
   twinWards:'WARDS',
   stormMotes:'MOTES',
-  chainDecree:'CHAIN'
+  chainDecree:'CHAIN',
+  groundingPulse:'GROUNDING'
 };
 
 const BOSS_SKILL_HINTS={
@@ -127,7 +128,7 @@ const BOSS_SKILL_HINTS={
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
   10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
   12:{bombDrop:'DODGE BOMBS',skyStrafe:'LANE STRAFE',sandStorm:'WIDE STORM',aoe:'SAND RING',lunge:'DIVE TARGET',magicBolt:'RANGED HIT'},
-  13:{twinWards:'MIXED DAMAGE',stormMotes:'FLYING ADDS',chainDecree:'CHAIN HIT'},
+  13:{twinWards:'MIXED DAMAGE',stormMotes:'FLYING ADDS',chainDecree:'CHAIN HIT',groundingPulse:'MELEE PULSE'},
   14:{aoe:'WIDE SUN',debuff:'DEATH MARK',meteor:'DODGE RING',magicBolt:'RANGED HIT'}
 };
 
@@ -156,7 +157,8 @@ const DEFAULT_SKILL_HINTS={
   lanternOrbit:'BACKLINE',
   twinWards:'BREAK WARDS',
   stormMotes:'KILL FLYERS',
-  chainDecree:'HEAL CHAIN'
+  chainDecree:'HEAL CHAIN',
+  groundingPulse:'FRONTLINE HIT'
 };
 
 const READABILITY_BOSS_IDS=new Set([3,4,5,6,10,11,12,13,14]);
@@ -197,6 +199,7 @@ export function bossReadableSkillPills(boss){
   add('twinWards','twinWardsCD','#8bdfff');
   add('stormMotes','stormMotesCD','#8bdfff');
   add('chainDecree','chainDecreeCD','#ffd166');
+  add('groundingPulse','groundingPulseCD','#9bb8ff');
   add('royalDive','royalDiveCD','#ff5a3a');
   add('bliz','blizzardCD','#88ddff');
   add('stomp','stompCD','#7a8a9a');

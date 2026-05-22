@@ -283,7 +283,16 @@ function smokeAstralWarden(ctx, boss) {
 function smokeStormboundVizier(ctx, boss) {
   if (boss.id !== 13) return null;
 
-  boss.mechCD = { twinWards: 0, stormMotes: 999, chainDecree: 999 };
+  boss.twinWardsFirst = 1;
+  boss.stormWardMaxDur = 8;
+  boss.stormMotesDelay = 3;
+  boss.stormMoteLifetime = 36;
+  boss.stormCycleEvery = 60;
+  boss.chainDecreeFirst = 1;
+  boss.groundingPulseFirst = 1;
+  boss._stormVizierInit = false;
+  boss._stormCycleState = null;
+  boss._stormWardRefs = [];
   boss._stormCastLock = 0;
   tickBoss(ctx, boss, 2);
   const iron = ctx.enemies.find(enemy => enemy.name === 'Iron Ward');
@@ -291,22 +300,21 @@ function smokeStormboundVizier(ctx, boss) {
   if (!iron || !mirror) throw new Error('Stormbound Vizier did not summon both Twin Wards');
   if (!iron.priorityTarget || iron.preferredBy !== 'magic') throw new Error('Iron Ward missing magic priority target metadata');
   if (!mirror.priorityTarget || mirror.preferredBy !== 'physical') throw new Error('Mirror Ward missing physical priority target metadata');
+  if (ctx.enemies.some(enemy => enemy.name === 'Storm Mote')) throw new Error('Stormbound Vizier spawned motes while wards were active');
 
-  iron._stormWardTimer = 1;
-  mirror._stormWardTimer = 1;
+  boss._stormChainCd = 0;
+  boss._stormGroundingCd = 0;
   tickBoss(ctx, boss, 2);
-  if (!ctx.damageText.some(item => item.text === 'WARD PULSE')) throw new Error('Stormbound Vizier wards did not pulse when left alive');
-  if (!ctx.damageText.some(item => item.text === 'COURT REBUKE')) throw new Error('Stormbound Vizier did not cast Court Rebuke after ward pressure');
+  if (ctx.damageText.some(item => item.text === 'CHAIN' || item.text === 'GROUNDING')) {
+    throw new Error('Stormbound Vizier should not use boss-only casts while wards are active');
+  }
 
-  iron.hp = 0;
-  mirror.hp = 0;
-  tickBoss(ctx, boss, 2);
-  if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
-  if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
+  tickBoss(ctx, boss, 10);
+  if (!ctx.damageText.some(item => item.text === 'COURT REBUKE')) throw new Error('Stormbound Vizier did not cast Court Rebuke when wards timed out');
+  if (boss._stormExposedTimer > 0) throw new Error('Stormbound Vizier should not expose after failed ward handling');
+  if (ctx.enemies.some(enemy => enemy.stormWard && enemy.hp > 0)) throw new Error('Stormbound Vizier failed wards should shatter after Court Rebuke');
 
-  boss.mechCD = { twinWards: 999, stormMotes: 0, chainDecree: 999 };
-  boss._stormCastLock = 0;
-  tickBoss(ctx, boss, 2);
+  tickBoss(ctx, boss, 5);
   const motes = ctx.enemies.filter(enemy => enemy.name === 'Storm Mote');
   if (!motes.length) throw new Error('Stormbound Vizier did not summon Storm Motes');
   if (!motes.every(mote => mote.priorityTarget && mote.flying && mote.preferredBy === 'ranged')) {
@@ -319,10 +327,32 @@ function smokeStormboundVizier(ctx, boss) {
   tickBoss(ctx, boss, 2);
   if (!ctx.damageText.some(item => item.text === 'STORM MOTE')) throw new Error('Storm Motes did not shoot backline targets');
 
-  boss.mechCD = { twinWards: 999, stormMotes: 999, chainDecree: 0 };
+  boss._stormChainCd = 0;
+  boss._stormGroundingCd = 0;
   boss._stormCastLock = 0;
-  tickBoss(ctx, boss, 2);
+  for (const mote of motes) mote.hp = 0;
+  ctx.units[0].x = boss.x;
+  ctx.units[0].y = boss.y + 54;
+  ctx.units[1].x = boss.x + 58;
+  ctx.units[1].y = boss.y + 66;
+  tickBoss(ctx, boss, 3);
+  if (!ctx.damageText.some(item => item.text === 'GROUNDING')) throw new Error('Stormbound Vizier did not pressure tank/melee with Grounding Pulse');
+  if (!ctx.units[0]._groundingBrandTimer || !ctx.units[1]._groundingBrandTimer) throw new Error('Stormbound Vizier Grounding Pulse did not brand tank and melee');
+  boss._stormCastLock = 0;
+  tickBoss(ctx, boss, 3);
   if (!ctx.damageText.some(item => item.text === 'CHAIN')) throw new Error('Stormbound Vizier did not cast Chain Decree');
+
+  boss._stormCycleState = 'boss';
+  boss._stormCycleTimer = 1;
+  tickBoss(ctx, boss, 2);
+  const nextIron = ctx.enemies.find(enemy => enemy.name === 'Iron Ward' && enemy.hp > 0);
+  const nextMirror = ctx.enemies.find(enemy => enemy.name === 'Mirror Ward' && enemy.hp > 0);
+  if (!nextIron || !nextMirror) throw new Error('Stormbound Vizier did not repeat Twin Wards after the boss-only window');
+  nextIron.hp = 0;
+  nextMirror.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if (!(boss._stormExposedTimer > 0)) throw new Error('Stormbound Vizier did not expose after wards broke');
+  if (!ctx.damageText.some(item => item.text === 'VIZIER EXPOSED')) throw new Error('Stormbound Vizier missing Judgment Window callout');
 
   const texts = ctx.damageText.map(item => item.text);
   const flashes = ctx.flashes.map(item => item.text);
@@ -353,10 +383,10 @@ function assertBossReadability(ctx, boss) {
     if (labels.includes('SMOKE')) throw new Error('Astral Lantern Warden should not use old smoke label');
   }
   if (boss.id === 13) {
-    for (const text of ['TWIN WARDS', 'WARD PULSE', 'COURT REBUKE', 'VIZIER EXPOSED', 'STORM MOTES', 'STORM MOTE', 'CHAIN DECREE', 'CHAIN']) {
+    for (const text of ['TWIN WARDS', 'COURT REBUKE', 'VIZIER EXPOSED', 'STORM MOTES', 'STORM MOTE', 'GROUNDING PULSE', 'GROUNDING', 'GROUNDING BRAND', 'CHAIN DECREE', 'CHAIN']) {
       if (!texts.includes(text)) throw new Error(`Stormbound Vizier missing ${text} callout`);
     }
-    for (const label of ['MAGIC', 'PHYSICAL']) {
+    for (const label of ['MAGIC', 'PHYSICAL', 'GROUNDING']) {
       if (!labels.includes(label)) throw new Error(`Stormbound Vizier missing ${label} ward warning label`);
     }
     if (texts.some(text => String(text).includes('EMBER'))) throw new Error('Stormbound Vizier should not use old Ember damage text');

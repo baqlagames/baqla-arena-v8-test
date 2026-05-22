@@ -50,6 +50,10 @@ function tickBossDebuffs(unit, {
     unit._gravityBrandTimer--;
     if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.4, unit.size * 0.4), unit.y - unit.size * 0.5, '#9bb8ff', 1, 2);
   }
+  if (unit._groundingBrandTimer > 0) {
+    unit._groundingBrandTimer--;
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.4, unit.size * 0.4), unit.y - unit.size * 0.5, '#8bdfff', 1, 2);
+  }
   if (unit._astralBlightTimer > 0) {
     unit._astralBlightTimer--;
     unit._astralBlightTick = Math.max(0, (unit._astralBlightTick || 60) - 1);

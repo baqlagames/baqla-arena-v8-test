@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-build-hp-clearance';
+import { BOSSES } from '../data/bosses.js?v=20260522-vizier-sequence';
 import { UNIT_VISUAL_SCALE, ARENA_L, ARENA_R, ARENA_TOP_BASE, ARENA_UNIT_SIZE_SCALE } from '../data/tuning.js';
 import { clampActorToSpawnArea, clampSpawnValue, spawnAreaFromView } from './arena-spawn-bounds.js';
 

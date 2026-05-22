@@ -4,7 +4,7 @@ import {
   drainHealToBarrier,
   tickAerialBombs,
   updateBoss,
-} from './boss-mechanics.js?v=20260522-build-hp-clearance';
+} from './boss-mechanics.js?v=20260522-vizier-sequence';
 
 export function createArenaBossRuntime(deps) {
   const randomRange = typeof deps.randomRange === 'function'

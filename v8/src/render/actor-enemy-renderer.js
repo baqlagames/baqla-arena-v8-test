@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-build-hp-clearance';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-vizier-sequence';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

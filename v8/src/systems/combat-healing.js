@@ -6,6 +6,9 @@ export function applyHealingReceived(target, amount, { healingReceivedMult }) {
   if (target && target._gravityBrandTimer > 0) {
     heal = Math.max(1, Math.round(heal * (1 - (target._gravityBrandHealCut || 0.12))));
   }
+  if (target && target._groundingBrandTimer > 0) {
+    heal = Math.max(1, Math.round(heal * (1 - (target._groundingBrandHealCut || 0.10))));
+  }
   const receivedMult = healingReceivedMult ? healingReceivedMult(target) : 1;
   if (receivedMult !== 1) heal = Math.max(1, Math.round(heal * receivedMult));
   return heal;

@@ -146,9 +146,10 @@ export const BOSSES=[
     // Court. Twin Wards and Storm Motes use priorityTarget so units swap off the
     // boss without requiring manual movement.
     stormVizier:true,projType:'lightning',
-    twinWardsCD:720,twinWardsFirst:130,stormWardHp:3200,stormWardPulseDelay:420,stormWardPulseEvery:300,stormWardPulseDmg:42,stormExposeDur:240,stormExposeMult:1.35,
-    stormMotesCD:620,stormMotesFirst:260,stormMoteCount:3,stormMoteHp:760,stormMoteDmg:36,stormMoteShotEvery:140,stormMoteLifetime:480,
+    twinWardsCD:1200,twinWardsFirst:120,stormCycleEvery:1200,stormWardMaxDur:600,stormMotesDelay:60,stormWardHp:3200,stormExposeDur:240,stormExposeMult:1.35,
+    stormMotesCD:1200,stormMoteCount:3,stormMoteHp:760,stormMoteDmg:36,stormMoteShotEvery:140,stormMoteLifetime:450,
     chainDecreeCD:500,chainDecreeFirst:190,chainDecreeDmg:78,chainDecreeCount:3,
+    groundingPulseCD:360,groundingPulseFirst:300,groundingPulseDmg:170,groundingPulseRadius:128,groundingPulseMeleeMult:0.78,groundingBrandDur:240,groundingBrandHealCut:0.10,
     courtRebukeDmg:94,courtRebukeLock:96,
     timeEnrageAt:10500},
   {id:14,name:'Sphinx Judicator',tier:'mini',act:3,color:'#d8a84a',accent:'#6f4a18',hp:19000,dmg:96,speed:0.24,atkSpd:66,range:82,size:52,armor:7,magicRes:0,armorType:'warded',points:1200,raidAoeDmg:30,spawnFromTop:true,spawnYOffset:58,entryHold:45,

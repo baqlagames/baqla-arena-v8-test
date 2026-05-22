@@ -16,6 +16,7 @@ function imminentBossSkillIcon(t,tickHz){
     ['twinWards','twinWardsCD','#8bdfff','W','Twin Wards Soon'],
     ['stormMotes','stormMotesCD','#8bdfff','M','Storm Motes Soon'],
     ['chainDecree','chainDecreeCD','#ffd166','C','Chain Decree Soon'],
+    ['groundingPulse','groundingPulseCD','#9bb8ff','G','Grounding Soon'],
     ['burrow','burrowCD','#8b6f3d','B','Burrow Soon'],
     ['lunge','lungeCD','#ff4444','L','Lunge Soon'],
     ['royalDive','royalDiveCD','#ff5a3a','D','Dive Soon'],
@@ -142,6 +143,7 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._healReductionTimer>0)icons.push({c:'#ff4400',g:'Ã¢Ë†â€™',title:'Heal Reduction'});
   if(t._searingBrandTimer>0)icons.push({c:'#ff6a22',g:'B',title:'Searing Brand'});
   if(t._gravityBrandTimer>0)icons.push({c:'#9bb8ff',g:'G',title:'Gravity Brand',pulse:true});
+  if(t._groundingBrandTimer>0)icons.push({c:'#8bdfff',g:'G',title:'Grounding Brand',pulse:true});
   if(t._astralBlightTimer>0)icons.push({c:'#8bdfff',g:'A',title:'Astral Blight',pulse:true});
   if(t.priorityTarget)icons.push({c:t.color||'#8bdfff',g:'!',title:t.preferredBy?('Priority: '+t.preferredBy):'Priority Target',pulse:true});
   if(t.stormWard)icons.push({c:t.color||'#8bdfff',g:t.stormWardKind==='iron'?'I':'M',title:t.name||'Storm Ward',pulse:true});

@@ -90,6 +90,9 @@ assert.ok(wardIcons.some(icon => icon.title === 'Lantern Ward'), 'boss status ic
 const brandedIcons = collectStatusIcons({ isPlayer: true, _gravityBrandTimer: 120 }, tickHz);
 assert.ok(brandedIcons.some(icon => icon.title === 'Gravity Brand'), 'player status icons should expose Gravity Brand');
 
+const groundingIcons = collectStatusIcons({ isPlayer: true, _groundingBrandTimer: 120 }, tickHz);
+assert.ok(groundingIcons.some(icon => icon.title === 'Grounding Brand'), 'player status icons should expose Grounding Brand');
+
 const blightedIcons = collectStatusIcons({ isPlayer: true, _astralBlightTimer: 120 }, tickHz);
 assert.ok(blightedIcons.some(icon => icon.title === 'Astral Blight'), 'player status icons should expose Astral Blight');
 
