@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-warden-backline-soften';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-warden-starfall-radius';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);

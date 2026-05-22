@@ -228,9 +228,12 @@ function smokeAstralWarden(ctx, boss) {
   if (boss.id !== 10) return null;
   const wardenTemplate = BOSSES.find(row => row.id === 10);
   if (wardenTemplate.starfallDmg !== 84) throw new Error('Astral Warden Starfall tuning drifted from 84');
+  if (wardenTemplate.starfallRadius !== 46) throw new Error('Astral Warden Starfall radius should be 46');
   if (Math.abs((wardenTemplate.starfallFrontlineMult || 0) - 0.55) > 0.0001) throw new Error('Astral Warden Starfall frontline splash tuning drifted from 55%');
-  if (Math.abs((wardenTemplate.astralBacklineSpellMult || 0) - 0.92) > 0.0001) throw new Error('Astral Warden backline spell multiplier should be 92%');
-  if (Math.abs((boss.astralBacklineSpellMult || 0) - 0.92) > 0.0001) throw new Error('Astral Warden spawned backline spell multiplier should remain unscaled at 92%');
+  if (Math.abs((wardenTemplate.astralBacklineSpellMult || 0) - 0.86) > 0.0001) throw new Error('Astral Warden backline spell multiplier should be 86%');
+  if (Math.abs((boss.astralBacklineSpellMult || 0) - 0.86) > 0.0001) throw new Error('Astral Warden spawned backline spell multiplier should remain unscaled at 86%');
+  if (wardenTemplate.lanternOrbitDmg !== 54) throw new Error('Astral Warden Lantern Orbit tuning drifted from 54');
+  if (Math.abs((wardenTemplate.astralBlightHpPct || 0) - 0.010) > 0.0001) throw new Error('Astral Warden Astral Blight tuning drifted from 1.0%');
   if (wardenTemplate.gravityTollDmg !== 94) throw new Error('Astral Warden Gravity Toll tuning drifted from 94');
   if (Math.abs((wardenTemplate.gravityTollFrontlineHpPct || 0) - 0.075) > 0.0001) throw new Error('Astral Warden frontline toll tuning drifted from 7.5%');
   if (wardenTemplate.timeEnrageAt !== 11400) throw new Error('Astral Warden enrage timer should be 11400 frames');

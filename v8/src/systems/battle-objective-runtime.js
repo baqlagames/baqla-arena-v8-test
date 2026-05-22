@@ -1,4 +1,4 @@
-import { createWeatherParticles, drawWeatherForegroundOverlay, drawWeatherOverlay } from '../render/weather.js?v=20260522-warden-backline-soften';
+import { createWeatherParticles, drawWeatherForegroundOverlay, drawWeatherOverlay } from '../render/weather.js?v=20260522-warden-starfall-radius';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 
 export function createBattleObjectiveRuntime(deps = {}) {

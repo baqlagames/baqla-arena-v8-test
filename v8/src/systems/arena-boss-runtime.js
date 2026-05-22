@@ -4,7 +4,7 @@ import {
   drainHealToBarrier,
   tickAerialBombs,
   updateBoss,
-} from './boss-mechanics.js?v=20260522-warden-backline-soften';
+} from './boss-mechanics.js?v=20260522-warden-starfall-radius';
 
 export function createArenaBossRuntime(deps) {
   const randomRange = typeof deps.randomRange === 'function'

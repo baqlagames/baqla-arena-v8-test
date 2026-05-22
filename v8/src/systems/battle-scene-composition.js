@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-warden-backline-soften';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-warden-starfall-radius';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

@@ -9,7 +9,7 @@ import {
   drawPlayerAuraOver as renderDrawPlayerAuraOver,
   drawPlayerAuraUnder as renderDrawPlayerAuraUnder,
   playerVfxColor as renderPlayerVfxColor,
-} from './actor-vfx.js?v=20260522-warden-backline-soften';
+} from './actor-vfx.js?v=20260522-warden-starfall-radius';
 import { projectileColor } from '../systems/combat-projectiles.js';
 
 export function createActorSpriteHelpers({

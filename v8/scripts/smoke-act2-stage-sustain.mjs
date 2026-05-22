@@ -717,8 +717,8 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.wardenMeleeByAttack.gravityToll > 0, 'stage 8: melee unit did not receive Gravity pressure');
     assert(logs.wardenTankAoE > 0, 'stage 8: tank unit did not receive Warden Gravity pressure');
     assert(logs.wardenMeleeAoE > 0, 'stage 8: melee unit did not receive reduced Warden AoE pressure');
-    assert(tank.minHp / tank.maxHp <= 0.84, `stage 8: tank stayed too healthy (${Math.round(100 * tank.minHp / tank.maxHp)}%)`);
-    assert(melee.minHp / melee.maxHp <= 0.88, `stage 8: melee stayed too healthy (${Math.round(100 * melee.minHp / melee.maxHp)}%)`);
+    assert(tank.minHp / tank.maxHp <= 0.88, `stage 8: tank stayed too healthy (${Math.round(100 * tank.minHp / tank.maxHp)}%)`);
+    assert(melee.minHp / melee.maxHp <= 0.90, `stage 8: melee stayed too healthy (${Math.round(100 * melee.minHp / melee.maxHp)}%)`);
     assert(logs.wardenShields >= 2, 'stage 8: Lantern Ward phase shields were not exercised');
     assert(logs.wardenWardBreaks >= 2, 'stage 8: Lantern Ward breaks were not exercised');
     assert(logs.wardenBlightBursts >= 2, 'stage 8: Astral Blight shield-break bursts were not exercised');

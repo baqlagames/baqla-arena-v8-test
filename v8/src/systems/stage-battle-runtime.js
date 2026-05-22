@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-warden-backline-soften';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-warden-backline-soften';
+} from './wave-lifecycle.js?v=20260522-warden-starfall-radius';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-warden-starfall-radius';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});
