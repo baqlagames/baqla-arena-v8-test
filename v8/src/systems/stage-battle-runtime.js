@@ -6,8 +6,8 @@ import {
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-player-hp-clearance';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-player-hp-clearance';
+} from './wave-lifecycle.js?v=20260522-build-hp-clearance';
+import { createRiftRuntime } from './rift-runtime.js?v=20260522-build-hp-clearance';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

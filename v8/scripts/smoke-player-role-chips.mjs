@@ -122,8 +122,18 @@ assert(meleeTrack, 'melee player HP bar should keep the compact player track');
 const tankCenter = tankTrack.x + tankTrack.w / 2;
 const meleeCenter = meleeTrack.x + meleeTrack.w / 2;
 assert(Math.abs(tankCenter - meleeCenter) >= 30, 'clustered tank/melee HP bars should separate horizontally');
-assert(tankTrack.y <= units[0].y - units[0].size * 2.7, 'tank HP bar should clear the tall player sprite');
-assert(meleeTrack.y <= units[1].y - units[1].size * 2.7, 'melee HP bar should clear the tall player sprite');
+assert(tankTrack.y <= units[0].y - units[0].size * 3.3, 'tank wave HP bar should clear the tall player sprite');
+assert(meleeTrack.y <= units[1].y - units[1].size * 3.3, 'melee wave HP bar should clear the tall player sprite');
+
+roundRects.length = 0;
+viewState.arena = { phase: 'build' };
+for (const unit of units) renderer.drawUnitHud(unit);
+const buildTankTrack = roundRects.find(rect => Math.abs(rect.w - 52) < 0.1 && Math.abs(rect.h - 9) < 0.1);
+const buildMeleeTrack = roundRects.find(rect => Math.abs(rect.w - 36) < 0.1 && Math.abs(rect.h - 7) < 0.1);
+assert(buildTankTrack, 'tank build HP bar should render');
+assert(buildMeleeTrack, 'melee build HP bar should render');
+assert(buildTankTrack.y <= units[0].y - units[0].size * 2.4, 'tank build HP bar should clear the prep sprite');
+assert(buildMeleeTrack.y <= units[1].y - units[1].size * 2.4, 'melee build HP bar should clear the prep sprite');
 
 renderer.drawUnitRaw(makeUnit('melee', 5, { isMinion: true }));
 renderer.drawUnitRaw(makeUnit('ranged', 6, { isGhost: true }));

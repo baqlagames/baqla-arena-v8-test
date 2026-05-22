@@ -1,9 +1,9 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-player-hp-clearance';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260522-build-hp-clearance';
 import { createActorSpriteHelpers } from './actor-sprite-helpers.js';
-import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-player-hp-clearance';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260522-build-hp-clearance';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';
@@ -109,7 +109,7 @@ function playerHudBaseY(u,y){
   if(!u)return 0;
   const s=Math.max(16,u.size||20);
   const inWave=arena&&arena.phase==='wave';
-  const clearance=inWave?Math.max(56,s*2.35+16):Math.max(38,s*1.65+10);
+  const clearance=inWave?Math.max(72,s*3.35+14):Math.max(54,s*2.45+12);
   return Math.max(ARENA_TOP+20,(Number.isFinite(y)?y:((u.y||0)+Math.sin(Number.isFinite(u.bobPhase)?u.bobPhase:0)*1.2))-clearance);
 }
 function naturalPlayerHudY(u){
@@ -124,7 +124,7 @@ function playerHudOffset(u,baseY,barW){
     const otherY=naturalPlayerHudY(other);
     const otherW=playerHudBarWidth(other);
     const overlapX=Math.abs((other.x||0)-(u.x||0))<(barW+otherW)/2+10;
-    return overlapX&&Math.abs(otherY-baseY)<20;
+    return overlapX&&Math.abs(otherY-baseY)<38;
   }).sort((a,b)=>((a.y||0)-(b.y||0))||((a.x||0)-(b.x||0))||((a.unitIdx||a.id||0)-(b.unitIdx||b.id||0)));
   const idx=close.indexOf(u);
   if(close.length<2||idx<0)return {x:0,y:0};

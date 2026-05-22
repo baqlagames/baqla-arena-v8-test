@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-player-hp-clearance';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-build-hp-clearance';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;
