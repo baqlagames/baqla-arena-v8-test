@@ -226,6 +226,10 @@ function smokeRoyalCarapace(ctx, boss) {
 
 function smokeAstralWarden(ctx, boss) {
   if (boss.id !== 10) return null;
+  const wardenTemplate = BOSSES.find(row => row.id === 10);
+  if (wardenTemplate.gravityTollDmg !== 94) throw new Error('Astral Warden Gravity Toll tuning drifted from 94');
+  if (Math.abs((wardenTemplate.gravityTollFrontlineHpPct || 0) - 0.075) > 0.0001) throw new Error('Astral Warden frontline toll tuning drifted from 7.5%');
+  if (wardenTemplate.timeEnrageAt !== 11400) throw new Error('Astral Warden enrage timer should be 11400 frames');
   boss._astralWardTriggered = {};
   boss._astralWardActive = null;
   boss._astralWardBreakLock = 0;

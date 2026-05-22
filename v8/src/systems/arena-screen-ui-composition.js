@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-vizier-ward-overcharge';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-warden-soften-gravity';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

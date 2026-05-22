@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-vizier-ward-overcharge';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260522-warden-soften-gravity';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);

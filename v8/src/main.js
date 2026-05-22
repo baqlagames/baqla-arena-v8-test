@@ -1,3 +1,3 @@
-import { startArena } from './systems/arena-runtime.js?v=20260522-vizier-ward-overcharge';
+import { startArena } from './systems/arena-runtime.js?v=20260522-warden-soften-gravity';
 
 startArena();

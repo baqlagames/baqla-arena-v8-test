@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260522-vizier-ward-overcharge';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-vizier-ward-overcharge';
+import { drawHealthBar } from './health-bars.js?v=20260522-warden-soften-gravity';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260522-warden-soften-gravity';
 
 export function createActorOverlayRenderer({
   ctx,

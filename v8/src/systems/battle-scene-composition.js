@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-vizier-ward-overcharge';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260522-warden-soften-gravity';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

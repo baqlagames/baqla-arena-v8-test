@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-vizier-ward-overcharge';
+import { BOSSES } from '../data/bosses.js?v=20260522-warden-soften-gravity';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){
