@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260523-dragon-judgment';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260523-dragon-judgment-fix';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

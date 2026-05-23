@@ -1,4 +1,4 @@
-import { createCodexReferenceScreens } from './codex-reference-screens.js?v=20260523-dragon-judgment';
+import { createCodexReferenceScreens } from './codex-reference-screens.js?v=20260523-dragon-judgment-fix';
 
 export function createCodexDetailRuntime(deps) {
   const ctx = deps.ctx;

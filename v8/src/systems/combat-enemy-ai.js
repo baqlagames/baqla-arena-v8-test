@@ -67,6 +67,11 @@ export function updateArenaEnemyAi(enemy, {
     if (enemy.armorBreakTimer <= 0) enemy.armorBreak = 0;
   }
   updateEnemyMechanics(enemy);
+  if (enemy._dragonSkyPhase && enemy._dragonJudgmentImmune) {
+    enemy.target = null;
+    if (enemy.cd > 0) enemy.cd--;
+    return;
+  }
   if (enemy.cd > 0) enemy.cd--;
 
   if (tickBurrowMovement(enemy, {

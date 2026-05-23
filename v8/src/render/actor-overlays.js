@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260523-dragon-judgment';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260523-dragon-judgment';
+import { drawHealthBar } from './health-bars.js?v=20260523-dragon-judgment-fix';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260523-dragon-judgment-fix';
 
 export function createActorOverlayRenderer({
   ctx,

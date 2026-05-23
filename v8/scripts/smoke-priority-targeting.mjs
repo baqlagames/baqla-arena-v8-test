@@ -138,6 +138,7 @@ const dragon = enemy('Winterglass Dragon', 250, 420, {
   _dragonSkyPhase: true,
   flying: true,
   _dragonJudgmentImmune: true,
+  untargetable: true,
 });
 const colossus = enemy('Frostglass Colossus', 188, 540, {
   dragonSkyGuard: true,
@@ -173,8 +174,11 @@ colossus.hp = 0;
 const dragonCasterFallback = findEnemyTargetForUnit(caster, view([dragon, colossus, juggernaut]));
 assert.equal(dragonCasterFallback, juggernaut, 'caster should swap to remaining Juggernaut before immune Dragon');
 juggernaut.hp = 0;
+const dragonImmuneNoGuardPick = findEnemyTargetForUnit(hunter, view([dragon, colossus, juggernaut]));
+assert.equal(dragonImmuneNoGuardPick, null, 'units should not target the untargetable Dragon during Judgment even if guards are dead');
 dragon._dragonSkyPhase = false;
 dragon._dragonJudgmentImmune = false;
+dragon.untargetable = false;
 dragon.flying = false;
 const dragonReturnPick = findEnemyTargetForUnit(hunter, view([dragon, colossus, juggernaut]));
 assert.equal(dragonReturnPick, dragon, 'units should return to Dragon after Judgment guards die');

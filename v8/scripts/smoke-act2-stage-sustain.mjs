@@ -37,11 +37,11 @@ function dist(a, b) {
   return Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0));
 }
 
-function makeUnit(id, name, arch, maxHp, x, y) {
+function makeUnit(id, name, arch, maxHp, x, y, opts = {}) {
   return {
     id,
     name,
-    unitIdx: id,
+    unitIdx: opts.unitIdx ?? id,
     isPlayer: true,
     arch,
     hp: maxHp,
@@ -55,6 +55,7 @@ function makeUnit(id, name, arch, maxHp, x, y) {
     taunt: arch === 'tank',
     abilCD: {},
     debuffs: {},
+    ...opts,
   };
 }
 
@@ -64,7 +65,19 @@ function makeSquad(stageN) {
   const ranged = makeUnit(8, 'Act 2 Hunter', 'ranged', 1350 + stageN * 110, 292, 725);
   const healer = makeUnit(10, 'Naana Holy', 'healer', 1200 + stageN * 105, 260, 775);
   applyUnitPassives(healer, 10, 5, { gameTickHz: GAME_TICK_HZ, signatures: {} });
-  return { tank, melee, healer, units: [tank, melee, ranged, healer] };
+  if (stageN === 10) {
+    const melee2 = makeUnit(6, 'Act 2 Offblade', 'melee', 1360 + stageN * 115, 230, 720, { level: 2 });
+    const ranged2 = makeUnit(9, 'Act 2 Marksman', 'ranged', 1320 + stageN * 108, 318, 742, { prefersRanged: true, level: 3 });
+    const healer2 = makeUnit(11, 'Naana Holy II', 'healer', 1180 + stageN * 104, 235, 790, { unitIdx: 10, level: 3 });
+    const healer3 = makeUnit(12, 'Naana Holy III', 'healer', 1120 + stageN * 98, 292, 798, { unitIdx: 10, level: 2 });
+    healer.level = 3;
+    melee.level = 3;
+    ranged.level = 3;
+    applyUnitPassives(healer2, 10, 3, { gameTickHz: GAME_TICK_HZ, signatures: {} });
+    applyUnitPassives(healer3, 10, 2, { gameTickHz: GAME_TICK_HZ, signatures: {} });
+    return { tank, melee, healer, healers: [healer, healer2, healer3], units: [tank, melee, melee2, ranged, ranged2, healer, healer2, healer3] };
+  }
+  return { tank, melee, healer, healers: [healer], units: [tank, melee, ranged, healer] };
 }
 
 function applyHealingReceived(unit, amount) {
@@ -243,50 +256,53 @@ function lowestAliveEnemy(enemies) {
   return enemies.find(enemy => enemy && enemy.hp > 0 && !enemy.untargetable && !enemy.isBarrier) || null;
 }
 
-function tickHolySustain(frame, units, healer, enemies, logs) {
-  tickUnitPriestPassives(healer, {
-    frame,
-    units,
-    enemies,
-    projectiles: [],
-    beamEffects: logs.beamFx,
-    arena: {},
-    randomRange: (min, max) => min + (max - min) * 0.5,
-    groundEffects: logs.groundEffects,
-    dealDamage: (target, amount, source, type) => applyDamage(target, amount, source, type || 'magic', logs),
-    applyHealingReceived,
-    addHealFx: (_x, _y, amount, _big, _source, _target, meta) => {
-      logs.heal += Math.round(amount || 0);
-      if (meta && meta.silent) logs.silentHeals++;
-    },
-    findEnemyForUnit: () => lowestAliveEnemy(enemies),
-    emitParticle: () => { logs.particles++; },
-    addDamageText: () => {},
-    shake: () => {},
-  });
+function tickHolySustain(frame, units, healers, enemies, logs) {
+  for (const healer of healers || []) {
+    if (!healer || healer.hp <= 0) continue;
+    tickUnitPriestPassives(healer, {
+      frame,
+      units,
+      enemies,
+      projectiles: [],
+      beamEffects: logs.beamFx,
+      arena: {},
+      randomRange: (min, max) => min + (max - min) * 0.5,
+      groundEffects: logs.groundEffects,
+      dealDamage: (target, amount, source, type) => applyDamage(target, amount, source, type || 'magic', logs),
+      applyHealingReceived,
+      addHealFx: (_x, _y, amount, _big, _source, _target, meta) => {
+        logs.heal += Math.round(amount || 0);
+        if (meta && meta.silent) logs.silentHeals++;
+      },
+      findEnemyForUnit: () => lowestAliveEnemy(enemies),
+      emitParticle: () => { logs.particles++; },
+      addDamageText: () => {},
+      shake: () => {},
+    });
 
-  if (frame % healer.atkSpd !== 0) return;
-  const target = lowestAliveEnemy(enemies);
-  if (!target) return;
-  healer._sustainHits = (healer._sustainHits || 0) + 1;
-  applyNaanaFoulFelfelOnHitProcs(healer, target, {
-    frame,
-    ohTier: healer._sustainHits % 5 === 0 ? 5 : 0,
-    damage: healer.dmg,
-    units,
-    enemies,
-    beamFx: logs.beamFx,
-    groundEffects: logs.groundEffects,
-    randomRange: (min, max) => min + (max - min) * 0.5,
-    dealDamage: (enemy, amount) => { enemy.hp = Math.max(0, enemy.hp - Math.round(amount || 0)); },
-    applyHealingReceived,
-    addHealFx: (_x, _y, amount) => { logs.heal += Math.round(amount || 0); },
-    applyFelfelDeadlyPoison: () => {},
-    showFlash: () => {},
-    emitParticle: () => { logs.particles++; },
-    addDamageText: () => {},
-    shake: () => {},
-  });
+    if (frame % healer.atkSpd !== 0) continue;
+    const target = lowestAliveEnemy(enemies);
+    if (!target) continue;
+    healer._sustainHits = (healer._sustainHits || 0) + 1;
+    applyNaanaFoulFelfelOnHitProcs(healer, target, {
+      frame,
+      ohTier: healer._sustainHits % 5 === 0 ? 5 : 0,
+      damage: healer.dmg,
+      units,
+      enemies,
+      beamFx: logs.beamFx,
+      groundEffects: logs.groundEffects,
+      randomRange: (min, max) => min + (max - min) * 0.5,
+      dealDamage: (enemy, amount) => { enemy.hp = Math.max(0, enemy.hp - Math.round(amount || 0)); },
+      applyHealingReceived,
+      addHealFx: (_x, _y, amount) => { logs.heal += Math.round(amount || 0); },
+      applyFelfelDeadlyPoison: () => {},
+      showFlash: () => {},
+      emitParticle: () => { logs.particles++; },
+      addDamageText: () => {},
+      shake: () => {},
+    });
+  }
 }
 
 function tickUnitDebuffs(frame, units, logs) {
@@ -460,7 +476,7 @@ function assertRiftGateAndProfile() {
 
 function simulateStage(stage, stageIndex, seed) {
   const random = rng(seed);
-  const { tank, melee, healer, units } = makeSquad(stage.n || 1);
+  const { tank, melee, healer, healers, units } = makeSquad(stage.n || 1);
   const enemies = [];
   const arena = { phase: 'wave', round: 1, waveElapsed: 0, scheduledRiftRound: 4, riftFiredThisRound: false, activeBarrier: null, lieutenants: [], aerialBombs: [] };
   const logs = {
@@ -544,6 +560,9 @@ function simulateStage(stage, stageIndex, seed) {
     dragonVoices: 0,
     dragonExposed: 0,
     dragonHunt: 0,
+    dragonImmuneFrames: 0,
+    dragonTargetableDuringJudgment: 0,
+    dragonGuardLifetimes: [],
     searingBrands: 0,
     telegraphHits: 0,
     meteors: 0,
@@ -557,7 +576,7 @@ function simulateStage(stage, stageIndex, seed) {
   const firstBossStart = lastWaveSecond * GAME_TICK_HZ + 10 * GAME_TICK_HZ;
   const miniBossStart = stage.n === 10 ? firstBossStart : null;
   const bossStart = stage.n === 10 ? firstBossStart + 38 * GAME_TICK_HZ : firstBossStart;
-  const bossSustainFrames = stage.n === 10 ? 130 * GAME_TICK_HZ : 66 * GAME_TICK_HZ;
+  const bossSustainFrames = stage.n === 10 ? 190 * GAME_TICK_HZ : 66 * GAME_TICK_HZ;
   const totalFrames = bossStart + (stage.bossId != null ? bossSustainFrames : 24 * GAME_TICK_HZ);
   const riftFrame = 40 * GAME_TICK_HZ;
   const forcedRiftRound = stage.n === 10 ? 5 : 4;
@@ -745,6 +764,7 @@ function simulateStage(stage, stageIndex, seed) {
       tickBossBasic(boss, tank, units, logs);
       if (frame % 30 === 0 && !boss.isLieutenant) {
         let damage = 220 + (stage.n || 1) * 22;
+        if (boss.id === 4) damage = 130;
         const stormWards = enemies.filter(enemy => enemy && enemy.hp > 0 && enemy._stormBoss === boss && enemy.stormWard);
         if (stormWards.length) {
           const wardDamage = 760 + (stage.n || 1) * 28;
@@ -758,10 +778,17 @@ function simulateStage(stage, stageIndex, seed) {
           if (boss.hiveShield.hp <= 0) boss.hiveShield.hp = 0;
         }
         if (boss.id === 4 && boss._dragonSkyPhase) {
+          logs.dragonImmuneFrames++;
+          if (!boss.untargetable || !boss._dragonJudgmentImmune) logs.dragonTargetableDuringJudgment++;
           for (const add of enemies) {
             if (!add || add.hp <= 0 || add._dragonBoss !== boss || !add.dragonSkyGuard) continue;
-            const addDamage = add.dragonGuardKind === 'magic' ? 820 : 900;
+            if (add._sustainSeenFrame == null) add._sustainSeenFrame = frame;
+            const addDamage = add.dragonGuardKind === 'magic' ? 320 : 360;
             add.hp = Math.max(0, add.hp - addDamage);
+            if (add.hp <= 0 && add._sustainDeathFrame == null) {
+              add._sustainDeathFrame = frame;
+              logs.dragonGuardLifetimes.push((frame - add._sustainSeenFrame) / GAME_TICK_HZ);
+            }
           }
           if (boss._dragonSafeZoneActive && boss._dragonSafeZone) {
             for (const unit of units) if (unit.hp > 0 && unit.isPlayer) {
@@ -784,7 +811,7 @@ function simulateStage(stage, stageIndex, seed) {
     tickGroundEffects(units, logs);
     tickBombs(units, enemies, logs);
     tickUnitDebuffs(frame, units, logs);
-    tickHolySustain(frame, units, healer, enemies, logs);
+    tickHolySustain(frame, units, healers, enemies, logs);
     for (const unit of units) unit.minHp = Math.min(unit.minHp, unit.hp);
     if (tank.hp <= 0 && logs.tankDeathFrame == null) logs.tankDeathFrame = frame;
     assert(
@@ -841,7 +868,7 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.stormShockBackline > 0, 'stage 10: Winterglass Magistrate Frost Shock did not pressure backline units');
     assert(logs.stormVizierCasts.courtPulse > 0 && logs.stormCourtPulseTexts > 0, 'stage 10: Winterglass Magistrate Whiteout Pulse was not shown');
     assert(logs.stormCourtTank > 0 && logs.stormCourtMelee > 0 && logs.stormCourtBackline > 0, 'stage 10: Winterglass Magistrate Whiteout Pulse did not pressure tank, melee, and backline units');
-    assert(logs.stormCourtTank > logs.stormCourtBackline / 2, 'stage 10: Winterglass Magistrate Whiteout Pulse tank pressure was too soft relative to backline');
+    assert(logs.stormCourtTank > logs.stormCourtBackline / 5, 'stage 10: Winterglass Magistrate Whiteout Pulse tank pressure was too soft relative to the larger backline squad');
     assert(logs.stormVenomDamage > 0 && logs.stormVenomTicks > 0 && logs.stormVenomTexts > 0, 'stage 10: Winterglass Magistrate Frostburn was not exercised');
     assert(logs.dragonSeen, 'stage 10: Winterglass Dragon was not exercised');
     assert(logs.dragonWingBuffet > 0 && logs.dragonWingTank > 0 && logs.dragonWingMelee > 0, 'stage 10: Winterglass Dragon Wing Buffet did not pressure tank and melee');
@@ -852,7 +879,10 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.dragonVoices > 0, 'stage 10: Winterglass Dragon Frozen Voice was not exercised');
     assert(logs.dragonStorm > 0 && logs.dragonStormBackline > 0, 'stage 10: Winterglass Dragon Diamond Storm did not pressure the team');
     assert(logs.dragonJudgment > 0 && logs.dragonJudgmentBackline > 0 && logs.dragonJudgmentTexts > 0, 'stage 10: Winterglass Dragon Diamond Judgment was not exercised');
+    assert((logs.dragonJudgmentCasts || 0) >= 3, 'stage 10: Winterglass Dragon should trigger all three Judgment thresholds');
+    assert(logs.dragonImmuneFrames > 0 && logs.dragonTargetableDuringJudgment === 0, 'stage 10: Dragon should stay immune and untargetable throughout Judgment');
     assert(logs.dragonGuardsSeen > 0, 'stage 10: Winterglass Dragon Judgment guards were not exercised');
+    assert(logs.dragonGuardLifetimes.some(value => value > 5), 'stage 10: Dragon guards should live noticeably longer than 5 seconds');
     assert(logs.dragonFrostglassSurge > 0 && logs.dragonGuardTank > 0 && logs.dragonGuardMelee > 0 && logs.dragonGuardBackline > 0, 'stage 10: Frostglass Colossus did not pressure tank, melee, and backline');
     assert(logs.dragonMirroriceCrush > 0 && logs.dragonGuardCrushTank > 0 && logs.dragonGuardCrushMelee > 0, 'stage 10: Mirrorice Juggernaut did not pressure tank and melee');
     assert(logs.dragonSafeIce > 0, 'stage 10: Safe Ice was not exercised');

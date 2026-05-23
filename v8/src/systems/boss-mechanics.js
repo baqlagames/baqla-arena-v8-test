@@ -1211,7 +1211,7 @@ function syncDragonCooldowns(b){
   const cd=b.mechCD||(b.mechCD={});
   const hidden=9999;
   const nextStorm=dragonNextStormThreshold(b);
-  cd.frozenScales=Math.max(0,Math.round(b._dragonScaleCd||0));
+  cd.frozenScales=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonScaleCd||0));
   cd.wingBuffet=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonWingCd||0));
   cd.iceComet=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonCometCd||0));
   cd.frozenVoice=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonVoiceCd||0));
@@ -1520,7 +1520,7 @@ function tickDragonIceWalls(b,ctx){
 function dragonAnchorPoint(b,ctx,sky=false){
   const h=Math.max(360,(ctx.arenaBottom||820)-(ctx.arenaTop||88));
   const x=(ARENA_L+ARENA_R)/2;
-  const y=(ctx.arenaTop||88)+(sky?Math.max(112,h*0.18):Math.max(176,h*0.28));
+  const y=(ctx.arenaTop||88)+(sky?Math.max(96,h*0.12):Math.max(190,h*0.27));
   return clampBossPoint(x,y,ctx,{sideMargin:70,topMargin:78,bottomMargin:220});
 }
 function anchorWinterglassDragon(b,ctx,sky=false){
@@ -1530,8 +1530,14 @@ function anchorWinterglassDragon(b,ctx,sky=false){
   const p=dragonAnchorPoint(b,ctx,sky);
   b._dragonHoldX=p.x;
   b._dragonHoldY=p.y;
-  b.x=p.x;
-  b.y=p.y;
+  if(sky&&b._dragonSkyMoveTimer>0){
+    b.x+=(p.x-b.x)*0.18;
+    b.y+=(p.y-b.y)*0.18;
+    b._dragonSkyMoveTimer--;
+  }else{
+    b.x=p.x;
+    b.y=p.y;
+  }
   return true;
 }
 function dragonJudgmentPhaseIndex(b){
@@ -1542,9 +1548,13 @@ function dragonJudgmentGuardScale(b){
   const scales=Array.isArray(b.dragonGuardScales)?b.dragonGuardScales:[1,1.12,1.25];
   return scales[dragonJudgmentPhaseIndex(b)]||1;
 }
+function dragonJudgmentGuardSizeScale(b){
+  const scales=Array.isArray(b.dragonGuardSizeScales)?b.dragonGuardSizeScales:[1,1.16,1.32];
+  return scales[dragonJudgmentPhaseIndex(b)]||1;
+}
 function dragonSafeZonePoint(b,ctx){
   const h=Math.max(360,(ctx.arenaBottom||820)-(ctx.arenaTop||88));
-  return clampBossPoint(b.x,b.y+Math.max(230,h*0.34),ctx,{sideMargin:92,topMargin:220,bottomMargin:135});
+  return clampBossPoint(b.x,b.y+Math.max(245,h*0.36),ctx,{sideMargin:92,topMargin:220,bottomMargin:135});
 }
 function spawnDragonSkyGuard(b,ctx,kind,slotX,scale){
   const { enemies, groundFx, addParticle:addP, addDamageText:addDmg }=ctx;
@@ -1553,15 +1563,16 @@ function spawnDragonSkyGuard(b,ctx,kind,slotX,scale){
   const baseHp=magic?(b.dragonColossusHp||6200):(b.dragonJuggernautHp||6800);
   const baseDmg=magic?(b.dragonColossusAttack||b.dragonColossusDmg||92):(b.dragonJuggernautAttack||b.dragonJuggernautDmg||118);
   const size=magic?(b.dragonColossusSize||52):(b.dragonJuggernautSize||54);
+  const sizeScale=dragonJudgmentGuardSizeScale(b);
   const p=clampBossPoint(b.x+slotX,b.y+Math.max(150,(b.size||70)*1.86),ctx,{sideMargin:80,topMargin:150,bottomMargin:145});
   const guard={
     name,dragonSkyGuard:true,dragonGuardKind:kind,_dragonBoss:b,_dragonGuardScale:scale,
     priorityTarget:true,preferredBy:magic?'magic':'physical',
     act:2,arch:'melee',color:magic?'#bff4ff':'#eef8ff',accent:magic?'#6fb8e8':'#9fdcff',projType:'frost',
     x:p.x,y:p.y,maxHp:Math.round(baseHp*scale),hp:Math.round(baseHp*scale),
-    dmg:Math.round(baseDmg*scale),speed:0.28,atkSpd:70,range:46,size:Math.round(size*(0.98+0.04*scale)),
-    armor:magic?(b.dragonColossusArmor||10):(b.dragonJuggernautArmor||2),
-    magicRes:magic?(b.dragonColossusMagicRes||1):(b.dragonJuggernautMagicRes||10),
+    dmg:Math.round(baseDmg*scale),speed:0.28,atkSpd:70,range:46,size:Math.round(size*sizeScale),
+    armor:magic?(Number.isFinite(b.dragonColossusArmor)?b.dragonColossusArmor:10):(Number.isFinite(b.dragonJuggernautArmor)?b.dragonJuggernautArmor:2),
+    magicRes:magic?(Number.isFinite(b.dragonColossusMagicRes)?b.dragonColossusMagicRes:1):(Number.isFinite(b.dragonJuggernautMagicRes)?b.dragonJuggernautMagicRes:10),
     points:0,fixedGoldReward:0,isEnemy:true,bossSupport:true,bossSupportColor:magic?'#bff4ff':'#eef8ff',
     cd:18,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},spawnFrame:ctx.frame||0,entryHold:22,
     _guardCastCd:magic?96:72
@@ -1685,12 +1696,14 @@ function resolveDragonJudgment(b,ctx){
 function startDragonDiamondStorm(b,ctx){
   const { groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
   b._dragonSkyThreshold=dragonNextStormThreshold(b);
+  if(Number.isFinite(b._dragonSkyThreshold)&&b.maxHp>0)b.hp=Math.max(1,Math.round(b.maxHp*b._dragonSkyThreshold));
   b._dragonSkyThresholdIndex=Math.min((b._dragonStormThresholds||[]).length,(b._dragonSkyThresholdIndex||0)+1);
   b._dragonSkyPhase=true;
   b._dragonJudgmentImmune=true;
   b._dragonJudgmentResolved=false;
   b._dragonSkyTimer=b.diamondStormDur||3120;
   b._dragonSkyMax=b._dragonSkyTimer;
+  b._dragonSkyMoveTimer=38;
   b._dragonStormTick=b.diamondStormTick||120;
   b._dragonMainPackSpawned=false;
   b._dragonGuardSpawned=0;
@@ -1698,11 +1711,19 @@ function startDragonDiamondStorm(b,ctx){
   b._dragonSafeZoneActive=false;
   b._dragonSafeZoneActivatedFrame=0;
   b.hiveShield=null;
+  b._dragonPendingComets=[];
+  b._dragonPendingMaws=[];
+  b._dragonIceWalls=[];
+  b._dragonCastLock=0;
+  b.target=null;
+  b._aoeAttackWarn=null;
   b._dragonSavedFlying=!!b.flying;
+  b._dragonSavedUntargetable=!!b.untargetable;
   b._dragonSavedPriority=!!b.priorityTarget;
   b._dragonSavedPreferredBy=b.preferredBy;
   b._dragonSavedRange=b.range;
   b.flying=true;
+  b.untargetable=true;
   b.priorityTarget=false;
   b.preferredBy=null;
   b.range=Math.max(b.range||0,230);
@@ -1724,6 +1745,7 @@ function endDragonDiamondStorm(b,ctx){
   b._dragonSkyPhase=false;
   b._dragonJudgmentImmune=false;
   b.flying=!!b._dragonSavedFlying;
+  b.untargetable=!!b._dragonSavedUntargetable;
   b.priorityTarget=!!b._dragonSavedPriority;
   b.preferredBy=b._dragonSavedPreferredBy;
   if(Number.isFinite(b._dragonSavedRange))b.range=b._dragonSavedRange;
@@ -1746,6 +1768,11 @@ function endDragonDiamondStorm(b,ctx){
   }
   b._dragonSafeZone=null;
   b._dragonSafeZoneActive=false;
+  for(const unit of dragonPlayers(ctx.units||[])){
+    unit._dragonSafeZoneMoving=0;
+    unit._dragonMechanicMove=0;
+    unit.target=null;
+  }
   anchorWinterglassDragon(b,ctx,false);
   shake(7);
 }
@@ -1814,25 +1841,24 @@ function updateWinterglassDragon(b,ctx){
     b._dragonExposedTimer--;
     if(b._dragonExposedTimer<=0)b._dragonExposedDamageMult=0;
   }
+  if(tickDragonSkyPhase(b,ctx))return;
+  const hpPct=b.maxHp>0?b.hp/b.maxHp:1;
+  const nextStormThreshold=dragonNextStormThreshold(b);
+  if(nextStormThreshold!=null&&hpPct<=nextStormThreshold){
+    if(startDragonDiamondStorm(b,ctx)){
+      syncDragonCooldowns(b);
+      return;
+    }
+  }
   tickDragonComets(b,ctx);
   tickDragonFrigidMaw(b,ctx);
   tickDragonIceWalls(b,ctx);
   updateDragonHunt(b,ctx);
-  if(tickDragonSkyPhase(b,ctx))return;
   anchorWinterglassDragon(b,ctx,false);
   tickDragonCooldowns(b);
   if((b._dragonScaleCd||0)<=0)toggleDragonScales(b,ctx);
   syncDragonCooldowns(b);
   if((b._dragonCastLock||0)>0)return;
-  const hpPct=b.maxHp>0?b.hp/b.maxHp:1;
-  const nextStormThreshold=dragonNextStormThreshold(b);
-  if(nextStormThreshold!=null&&hpPct<=nextStormThreshold){
-    if(startDragonDiamondStorm(b,ctx)){
-      b._dragonCastLock=70;
-      syncDragonCooldowns(b);
-      return;
-    }
-  }
   const tryCast=(timerProp,cd,lock,fn)=>{
     if(Number.isFinite(b[timerProp])&&b[timerProp]>0)return false;
     if(!fn(b,ctx))return false;

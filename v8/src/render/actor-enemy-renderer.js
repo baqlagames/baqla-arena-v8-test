@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260523-dragon-judgment';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260523-dragon-judgment-fix';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

@@ -1,4 +1,4 @@
-import { drawActorShieldVfx } from './shield-vfx.js?v=20260523-dragon-judgment';
+import { drawActorShieldVfx } from './shield-vfx.js?v=20260523-dragon-judgment-fix';
 
 function fallbackRandomRange(min, max) {
   return min + Math.random() * (max - min);

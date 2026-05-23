@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260523-dragon-judgment';
+import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260523-dragon-judgment-fix';
 
 function meleeBossOrbitPoint(unit, target) {
   const isTank = !!(unit && (unit.arch === 'tank' || unit.taunt));
@@ -40,6 +40,18 @@ function dragonSafeZoneMovePoint(unit, enemies) {
   return { x: zone.x + slot.x, y: zone.y + slot.y, dragon };
 }
 
+function moveMechanicDirect(unit, x, y, speed, clampToArena) {
+  const dx = x - unit.x;
+  const dy = y - unit.y;
+  const d = Math.hypot(dx, dy);
+  if (d < 1.5) return;
+  const step = Math.max(3.6, speed || 0);
+  unit.x += dx / d * Math.min(step, d);
+  unit.y += dy / d * Math.min(step, d);
+  unit.facing = dx >= 0 ? 1 : -1;
+  if (typeof clampToArena === 'function') clampToArena(unit);
+}
+
 export function prepareUnitAttackTarget(unit, {
   arena,
   enemies,
@@ -66,8 +78,9 @@ export function prepareUnitAttackTarget(unit, {
     const safeMove = dragonSafeZoneMovePoint(unit, enemies);
     if (safeMove) {
       unit.target = null;
-      unit._dragonSafeZoneMoving = 8;
-      moveToward(unit, safeMove.x, safeMove.y, unit.speed * 1.65);
+      unit._dragonSafeZoneMoving = 10;
+      unit._dragonMechanicMove = 10;
+      moveMechanicDirect(unit, safeMove.x, safeMove.y, Math.max(3.8, (unit.speed || 1) * 3.2), clampToArena);
       return { canAttack: false };
     }
     if (unit._dragonSafeZoneMoving > 0) unit._dragonSafeZoneMoving--;

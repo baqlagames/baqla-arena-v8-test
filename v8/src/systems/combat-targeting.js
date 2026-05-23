@@ -55,7 +55,6 @@ function priorityTargetScore(unit, target, distance) {
   else if (preferred === 'magic' || preferred === 'physical' || preferred === 'ranged' || preferred === 'melee') score += 100;
   if (target._stormBoss && target._stormBoss._stormShieldActive) score -= 420;
   if (target.dragonSkyGuard && target._dragonBoss && target._dragonBoss._dragonSkyPhase) score -= 520;
-  if (target._dragonSkyPhase && isArenaRangedActor(unit)) score -= 520;
   if (target.flying && isArenaRangedActor(unit)) score -= 180;
   if (target.isBoss || target.isElite) score += 160;
   return score - 480;
@@ -202,7 +201,6 @@ export function isReachableFromLeash(unit, target, bounds) {
   if (!unit.isPlayer || unit.homeX == null) return true;
   if (target.fromRift) return true;
   if (target.dragonSkyGuard && target._dragonBoss && target._dragonBoss._dragonSkyPhase) return true;
-  if (target._dragonSkyPhase && isArenaRangedActor(unit)) return true;
   if (unit.paladinHybrid) {
     const paladinDistance = Math.abs(target.x - unit.homeX) + Math.abs(target.y - unit.homeY);
     return paladinDistance < 400;

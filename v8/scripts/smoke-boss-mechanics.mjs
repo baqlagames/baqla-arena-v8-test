@@ -610,11 +610,14 @@ function smokeWinterglassDragon(ctx, boss) {
   if (boss.id !== 4) return null;
   const dragonTemplate = BOSSES.find(row => row.id === 4);
   if (dragonTemplate.name !== 'Winterglass Dragon') throw new Error('boss id 4 should be Winterglass Dragon');
-  if (dragonTemplate.hp !== 36000 || dragonTemplate.dmg !== 150 || dragonTemplate.size !== 70) throw new Error('Winterglass Dragon core tuning drifted');
+  if (dragonTemplate.hp !== 46000 || dragonTemplate.dmg !== 150 || dragonTemplate.size !== 70 || dragonTemplate.armor !== 10 || dragonTemplate.magicRes !== 10) throw new Error('Winterglass Dragon core tuning drifted');
   if (dragonTemplate.timeEnrageAt !== 36000) throw new Error('Winterglass Dragon enrage should be 36000 frames');
-  if (dragonTemplate.diamondStormDur !== 3120 || dragonTemplate.diamondStormDmg !== 30 || dragonTemplate.diamondJudgmentDmg !== 250) throw new Error('Winterglass Dragon Diamond Judgment tuning drifted');
+  if (dragonTemplate.diamondStormDur !== 3120 || dragonTemplate.diamondStormDmg !== 42 || dragonTemplate.diamondJudgmentDmg !== 360) throw new Error('Winterglass Dragon Diamond Judgment tuning drifted');
   if (JSON.stringify(dragonTemplate.diamondStormThresholds) !== JSON.stringify([0.75, 0.50, 0.25])) throw new Error('Winterglass Dragon sky phases should trigger at 75/50/25% HP');
-  if (dragonTemplate.dragonColossusHp !== 6200 || dragonTemplate.dragonJuggernautHp !== 6800 || dragonTemplate.dragonColossusSurgeDmg !== 84 || dragonTemplate.dragonJuggernautCrushDmg !== 138) {
+  if (JSON.stringify(dragonTemplate.dragonGuardScales) !== JSON.stringify([1.00, 1.22, 1.45]) || JSON.stringify(dragonTemplate.dragonGuardSizeScales) !== JSON.stringify([1.00, 1.16, 1.32])) {
+    throw new Error('Winterglass Dragon Judgment guard scaling drifted');
+  }
+  if (dragonTemplate.dragonColossusHp !== 15000 || dragonTemplate.dragonJuggernautHp !== 16500 || dragonTemplate.dragonColossusArmor !== 18 || dragonTemplate.dragonJuggernautMagicRes !== 18 || dragonTemplate.dragonColossusSurgeDmg !== 116 || dragonTemplate.dragonJuggernautCrushDmg !== 176) {
     throw new Error('Winterglass Dragon Judgment guard tuning drifted');
   }
   if (dragonTemplate.meteorCD || dragonTemplate.aoeCD || dragonTemplate.debuffCD || dragonTemplate.sonsAt || dragonTemplate.searingBrandEvery) throw new Error('Winterglass Dragon should not keep old Sultan fire mechanics');
@@ -693,19 +696,37 @@ function smokeWinterglassDragon(ctx, boss) {
   const voiced = ctx.units.filter(unit => unit._stormSilenceTimer > 0);
   if (voiced.length < 2 || !voiced.some(unit => unit.arch === 'healer')) throw new Error('Frozen Voice should silence two targets, healer first');
 
-  boss._dragonCastLock = 0;
+  boss._dragonCastLock = 999;
   boss.hp = Math.round(boss.maxHp * 0.74);
+  boss._dragonWingCd = 0;
+  boss._dragonCometCd = 0;
+  boss._dragonVoiceCd = 0;
+  boss._dragonMawCd = 0;
+  boss._dragonWallCd = 0;
+  const preJudgmentY = boss.y;
+  const preJudgmentCastCounts = {
+    wing: boss._dragonWingBuffetCasts || 0,
+    comet: boss._dragonCometCasts || 0,
+    voice: boss._dragonVoiceCasts || 0,
+    maw: boss._dragonMawCasts || 0,
+    wall: boss._dragonIceWallCasts || 0,
+  };
   tickBoss(ctx, boss, 1);
-  if (!boss._dragonSkyPhase || !boss.flying || !boss._dragonJudgmentImmune || boss._dragonSkyThreshold !== 0.75) throw new Error('Diamond Judgment should make the Dragon airborne and immune at 75% HP');
+  if (!boss._dragonSkyPhase || !boss.flying || !boss.untargetable || !boss._dragonJudgmentImmune || boss._dragonSkyThreshold !== 0.75) throw new Error('Diamond Judgment should make the Dragon airborne, untargetable, and immune at 75% HP');
+  if (boss.hp !== Math.round(boss.maxHp * 0.75)) throw new Error('Diamond Judgment should clamp Dragon HP to the crossed threshold');
+  if (!(boss.y < preJudgmentY) || !(boss._dragonHoldY < preJudgmentY)) throw new Error('Diamond Judgment should move the Dragon upward to its sky anchor');
   if (boss.hiveShield) throw new Error('Diamond Judgment should not use the old breakable sky shield');
   const guards = ctx.enemies.filter(enemy => enemy.dragonSkyGuard && enemy._dragonBoss === boss);
   const colossus = guards.find(enemy => enemy.name === 'Frostglass Colossus');
   const juggernaut = guards.find(enemy => enemy.name === 'Mirrorice Juggernaut');
   if (guards.length !== 2 || !colossus || !juggernaut) throw new Error('Diamond Judgment should spawn Frostglass Colossus and Mirrorice Juggernaut');
-  if (colossus.maxHp !== 6200 || colossus.preferredBy !== 'magic' || juggernaut.maxHp !== 6800 || juggernaut.preferredBy !== 'physical') throw new Error('Judgment guard stats or targeting drifted');
+  if (colossus.maxHp !== 15000 || colossus.armor !== 18 || colossus.magicRes !== 0 || colossus.preferredBy !== 'magic' || juggernaut.maxHp !== 16500 || juggernaut.armor !== 4 || juggernaut.magicRes !== 18 || juggernaut.preferredBy !== 'physical') throw new Error('Judgment guard stats or targeting drifted');
   const immuneDamage = applyBossAndRecordModifiers(100, { target: boss, attacker: { arch: 'caster', attackType: 'magic' }, dmgType: 'magic', attackTypeOverride: 'magic' });
   if (immuneDamage !== 0) throw new Error('Dragon should be immune during Diamond Judgment');
   tickBoss(ctx, boss, 140);
+  if ((boss._dragonWingBuffetCasts || 0) !== preJudgmentCastCounts.wing || (boss._dragonCometCasts || 0) !== preJudgmentCastCounts.comet || (boss._dragonVoiceCasts || 0) !== preJudgmentCastCounts.voice || (boss._dragonMawCasts || 0) !== preJudgmentCastCounts.maw || (boss._dragonIceWallCasts || 0) !== preJudgmentCastCounts.wall) {
+    throw new Error('Diamond Judgment should suppress all other Dragon casts while active');
+  }
   if (!ctx.damageHits.some(hit => hit.attackType === 'diamondStorm')) throw new Error('Diamond Storm should apply light team pressure');
   if (!ctx.damageHits.some(hit => hit.attackType === 'frostglassSurge')) throw new Error('Frostglass Colossus should use Frostglass Surge on the team');
   if (!ctx.damageHits.some(hit => hit.attackType === 'mirroriceCrush')) throw new Error('Mirrorice Juggernaut should use Mirrorice Crush on tank/melee');

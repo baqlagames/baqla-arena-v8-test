@@ -2,7 +2,7 @@ import { createScreenFlowRenderer } from '../ui/screen-flow-runtime.js';
 import { drawBattleHudOverlay } from '../ui/battle-hud.js';
 import { drawDesktopBattleControls, drawMobileBattleControls } from '../ui/battle-controls.js';
 import { drawBattleTopChrome } from '../ui/battle-topbar.js';
-import { drawBossCastBar as drawEncounterBossCastBar, drawBossHpBar as drawEncounterBossHpBar, drawLieutenantsBar as drawEncounterLieutenantsBar, drawPurifyBar as drawEncounterPurifyBar } from '../ui/encounter-bars.js?v=20260523-dragon-judgment';
+import { drawBossCastBar as drawEncounterBossCastBar, drawBossHpBar as drawEncounterBossHpBar, drawLieutenantsBar as drawEncounterLieutenantsBar, drawPurifyBar as drawEncounterPurifyBar } from '../ui/encounter-bars.js?v=20260523-dragon-judgment-fix';
 import { drawPauseMenu } from '../ui/pause-menu.js';
 import { drawCombatRoundChip as drawRoundReportChip } from '../ui/round-report.js';
 import { drawCombatReportPanel as drawResultCombatReportPanel, resultButtonRects as getResultButtonRects } from '../ui/results.js';
