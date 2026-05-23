@@ -1,4 +1,4 @@
-import { createWeatherParticles, drawWeatherForegroundOverlay, drawWeatherOverlay } from '../render/weather.js?v=20260523-winterglass-dragon';
+import { createWeatherParticles, drawWeatherForegroundOverlay, drawWeatherOverlay } from '../render/weather.js?v=20260523-dragon-storm45';
 import { createBattleStructuresRenderer } from '../render/battle-structures.js';
 
 export function createBattleObjectiveRuntime(deps = {}) {

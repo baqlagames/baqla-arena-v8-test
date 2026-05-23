@@ -1,4 +1,4 @@
-import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260523-winterglass-dragon';
+import { createBattleSceneRuntime } from '../render/battle-scene-runtime.js?v=20260523-dragon-storm45';
 
 export function createBattleSceneComposition(deps) {
   const states = deps.states;

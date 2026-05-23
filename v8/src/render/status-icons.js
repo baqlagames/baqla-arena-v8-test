@@ -24,6 +24,8 @@ function imminentBossSkillIcon(t,tickHz){
     ['wingBuffet','wingBuffetCD','#9fdcff','B','Wing Buffet Soon'],
     ['iceComet','iceCometCD','#d8f8ff','C','Ice Comets Soon'],
     ['frozenVoice','frozenVoiceCD','#d8f8ff','V','Frozen Voice Soon'],
+    ['frigidMaw','frigidMawCD','#bff4ff','M','Frigid Maw Soon'],
+    ['iceWall','iceWallCD','#d8f8ff','W','Icebreaker Wall Soon'],
     ['diamondStorm','diamondStormCD','#eef8ff','D','Diamond Storm Soon'],
     ['dragonHunt','dragonHuntCD','#9fdcff','H','Dragon Hunt'],
     ['burrow','burrowCD','#8b6f3d','B','Burrow Soon'],
@@ -166,6 +168,7 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._stormSilenceTimer>0)icons.push({c:'#d8f8ff',g:'V',title:'Frozen Voice',pulse:true});
   if(t._stormCurseTimer>0)icons.push({c:'#9fdcff',g:'C',title:'Rime Curse',pulse:true});
   if(t._stormVenomTimer>0)icons.push({c:'#d8f8ff',g:'F',title:'Frostburn',pulse:true});
+  if(t._rimeVenomTimer>0)icons.push({c:'#bff4ff',g:'V',title:'Rime Venom',pulse:true});
   if(t._astralBlightTimer>0)icons.push({c:'#8bdfff',g:'A',title:'Astral Blight',pulse:true});
   const sigIcon=playerSignatureIcon(t);
   if(sigIcon)icons.push(sigIcon);
@@ -180,6 +183,7 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._dragonSkyPhase)icons.push({c:'#d8f8ff',g:'D',title:'Diamond Storm',pulse:true});
   if(t._dragonExposedTimer>0)icons.push({c:'#d8f8ff',g:'E',title:'Dragon Exposed',pulse:true});
   if(t._dragonHuntActive)icons.push({c:'#9fdcff',g:'H',title:'Dragon Hunt',pulse:true});
+  if(t.dragonBroodguard)icons.push({c:'#bff4ff',g:'B',title:'Glacier Broodguard',pulse:true});
   if(t.winterWhelp)icons.push({c:'#d8f8ff',g:'W',title:'Winter Whelp',pulse:true});
   if(t._royalStingTimer>0)icons.push({c:'#ffdd44',g:'S',title:'Royal Sting'});
   if(t.timeEnraged)icons.push({c:'#ff2200',g:'!',title:'Boss Enraged',pulse:true});

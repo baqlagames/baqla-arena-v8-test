@@ -1,9 +1,9 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=20260523-winterglass-dragon';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260523-winterglass-dragon';
-import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260523-winterglass-dragon';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260523-dragon-storm45';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260523-dragon-storm45';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260523-dragon-storm45';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';

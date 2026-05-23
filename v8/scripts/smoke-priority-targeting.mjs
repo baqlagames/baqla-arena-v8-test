@@ -147,10 +147,19 @@ const whelp = enemy('Winter Whelp', 250, 560, {
   preferredBy: 'melee',
   arch: 'melee',
 });
+const broodguard = enemy('Glacier Broodguard', 250, 520, {
+  dragonBroodguard: true,
+  _dragonBoss: dragon,
+  priorityTarget: true,
+  preferredBy: 'melee',
+  arch: 'melee',
+});
 const skyMeleePick = findEnemyTargetForUnit(melee, view([dragon, whelp]));
 assert.equal(skyMeleePick, whelp, 'melee should switch to grounded Winter Whelps during Dragon sky phase');
 const skyTankPick = findEnemyTargetForUnit(tank, view([dragon, whelp]));
 assert.equal(skyTankPick, whelp, 'tank should switch to grounded Winter Whelps during Dragon sky phase');
+const broodMeleePick = findEnemyTargetForUnit(melee, view([dragon, broodguard, whelp]));
+assert.equal(broodMeleePick, broodguard, 'melee should prefer the closer Glacier Broodguard during Dragon sky phase');
 const skyCasterPick = findEnemyTargetForUnit(caster, view([dragon, whelp]));
 assert.equal(skyCasterPick, dragon, 'caster should keep attacking airborne Winterglass Dragon during sky phase');
 const skyHunterPick = findEnemyTargetForUnit(hunter, view([dragon, whelp]));

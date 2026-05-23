@@ -94,6 +94,22 @@ function tickBossDebuffs(unit, {
       unit._stormVenomFrom = null;
     }
   }
+  if (unit._rimeVenomTimer > 0) {
+    unit._rimeVenomTimer--;
+    unit._rimeVenomTick = Math.max(0, (unit._rimeVenomTick || 120) - 1);
+    if (unit._rimeVenomTick <= 0 && unit.hp > 0) {
+      unit._rimeVenomTick = 120;
+      const dmg = Math.max(unit._rimeVenomMinDmg || 8, Math.round((unit.maxHp || unit.hp || 1) * (unit._rimeVenomHpPct || 0.008)));
+      dealDamage(unit, dmg, unit._rimeVenomFrom || null, 'magic', 'rimeVenom', { sourceLabel: 'RIME VENOM', sourceColor: '#bff4ff' });
+      addDamageText(unit.x, unit.y - unit.size - 8, 'RIME VENOM', '#bff4ff');
+      emitParticle(unit.x, unit.y - unit.size * 0.5, '#bff4ff', 4, 2);
+    }
+    if (frame % 10 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.35, unit.size * 0.35), unit.y - unit.size * 0.45, '#bff4ff', 1, 2);
+    if (unit._rimeVenomTimer <= 0) {
+      unit._rimeVenomTick = 0;
+      unit._rimeVenomFrom = null;
+    }
+  }
   if (unit._astralBlightTimer > 0) {
     unit._astralBlightTimer--;
     unit._astralBlightTick = Math.max(0, (unit._astralBlightTick || 60) - 1);

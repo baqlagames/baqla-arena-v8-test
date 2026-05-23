@@ -82,7 +82,7 @@ export function drawLieutenantsBar(ctx,view){
 const BOSS_SKILL_LABELS={
   2:{aoe:'TOXIC',debuff:'DISEASE',pcloud:'CLOUD'},
   3:{aoe:'SMOKE',debuff:'MARK',vanish:'AMBUSH'},
-  4:{frozenScales:'SCALES',wingBuffet:'BUFFET',iceComet:'COMETS',frozenVoice:'VOICE',diamondStorm:'STORM',dragonHunt:'HUNT'},
+  4:{frozenScales:'SCALES',wingBuffet:'BUFFET',frigidMaw:'MAW',iceWall:'WALL',iceComet:'COMETS',frozenVoice:'VOICE',diamondStorm:'STORM',dragonHunt:'HUNT'},
   5:{aoe:'QUAKE',burrow:'BURROW',debuff:'SLOW',magicBolt:'SAND'},
   6:{aoe:'SUN',debuff:'DEATH',spawn:'MUMMY',magicBolt:'BOLT'},
   10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
@@ -126,13 +126,15 @@ const DEFAULT_SKILL_LABELS={
   wingBuffet:'BUFFET',
   iceComet:'COMETS',
   frozenVoice:'VOICE',
+  frigidMaw:'MAW',
+  iceWall:'WALL',
   diamondStorm:'STORM',
   dragonHunt:'HUNT'
 };
 
 const BOSS_SKILL_HINTS={
   3:{aoe:'MOVE OUT',debuff:'MARKED TARGET',vanish:'BACKLINE AMBUSH'},
-  4:{frozenScales:'MIXED DAMAGE',wingBuffet:'FRONTLINE HIT',iceComet:'4 TARGETS',frozenVoice:'HEALER LOCK',diamondStorm:'SKY PHASE',dragonHunt:'NO TANK'},
+  4:{frozenScales:'MIXED DAMAGE',wingBuffet:'FRONTLINE HIT',frigidMaw:'CONE HIT',iceWall:'MOVING WALL',iceComet:'4 TARGETS',frozenVoice:'HEALER LOCK',diamondStorm:'SKY PHASE',dragonHunt:'NO TANK'},
   5:{aoe:'GROUND SLAM',burrow:'MOVE AWAY',debuff:'SLOW TARGET',magicBolt:'RANGED HIT'},
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
   10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
@@ -175,6 +177,8 @@ const DEFAULT_SKILL_HINTS={
   wingBuffet:'FRONTLINE HIT',
   iceComet:'4 TARGETS',
   frozenVoice:'HEALER LOCK',
+  frigidMaw:'CONE HIT',
+  iceWall:'MOVING WALL',
   diamondStorm:'SKY PHASE',
   dragonHunt:'NO TANK'
 };
@@ -223,6 +227,8 @@ export function bossReadableSkillPills(boss){
   add('tankCurse','tankCurseCD','#9fdcff');
   add('frozenScales','frozenScalesCD','#d8f8ff');
   add('wingBuffet','wingBuffetCD','#9fdcff');
+  add('frigidMaw','frigidMawCD','#bff4ff');
+  add('iceWall','iceWallCD','#d8f8ff');
   add('iceComet','iceCometCD','#d8f8ff');
   add('frozenVoice','frozenVoiceCD','#d8f8ff');
   add('diamondStorm','diamondStormCD','#eef8ff');

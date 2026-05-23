@@ -1152,6 +1152,51 @@ function dragonVoiceCooldown(b){
   const max=b.frozenVoiceCDMax||900;
   return Math.round(rnd(min,max));
 }
+function dragonAngleDiff(a,b){
+  let d=a-b;
+  while(d>Math.PI)d-=Math.PI*2;
+  while(d<-Math.PI)d+=Math.PI*2;
+  return Math.abs(d);
+}
+function dragonLineDistance(px,py,x1,y1,x2,y2){
+  const dx=x2-x1,dy=y2-y1,lenSq=dx*dx+dy*dy;
+  if(lenSq<=0)return {dist:Math.hypot(px-x1,py-y1),t:0};
+  const t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/lenSq));
+  const x=x1+dx*t,y=y1+dy*t;
+  return {dist:Math.hypot(px-x,py-y),t};
+}
+function dragonPathPoint(points,pct){
+  const segs=[];
+  let total=0;
+  for(let i=0;i<points.length-1;i++){
+    const a=points[i],b=points[i+1],len=Math.hypot(b.x-a.x,b.y-a.y);
+    segs.push({a,b,len});total+=len;
+  }
+  let walk=Math.max(0,Math.min(1,pct))*Math.max(1,total);
+  for(const seg of segs){
+    if(walk>seg.len){walk-=seg.len;continue}
+    const t=seg.len>0?walk/seg.len:0;
+    return {
+      x:seg.a.x+(seg.b.x-seg.a.x)*t,
+      y:seg.a.y+(seg.b.y-seg.a.y)*t,
+      dx:seg.b.x-seg.a.x,
+      dy:seg.b.y-seg.a.y
+    };
+  }
+  const last=segs[segs.length-1];
+  return last?{x:last.b.x,y:last.b.y,dx:last.b.x-last.a.x,dy:last.b.y-last.a.y}:points[0];
+}
+function applyDragonRimeVenom(u,b,ctx){
+  if(!u||u.hp<=0)return;
+  u._rimeVenomTimer=Math.max(u._rimeVenomTimer||0,b.rimeVenomDur||5*GAME_TICK_HZ);
+  u._rimeVenomTick=Math.min(u._rimeVenomTick||GAME_TICK_HZ,GAME_TICK_HZ);
+  u._rimeVenomHpPct=b.rimeVenomHpPct||0.008;
+  u._rimeVenomMinDmg=b.rimeVenomMinDmg||8;
+  u._rimeVenomHealCut=b.rimeVenomHealCut||0.08;
+  u._rimeVenomFrom=b;
+  ctx.addDamageText(u.x,u.y-(u.size||20)-20,'RIME VENOM','#bff4ff',{sz:10,bold:true,outline:'#061433'});
+  ctx.addParticle(u.x,u.y-u.size*0.45,'#bff4ff',5,2);
+}
 function syncDragonCooldowns(b){
   const cd=b.mechCD||(b.mechCD={});
   const hidden=9999;
@@ -1159,6 +1204,8 @@ function syncDragonCooldowns(b){
   cd.wingBuffet=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonWingCd||0));
   cd.iceComet=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonCometCd||0));
   cd.frozenVoice=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonVoiceCd||0));
+  cd.frigidMaw=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonMawCd||0));
+  cd.iceWall=b._dragonSkyPhase?hidden:Math.max(0,Math.round(b._dragonWallCd||0));
   cd.diamondStorm=b._dragonSkyDone?hidden:(b._dragonSkyPhase?0:Math.max(0,Math.round(b._dragonStormCd||0)));
   cd.dragonHunt=b._dragonHuntActive?0:hidden;
 }
@@ -1170,8 +1217,11 @@ function initWinterglassDragon(b,ctx){
   b._dragonWingCd=b.wingBuffetFirst||210;
   b._dragonCometCd=b.iceCometFirst||360;
   b._dragonVoiceCd=b.frozenVoiceFirst||510;
+  b._dragonMawCd=b.frigidMawFirst||600;
+  b._dragonWallCd=b.iceWallFirst||1080;
   b._dragonStormCd=b.diamondStormCD||480;
   b._dragonPendingComets=[];
+  b._dragonIceWalls=[];
   b._dragonBasePrefersBackline=!!b.prefersBackline;
   b._dragonBaseFlying=!!b.flying;
   b._dragonBasePriority=!!b.priorityTarget;
@@ -1190,6 +1240,8 @@ function tickDragonCooldowns(b){
   if(b._dragonWingCd>0)b._dragonWingCd--;
   if(b._dragonCometCd>0)b._dragonCometCd--;
   if(b._dragonVoiceCd>0)b._dragonVoiceCd--;
+  if(b._dragonMawCd>0)b._dragonMawCd--;
+  if(b._dragonWallCd>0)b._dragonWallCd--;
   if(b._dragonStormCd>0)b._dragonStormCd--;
 }
 function toggleDragonScales(b,ctx){
@@ -1328,26 +1380,213 @@ function castDragonFrozenVoice(b,ctx){
   shake(4);
   return true;
 }
-function spawnDragonWhelp(b,ctx,index){
+function castDragonFrigidMaw(b,ctx){
+  const { units, groundFx, beamFx, dealDamage, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  const players=dragonPlayers(units);
+  if(!players.length)return false;
+  const focus=players.find(dragonIsTank)||players.sort((a,bb)=>((a.hp/a.maxHp)-(bb.hp/bb.maxHp)))[0];
+  if(!focus)return false;
+  const angle=Math.atan2(focus.y-b.y,focus.x-b.x);
+  const range=b.frigidMawRange||260;
+  const arc=b.frigidMawArc||0.86;
+  const base=(b.frigidMawDmg||126)*dragonSkillDamageMult(b);
+  groundFx.push({x:b.x,y:b.y,r:0,maxR:range,life:0.72,color:'#bff4ff',enemyWarn:true,warnTimer:30,warnMax:30,warnKind:'cleave',warnAngle:angle,warnSpread:arc,label:'MAW'});
+  for(let i=-1;i<=1;i++){
+    const a=angle+i*arc*0.34;
+    beamFx.push({x1:b.x,y1:b.y-b.size*0.18,x2:b.x+Math.cos(a)*range,y2:b.y+Math.sin(a)*range,life:24,maxLife:24,color:'#d8f8ff',width:i===0?5:2.6,straight:true});
+  }
+  let hits=0;
+  for(const u of players){
+    const dx=u.x-b.x,dy=u.y-b.y,d=Math.hypot(dx,dy);
+    if(d>range+(u.size||20)*0.45)continue;
+    if(dragonAngleDiff(Math.atan2(dy,dx),angle)>arc*0.52)continue;
+    const mult=dragonIsTank(u)?(b.frigidMawTankMult||1.05):(dragonIsMelee(u)?(b.frigidMawMeleeMult||0.95):(b.frigidMawBacklineMult||0.65));
+    dealDamage(u,Math.round(base*mult),b,'magic','frigidMaw',{sourceLabel:'FRIGID MAW',sourceColor:'#bff4ff'});
+    applyDragonRimeVenom(u,b,ctx);
+    addDmg(u.x,u.y-(u.size||20)-8,'FRIGID MAW','#bff4ff',{sz:11,bold:true,outline:'#061433'});
+    addP(u.x,u.y,'#d8f8ff',8,3);
+    hits++;
+  }
+  if(!hits){
+    dealDamage(focus,Math.round(base*(dragonIsTank(focus)?0.90:0.62)),b,'magic','frigidMaw',{sourceLabel:'FRIGID MAW',sourceColor:'#bff4ff'});
+    applyDragonRimeVenom(focus,b,ctx);
+    hits++;
+  }
+  addDmg(b.x,b.y-(b.size||70)-14,'FRIGID MAW','#bff4ff',{sz:13,bold:true,outline:'#061433'});
+  showFlash('FRIGID MAW!','#bff4ff',45);
+  b._dragonMawCasts=(b._dragonMawCasts||0)+1;
+  shake(6);
+  return true;
+}
+function castDragonIceWall(b,ctx){
+  const { units, groundFx, beamFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
+  const players=dragonPlayers(units);
+  if(!players.length)return false;
+  const target=players.sort((a,bb)=>((a.hp/a.maxHp)-(bb.hp/bb.maxHp)))[0];
+  const leftStart=(target.x||b.x)>((ARENA_L+ARENA_R)/2);
+  const yBase=target.y||b.y+160;
+  const start=clampBossPoint(leftStart?ARENA_L+24:ARENA_R-24,yBase-150,ctx,{sideMargin:18,topMargin:86,bottomMargin:66});
+  const mid=clampBossPoint(b.x+(leftStart?74:-74),yBase+rnd(-36,36),ctx,{sideMargin:38,topMargin:90,bottomMargin:66});
+  const end=clampBossPoint(leftStart?ARENA_R-24:ARENA_L+24,yBase+140,ctx,{sideMargin:18,topMargin:86,bottomMargin:66});
+  const warn=b.iceWallWarn||42;
+  const wall={points:[start,mid,end],warn,t:0,dur:b.iceWallDur||150,width:b.iceWallWidth||30,length:b.iceWallLength||145,dmg:Math.round((b.iceWallDmg||96)*dragonSkillDamageMult(b)),hit:new Set()};
+  b._dragonIceWalls=Array.isArray(b._dragonIceWalls)?b._dragonIceWalls:[];
+  b._dragonIceWalls.push(wall);
+  for(let i=0;i<wall.points.length-1;i++){
+    const a=wall.points[i],bb=wall.points[i+1];
+    groundFx.push({x:a.x,y:a.y,x2:bb.x,y2:bb.y,r:0,maxR:32,life:0.78,color:'#d8f8ff',enemyWarn:true,warnTimer:warn,warnMax:warn,warnKind:'line',width:wall.width,label:'WALL'});
+    beamFx.push({x1:a.x,y1:a.y,x2:bb.x,y2:bb.y,life:warn,maxLife:warn,color:'#9fdcff',width:2.2,straight:true});
+  }
+  addDmg(b.x,b.y-(b.size||70)-14,'ICEBREAKER WALL','#d8f8ff',{sz:13,bold:true,outline:'#061433'});
+  showFlash('ICEBREAKER WALL!','#d8f8ff',45);
+  for(let i=0;i<18;i++)addP(mid.x+rnd(-50,50),mid.y+rnd(-25,25),'#d8f8ff',1,3);
+  b._dragonIceWallCasts=(b._dragonIceWallCasts||0)+1;
+  shake(5);
+  return true;
+}
+function tickDragonIceWalls(b,ctx){
+  const walls=Array.isArray(b._dragonIceWalls)?b._dragonIceWalls:[];
+  if(!walls.length)return;
+  const { units, groundFx, beamFx, dealDamage, addParticle:addP, addDamageText:addDmg, shake }=ctx;
+  for(let i=walls.length-1;i>=0;i--){
+    const wall=walls[i];
+    if(wall.warn>0){wall.warn--;continue}
+    wall.t++;
+    const pct=wall.t/Math.max(1,wall.dur||150);
+    const p=dragonPathPoint(wall.points,pct);
+    const d=Math.hypot(p.dx||1,p.dy||0)||1;
+    const nx=-(p.dy||0)/d,ny=(p.dx||1)/d;
+    const half=(wall.length||145)*0.5;
+    const x1=p.x-nx*half,y1=p.y-ny*half,x2=p.x+nx*half,y2=p.y+ny*half;
+    beamFx.push({x1,y1,x2,y2,life:12,maxLife:12,color:'#eef8ff',width:8,straight:true});
+    beamFx.push({x1:p.x-(p.dx/d)*26,y1:p.y-(p.dy/d)*26,x2:p.x+(p.dx/d)*26,y2:p.y+(p.dy/d)*26,life:10,maxLife:10,color:'#9fdcff',width:13,straight:true});
+    if(wall.t%8===0)groundFx.push({x:p.x,y:p.y,r:0,maxR:Math.max(30,wall.width+10),life:0.28,color:'#d8f8ff',enemyWarn:true,warnTimer:8,warnMax:8,label:'WALL'});
+    for(const u of dragonPlayers(units)){
+      if(wall.hit.has(u))continue;
+      const hit=dragonLineDistance(u.x,u.y,x1,y1,x2,y2);
+      if(hit.dist>(wall.width||30))continue;
+      const mult=dragonIsTank(u)?0.95:(dragonIsMelee(u)?0.90:0.72);
+      dealDamage(u,Math.round((wall.dmg||96)*mult),b,'magic','iceWall',{sourceLabel:'ICE WALL',sourceColor:'#d8f8ff'});
+      applyDragonRimeVenom(u,b,ctx);
+      addDmg(u.x,u.y-(u.size||20)-8,'ICE WALL','#d8f8ff',{sz:11,bold:true,outline:'#061433'});
+      addP(u.x,u.y,'#d8f8ff',10,3);
+      wall.hit.add(u);
+      shake(4);
+    }
+    if(wall.t>=wall.dur)walls.splice(i,1);
+  }
+}
+function spawnDragonBroodguard(b,ctx){
+  const { enemies, groundFx, addParticle:addP, addDamageText:addDmg }=ctx;
+  const p=clampBossPoint(b.x,b.y+Math.max(145,(b.size||70)*1.85),ctx,{sideMargin:68,topMargin:135,bottomMargin:125});
+  const brood={
+    name:'Glacier Broodguard',dragonBroodguard:true,_dragonBoss:b,_dragonPack:'main',
+    priorityTarget:true,preferredBy:'melee',
+    act:2,arch:'melee',color:'#bff4ff',accent:'#6fb8e8',projType:'frost',
+    x:p.x,y:p.y,
+    maxHp:b.dragonBroodguardHp||4200,hp:b.dragonBroodguardHp||4200,
+    dmg:b.dragonBroodguardAttack||b.dragonBroodguardDmg||72,speed:0.30,atkSpd:70,range:44,size:b.dragonBroodguardSize||44,
+    armor:b.dragonBroodguardArmor||6,magicRes:b.dragonBroodguardMagicRes||2,points:0,fixedGoldReward:0,isEnemy:true,bossSupport:true,bossSupportColor:'#bff4ff',
+    cd:20,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},spawnFrame:ctx.frame||0,entryHold:22,_goreCd:80
+  };
+  enemies.push(brood);
+  groundFx.push({x:brood.x,y:brood.y,r:0,maxR:78,life:0.7,color:'#bff4ff',enemyWarn:true,warnTimer:28,warnMax:28,label:'BROOD'});
+  addDmg(brood.x,brood.y-brood.size-14,'GLACIER BROODGUARD','#bff4ff',{sz:12,bold:true,outline:'#061433'});
+  addP(brood.x,brood.y,'#d8f8ff',22,4);
+  return brood;
+}
+function tickDragonBroodguard(brood,b,ctx){
+  if(!brood||brood.hp<=0)return;
+  brood._goreCd=Math.max(0,(brood._goreCd||0)-1);
+  if(brood._goreCd>0)return;
+  brood._goreCd=Math.round(2.8*GAME_TICK_HZ);
+  const { units, groundFx, beamFx, dealDamage, addParticle:addP, addDamageText:addDmg, shake }=ctx;
+  const players=dragonPlayers(units);
+  const target=players.find(dragonIsTank)||players.find(dragonIsMelee)||players[0];
+  if(!target)return;
+  const angle=Math.atan2(target.y-brood.y,target.x-brood.x);
+  const range=118,spread=1.05;
+  groundFx.push({x:brood.x,y:brood.y,r:0,maxR:range,life:0.42,color:'#bff4ff',enemyWarn:true,warnTimer:18,warnMax:18,warnKind:'cleave',warnAngle:angle,warnSpread:spread,label:'GORE'});
+  const forcedFrontline=[
+    players.find(dragonIsTank),
+    players.filter(u=>dragonIsMelee(u)&&!dragonIsTank(u)).sort((a,bb)=>Math.hypot((a.x||0)-brood.x,(a.y||0)-brood.y)-Math.hypot((bb.x||0)-brood.x,(bb.y||0)-brood.y))[0]
+  ].filter(Boolean);
+  const hitList=[];
+  for(const u of players){
+    if(!(dragonIsTank(u)||dragonIsMelee(u)))continue;
+    const dx=u.x-brood.x,dy=u.y-brood.y,d=Math.hypot(dx,dy);
+    if(d>range+(u.size||20)*0.35)continue;
+    if(dragonAngleDiff(Math.atan2(dy,dx),angle)>spread*0.55)continue;
+    hitList.push(u);
+  }
+  for(const u of forcedFrontline){
+    if(hitList.includes(u))continue;
+    hitList.push(u);
+  }
+  let hits=0;
+  for(const u of hitList){
+    const mult=dragonIsTank(u)?1.05:0.82;
+    dealDamage(u,Math.round((b.dragonBroodguardGoreDmg||96)*mult),brood,'magic','crystalGore',{sourceLabel:'CRYSTAL GORE',sourceColor:'#bff4ff'});
+    beamFx.push({x1:brood.x,y1:brood.y-brood.size*0.15,x2:u.x,y2:u.y-u.size*0.15,life:14,maxLife:14,color:'#bff4ff',width:4,straight:true});
+    addDmg(u.x,u.y-(u.size||20)-8,'CRYSTAL GORE','#bff4ff',{sz:10,bold:true,outline:'#061433'});
+    addP(u.x,u.y,'#d8f8ff',7,3);
+    hits++;
+  }
+  if(!hits){
+    dealDamage(target,Math.round((b.dragonBroodguardGoreDmg||96)*0.85),brood,'magic','crystalGore',{sourceLabel:'CRYSTAL GORE',sourceColor:'#bff4ff'});
+    addDmg(target.x,target.y-(target.size||20)-8,'CRYSTAL GORE','#bff4ff',{sz:10,bold:true,outline:'#061433'});
+  }
+  addDmg(brood.x,brood.y-brood.size-12,'CRYSTAL GORE','#bff4ff',{sz:11,bold:true,outline:'#061433'});
+  shake(4);
+}
+function spawnDragonWhelp(b,ctx,index,opts={}){
   const { enemies, groundFx, addParticle:addP, addDamageText:addDmg }=ctx;
   const side=index%2===0?-1:1;
   const row=Math.floor(index/2);
+  const p=opts.x!=null&&opts.y!=null?{x:opts.x,y:opts.y}:clampBossPoint(
+    b.x+side*(70+row*24),
+    b.y+Math.max(205,(b.size||70)*2.25)+row*38,
+    ctx,
+    {sideMargin:42,topMargin:150,bottomMargin:90}
+  );
   const whelp={
-    name:'Winter Whelp',winterWhelp:true,_dragonBoss:b,
+    name:'Winter Whelp',winterWhelp:true,_dragonBoss:b,_dragonPack:opts.pack||'main',
     priorityTarget:true,preferredBy:'melee',
     act:2,arch:'melee',color:'#d8f8ff',accent:'#6fb8e8',projType:'frost',
-    x:b.x+side*(70+row*20),y:b.y+Math.max(74,(b.size||54)*0.95)+row*36,
-    maxHp:b.winterWhelpHp||760,hp:b.winterWhelpHp||760,
-    dmg:b.winterWhelpDmg||38,speed:0.35,atkSpd:72,range:38,size:b.winterWhelpSize||23,
+    x:p.x,y:p.y,
+    maxHp:opts.hp||b.winterWhelpHp||950,hp:opts.hp||b.winterWhelpHp||950,
+    dmg:opts.dmg||b.winterWhelpAttack||b.winterWhelpDmg||44,speed:0.35,atkSpd:72,range:38,size:opts.size||b.winterWhelpSize||24,
     armor:1,magicRes:1,points:0,fixedGoldReward:0,isEnemy:true,bossSupport:true,bossSupportColor:'#d8f8ff',
     cd:0,facing:-1,bobPhase:Math.random()*Math.PI*2,debuffs:{},spawnFrame:ctx.frame||0,entryHold:18
   };
-  clampBossActor(whelp,ctx,{topMargin:78,bottomMargin:90});
   enemies.push(whelp);
   groundFx.push({x:whelp.x,y:whelp.y,r:0,maxR:52,life:0.55,color:'#d8f8ff',enemyWarn:true,warnTimer:24,warnMax:24,label:'WHELP'});
   addDmg(whelp.x,whelp.y-whelp.size-10,'WINTER WHELP','#d8f8ff',{sz:11,bold:true,outline:'#061433'});
   addP(whelp.x,whelp.y,'#d8f8ff',14,3);
   return whelp;
+}
+function spawnDragonSkyPack(b,ctx){
+  if(b._dragonMainPackSpawned)return;
+  b._dragonMainPackSpawned=true;
+  spawnDragonBroodguard(b,ctx);
+  for(let i=0;i<(b.diamondStormWhelps||4);i++)spawnDragonWhelp(b,ctx,i,{pack:'main'});
+  b._dragonWhelpsSpawned=b.diamondStormWhelps||4;
+}
+function activeDragonSkyAdds(b,enemies){
+  return (enemies||[]).filter(enemy=>enemy&&enemy.hp>0&&enemy._dragonBoss===b&&(enemy.winterWhelp||enemy.dragonBroodguard));
+}
+function maybeSpawnDragonFollowupWhelps(b,ctx){
+  const remaining=b._dragonSkyTimer||0;
+  if(remaining<=8*GAME_TICK_HZ)return;
+  if(activeDragonSkyAdds(b,ctx.enemies).length)return;
+  b._dragonFollowupCd=Math.max(0,(b._dragonFollowupCd||0)-1);
+  if(b._dragonFollowupCd>0)return;
+  b._dragonFollowupCd=b.dragonFollowupWhelpEvery||10*GAME_TICK_HZ;
+  const yBase=clampBossPoint(b.x,b.y+Math.max(215,(b.size||70)*2.35),ctx,{sideMargin:46,topMargin:155,bottomMargin:90}).y;
+  const followupDmg=b.dragonFollowupWhelpAttack||b.dragonFollowupWhelpDmg||38;
+  spawnDragonWhelp(b,ctx,0,{pack:'followup',hp:b.dragonFollowupWhelpHp||850,dmg:followupDmg,x:b.x-64,y:yBase});
+  spawnDragonWhelp(b,ctx,1,{pack:'followup',hp:b.dragonFollowupWhelpHp||850,dmg:followupDmg,x:b.x+64,y:yBase+18});
+  ctx.addDamageText(b.x,yBase-42,'WINTER WHELPS','#d8f8ff',{sz:11,bold:true,outline:'#061433'});
 }
 function startDragonDiamondStorm(b,ctx){
   const { groundFx, addParticle:addP, addDamageText:addDmg, showFlash, shake }=ctx;
@@ -1357,7 +1596,8 @@ function startDragonDiamondStorm(b,ctx){
   b._dragonSkyMax=b._dragonSkyTimer;
   b._dragonStormTick=b.diamondStormTick||60;
   b._dragonWhelpsSpawned=0;
-  b._dragonWhelpCd=1;
+  b._dragonMainPackSpawned=false;
+  b._dragonFollowupCd=b.dragonFollowupWhelpEvery||10*GAME_TICK_HZ;
   b._dragonSavedFlying=!!b.flying;
   b._dragonSavedPriority=!!b.priorityTarget;
   b._dragonSavedPreferredBy=b.preferredBy;
@@ -1371,6 +1611,7 @@ function startDragonDiamondStorm(b,ctx){
   for(let i=0;i<46;i++)addP(b.x+rnd(-b.size*1.2,b.size*1.2),b.y+rnd(-b.size,b.size*0.7),'#d8f8ff',1,5);
   showFlash('DIAMOND STORM!','#d8f8ff',75);
   b._dragonStormCasts=(b._dragonStormCasts||0)+1;
+  spawnDragonSkyPack(b,ctx);
   shake(10);
   return true;
 }
@@ -1384,7 +1625,7 @@ function endDragonDiamondStorm(b,ctx){
   b._dragonExposedTimer=Math.max(b._dragonExposedTimer||0,b.dragonExposeDur||300);
   b._dragonExposedDamageMult=b.dragonExposeMult||1.22;
   for(const enemy of enemies||[]){
-    if(enemy&&enemy.winterWhelp&&enemy._dragonBoss===b&&enemy.hp>0){
+    if(enemy&&enemy._dragonBoss===b&&(enemy.winterWhelp||enemy.dragonBroodguard)&&enemy.hp>0){
       enemy.hp=0;
       addP(enemy.x,enemy.y,'#d8f8ff',10,3);
     }
@@ -1398,12 +1639,11 @@ function tickDragonSkyPhase(b,ctx){
   if(!b._dragonSkyPhase)return false;
   const { units, beamFx, groundFx, dealDamage, addParticle:addP, addDamageText:addDmg, shake }=ctx;
   b._dragonSkyTimer--;
-  b._dragonWhelpCd--;
-  if((b._dragonWhelpCd||0)<=0&&(b._dragonWhelpsSpawned||0)<(b.diamondStormWhelps||4)){
-    spawnDragonWhelp(b,ctx,b._dragonWhelpsSpawned||0);
-    b._dragonWhelpsSpawned=(b._dragonWhelpsSpawned||0)+1;
-    b._dragonWhelpCd=b.diamondStormWhelpEvery||96;
+  spawnDragonSkyPack(b,ctx);
+  for(const enemy of activeDragonSkyAdds(b,ctx.enemies)){
+    if(enemy.dragonBroodguard)tickDragonBroodguard(enemy,b,ctx);
   }
+  maybeSpawnDragonFollowupWhelps(b,ctx);
   b._dragonStormTick=(b._dragonStormTick||1)-1;
   if(b._dragonStormTick<=0){
     b._dragonStormTick=b.diamondStormTick||60;
@@ -1454,6 +1694,7 @@ function updateWinterglassDragon(b,ctx){
     if(b._dragonExposedTimer<=0)b._dragonExposedDamageMult=0;
   }
   tickDragonComets(b,ctx);
+  tickDragonIceWalls(b,ctx);
   updateDragonHunt(b,ctx);
   if(tickDragonSkyPhase(b,ctx))return;
   tickDragonCooldowns(b);
@@ -1477,6 +1718,8 @@ function updateWinterglassDragon(b,ctx){
     return true;
   };
   if(tryCast('_dragonWingCd',b.wingBuffetCD||420,50,castDragonWingBuffet))return;
+  if(tryCast('_dragonMawCd',b.frigidMawCD||1200,58,castDragonFrigidMaw))return;
+  if(tryCast('_dragonWallCd',b.iceWallCD||1560,54,castDragonIceWall))return;
   if(tryCast('_dragonCometCd',b.iceCometCD||690,64,castDragonIceComets))return;
   tryCast('_dragonVoiceCd',dragonVoiceCooldown,48,castDragonFrozenVoice);
 }

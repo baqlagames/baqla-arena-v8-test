@@ -1,5 +1,5 @@
-import { drawHealthBar } from './health-bars.js?v=20260523-winterglass-dragon';
-import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260523-winterglass-dragon';
+import { drawHealthBar } from './health-bars.js?v=20260523-dragon-storm45';
+import { collectStatusIcons, drawStatusIconChips } from './status-icons.js?v=20260523-dragon-storm45';
 
 export function createActorOverlayRenderer({
   ctx,

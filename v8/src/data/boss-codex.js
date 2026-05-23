@@ -43,13 +43,14 @@ export const BOSS_CODEX_ENTRIES = [
     bossId: 4,
     stage: 10,
     title: 'Winterglass Dragon',
-    subtitle: 'Scales, comets, sky storm',
+    subtitle: 'Scales, broodguard, sky storm',
     color: '#9fdcff',
     tags: ['FROST', 'BURST', 'BACKLINE THREAT', 'SOFT CONTROL', 'MIXED DAMAGE', 'FLYERS'],
     mechanics: [
       ['Frozen Scales', 'Rime and Glass Scales alternate physical and magic resistance.'],
       ['Ice Comets', 'Four visible comet targets test team healing.'],
-      ['Diamond Storm', 'The dragon flies while ranged units keep firing and melee clears whelps.'],
+      ['Frigid Maw', 'A frost cone and moving ice wall punish stacked frontline units.'],
+      ['Diamond Storm', 'The dragon flies while ranged units keep firing and melee clears the Broodguard pack.'],
     ],
   },
   {

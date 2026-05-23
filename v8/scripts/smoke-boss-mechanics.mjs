@@ -612,6 +612,10 @@ function smokeWinterglassDragon(ctx, boss) {
   if (dragonTemplate.name !== 'Winterglass Dragon') throw new Error('boss id 4 should be Winterglass Dragon');
   if (dragonTemplate.hp !== 36000 || dragonTemplate.dmg !== 150 || dragonTemplate.size !== 70) throw new Error('Winterglass Dragon core tuning drifted');
   if (dragonTemplate.timeEnrageAt !== 36000) throw new Error('Winterglass Dragon enrage should be 36000 frames');
+  if (dragonTemplate.diamondStormDur !== 5400 || dragonTemplate.diamondStormDmg !== 34) throw new Error('Winterglass Dragon Diamond Storm should be a 45s softened sky phase');
+  if (dragonTemplate.winterWhelpHp !== 950 || dragonTemplate.winterWhelpDmg !== 44 || dragonTemplate.dragonBroodguardHp !== 4200 || dragonTemplate.dragonBroodguardDmg !== 72) {
+    throw new Error('Winterglass Dragon sky phase add tuning drifted');
+  }
   if (dragonTemplate.meteorCD || dragonTemplate.aoeCD || dragonTemplate.debuffCD || dragonTemplate.sonsAt || dragonTemplate.searingBrandEvery) throw new Error('Winterglass Dragon should not keep old Sultan fire mechanics');
   if (dragonTemplate.spawnCD !== 0) throw new Error('Winterglass Dragon should not spawn old fire support');
 
@@ -639,14 +643,39 @@ function smokeWinterglassDragon(ctx, boss) {
   boss._dragonWingCd = 0;
   boss._dragonCometCd = 9999;
   boss._dragonVoiceCd = 9999;
+  boss._dragonMawCd = 9999;
+  boss._dragonWallCd = 9999;
   tickBoss(ctx, boss, 1);
   if (!ctx.damageHits.some(hit => hit.attackType === 'wingBuffet')) throw new Error('Winterglass Dragon Wing Buffet did not hit tank/melee');
   if (!ctx.units[0]._groundingBrandTimer || !ctx.units[1]._groundingBrandTimer) throw new Error('Wing Buffet should apply Frostbite to tank and melee');
 
   boss._dragonCastLock = 0;
   boss._dragonWingCd = 9999;
+  boss._dragonCometCd = 9999;
+  boss._dragonVoiceCd = 9999;
+  boss._dragonMawCd = 0;
+  boss._dragonWallCd = 9999;
+  tickBoss(ctx, boss, 1);
+  if (!ctx.damageHits.some(hit => hit.attackType === 'frigidMaw')) throw new Error('Winterglass Dragon Frigid Maw did not damage units');
+  if (!ctx.units.some(unit => unit._rimeVenomTimer > 0)) throw new Error('Frigid Maw should apply Rime Venom');
+
+  boss._dragonCastLock = 0;
+  boss._dragonWingCd = 9999;
+  boss._dragonCometCd = 9999;
+  boss._dragonVoiceCd = 9999;
+  boss._dragonMawCd = 9999;
+  boss._dragonWallCd = 0;
+  tickBoss(ctx, boss, 1);
+  if (!boss._dragonIceWalls || boss._dragonIceWalls.length === 0) throw new Error('Winterglass Dragon Icebreaker Wall was not queued');
+  tickBoss(ctx, boss, 220);
+  if (!ctx.damageHits.some(hit => hit.attackType === 'iceWall')) throw new Error('Winterglass Dragon Icebreaker Wall did not hit any unit');
+
+  boss._dragonCastLock = 0;
+  boss._dragonWingCd = 9999;
   boss._dragonCometCd = 0;
   boss._dragonVoiceCd = 9999;
+  boss._dragonMawCd = 9999;
+  boss._dragonWallCd = 9999;
   tickBoss(ctx, boss, 1);
   tickBoss(ctx, boss, 90);
   const cometTargets = new Set(ctx.damageHits.filter(hit => hit.attackType === 'iceComet').map(hit => hit.target));
@@ -656,6 +685,8 @@ function smokeWinterglassDragon(ctx, boss) {
   boss._dragonWingCd = 9999;
   boss._dragonCometCd = 9999;
   boss._dragonVoiceCd = 0;
+  boss._dragonMawCd = 9999;
+  boss._dragonWallCd = 9999;
   tickBoss(ctx, boss, 1);
   const voiced = ctx.units.filter(unit => unit._stormSilenceTimer > 0);
   if (voiced.length < 2 || !voiced.some(unit => unit.arch === 'healer')) throw new Error('Frozen Voice should silence two targets, healer first');
@@ -664,10 +695,20 @@ function smokeWinterglassDragon(ctx, boss) {
   boss.hp = Math.round(boss.maxHp * 0.49);
   tickBoss(ctx, boss, 1);
   if (!boss._dragonSkyPhase || !boss.flying) throw new Error('Diamond Storm should make the Dragon airborne at 50% HP');
+  const brood = ctx.enemies.filter(enemy => enemy.dragonBroodguard);
+  const mainWhelps = ctx.enemies.filter(enemy => enemy.winterWhelp && enemy._dragonPack === 'main');
+  if (brood.length !== 1 || mainWhelps.length !== 4) throw new Error('Diamond Storm should spawn one Broodguard and four main Whelps');
+  if (brood[0].maxHp !== 4200 || brood[0].dmg !== 72 || brood[0].size !== 44) throw new Error('Glacier Broodguard stats drifted');
+  if (!mainWhelps.every(enemy => enemy.maxHp === 950 && enemy.dmg === 44 && enemy.size === 24)) throw new Error('main Winter Whelp stats drifted');
   tickBoss(ctx, boss, 130);
-  if (!ctx.enemies.some(enemy => enemy.winterWhelp)) throw new Error('Diamond Storm should spawn Winter Whelps for melee');
   if (!ctx.damageHits.some(hit => hit.attackType === 'diamondStorm')) throw new Error('Diamond Storm should apply light team pressure');
-  tickBoss(ctx, boss, 420);
+  if (!ctx.damageHits.some(hit => hit.attackType === 'crystalGore')) throw new Error('Glacier Broodguard should use Crystal Gore on tank/melee');
+  for (const enemy of ctx.enemies) if (enemy._dragonBoss === boss && (enemy.winterWhelp || enemy.dragonBroodguard)) enemy.hp = 0;
+  boss._dragonFollowupCd = 1;
+  tickBoss(ctx, boss, 2);
+  const followups = ctx.enemies.filter(enemy => enemy.winterWhelp && enemy._dragonPack === 'followup');
+  if (followups.length !== 2 || !followups.every(enemy => enemy.maxHp === 850 && enemy.dmg === 38)) throw new Error('Diamond Storm follow-up Whelps should spawn as a low-pressure pair');
+  tickBoss(ctx, boss, 5400);
   if (boss._dragonSkyPhase || !(boss._dragonExposedTimer > 0)) throw new Error('Dragon should land exposed after Diamond Storm');
 
   ctx.units[0].hp = 0;
@@ -688,10 +729,10 @@ function assertBossReadability(ctx, boss) {
   const labels = (ctx.groundFx || []).map(item => item && item.label).filter(Boolean);
   const warnLabels = (ctx.groundFx || []).filter(item => item && item.enemyWarn).map(item => item.label);
   if (boss.id === 4) {
-    for (const text of ['RIME SCALES', 'GLASS SCALES', 'WING BUFFET', 'FROSTBITE', 'ICE COMET BARRAGE', 'ICE COMET', 'FROZEN VOICE', 'DIAMOND STORM', 'WINTER WHELP', 'DRAGON EXPOSED', 'HUNT']) {
+    for (const text of ['RIME SCALES', 'GLASS SCALES', 'WING BUFFET', 'FROSTBITE', 'FRIGID MAW', 'RIME VENOM', 'ICEBREAKER WALL', 'ICE WALL', 'ICE COMET BARRAGE', 'ICE COMET', 'FROZEN VOICE', 'DIAMOND STORM', 'GLACIER BROODGUARD', 'WINTER WHELP', 'CRYSTAL GORE', 'DRAGON EXPOSED', 'HUNT']) {
       if (!texts.includes(text)) throw new Error(`Winterglass Dragon missing ${text} callout`);
     }
-    for (const label of ['SCALES', 'BUFFET', 'COMET', 'VOICE', 'STORM', 'WHELP', 'EXPOSED', 'HUNT']) {
+    for (const label of ['SCALES', 'BUFFET', 'MAW', 'WALL', 'COMET', 'VOICE', 'STORM', 'BROOD', 'WHELP', 'EXPOSED', 'HUNT']) {
       if (!labels.includes(label)) throw new Error(`Winterglass Dragon missing ${label} warning label`);
     }
     if (texts.some(text => String(text).includes('EMBER') || String(text).includes('INFERNO') || String(text).includes('BURNING DOT'))) throw new Error('Winterglass Dragon should not use old Sultan/fire text');
