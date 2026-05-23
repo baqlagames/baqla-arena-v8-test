@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260523-dragon-storm45';
+import { BOSSES } from '../data/bosses.js?v=20260523-dragon-judgment';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){

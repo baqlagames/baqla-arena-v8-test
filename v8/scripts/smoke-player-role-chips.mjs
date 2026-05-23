@@ -56,7 +56,7 @@ const textCalls = [];
 const roundRects = [];
 const ctx = createRecordingCanvasContext(textCalls, roundRects);
 const units = [
-  makeUnit('tank', 0, { taunt: true, x: 230, y: 660 }),
+  makeUnit('tank', 0, { taunt: true, x: 230, y: 660, signature: { t: 600, cd: 1200 } }),
   makeUnit('melee', 1, { prefersMelee: true, x: 236, y: 664 }),
 ];
 const groundFx = [];
@@ -118,6 +118,7 @@ const tankTrack = roundRects.find(rect => Math.abs(rect.w - 58) < 0.1 && Math.ab
 const meleeTrack = roundRects.find(rect => Math.abs(rect.w - 36) < 0.1 && Math.abs(rect.h - 7) < 0.1);
 assert(tankTrack, 'tank player HP bar should use the wider/taller tank track');
 assert(meleeTrack, 'melee player HP bar should keep the compact player track');
+assert(textCalls.some(call => call.text === '5s'), 'player HUD should render signature cooldown below HP');
 
 const tankCenter = tankTrack.x + tankTrack.w / 2;
 const meleeCenter = meleeTrack.x + meleeTrack.w / 2;

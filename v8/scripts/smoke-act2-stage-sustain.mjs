@@ -189,10 +189,20 @@ function applyDamage(target, amount, source, type = 'normal', logs, attackType =
     if (attackType === 'frigidMaw') logs.dragonMaw += damage;
     if (attackType === 'iceWall') logs.dragonIceWall += damage;
     if (attackType === 'rimeVenom') logs.dragonRimeVenom += damage;
-    if (attackType === 'crystalGore') {
-      logs.dragonCrystalGore += damage;
-      if (target.arch === 'tank') logs.dragonBroodTank += damage;
-      if (target.arch === 'melee') logs.dragonBroodMelee += damage;
+    if (attackType === 'diamondJudgment') {
+      logs.dragonJudgment += damage;
+      if (target.arch === 'ranged' || target.arch === 'healer' || target.arch === 'caster') logs.dragonJudgmentBackline += damage;
+    }
+    if (attackType === 'frostglassSurge') {
+      logs.dragonFrostglassSurge += damage;
+      if (target.arch === 'tank') logs.dragonGuardTank += damage;
+      if (target.arch === 'melee') logs.dragonGuardMelee += damage;
+      if (target.arch === 'ranged' || target.arch === 'healer' || target.arch === 'caster') logs.dragonGuardBackline += damage;
+    }
+    if (attackType === 'mirroriceCrush') {
+      logs.dragonMirroriceCrush += damage;
+      if (target.arch === 'tank') logs.dragonGuardCrushTank += damage;
+      if (target.arch === 'melee') logs.dragonGuardCrushMelee += damage;
     }
   }
 }
@@ -520,12 +530,18 @@ function simulateStage(stage, stageIndex, seed) {
     dragonMaw: 0,
     dragonIceWall: 0,
     dragonRimeVenom: 0,
-    dragonCrystalGore: 0,
-    dragonBroodTank: 0,
-    dragonBroodMelee: 0,
-    dragonBroodguardsSeen: 0,
+    dragonJudgment: 0,
+    dragonJudgmentBackline: 0,
+    dragonFrostglassSurge: 0,
+    dragonMirroriceCrush: 0,
+    dragonGuardTank: 0,
+    dragonGuardMelee: 0,
+    dragonGuardBackline: 0,
+    dragonGuardCrushTank: 0,
+    dragonGuardCrushMelee: 0,
+    dragonGuardsSeen: 0,
+    dragonSafeIce: 0,
     dragonVoices: 0,
-    dragonWhelpsSeen: 0,
     dragonExposed: 0,
     dragonHunt: 0,
     searingBrands: 0,
@@ -541,7 +557,7 @@ function simulateStage(stage, stageIndex, seed) {
   const firstBossStart = lastWaveSecond * GAME_TICK_HZ + 10 * GAME_TICK_HZ;
   const miniBossStart = stage.n === 10 ? firstBossStart : null;
   const bossStart = stage.n === 10 ? firstBossStart + 38 * GAME_TICK_HZ : firstBossStart;
-  const bossSustainFrames = stage.n === 10 ? 62 * GAME_TICK_HZ : 66 * GAME_TICK_HZ;
+  const bossSustainFrames = stage.n === 10 ? 130 * GAME_TICK_HZ : 66 * GAME_TICK_HZ;
   const totalFrames = bossStart + (stage.bossId != null ? bossSustainFrames : 24 * GAME_TICK_HZ);
   const riftFrame = 40 * GAME_TICK_HZ;
   const forcedRiftRound = stage.n === 10 ? 5 : 4;
@@ -614,13 +630,15 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'WING BUFFET') logs.dragonWingTexts = (logs.dragonWingTexts || 0) + 1;
       if (text === 'ICE COMET') logs.dragonCometTexts = (logs.dragonCometTexts || 0) + 1;
       if (text === 'DIAMOND STORM') logs.dragonStormTexts = (logs.dragonStormTexts || 0) + 1;
+      if (text === 'DIAMOND JUDGMENT') logs.dragonJudgmentTexts = (logs.dragonJudgmentTexts || 0) + 1;
       if (text === 'FRIGID MAW') logs.dragonMawTexts = (logs.dragonMawTexts || 0) + 1;
       if (text === 'ICE WALL' || text === 'ICEBREAKER WALL') logs.dragonIceWallTexts = (logs.dragonIceWallTexts || 0) + 1;
       if (text === 'RIME VENOM') logs.dragonRimeVenomTexts = (logs.dragonRimeVenomTexts || 0) + 1;
-      if (text === 'GLACIER BROODGUARD') logs.dragonBroodguardsSeen++;
-      if (text === 'CRYSTAL GORE') logs.dragonCrystalGoreTexts = (logs.dragonCrystalGoreTexts || 0) + 1;
+      if (text === 'FROSTGLASS COLOSSUS' || text === 'MIRRORICE JUGGERNAUT') logs.dragonGuardsSeen++;
+      if (text === 'FROSTGLASS SURGE') logs.dragonFrostglassSurgeTexts = (logs.dragonFrostglassSurgeTexts || 0) + 1;
+      if (text === 'MIRRORICE CRUSH') logs.dragonMirroriceCrushTexts = (logs.dragonMirroriceCrushTexts || 0) + 1;
+      if (text === 'SAFE ICE' || text === 'SAFE ICE FORMING') logs.dragonSafeIce++;
       if (text === 'FROZEN VOICE' && mainBoss && mainBoss.id === 4) logs.dragonVoices++;
-      if (text === 'WINTER WHELP') logs.dragonWhelpsSeen++;
       if (text === 'DRAGON EXPOSED') logs.dragonExposed++;
       if (text === 'HUNT' || text === 'DRAGON HUNT') logs.dragonHunt++;
     },
@@ -646,6 +664,7 @@ function simulateStage(stage, stageIndex, seed) {
       if (text === 'WING BUFFET!') logs.dragonWingCasts = (logs.dragonWingCasts || 0) + 1;
       if (text === 'ICE COMET BARRAGE!') logs.dragonCometCasts = (logs.dragonCometCasts || 0) + 1;
       if (text === 'DIAMOND STORM!') logs.dragonStormCasts = (logs.dragonStormCasts || 0) + 1;
+      if (text === 'DIAMOND JUDGMENT!') logs.dragonJudgmentCasts = (logs.dragonJudgmentCasts || 0) + 1;
       if (text === 'FRIGID MAW!') logs.dragonMawCasts = (logs.dragonMawCasts || 0) + 1;
       if (text === 'ICEBREAKER WALL!') logs.dragonIceWallCasts = (logs.dragonIceWallCasts || 0) + 1;
       if (text === 'DRAGON HUNT!') logs.dragonHunt++;
@@ -740,18 +759,24 @@ function simulateStage(stage, stageIndex, seed) {
         }
         if (boss.id === 4 && boss._dragonSkyPhase) {
           for (const add of enemies) {
-            if (!add || add.hp <= 0 || add._dragonBoss !== boss || !(add.winterWhelp || add.dragonBroodguard)) continue;
-            const addDamage = add.dragonBroodguard ? 320 : 230;
+            if (!add || add.hp <= 0 || add._dragonBoss !== boss || !add.dragonSkyGuard) continue;
+            const addDamage = add.dragonGuardKind === 'magic' ? 820 : 900;
             add.hp = Math.max(0, add.hp - addDamage);
           }
+          if (boss._dragonSafeZoneActive && boss._dragonSafeZone) {
+            for (const unit of units) if (unit.hp > 0 && unit.isPlayer) {
+              unit.x = boss._dragonSafeZone.x;
+              unit.y = boss._dragonSafeZone.y;
+            }
+          }
+          damage = 0;
         }
         const keepAliveForMechanics = boss === mainBoss || boss === miniBoss;
         if (damage > 0) boss.hp = keepAliveForMechanics ? Math.max(1, boss.hp - damage) : Math.max(0, boss.hp - damage);
       }
     }
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Son of Embers')) logs.sonsSeen = true;
-    if (enemies.some(enemy => enemy && enemy.winterWhelp)) logs.dragonWhelpsSeen++;
-    if (enemies.some(enemy => enemy && enemy.dragonBroodguard)) logs.dragonBroodguardsSeen++;
+    if (enemies.some(enemy => enemy && enemy.dragonSkyGuard)) logs.dragonGuardsSeen++;
     if (enemies.some(enemy => enemy && enemy.hp > 0 && (enemy.name === 'Frostglass Prism' || enemy.name === 'Mirrorice Bulwark'))) logs.stormWardsSeen++;
     if (enemies.some(enemy => enemy && enemy.hp > 0 && enemy.name === 'Storm Mote')) logs.stormMotesSeen++;
     if (miniBoss && miniBoss._stormShieldActive) logs.stormShieldFrames++;
@@ -826,9 +851,11 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.dragonComets > 0, 'stage 10: Winterglass Dragon Ice Comets were not exercised');
     assert(logs.dragonVoices > 0, 'stage 10: Winterglass Dragon Frozen Voice was not exercised');
     assert(logs.dragonStorm > 0 && logs.dragonStormBackline > 0, 'stage 10: Winterglass Dragon Diamond Storm did not pressure the team');
-    assert(logs.dragonBroodguardsSeen > 0, 'stage 10: Winterglass Dragon Glacier Broodguard was not exercised');
-    assert(logs.dragonCrystalGore > 0 && logs.dragonBroodTank > 0 && logs.dragonBroodMelee > 0, 'stage 10: Dragon Broodguard Crystal Gore did not pressure tank and melee');
-    assert(logs.dragonWhelpsSeen > 0, 'stage 10: Winterglass Dragon whelps were not exercised');
+    assert(logs.dragonJudgment > 0 && logs.dragonJudgmentBackline > 0 && logs.dragonJudgmentTexts > 0, 'stage 10: Winterglass Dragon Diamond Judgment was not exercised');
+    assert(logs.dragonGuardsSeen > 0, 'stage 10: Winterglass Dragon Judgment guards were not exercised');
+    assert(logs.dragonFrostglassSurge > 0 && logs.dragonGuardTank > 0 && logs.dragonGuardMelee > 0 && logs.dragonGuardBackline > 0, 'stage 10: Frostglass Colossus did not pressure tank, melee, and backline');
+    assert(logs.dragonMirroriceCrush > 0 && logs.dragonGuardCrushTank > 0 && logs.dragonGuardCrushMelee > 0, 'stage 10: Mirrorice Juggernaut did not pressure tank and melee');
+    assert(logs.dragonSafeIce > 0, 'stage 10: Safe Ice was not exercised');
     assert(logs.dragonExposed > 0, 'stage 10: Winterglass Dragon exposed landing was not exercised');
     assert.equal(logs.sonsSeen, false, 'stage 10: Winterglass Dragon should not spawn Sons of Embers');
   }
@@ -890,12 +917,18 @@ function simulateStage(stage, stageIndex, seed) {
     dragonComets: logs.dragonComets,
     dragonStorm: logs.dragonStorm,
     dragonStormBackline: logs.dragonStormBackline,
-    dragonCrystalGore: logs.dragonCrystalGore,
-    dragonBroodTank: logs.dragonBroodTank,
-    dragonBroodMelee: logs.dragonBroodMelee,
-    dragonBroodguardsSeen: logs.dragonBroodguardsSeen,
+    dragonJudgment: logs.dragonJudgment,
+    dragonJudgmentBackline: logs.dragonJudgmentBackline,
+    dragonFrostglassSurge: logs.dragonFrostglassSurge,
+    dragonMirroriceCrush: logs.dragonMirroriceCrush,
+    dragonGuardTank: logs.dragonGuardTank,
+    dragonGuardMelee: logs.dragonGuardMelee,
+    dragonGuardBackline: logs.dragonGuardBackline,
+    dragonGuardCrushTank: logs.dragonGuardCrushTank,
+    dragonGuardCrushMelee: logs.dragonGuardCrushMelee,
+    dragonGuardsSeen: logs.dragonGuardsSeen,
+    dragonSafeIce: logs.dragonSafeIce,
     dragonVoices: logs.dragonVoices,
-    dragonWhelpsSeen: logs.dragonWhelpsSeen,
     dragonExposed: logs.dragonExposed,
     dragonHunt: logs.dragonHunt,
     searingBrands: logs.searingBrands,
@@ -942,11 +975,14 @@ for (const summary of summaries) {
     summary.dragonMaw ? `dragon maw ${summary.dragonMaw}` : null,
     summary.dragonIceWall ? `dragon wall ${summary.dragonIceWall}` : null,
     summary.dragonRimeVenom ? `rime venom ${summary.dragonRimeVenom}` : null,
-    summary.dragonCrystalGore ? `brood gore ${summary.dragonCrystalGore} tank:${summary.dragonBroodTank} melee:${summary.dragonBroodMelee}` : null,
+    summary.dragonFrostglassSurge ? `guard surge ${summary.dragonFrostglassSurge} tank:${summary.dragonGuardTank} melee:${summary.dragonGuardMelee} back:${summary.dragonGuardBackline}` : null,
+    summary.dragonMirroriceCrush ? `guard crush ${summary.dragonMirroriceCrush} tank:${summary.dragonGuardCrushTank} melee:${summary.dragonGuardCrushMelee}` : null,
     summary.dragonComets ? `dragon comets ${summary.dragonComets}` : null,
     summary.dragonStorm ? `diamond storm ${summary.dragonStorm} back:${summary.dragonStormBackline}` : null,
+    summary.dragonJudgment ? `judgment ${summary.dragonJudgment} back:${summary.dragonJudgmentBackline}` : null,
+    summary.dragonSafeIce ? `safe ice ${summary.dragonSafeIce}` : null,
     summary.dragonVoices ? `dragon voices ${summary.dragonVoices}` : null,
-    summary.dragonWhelpsSeen ? `whelps ${summary.dragonWhelpsSeen}` : null,
+    summary.dragonGuardsSeen ? `guards ${summary.dragonGuardsSeen}` : null,
     summary.dragonExposed ? `dragon exposed ${summary.dragonExposed}` : null,
     summary.dragonHunt ? `hunt ${summary.dragonHunt}` : null,
     summary.searingBrands ? `searing brands ${summary.searingBrands}` : null,

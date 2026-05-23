@@ -9,8 +9,9 @@ export function createWeatherParticles(weather,width,height,randomRange){
     }
   }
   if(weather==='snow'||weather==='blizzard'){
-    for(let i=0;i<50;i++){
-      particles.snowflakes.push({x:Math.random()*width,y:Math.random()*height,vx:rnd(-1,1),vy:1+Math.random()*1.5,sz:2+Math.random()*2});
+    const count=weather==='blizzard'?18:34;
+    for(let i=0;i<count;i++){
+      particles.snowflakes.push({x:Math.random()*width,y:Math.random()*height,vx:rnd(-0.8,0.8),vy:0.8+Math.random()*1.25,sz:1.4+Math.random()*1.8});
     }
   }
   return particles;
@@ -47,8 +48,8 @@ function makeLightningForks(width,arenaTop,arenaBot){
 function ensureWinterglassSnow(particles,width,height){
   if(!particles)return;
   if(!Array.isArray(particles.snowflakes))particles.snowflakes=[];
-  while(particles.snowflakes.filter(flake=>flake&&flake.winterglass).length<95){
-    particles.snowflakes.push({x:Math.random()*width,y:Math.random()*height,vx:-0.8+Math.random()*1.6,vy:1.7+Math.random()*2.3,sz:2+Math.random()*2.8,winterglass:true});
+  while(particles.snowflakes.filter(flake=>flake&&flake.winterglass).length<24){
+    particles.snowflakes.push({x:Math.random()*width,y:Math.random()*height,vx:-0.55+Math.random()*1.1,vy:1.1+Math.random()*1.5,sz:1.4+Math.random()*1.8,winterglass:true});
   }
 }
 
@@ -71,12 +72,12 @@ function drawWinterglassForeground(ctx,view){
   const particles=view.particles||{};
   ensureWinterglassSnow(particles,width,height);
   ctx.save();
-  ctx.fillStyle='rgba(216,248,255,0.78)';
-  ctx.strokeStyle='rgba(159,220,255,0.42)';
+  ctx.fillStyle='rgba(216,248,255,0.52)';
+  ctx.strokeStyle='rgba(159,220,255,0.25)';
   ctx.lineWidth=1;
   for(const flake of particles.snowflakes||[]){
     if(!flake.winterglass)continue;
-    ctx.globalAlpha=0.45+Math.min(0.35,(flake.sz||2)*0.08);
+    ctx.globalAlpha=0.18+Math.min(0.14,(flake.sz||2)*0.045);
     ctx.beginPath();
     ctx.arc(flake.x,flake.y,flake.sz||2,0,Math.PI*2);
     ctx.fill();
@@ -214,7 +215,7 @@ export function drawWeatherOverlay(ctx,view){
   }
 
   if(weather==='blizzard'){
-    ctx.fillStyle='rgba(200,220,255,0.06)';
+    ctx.fillStyle='rgba(200,220,255,0.035)';
     ctx.fillRect(0,arenaTop,width,arenaBot-arenaTop);
   }
   if(weather==='sandstorm'){

@@ -1,4 +1,4 @@
-import { createArenaCodexRuntime } from './arena-codex-runtime.js';
+import { createArenaCodexRuntime } from './arena-codex-runtime.js?v=20260523-dragon-judgment';
 
 export function createArenaCodexComposition(deps) {
   const states = deps.states;

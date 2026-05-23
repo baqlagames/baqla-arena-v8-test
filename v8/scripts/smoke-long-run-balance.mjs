@@ -61,7 +61,7 @@ function waveQueue(stage, round, totalRounds) {
   if (round >= totalRounds) return stage.bossId != null ? ['BOSS'] : [{ elite: stage.eliteEnemyId }];
   const plan = (round === 1 ? arena_stageOpenerQueue(stage) : null) || arena_themedWaveQueue(round, stage.n || 1, stage.act || 1);
   const queue = [...(plan.queue || [])];
-  if ((stage.n || 0) === 10 && round === 4) queue.push({ boss: 13, label: 'MINI BOSS - STORMBOUND VIZIER', color: '#3f8cff' });
+  if ((stage.n || 0) === 10 && round === 4) queue.push({ boss: 13, label: 'MINI BOSS - WINTERGLASS MAGISTRATE', color: '#9fdcff' });
   return queue;
 }
 

@@ -1,4 +1,4 @@
-import { BOSS_CODEX_ENTRIES } from '../data/boss-codex.js';
+import { BOSS_CODEX_ENTRIES } from '../data/boss-codex.js?v=20260523-dragon-judgment';
 
 export function createCodexReferenceScreens(deps) {
   const ctx = deps.ctx;

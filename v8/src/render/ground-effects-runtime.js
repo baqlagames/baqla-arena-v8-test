@@ -129,6 +129,39 @@ export function createGroundEffectsRuntime(deps) {
       ctx.beginPath();ctx.arc(g.x,g.y,g.r*0.62,0,Math.PI*2);ctx.stroke();
       ctx.setLineDash([]);ctx.restore();
       if(frame%2===0){addP(g.x+rnd(-g.r*0.65,g.r*0.65),g.y+rnd(-g.r*0.45,g.r*0.45),'#aa55dd',1.8,3);addP(g.x+rnd(-g.r*0.55,g.r*0.55),g.y+rnd(-g.r*0.35,g.r*0.35),'#55ff77',1.4,3)}
+    }else if(g.safeZone){
+      const t=Math.max(0,Math.min(1,g.life*2.3));
+      const active=!!g.active;
+      const c=active?(g.color||'#d8f8ff'):'#8fb8c8';
+      ctx.save();
+      ctx.globalAlpha=active?(0.55+0.18*Math.sin(frame*0.18))*t:0.28*t;
+      ctx.fillStyle=active?'rgba(216,248,255,0.18)':'rgba(120,160,180,0.10)';
+      ctx.beginPath();ctx.ellipse(g.x,g.y,g.maxR,g.maxR*0.36,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=c;ctx.lineWidth=active?3:2;ctx.setLineDash(active?[12,5]:[5,6]);ctx.lineDashOffset=-frame*(active?0.9:0.35);
+      ctx.beginPath();ctx.ellipse(g.x,g.y,g.maxR,g.maxR*0.36,0,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);
+      if(active){
+        ctx.strokeStyle='#ffffff';ctx.globalAlpha=0.72*t;ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.ellipse(g.x,g.y,g.maxR*0.62,g.maxR*0.21,0,0,Math.PI*2);ctx.stroke();
+      }
+      ctx.fillStyle=active?'#eef8ff':'#d8f8ff';ctx.font='bold 11px Arial';ctx.textAlign='center';
+      ctx.fillText(g.label||(active?'SAFE ICE':'SAFE ICE'),g.x,g.y+4);
+      ctx.textAlign='left';
+      ctx.restore();
+    }else if(g.iceCometFall){
+      const p=Math.max(0,Math.min(1,g.progress||0));
+      const c=g.color||'#d8f8ff';
+      const y=g.y-(1-p)*(g.height||150);
+      ctx.save();
+      ctx.globalAlpha=0.22+0.58*p;
+      ctx.fillStyle='rgba(6,20,45,0.35)';
+      ctx.beginPath();ctx.ellipse(g.x,g.y,Math.max(10,g.maxR*0.42),Math.max(4,g.maxR*0.14),0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=c;ctx.lineWidth=4;ctx.shadowColor=c;ctx.shadowBlur=10;
+      ctx.beginPath();ctx.moveTo(g.x-9,y-18);ctx.lineTo(g.x+8,y-6);ctx.lineTo(g.x+2,y+17);ctx.lineTo(g.x-10,y+4);ctx.closePath();ctx.stroke();
+      ctx.fillStyle='rgba(238,248,255,0.42)';ctx.fill();
+      ctx.shadowBlur=0;ctx.strokeStyle='rgba(216,248,255,0.65)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(g.x-2,y-24);ctx.lineTo(g.x-18,y-58);ctx.stroke();
+      ctx.restore();
     }else if(g.bossTel){
       // Boss AoE telegraph Ã¢â‚¬â€ pulsing red ring that fills before detonation
       const fillT=clamp(1-(g.telTimer/(g.telMax||30)),0,1);

@@ -1,4 +1,4 @@
-import { drawUnitShieldVfx } from './shield-vfx.js?v=20260523-dragon-storm45';
+import { drawUnitShieldVfx } from './shield-vfx.js?v=20260523-dragon-judgment';
 
 function unitRoleColor(unit){
   if(!unit)return '#d8f4ff';

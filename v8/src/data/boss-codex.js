@@ -43,14 +43,15 @@ export const BOSS_CODEX_ENTRIES = [
     bossId: 4,
     stage: 10,
     title: 'Winterglass Dragon',
-    subtitle: 'Scales, broodguard, sky storm',
+    subtitle: 'Scales, judgment, safe ice',
     color: '#9fdcff',
-    tags: ['FROST', 'BURST', 'BACKLINE THREAT', 'SOFT CONTROL', 'MIXED DAMAGE', 'FLYERS'],
+    tags: ['FROST', 'BURST', 'BACKLINE THREAT', 'SOFT CONTROL', 'MIXED DAMAGE', 'SAFE ZONE'],
     mechanics: [
       ['Frozen Scales', 'Rime and Glass Scales alternate physical and magic resistance.'],
       ['Ice Comets', 'Four visible comet targets test team healing.'],
       ['Frigid Maw', 'A frost cone and moving ice wall punish stacked frontline units.'],
-      ['Diamond Storm', 'The dragon flies while ranged units keep firing and melee clears the Broodguard pack.'],
+      ['Diamond Judgment', 'At 75%, 50%, and 25% HP, the dragon flies immune while the team kills two priority guards.'],
+      ['Safe Ice', 'The first guard death forms shelter; both guards must die to activate it before Judgment lands.'],
     ],
   },
   {

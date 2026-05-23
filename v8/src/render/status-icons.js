@@ -26,7 +26,7 @@ function imminentBossSkillIcon(t,tickHz){
     ['frozenVoice','frozenVoiceCD','#d8f8ff','V','Frozen Voice Soon'],
     ['frigidMaw','frigidMawCD','#bff4ff','M','Frigid Maw Soon'],
     ['iceWall','iceWallCD','#d8f8ff','W','Icebreaker Wall Soon'],
-    ['diamondStorm','diamondStormCD','#eef8ff','D','Diamond Storm Soon'],
+    ['diamondStorm','diamondStormCD','#eef8ff','J','Diamond Judgment Soon'],
     ['dragonHunt','dragonHuntCD','#9fdcff','H','Dragon Hunt'],
     ['burrow','burrowCD','#8b6f3d','B','Burrow Soon'],
     ['lunge','lungeCD','#ff4444','L','Lunge Soon'],
@@ -180,11 +180,12 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._stormExposedTimer>0)icons.push({c:'#d8f8ff',g:'E',title:'Magistrate Exposed',pulse:true});
   if(t._dragonScaleMode==='rime')icons.push({c:'#9fdcff',g:'R',title:'Rime Scales',pulse:true});
   if(t._dragonScaleMode==='glass')icons.push({c:'#eef8ff',g:'G',title:'Glass Scales',pulse:true});
-  if(t._dragonSkyPhase)icons.push({c:'#d8f8ff',g:'D',title:'Diamond Storm',pulse:true});
+  if(t._dragonSkyPhase)icons.push({c:'#d8f8ff',g:'J',title:'Diamond Judgment',pulse:true});
+  if(t._dragonJudgmentImmune)icons.push({c:'#eef8ff',g:'I',title:'Dragon Immune',pulse:true});
+  if(t._dragonSafeZoneActive)icons.push({c:'#d8f8ff',g:'S',title:'Safe Ice',pulse:true});
   if(t._dragonExposedTimer>0)icons.push({c:'#d8f8ff',g:'E',title:'Dragon Exposed',pulse:true});
   if(t._dragonHuntActive)icons.push({c:'#9fdcff',g:'H',title:'Dragon Hunt',pulse:true});
-  if(t.dragonBroodguard)icons.push({c:'#bff4ff',g:'B',title:'Glacier Broodguard',pulse:true});
-  if(t.winterWhelp)icons.push({c:'#d8f8ff',g:'W',title:'Winter Whelp',pulse:true});
+  if(t.dragonSkyGuard)icons.push({c:t.color||'#d8f8ff',g:t.dragonGuardKind==='magic'?'C':'J',title:t.name||'Judgment Guard',pulse:true});
   if(t._royalStingTimer>0)icons.push({c:'#ffdd44',g:'S',title:'Royal Sting'});
   if(t.timeEnraged)icons.push({c:'#ff2200',g:'!',title:'Boss Enraged',pulse:true});
   if(t.royalCarapaceTimer>0)icons.push({c:'#ffdd44',g:'C',title:'Carapace Casting',pulse:true});

@@ -82,7 +82,7 @@ export function drawLieutenantsBar(ctx,view){
 const BOSS_SKILL_LABELS={
   2:{aoe:'TOXIC',debuff:'DISEASE',pcloud:'CLOUD'},
   3:{aoe:'SMOKE',debuff:'MARK',vanish:'AMBUSH'},
-  4:{frozenScales:'SCALES',wingBuffet:'BUFFET',frigidMaw:'MAW',iceWall:'WALL',iceComet:'COMETS',frozenVoice:'VOICE',diamondStorm:'STORM',dragonHunt:'HUNT'},
+  4:{frozenScales:'SCALES',wingBuffet:'BUFFET',frigidMaw:'MAW',iceWall:'WALL',iceComet:'COMETS',frozenVoice:'VOICE',diamondStorm:'JUDGMENT',dragonHunt:'HUNT'},
   5:{aoe:'QUAKE',burrow:'BURROW',debuff:'SLOW',magicBolt:'SAND'},
   6:{aoe:'SUN',debuff:'DEATH',spawn:'MUMMY',magicBolt:'BOLT'},
   10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
@@ -128,13 +128,13 @@ const DEFAULT_SKILL_LABELS={
   frozenVoice:'VOICE',
   frigidMaw:'MAW',
   iceWall:'WALL',
-  diamondStorm:'STORM',
+  diamondStorm:'JUDGMENT',
   dragonHunt:'HUNT'
 };
 
 const BOSS_SKILL_HINTS={
   3:{aoe:'MOVE OUT',debuff:'MARKED TARGET',vanish:'BACKLINE AMBUSH'},
-  4:{frozenScales:'MIXED DAMAGE',wingBuffet:'FRONTLINE HIT',frigidMaw:'CONE HIT',iceWall:'MOVING WALL',iceComet:'4 TARGETS',frozenVoice:'HEALER LOCK',diamondStorm:'SKY PHASE',dragonHunt:'NO TANK'},
+  4:{frozenScales:'MIXED DAMAGE',wingBuffet:'FRONTLINE HIT',frigidMaw:'CONE HIT',iceWall:'MOVING WALL',iceComet:'4 TARGETS',frozenVoice:'HEALER LOCK',diamondStorm:'SAFE ZONE',dragonHunt:'NO TANK'},
   5:{aoe:'GROUND SLAM',burrow:'MOVE AWAY',debuff:'SLOW TARGET',magicBolt:'RANGED HIT'},
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
   10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
@@ -179,7 +179,7 @@ const DEFAULT_SKILL_HINTS={
   frozenVoice:'HEALER LOCK',
   frigidMaw:'CONE HIT',
   iceWall:'MOVING WALL',
-  diamondStorm:'SKY PHASE',
+  diamondStorm:'SAFE ZONE',
   dragonHunt:'NO TANK'
 };
 

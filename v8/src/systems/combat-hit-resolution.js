@@ -82,6 +82,7 @@ export function applyBossAndRecordModifiers(dmg, {
   if (target._stormShieldActive && (target.stormVizier || target.id === 13)) next = Math.max(1, Math.round(next * (target._stormShieldDamageMult || target.stormShieldDamageMult || 0.24)));
   if (target._stormExposedTimer > 0) next *= (target._stormExposedDamageMult || 1.35);
   if (isWinterglassDragonTarget(target)) {
+    if (target._dragonJudgmentImmune) return 0;
     const mode = target._dragonScaleMode || 'rime';
     const isMagic = winterglassDamageIsMagic({ attacker, dmgType, attackTypeOverride });
     if ((mode === 'rime' && !isMagic) || (mode === 'glass' && isMagic)) {

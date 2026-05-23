@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260523-dragon-storm45';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260523-dragon-judgment';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

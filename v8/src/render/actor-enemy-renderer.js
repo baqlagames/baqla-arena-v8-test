@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260523-dragon-storm45';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260523-dragon-judgment';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({
@@ -95,7 +95,7 @@ export function createActorEnemyRenderer({
     ctx.restore();
   }
 
-  function drawDragonBroodguard(enemy, x, y, size) {
+  function drawDragonGuard(enemy, x, y, size) {
     const f = frame();
     const pulse = 0.72 + 0.28 * Math.sin(f * 0.10 + (enemy.bobPhase || 0));
     ctx.save();
@@ -133,32 +133,10 @@ export function createActorEnemyRenderer({
     ctx.restore();
   }
 
-  function drawDragonWhelp(enemy, x, y, size) {
-    const f = frame();
-    const flap = Math.sin(f * 0.18 + (enemy.bobPhase || 0));
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.fillStyle = 'rgba(0,0,0,0.34)';
-    ctx.beginPath(); ctx.ellipse(0, size * 0.56, size * 0.58, size * 0.16, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#18405c';
-    ctx.strokeStyle = '#061433';
-    ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.ellipse(0, -size * 0.06, size * 0.46, size * 0.30, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#d8f8ff';
-    ctx.globalAlpha = 0.70;
-    ctx.beginPath(); ctx.ellipse(-size * 0.34, -size * 0.18, size * 0.28, size * (0.16 + flap * 0.025), -0.35, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(size * 0.34, -size * 0.18, size * 0.28, size * (0.16 - flap * 0.025), 0.35, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#bff4ff';
-    ctx.beginPath(); ctx.arc(size * 0.28, -size * 0.16, size * 0.13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.restore();
-  }
-
   function drawEnemyBody(enemy, x, y, size) {
     const f = frame();
     if (enemy.isBoss) return drawBossBody(enemy, x, y, size);
-    if (enemy.dragonBroodguard) return drawDragonBroodguard(enemy, x, y, size);
-    if (enemy.winterWhelp) return drawDragonWhelp(enemy, x, y, size);
+    if (enemy.dragonSkyGuard) return drawDragonGuard(enemy, x, y, size);
     if (enemy.stormWard) return drawStormWard(enemy, x, y, size);
     if (enemy.stormMote) return drawStormMote(enemy, x, y, size);
     if (enemy.isElite) {

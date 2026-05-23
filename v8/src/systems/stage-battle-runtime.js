@@ -1,13 +1,13 @@
 import { startStageRun } from './stage-runner.js';
-import { createStageRunSetup } from './stage-lifecycle.js?v=20260523-dragon-storm45';
+import { createStageRunSetup } from './stage-lifecycle.js?v=20260523-dragon-judgment';
 import {
   completeWavePhase,
   configureWaveSpawning,
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260523-dragon-storm45';
-import { createRiftRuntime } from './rift-runtime.js?v=20260523-dragon-storm45';
+} from './wave-lifecycle.js?v=20260523-dragon-judgment';
+import { createRiftRuntime } from './rift-runtime.js?v=20260523-dragon-judgment';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

@@ -198,10 +198,20 @@ export function updateArenaEnemyAi(enemy, {
 
 function shouldHoldStormVizierStation(enemy, { arenaPhase, units }) {
   if (!arenaPhase || !enemy) return false;
-  if (!(enemy.stormVizier || enemy.id === 13 || enemy.stormWard || enemy._stormBoss)) return false;
+  const dragon = enemy.winterglassDragon || enemy.id === 4 || enemy.name === 'Winterglass Dragon';
+  if (!(dragon || enemy.stormVizier || enemy.id === 13 || enemy.stormWard || enemy._stormBoss)) return false;
   const livePlayers = (units || []).filter(unit => unit && unit.hp > 0 && unit.isPlayer && !unit.isMinion && !unit.isGhost && !unit.isMirror && !unit.untargetable);
   const livePlayer = livePlayers.length > 0;
   if (!livePlayer) return false;
+  if (dragon) {
+    const liveFrontline = livePlayers.some(unit => unit.arch === 'tank' || unit.arch === 'melee' || unit.taunt || unit.prefersMelee);
+    if (!liveFrontline) return false;
+    const holdX = Number.isFinite(enemy._dragonHoldX) ? enemy._dragonHoldX : enemy.x;
+    const holdY = Number.isFinite(enemy._dragonHoldY) ? enemy._dragonHoldY : enemy.y;
+    enemy.x = holdX;
+    enemy.y = holdY;
+    return true;
+  }
   if (enemy.id === 13 || enemy.winterglassMagistrate || enemy.stormVizier) {
     const liveTank = livePlayers.some(unit => unit.arch === 'tank' || unit.taunt);
     if (!liveTank) return false;

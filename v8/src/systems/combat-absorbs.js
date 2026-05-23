@@ -48,7 +48,7 @@ export function absorbHiveShield(target, raw, attacker, {
   emitShieldAbsorbFx(target, { type: 'hive', color: shieldColor, amount: absorb, frame, emitParticle, groundEffects, particleCount: 4, particleSize: 3 });
   if (target.hiveShield.hp <= 0) {
     if (target.hiveShield.royalCarapace) target._royalCarapaceBroken = true;
-    else showFlash(isAstralWard ? 'WARD BROKEN!' : 'HIVE SHIELD BROKEN!', shieldColor, 40);
+    if (!target.hiveShield.royalCarapace) showFlash(isAstralWard ? 'WARD BROKEN!' : 'HIVE SHIELD BROKEN!', shieldColor, 40);
     emitShieldAbsorbFx(target, { type: 'hive', color: shieldColor, amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: isAstralWard ? 'WARD BREAK' : 'HIVE BREAK', groundPulse: true });
     target.hiveShield = null;
   }

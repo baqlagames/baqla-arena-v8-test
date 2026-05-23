@@ -1,9 +1,9 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { PLAYER_UNITS } from '../data/units.js';
 import { drawVodkaSprite } from './vodka.js';
-import { createActorOverlayRenderer } from './actor-overlays.js?v=20260523-dragon-storm45';
-import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260523-dragon-storm45';
-import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260523-dragon-storm45';
+import { createActorOverlayRenderer } from './actor-overlays.js?v=20260523-dragon-judgment';
+import { createActorSpriteHelpers } from './actor-sprite-helpers.js?v=20260523-dragon-judgment';
+import { createActorEnemyRenderer } from './actor-enemy-renderer.js?v=20260523-dragon-judgment';
 import { createActorUnitSpriteAssets } from './actor-unit-sprite-assets.js';
 import { createActorPlayerRenderer } from './actor-player-renderer.js';
 import { createCompanionSpriteRenderer } from './companion-sprites.js';
@@ -94,7 +94,42 @@ function drawUnitHud(u){
   const hudX=u.x+hudOffset.x;
   const hudY=hpBarY+hudOffset.y;
   drawHpBar(hudX,hudY,u.hp,u.maxHp,barW,hudInfo&&hudInfo.tank?'playerTank':'player');
+  drawSignatureCooldownStrip(u,hudX,hudY,barW,hudInfo&&hudInfo.tank);
   drawStatusIcons(u,hudX,hudY-16);
+}
+function drawSignatureCooldownStrip(u,x,y,width,isTank){
+  const sig=u&&u.signature;
+  if(!sig||!Number.isFinite(sig.cd)||sig.cd<=0)return;
+  const pct=Math.max(0,Math.min(1,(sig.t||0)/sig.cd));
+  const ready=pct>=1;
+  const stripW=Math.max(28,Math.min(width,46));
+  const stripH=5;
+  const bx=Math.round(x-stripW/2);
+  const by=Math.round(y+(isTank?14:11));
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.40)';
+  ctx.shadowBlur=2;
+  ctx.fillStyle='rgba(8,8,18,0.82)';
+  ctx.beginPath();ctx.roundRect(bx,by,stripW,stripH,3);ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;
+  const fill=ready?stripW:Math.max(2,stripW*pct);
+  const grad=ctx.createLinearGradient(bx,0,bx+stripW,0);
+  grad.addColorStop(0,ready?'#ffe066':'#7bdcff');
+  grad.addColorStop(1,ready?'#ff9f1a':'#d8f8ff');
+  ctx.fillStyle=grad;
+  ctx.beginPath();ctx.roundRect(bx,by,fill,stripH,3);ctx.fill();
+  ctx.strokeStyle=ready?'rgba(255,224,102,0.88)':'rgba(216,248,255,0.55)';
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(bx+0.5,by+0.5,stripW-1,stripH-1,2.5);ctx.stroke();
+  ctx.font='800 7px Segoe UI, Arial';
+  ctx.textAlign='center';
+  ctx.textBaseline='top';
+  ctx.fillStyle=ready?'#fff4a8':'#eafcff';
+  const remaining=Math.max(0,Math.ceil((sig.cd-(sig.t||0))/GAME_TICK_HZ));
+  ctx.fillText(ready?'SIG':remaining+'s',x,by+stripH+1);
+  ctx.restore();
+  ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';
 }
 function playerHudInfo(u){
   if(!u||!u.isPlayer||u.isMinion||u.isGhost||u.isMirror)return null;

@@ -1,6 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260523-dragon-storm45';
+import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260523-dragon-judgment';
 
 function meleeBossOrbitPoint(unit, target) {
   const isTank = !!(unit && (unit.arch === 'tank' || unit.taunt));
@@ -17,6 +17,27 @@ function meleeBossOrbitPoint(unit, target) {
   const id = Math.abs((unit.unitIdx ?? unit.id ?? 0) | 0);
   const slot = slots[id % slots.length];
   return { x: target.x + slot.x, y: target.y + slot.y };
+}
+
+function dragonSafeZoneMovePoint(unit, enemies) {
+  if (!unit || !unit.isPlayer || unit.isMinion || unit.isGhost || unit.isMirror) return null;
+  const dragon = (enemies || []).find(enemy => enemy && enemy.hp > 0 && enemy._dragonSkyPhase && enemy._dragonSafeZoneActive && enemy._dragonSafeZone);
+  if (!dragon) return null;
+  const guardsAlive = (enemies || []).some(enemy => enemy && enemy.hp > 0 && enemy._dragonBoss === dragon && enemy.dragonSkyGuard);
+  if (guardsAlive) return null;
+  const zone = dragon._dragonSafeZone;
+  const radius = Math.max(46, dragon.diamondSafeZoneRadius || 96);
+  const slots = [
+    { x: 0, y: 0 },
+    { x: -radius * 0.28, y: radius * 0.10 },
+    { x: radius * 0.28, y: radius * 0.10 },
+    { x: -radius * 0.18, y: -radius * 0.22 },
+    { x: radius * 0.18, y: -radius * 0.22 },
+    { x: 0, y: radius * 0.28 },
+  ];
+  const id = Math.abs((unit.unitIdx ?? unit.id ?? 0) | 0);
+  const slot = slots[id % slots.length];
+  return { x: zone.x + slot.x, y: zone.y + slot.y, dragon };
 }
 
 export function prepareUnitAttackTarget(unit, {
@@ -41,6 +62,16 @@ export function prepareUnitAttackTarget(unit, {
   shake,
 }) {
   if (unit.familiar) followFamiliarAnchor(unit);
+  if (arena && arena.phase === 'wave') {
+    const safeMove = dragonSafeZoneMovePoint(unit, enemies);
+    if (safeMove) {
+      unit.target = null;
+      unit._dragonSafeZoneMoving = 8;
+      moveToward(unit, safeMove.x, safeMove.y, unit.speed * 1.65);
+      return { canAttack: false };
+    }
+    if (unit._dragonSafeZoneMoving > 0) unit._dragonSafeZoneMoving--;
+  }
   let target = unit.prefersRanged ? findRangedEnemyForUnit(unit) : findEnemyForUnit(unit);
   if (!target) {
     unit.target = null;

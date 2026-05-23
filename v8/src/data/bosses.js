@@ -39,19 +39,22 @@ export const BOSSES=[
     timeEnrageAt:8250},
   {id:4,name:'Winterglass Dragon',tier:'vs',act:2,color:'#9fdcff',accent:'#eef8ff',hp:36000,dmg:150,speed:0.35,atkSpd:54,range:92,size:70,armor:5,magicRes:6,points:1500,raidAoeDmg:44,
     // Stage 10 final boss: role-check frost dragon. Frozen Scales reward mixed
-    // damage, Diamond Storm creates a long sky phase, and Hunt prevents
+    // damage, Diamond Judgment creates immune guard/safe-zone phases, and Hunt prevents
     // healer/ranged stall endings after the tank dies.
     winterglassDragon:true,frostBoss:true,projType:'frost',
     frozenScalesCD:720,frozenScaleResistMult:0.55,
     wingBuffetCD:420,wingBuffetFirst:210,wingBuffetDmg:132,wingBuffetRadius:150,wingBuffetTankMult:1.18,wingBuffetMeleeMult:0.95,wingBuffetStun:27,frostbiteDur:210,frostbiteHealCut:0.12,
-    iceCometCD:690,iceCometFirst:360,iceCometDmg:138,iceCometRadius:58,iceCometWarn:54,iceCometTargets:4,
+    iceCometCD:690,iceCometFirst:360,iceCometDmg:138,iceCometRadius:58,iceCometWarn:96,iceCometFall:54,iceCometTargets:4,
     frozenVoiceCD:840,frozenVoiceCDMin:720,frozenVoiceCDMax:900,frozenVoiceFirst:510,frozenVoiceDur:120,frozenVoiceTargets:2,
     frigidMawCD:1200,frigidMawFirst:600,frigidMawDmg:126,frigidMawRange:260,frigidMawArc:0.86,frigidMawTankMult:1.05,frigidMawMeleeMult:0.95,frigidMawBacklineMult:0.65,
-    iceWallCD:1560,iceWallFirst:1080,iceWallDmg:96,iceWallWarn:42,iceWallDur:150,iceWallWidth:30,iceWallLength:145,
+    iceWallCD:1560,iceWallFirst:450,iceWallDmg:96,iceWallWarn:54,iceWallDur:210,iceWallWidth:34,iceWallLength:160,
     rimeVenomDur:600,rimeVenomHpPct:0.008,rimeVenomMinDmg:8,rimeVenomHealCut:0.08,
-    diamondStormCD:480,diamondStormAt:0.50,diamondStormDur:5400,diamondStormTick:120,diamondStormDmg:34,diamondStormWhelps:4,dragonExposeDur:300,dragonExposeMult:1.22,
-    winterWhelpHp:950,winterWhelpDmg:44,winterWhelpAttack:44,winterWhelpSize:24,dragonFollowupWhelpHp:850,dragonFollowupWhelpDmg:38,dragonFollowupWhelpAttack:38,dragonFollowupWhelpEvery:1200,
-    dragonBroodguardHp:4200,dragonBroodguardDmg:72,dragonBroodguardAttack:72,dragonBroodguardSize:44,dragonBroodguardArmor:6,dragonBroodguardMagicRes:2,dragonBroodguardGoreDmg:96,
+    diamondStormCD:480,diamondStormAt:0.75,diamondStormThresholds:[0.75,0.50,0.25],diamondStormDur:3120,diamondStormTick:120,diamondStormDmg:30,
+    diamondJudgmentDmg:250,diamondJudgmentSafeMult:0.30,diamondJudgmentOutsideMult:1.00,diamondSafeZoneRadius:96,diamondSafeZoneMoveLead:900,
+    dragonGuardScales:[1.00,1.12,1.25],
+    dragonColossusHp:6200,dragonColossusDmg:92,dragonColossusAttack:92,dragonColossusSize:52,dragonColossusArmor:10,dragonColossusMagicRes:1,dragonColossusSurgeDmg:84,
+    dragonJuggernautHp:6800,dragonJuggernautDmg:118,dragonJuggernautAttack:118,dragonJuggernautSize:54,dragonJuggernautArmor:2,dragonJuggernautMagicRes:10,dragonJuggernautCrushDmg:138,
+    dragonExposeDur:240,dragonExposeMult:1.10,
     dragonHuntCD:240,dragonHuntDmgMult:1.14,
     spawnCD:0,spawnCount:0,
     timeEnrageAt:36000},

@@ -612,9 +612,10 @@ function smokeWinterglassDragon(ctx, boss) {
   if (dragonTemplate.name !== 'Winterglass Dragon') throw new Error('boss id 4 should be Winterglass Dragon');
   if (dragonTemplate.hp !== 36000 || dragonTemplate.dmg !== 150 || dragonTemplate.size !== 70) throw new Error('Winterglass Dragon core tuning drifted');
   if (dragonTemplate.timeEnrageAt !== 36000) throw new Error('Winterglass Dragon enrage should be 36000 frames');
-  if (dragonTemplate.diamondStormDur !== 5400 || dragonTemplate.diamondStormDmg !== 34) throw new Error('Winterglass Dragon Diamond Storm should be a 45s softened sky phase');
-  if (dragonTemplate.winterWhelpHp !== 950 || dragonTemplate.winterWhelpDmg !== 44 || dragonTemplate.dragonBroodguardHp !== 4200 || dragonTemplate.dragonBroodguardDmg !== 72) {
-    throw new Error('Winterglass Dragon sky phase add tuning drifted');
+  if (dragonTemplate.diamondStormDur !== 3120 || dragonTemplate.diamondStormDmg !== 30 || dragonTemplate.diamondJudgmentDmg !== 250) throw new Error('Winterglass Dragon Diamond Judgment tuning drifted');
+  if (JSON.stringify(dragonTemplate.diamondStormThresholds) !== JSON.stringify([0.75, 0.50, 0.25])) throw new Error('Winterglass Dragon sky phases should trigger at 75/50/25% HP');
+  if (dragonTemplate.dragonColossusHp !== 6200 || dragonTemplate.dragonJuggernautHp !== 6800 || dragonTemplate.dragonColossusSurgeDmg !== 84 || dragonTemplate.dragonJuggernautCrushDmg !== 138) {
+    throw new Error('Winterglass Dragon Judgment guard tuning drifted');
   }
   if (dragonTemplate.meteorCD || dragonTemplate.aoeCD || dragonTemplate.debuffCD || dragonTemplate.sonsAt || dragonTemplate.searingBrandEvery) throw new Error('Winterglass Dragon should not keep old Sultan fire mechanics');
   if (dragonTemplate.spawnCD !== 0) throw new Error('Winterglass Dragon should not spawn old fire support');
@@ -656,6 +657,7 @@ function smokeWinterglassDragon(ctx, boss) {
   boss._dragonMawCd = 0;
   boss._dragonWallCd = 9999;
   tickBoss(ctx, boss, 1);
+  tickBoss(ctx, boss, 55);
   if (!ctx.damageHits.some(hit => hit.attackType === 'frigidMaw')) throw new Error('Winterglass Dragon Frigid Maw did not damage units');
   if (!ctx.units.some(unit => unit._rimeVenomTimer > 0)) throw new Error('Frigid Maw should apply Rime Venom');
 
@@ -677,7 +679,7 @@ function smokeWinterglassDragon(ctx, boss) {
   boss._dragonMawCd = 9999;
   boss._dragonWallCd = 9999;
   tickBoss(ctx, boss, 1);
-  tickBoss(ctx, boss, 90);
+  tickBoss(ctx, boss, 125);
   const cometTargets = new Set(ctx.damageHits.filter(hit => hit.attackType === 'iceComet').map(hit => hit.target));
   if (cometTargets.size < 4) throw new Error('Ice Comet Barrage should hit four unique living units in the smoke');
 
@@ -692,24 +694,55 @@ function smokeWinterglassDragon(ctx, boss) {
   if (voiced.length < 2 || !voiced.some(unit => unit.arch === 'healer')) throw new Error('Frozen Voice should silence two targets, healer first');
 
   boss._dragonCastLock = 0;
+  boss.hp = Math.round(boss.maxHp * 0.74);
+  tickBoss(ctx, boss, 1);
+  if (!boss._dragonSkyPhase || !boss.flying || !boss._dragonJudgmentImmune || boss._dragonSkyThreshold !== 0.75) throw new Error('Diamond Judgment should make the Dragon airborne and immune at 75% HP');
+  if (boss.hiveShield) throw new Error('Diamond Judgment should not use the old breakable sky shield');
+  const guards = ctx.enemies.filter(enemy => enemy.dragonSkyGuard && enemy._dragonBoss === boss);
+  const colossus = guards.find(enemy => enemy.name === 'Frostglass Colossus');
+  const juggernaut = guards.find(enemy => enemy.name === 'Mirrorice Juggernaut');
+  if (guards.length !== 2 || !colossus || !juggernaut) throw new Error('Diamond Judgment should spawn Frostglass Colossus and Mirrorice Juggernaut');
+  if (colossus.maxHp !== 6200 || colossus.preferredBy !== 'magic' || juggernaut.maxHp !== 6800 || juggernaut.preferredBy !== 'physical') throw new Error('Judgment guard stats or targeting drifted');
+  const immuneDamage = applyBossAndRecordModifiers(100, { target: boss, attacker: { arch: 'caster', attackType: 'magic' }, dmgType: 'magic', attackTypeOverride: 'magic' });
+  if (immuneDamage !== 0) throw new Error('Dragon should be immune during Diamond Judgment');
+  tickBoss(ctx, boss, 140);
+  if (!ctx.damageHits.some(hit => hit.attackType === 'diamondStorm')) throw new Error('Diamond Storm should apply light team pressure');
+  if (!ctx.damageHits.some(hit => hit.attackType === 'frostglassSurge')) throw new Error('Frostglass Colossus should use Frostglass Surge on the team');
+  if (!ctx.damageHits.some(hit => hit.attackType === 'mirroriceCrush')) throw new Error('Mirrorice Juggernaut should use Mirrorice Crush on tank/melee');
+  colossus.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if (!boss._dragonSafeZone || boss._dragonSafeZoneActive) throw new Error('first Judgment guard death should create dormant Safe Ice only');
+  juggernaut.hp = 0;
+  tickBoss(ctx, boss, 2);
+  if (!boss._dragonSafeZoneActive) throw new Error('both Judgment guards dead should activate Safe Ice');
+  for (const unit of ctx.units) {
+    unit.x = boss._dragonSafeZone.x;
+    unit.y = boss._dragonSafeZone.y;
+  }
+  boss._dragonSkyTimer = 1;
+  tickBoss(ctx, boss, 2);
+  if (boss._dragonSkyPhase || !(boss._dragonExposedTimer > 0)) throw new Error('Dragon should land exposed after a sheltered Diamond Judgment');
+  if (!ctx.damageHits.some(hit => hit.attackType === 'diamondJudgment')) throw new Error('Diamond Judgment should resolve into raid damage');
+
+  boss._dragonExposedTimer = 0;
+  boss._dragonExposedDamageMult = 0;
+  boss._dragonCastLock = 0;
   boss.hp = Math.round(boss.maxHp * 0.49);
   tickBoss(ctx, boss, 1);
-  if (!boss._dragonSkyPhase || !boss.flying) throw new Error('Diamond Storm should make the Dragon airborne at 50% HP');
-  const brood = ctx.enemies.filter(enemy => enemy.dragonBroodguard);
-  const mainWhelps = ctx.enemies.filter(enemy => enemy.winterWhelp && enemy._dragonPack === 'main');
-  if (brood.length !== 1 || mainWhelps.length !== 4) throw new Error('Diamond Storm should spawn one Broodguard and four main Whelps');
-  if (brood[0].maxHp !== 4200 || brood[0].dmg !== 72 || brood[0].size !== 44) throw new Error('Glacier Broodguard stats drifted');
-  if (!mainWhelps.every(enemy => enemy.maxHp === 950 && enemy.dmg === 44 && enemy.size === 24)) throw new Error('main Winter Whelp stats drifted');
-  tickBoss(ctx, boss, 130);
-  if (!ctx.damageHits.some(hit => hit.attackType === 'diamondStorm')) throw new Error('Diamond Storm should apply light team pressure');
-  if (!ctx.damageHits.some(hit => hit.attackType === 'crystalGore')) throw new Error('Glacier Broodguard should use Crystal Gore on tank/melee');
-  for (const enemy of ctx.enemies) if (enemy._dragonBoss === boss && (enemy.winterWhelp || enemy.dragonBroodguard)) enemy.hp = 0;
-  boss._dragonFollowupCd = 1;
+  if (!boss._dragonSkyPhase || boss._dragonSkyThreshold !== 0.5) throw new Error('second Diamond Judgment should trigger at 50% HP');
+  for (const guard of ctx.enemies.filter(enemy => enemy._dragonBoss === boss && enemy.dragonSkyGuard)) guard.hp = 0;
+  boss._dragonSkyTimer = 1;
   tickBoss(ctx, boss, 2);
-  const followups = ctx.enemies.filter(enemy => enemy.winterWhelp && enemy._dragonPack === 'followup');
-  if (followups.length !== 2 || !followups.every(enemy => enemy.maxHp === 850 && enemy.dmg === 38)) throw new Error('Diamond Storm follow-up Whelps should spawn as a low-pressure pair');
-  tickBoss(ctx, boss, 5400);
-  if (boss._dragonSkyPhase || !(boss._dragonExposedTimer > 0)) throw new Error('Dragon should land exposed after Diamond Storm');
+  if (!ctx.damageHits.some(hit => hit.attackType === 'diamondJudgment')) throw new Error('Diamond Judgment should resolve every threshold phase');
+
+  boss._dragonCastLock = 0;
+  boss.hp = Math.round(boss.maxHp * 0.24);
+  tickBoss(ctx, boss, 1);
+  if (!boss._dragonSkyPhase || boss._dragonSkyThreshold !== 0.25) throw new Error('third Diamond Judgment should trigger at 25% HP');
+  for (const guard of ctx.enemies.filter(enemy => enemy._dragonBoss === boss && enemy.dragonSkyGuard)) guard.hp = 0;
+  boss._dragonSkyTimer = 1;
+  tickBoss(ctx, boss, 2);
+  if ((boss._dragonStormCasts || 0) < 3) throw new Error('Winterglass Dragon should use three threshold sky phases');
 
   ctx.units[0].hp = 0;
   boss._dragonCastLock = 0;
@@ -729,12 +762,13 @@ function assertBossReadability(ctx, boss) {
   const labels = (ctx.groundFx || []).map(item => item && item.label).filter(Boolean);
   const warnLabels = (ctx.groundFx || []).filter(item => item && item.enemyWarn).map(item => item.label);
   if (boss.id === 4) {
-    for (const text of ['RIME SCALES', 'GLASS SCALES', 'WING BUFFET', 'FROSTBITE', 'FRIGID MAW', 'RIME VENOM', 'ICEBREAKER WALL', 'ICE WALL', 'ICE COMET BARRAGE', 'ICE COMET', 'FROZEN VOICE', 'DIAMOND STORM', 'GLACIER BROODGUARD', 'WINTER WHELP', 'CRYSTAL GORE', 'DRAGON EXPOSED', 'HUNT']) {
+    for (const text of ['RIME SCALES', 'GLASS SCALES', 'WING BUFFET', 'FROSTBITE', 'FRIGID MAW', 'RIME VENOM', 'ICEBREAKER WALL', 'ICE WALL', 'ICE COMET BARRAGE', 'ICE COMET', 'FROZEN VOICE', 'DIAMOND STORM', 'DIAMOND JUDGMENT', 'DRAGON IMMUNE', 'JUDGMENT GUARDS', 'FROSTGLASS COLOSSUS', 'MIRRORICE JUGGERNAUT', 'FROSTGLASS SURGE', 'MIRRORICE CRUSH', 'SAFE ICE FORMING', 'SAFE ICE', 'DRAGON EXPOSED', 'HUNT']) {
       if (!texts.includes(text)) throw new Error(`Winterglass Dragon missing ${text} callout`);
     }
-    for (const label of ['SCALES', 'BUFFET', 'MAW', 'WALL', 'COMET', 'VOICE', 'STORM', 'BROOD', 'WHELP', 'EXPOSED', 'HUNT']) {
+    for (const label of ['SCALES', 'BUFFET', 'MAW', 'WALL', 'COMET', 'VOICE', 'STORM', 'JUDGMENT', 'MAGIC', 'PHYSICAL', 'SURGE', 'CRUSH', 'SAFE ICE', 'EXPOSED', 'HUNT']) {
       if (!labels.includes(label)) throw new Error(`Winterglass Dragon missing ${label} warning label`);
     }
+    if (texts.some(text => String(text).includes('SKY SHIELD') || String(text).includes('SHIELD DETONATION') || String(text).includes('BROODGUARD') || String(text).includes('WINTER WHELP') || String(text).includes('CRYSTAL GORE'))) throw new Error('Winterglass Dragon should not use old sky-shield/whelp text');
     if (texts.some(text => String(text).includes('EMBER') || String(text).includes('INFERNO') || String(text).includes('BURNING DOT'))) throw new Error('Winterglass Dragon should not use old Sultan/fire text');
   }
   if (boss.id === 10) {

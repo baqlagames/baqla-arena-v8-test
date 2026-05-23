@@ -60,11 +60,12 @@ const dragon = {
   mechCD: { frozenScales: 600, wingBuffet: 210, frigidMaw: 300, iceWall: 360, iceComet: 90, frozenVoice: 510, diamondStorm: 400, dragonHunt: 9999 },
 };
 assert.equal(bossReadableSkillLabel(dragon, 'iceComet'), 'COMETS', 'Winterglass Dragon comets should use readable labels');
-assert.equal(bossReadableSkillLabel(dragon, 'diamondStorm'), 'STORM', 'Winterglass Dragon sky phase should use readable labels');
+assert.equal(bossReadableSkillLabel(dragon, 'diamondStorm'), 'JUDGMENT', 'Winterglass Dragon sky phase should use readable Judgment label');
 assert.equal(bossReadableSkillLabel(dragon, 'frigidMaw'), 'MAW', 'Winterglass Dragon cone should use readable label');
 assert.equal(bossReadableSkillHint(dragon, 'iceWall'), 'MOVING WALL', 'Winterglass Dragon wall should expose moving-wall hint');
 assert.equal(bossReadableSkillHint(dragon, 'frozenScales'), 'MIXED DAMAGE', 'Winterglass Dragon scales should expose mixed-damage hint');
-assert.deepEqual(bossReadableSkillPills(dragon).map(skill => skill.name), ['SCALES', 'BUFFET', 'MAW', 'WALL', 'COMETS', 'VOICE', 'STORM', 'HUNT'], 'Winterglass Dragon skill pills should use dragon-specific labels');
+assert.equal(bossReadableSkillHint(dragon, 'diamondStorm'), 'SAFE ZONE', 'Winterglass Dragon Judgment should expose safe-zone hint');
+assert.deepEqual(bossReadableSkillPills(dragon).map(skill => skill.name), ['SCALES', 'BUFFET', 'MAW', 'WALL', 'COMETS', 'VOICE', 'JUDGMENT', 'HUNT'], 'Winterglass Dragon skill pills should use dragon-specific labels');
 
 const urgent = bossUrgentSkillHudState(dragon, tickHz);
 assert.equal(urgent.label, 'COMETS', 'urgent mechanic HUD should pick the nearest imminent Dragon mechanic');
@@ -98,9 +99,11 @@ assert.ok(earlyBossIcons.some(icon => icon.title === 'Bolt Soon'), 'boss status 
 const wardenIcons = collectStatusIcons({ isBoss: true, mechCD: { starfall: 80 }, starfallCD: 420 }, tickHz);
 assert.ok(wardenIcons.some(icon => icon.title === 'Starfall Soon'), 'boss status icons should expose Warden mechanic warnings');
 
-const dragonIcons = collectStatusIcons({ isBoss: true, _dragonScaleMode: 'rime', _dragonSkyPhase: true, _dragonExposedTimer: 120, _dragonHuntActive: true, mechCD: { iceComet: 80 }, iceCometCD: 690 }, tickHz);
+const dragonIcons = collectStatusIcons({ isBoss: true, _dragonScaleMode: 'rime', _dragonSkyPhase: true, _dragonJudgmentImmune: true, _dragonSafeZoneActive: true, _dragonExposedTimer: 120, _dragonHuntActive: true, mechCD: { iceComet: 80 }, iceCometCD: 690 }, tickHz);
 assert.ok(dragonIcons.some(icon => icon.title === 'Rime Scales'), 'boss status icons should expose Dragon scales');
-assert.ok(dragonIcons.some(icon => icon.title === 'Diamond Storm'), 'boss status icons should expose Dragon sky phase');
+assert.ok(dragonIcons.some(icon => icon.title === 'Diamond Judgment'), 'boss status icons should expose Dragon Judgment phase');
+assert.ok(dragonIcons.some(icon => icon.title === 'Dragon Immune'), 'boss status icons should expose Dragon immunity');
+assert.ok(dragonIcons.some(icon => icon.title === 'Safe Ice'), 'boss status icons should expose active Safe Ice');
 assert.ok(dragonIcons.some(icon => icon.title === 'Dragon Exposed'), 'boss status icons should expose Dragon exposed windows');
 assert.ok(dragonIcons.some(icon => icon.title === 'Dragon Hunt'), 'boss status icons should expose Dragon Hunt');
 assert.ok(dragonIcons.some(icon => icon.title === 'Ice Comets Soon'), 'boss status icons should expose imminent Dragon comets');
@@ -153,8 +156,8 @@ assert.ok(stormVenomIcons.some(icon => icon.title === 'Frostburn'), 'player stat
 const rimeVenomIcons = collectStatusIcons({ isPlayer: true, _rimeVenomTimer: 120 }, tickHz);
 assert.ok(rimeVenomIcons.some(icon => icon.title === 'Rime Venom'), 'player status icons should expose Dragon Rime Venom');
 
-const broodIcons = collectStatusIcons({ dragonBroodguard: true, priorityTarget: true, preferredBy: 'melee' }, tickHz);
-assert.ok(broodIcons.some(icon => icon.title === 'Glacier Broodguard'), 'enemy status icons should expose Dragon Broodguard');
+const guardIcons = collectStatusIcons({ dragonSkyGuard: true, dragonGuardKind: 'magic', name: 'Frostglass Colossus', priorityTarget: true, preferredBy: 'magic' }, tickHz);
+assert.ok(guardIcons.some(icon => icon.title === 'Frostglass Colossus'), 'enemy status icons should expose Dragon Judgment guards');
 
 const signatureIcons = collectStatusIcons({ isPlayer: true, signature: { t: 100, cd: 100 } }, tickHz);
 assert.ok(signatureIcons.some(icon => icon.title === 'Signature Ready'), 'player status icons should expose signature readiness');

@@ -137,32 +137,46 @@ const dragon = enemy('Winterglass Dragon', 250, 420, {
   winterglassDragon: true,
   _dragonSkyPhase: true,
   flying: true,
-  priorityTarget: true,
-  preferredBy: 'ranged',
+  _dragonJudgmentImmune: true,
 });
-const whelp = enemy('Winter Whelp', 250, 560, {
-  winterWhelp: true,
+const colossus = enemy('Frostglass Colossus', 188, 540, {
+  dragonSkyGuard: true,
+  dragonGuardKind: 'magic',
   _dragonBoss: dragon,
   priorityTarget: true,
-  preferredBy: 'melee',
+  preferredBy: 'magic',
   arch: 'melee',
 });
-const broodguard = enemy('Glacier Broodguard', 250, 520, {
-  dragonBroodguard: true,
+const juggernaut = enemy('Mirrorice Juggernaut', 286, 540, {
+  dragonSkyGuard: true,
+  dragonGuardKind: 'physical',
   _dragonBoss: dragon,
   priorityTarget: true,
-  preferredBy: 'melee',
+  preferredBy: 'physical',
   arch: 'melee',
 });
-const skyMeleePick = findEnemyTargetForUnit(melee, view([dragon, whelp]));
-assert.equal(skyMeleePick, whelp, 'melee should switch to grounded Winter Whelps during Dragon sky phase');
-const skyTankPick = findEnemyTargetForUnit(tank, view([dragon, whelp]));
-assert.equal(skyTankPick, whelp, 'tank should switch to grounded Winter Whelps during Dragon sky phase');
-const broodMeleePick = findEnemyTargetForUnit(melee, view([dragon, broodguard, whelp]));
-assert.equal(broodMeleePick, broodguard, 'melee should prefer the closer Glacier Broodguard during Dragon sky phase');
-const skyCasterPick = findEnemyTargetForUnit(caster, view([dragon, whelp]));
-assert.equal(skyCasterPick, dragon, 'caster should keep attacking airborne Winterglass Dragon during sky phase');
-const skyHunterPick = findEnemyTargetForUnit(hunter, view([dragon, whelp]));
-assert.equal(skyHunterPick, dragon, 'ranged physical unit should keep attacking airborne Winterglass Dragon during sky phase');
+const dragonCasterPick = findEnemyTargetForUnit(caster, view([dragon, colossus, juggernaut]));
+assert.equal(dragonCasterPick, colossus, 'caster should prefer Frostglass Colossus while Dragon is immune');
+const dragonHealerPick = findEnemyTargetForUnit(healer, view([dragon, colossus, juggernaut]));
+assert.equal(dragonHealerPick, colossus, 'healer attacker should prefer Frostglass Colossus while Dragon is immune');
+const dragonMeleePick = findEnemyTargetForUnit(melee, view([dragon, colossus, juggernaut]));
+assert.equal(dragonMeleePick, juggernaut, 'melee should prefer Mirrorice Juggernaut while Dragon is immune');
+const dragonTankPick = findEnemyTargetForUnit(tank, view([dragon, colossus, juggernaut]));
+assert.equal(dragonTankPick, juggernaut, 'tank should prefer Mirrorice Juggernaut while Dragon is immune');
+const dragonHunterPick = findEnemyTargetForUnit(hunter, view([dragon, colossus, juggernaut]));
+assert.equal(dragonHunterPick, juggernaut, 'physical ranged should prefer Mirrorice Juggernaut while Dragon is immune');
+juggernaut.hp = 0;
+const dragonMeleeFallback = findEnemyTargetForUnit(melee, view([dragon, colossus, juggernaut]));
+assert.equal(dragonMeleeFallback, colossus, 'melee should swap to remaining Colossus before immune Dragon');
+juggernaut.hp = 1000;
+colossus.hp = 0;
+const dragonCasterFallback = findEnemyTargetForUnit(caster, view([dragon, colossus, juggernaut]));
+assert.equal(dragonCasterFallback, juggernaut, 'caster should swap to remaining Juggernaut before immune Dragon');
+juggernaut.hp = 0;
+dragon._dragonSkyPhase = false;
+dragon._dragonJudgmentImmune = false;
+dragon.flying = false;
+const dragonReturnPick = findEnemyTargetForUnit(hunter, view([dragon, colossus, juggernaut]));
+assert.equal(dragonReturnPick, dragon, 'units should return to Dragon after Judgment guards die');
 
 console.log('smoke-priority-targeting: ok');
