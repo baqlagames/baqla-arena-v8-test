@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260523-dragon-judgment-fix';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260523-dragon-judgment-hud';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({
@@ -98,38 +98,66 @@ export function createActorEnemyRenderer({
   function drawDragonGuard(enemy, x, y, size) {
     const f = frame();
     const pulse = 0.72 + 0.28 * Math.sin(f * 0.10 + (enemy.bobPhase || 0));
+    const magic = enemy.dragonGuardKind === 'magic';
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = 'rgba(0,0,0,0.42)';
-    ctx.beginPath(); ctx.ellipse(0, size * 0.58, size * 0.82, size * 0.22, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(216,248,255,0.72)';
-    ctx.lineWidth = 2.4;
-    ctx.beginPath(); ctx.ellipse(0, -size * 0.06, size * 0.78, size * 0.42, 0, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = '#16314a';
-    ctx.strokeStyle = '#061433';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(0, -size * 0.08, size * 0.70, size * 0.38, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#d8f8ff';
-    ctx.globalAlpha = 0.82;
-    ctx.beginPath(); ctx.ellipse(size * 0.42, -size * 0.20, size * 0.28, size * 0.20, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#0d2238';
-    for (const lx of [-0.42, -0.16, 0.18, 0.46]) {
+    ctx.beginPath(); ctx.ellipse(0, size * 0.60, magic ? size * 0.92 : size * 0.58, size * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+    if (magic) {
+      ctx.strokeStyle = 'rgba(191,244,255,0.78)';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.ellipse(0, -size * 0.06, size * 0.78, size * 0.42, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#16314a';
+      ctx.strokeStyle = '#061433';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, -size * 0.08, size * 0.70, size * 0.38, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#d8f8ff';
+      ctx.globalAlpha = 0.82;
+      ctx.beginPath(); ctx.ellipse(size * 0.42, -size * 0.20, size * 0.28, size * 0.20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#0d2238';
+      for (const lx of [-0.42, -0.16, 0.18, 0.46]) {
+        ctx.beginPath();
+        ctx.roundRect(size * lx - size * 0.07, size * 0.18, size * 0.14, size * 0.44, size * 0.05);
+        ctx.fill(); ctx.stroke();
+      }
+      ctx.strokeStyle = '#bff4ff';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        const a = -1.15 + i * 0.28;
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.22 + i * size * 0.14, -size * 0.40);
+        ctx.lineTo(-size * 0.32 + Math.cos(a) * size * 0.22, -size * 0.68 + Math.sin(a) * size * 0.12);
+        ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(191,244,255,' + (0.35 + pulse * 0.32) + ')';
+      ctx.beginPath(); ctx.arc(size * 0.50, -size * 0.20, size * 0.10, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.fillStyle = '#eef8ff';
+      ctx.globalAlpha = 0.16 + pulse * 0.12;
+      ctx.beginPath(); ctx.ellipse(0, -size * 0.12, size * 0.56, size * 0.88, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#10243a';
+      ctx.strokeStyle = '#eef8ff';
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
-      ctx.roundRect(size * lx - size * 0.07, size * 0.18, size * 0.14, size * 0.44, size * 0.05);
+      ctx.moveTo(0, -size * 0.88);
+      ctx.lineTo(size * 0.48, -size * 0.40);
+      ctx.lineTo(size * 0.36, size * 0.62);
+      ctx.lineTo(-size * 0.36, size * 0.62);
+      ctx.lineTo(-size * 0.48, -size * 0.40);
+      ctx.closePath();
       ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#d8f8ff';
+      ctx.beginPath(); ctx.ellipse(0, -size * 0.10, size * 0.20, size * 0.52, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#9fdcff';
+      ctx.lineWidth = 1.8;
+      for (const off of [-0.24, 0.24]) {
+        ctx.beginPath(); ctx.moveTo(size * off, -size * 0.62); ctx.lineTo(size * off * 0.55, size * 0.48); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.46 + pulse * 0.24) + ')';
+      ctx.beginPath(); ctx.arc(0, -size * 0.48, size * 0.09, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.strokeStyle = '#bff4ff';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 4; i++) {
-      const a = -1.15 + i * 0.28;
-      ctx.beginPath();
-      ctx.moveTo(-size * 0.22 + i * size * 0.14, -size * 0.40);
-      ctx.lineTo(-size * 0.32 + Math.cos(a) * size * 0.22, -size * 0.68 + Math.sin(a) * size * 0.12);
-      ctx.stroke();
-    }
-    ctx.fillStyle = 'rgba(191,244,255,' + (0.35 + pulse * 0.32) + ')';
-    ctx.beginPath(); ctx.arc(size * 0.50, -size * 0.20, size * 0.10, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 

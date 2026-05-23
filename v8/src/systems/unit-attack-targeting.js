@@ -1,6 +1,7 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
-import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260523-dragon-judgment-fix';
+import { arenaEngagementBands, effectiveArenaAttackRange, isArenaRangedActor, limitBurstLanding } from './combat-targeting.js?v=20260523-dragon-judgment-hud';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 function meleeBossOrbitPoint(unit, target) {
   const isTank = !!(unit && (unit.arch === 'tank' || unit.taunt));
@@ -133,7 +134,7 @@ export function prepareUnitAttackTarget(unit, {
   let attackRange = unit.range || 40;
   if (arena && arena.phase === 'wave') attackRange = effectiveArenaAttackRange(unit, { inArena: true });
 
-  if (unit.shadowStep && unit.stealth && unit.stealthHits === 0 && !unit.firstHitDone && distance > attackRange && distance <= unit.shadowStep.range) {
+  if (unit.shadowStep && unit.stealth && unit.stealthHits === 0 && !unit.firstHitDone && isValidPlayerOffensiveTarget(target) && distance > attackRange && distance <= unit.shadowStep.range) {
     const fromX = unit.x;
     const fromY = unit.y;
     const offset = unit.shadowStep.landOffset || 25;

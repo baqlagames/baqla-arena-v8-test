@@ -277,7 +277,7 @@ function arena_drawHud(){
     const alive=arena.lieutenants.filter(l=>l.hp>0).length;
     const total=arena.lieutenants.length;
     if(alive>0)arena_drawLieutenantsBar(alive,total);
-  }else if(arena&&arena.phase==='wave'&&bossRef&&bossRef.hp>0&&!bossRef.untargetable){
+  }else if(arena&&arena.phase==='wave'&&bossRef&&bossRef.hp>0&&(!bossRef.untargetable||bossRef._dragonSkyPhase)){
     arena_drawBossHpBar(bossRef);
     arena_drawBossCastBar(bossRef);
   }

@@ -1556,6 +1556,13 @@ function dragonSafeZonePoint(b,ctx){
   const h=Math.max(360,(ctx.arenaBottom||820)-(ctx.arenaTop||88));
   return clampBossPoint(b.x,b.y+Math.max(245,h*0.36),ctx,{sideMargin:92,topMargin:220,bottomMargin:135});
 }
+function dragonJudgmentGuardPoint(ctx,kind){
+  const h=Math.max(360,(ctx.arenaBottom||820)-(ctx.arenaTop||88));
+  const center=(ARENA_L+ARENA_R)/2;
+  const x=center+(kind==='magic'?-105:105);
+  const y=(ctx.arenaTop||88)+h*0.42;
+  return clampBossPoint(x,y,ctx,{sideMargin:80,topMargin:150,bottomMargin:145});
+}
 function spawnDragonSkyGuard(b,ctx,kind,slotX,scale){
   const { enemies, groundFx, addParticle:addP, addDamageText:addDmg }=ctx;
   const magic=kind==='magic';
@@ -1564,9 +1571,10 @@ function spawnDragonSkyGuard(b,ctx,kind,slotX,scale){
   const baseDmg=magic?(b.dragonColossusAttack||b.dragonColossusDmg||92):(b.dragonJuggernautAttack||b.dragonJuggernautDmg||118);
   const size=magic?(b.dragonColossusSize||52):(b.dragonJuggernautSize||54);
   const sizeScale=dragonJudgmentGuardSizeScale(b);
-  const p=clampBossPoint(b.x+slotX,b.y+Math.max(150,(b.size||70)*1.86),ctx,{sideMargin:80,topMargin:150,bottomMargin:145});
+  const p=dragonJudgmentGuardPoint(ctx,kind);
   const guard={
     name,dragonSkyGuard:true,dragonGuardKind:kind,_dragonBoss:b,_dragonGuardScale:scale,
+    _dragonGuardAnchorX:p.x,_dragonGuardAnchorY:p.y,stationarySupport:true,
     priorityTarget:true,preferredBy:magic?'magic':'physical',
     act:2,arch:'melee',color:magic?'#bff4ff':'#eef8ff',accent:magic?'#6fb8e8':'#9fdcff',projType:'frost',
     x:p.x,y:p.y,maxHp:Math.round(baseHp*scale),hp:Math.round(baseHp*scale),
@@ -1601,6 +1609,10 @@ function activeDragonSkyAdds(b,enemies){
 }
 function tickDragonSkyGuard(guard,b,ctx){
   if(!guard||guard.hp<=0)return;
+  if(Number.isFinite(guard._dragonGuardAnchorX)&&Number.isFinite(guard._dragonGuardAnchorY)){
+    guard.x=guard._dragonGuardAnchorX;
+    guard.y=guard._dragonGuardAnchorY;
+  }
   guard._guardCastCd=Math.max(0,(guard._guardCastCd||0)-1);
   if(guard._guardCastCd>0)return;
   const { units, groundFx, beamFx, dealDamage, addParticle:addP, addDamageText:addDmg, shake }=ctx;

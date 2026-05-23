@@ -111,7 +111,7 @@ export function updateArenaEnemyAi(enemy, {
     shake,
   });
 
-  const holdStationary = shouldHoldStormVizierStation(enemy, { arenaPhase, units });
+  const holdStationary = !!enemy.stationarySupport || !!enemy.dragonSkyGuard || shouldHoldStormVizierStation(enemy, { arenaPhase, units });
 
   const targetInfo = chooseEnemyTarget(enemy, {
     arenaPhase,

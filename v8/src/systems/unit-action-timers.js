@@ -2,6 +2,7 @@ import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
 import { ARENA_LEASH_BACK, ARENA_LEASH_FWD, ARENA_LEASH_SIDE } from '../data/tuning.js';
 import { limitBurstLanding } from './combat-targeting.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function tickUnitActionTimers(unit, {
   frame,
@@ -233,7 +234,7 @@ function tickDeathFromAbove(unit, {
     let best = null;
     let bestDistance = Infinity;
     for (const enemy of enemies) {
-      if (enemy.hp > 0) {
+      if (isValidPlayerOffensiveTarget(enemy)) {
         const distance = dist(unit, enemy);
         if (distance < 155 && distance < bestDistance) {
           bestDistance = distance;
@@ -264,7 +265,7 @@ function tickDeathFromAbove(unit, {
   else clampToArena(unit);
   const damage = Math.round(unit.dmg * 4);
   for (const enemy of enemies) {
-    if (enemy.hp <= 0) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     if (dist(unit, enemy) <= 80) {
       dealDamage(enemy, damage, unit, 'normal');
       enemy.stunned = Math.max(enemy.stunned || 0, 2 * GAME_TICK_HZ);
@@ -307,7 +308,7 @@ function tickKillingSpree(unit, {
 
   unit.killingSpree.timer = 0;
   const target = unit.killingSpree.targets[unit.killingSpree.idx];
-  if (target && target.hp > 0) {
+  if (isValidPlayerOffensiveTarget(target)) {
     const fromX = unit.x;
     const fromY = unit.y;
     const landing = limitBurstLanding(unit, target.x + randomRange(-15, 15), target.y + randomRange(-10, 10), unit.killingSpree.maxStep || 140);

@@ -612,7 +612,7 @@ function smokeWinterglassDragon(ctx, boss) {
   if (dragonTemplate.name !== 'Winterglass Dragon') throw new Error('boss id 4 should be Winterglass Dragon');
   if (dragonTemplate.hp !== 46000 || dragonTemplate.dmg !== 150 || dragonTemplate.size !== 70 || dragonTemplate.armor !== 10 || dragonTemplate.magicRes !== 10) throw new Error('Winterglass Dragon core tuning drifted');
   if (dragonTemplate.timeEnrageAt !== 36000) throw new Error('Winterglass Dragon enrage should be 36000 frames');
-  if (dragonTemplate.diamondStormDur !== 3120 || dragonTemplate.diamondStormDmg !== 42 || dragonTemplate.diamondJudgmentDmg !== 360) throw new Error('Winterglass Dragon Diamond Judgment tuning drifted');
+  if (dragonTemplate.diamondStormDur !== 5400 || dragonTemplate.diamondStormDmg !== 42 || dragonTemplate.diamondJudgmentDmg !== 360) throw new Error('Winterglass Dragon Diamond Judgment tuning drifted');
   if (JSON.stringify(dragonTemplate.diamondStormThresholds) !== JSON.stringify([0.75, 0.50, 0.25])) throw new Error('Winterglass Dragon sky phases should trigger at 75/50/25% HP');
   if (JSON.stringify(dragonTemplate.dragonGuardScales) !== JSON.stringify([1.00, 1.22, 1.45]) || JSON.stringify(dragonTemplate.dragonGuardSizeScales) !== JSON.stringify([1.00, 1.16, 1.32])) {
     throw new Error('Winterglass Dragon Judgment guard scaling drifted');
@@ -721,9 +721,18 @@ function smokeWinterglassDragon(ctx, boss) {
   const juggernaut = guards.find(enemy => enemy.name === 'Mirrorice Juggernaut');
   if (guards.length !== 2 || !colossus || !juggernaut) throw new Error('Diamond Judgment should spawn Frostglass Colossus and Mirrorice Juggernaut');
   if (colossus.maxHp !== 15000 || colossus.armor !== 18 || colossus.magicRes !== 0 || colossus.preferredBy !== 'magic' || juggernaut.maxHp !== 16500 || juggernaut.armor !== 4 || juggernaut.magicRes !== 18 || juggernaut.preferredBy !== 'physical') throw new Error('Judgment guard stats or targeting drifted');
+  const guardY = ARENA_TOP + (ARENA_BOT - ARENA_TOP) * 0.42;
+  if (Math.abs(colossus.x - ((ARENA_L + ARENA_R) / 2 - 105)) > 2 || Math.abs(juggernaut.x - ((ARENA_L + ARENA_R) / 2 + 105)) > 2 || Math.abs(colossus.y - guardY) > 2 || Math.abs(juggernaut.y - guardY) > 2) {
+    throw new Error('Judgment guards should spawn at fixed separated mid-arena anchors');
+  }
+  const colossusStart = { x: colossus.x, y: colossus.y };
+  const juggernautStart = { x: juggernaut.x, y: juggernaut.y };
   const immuneDamage = applyBossAndRecordModifiers(100, { target: boss, attacker: { arch: 'caster', attackType: 'magic' }, dmgType: 'magic', attackTypeOverride: 'magic' });
   if (immuneDamage !== 0) throw new Error('Dragon should be immune during Diamond Judgment');
   tickBoss(ctx, boss, 140);
+  if (Math.hypot(colossus.x - colossusStart.x, colossus.y - colossusStart.y) > 0.1 || Math.hypot(juggernaut.x - juggernautStart.x, juggernaut.y - juggernautStart.y) > 0.1) {
+    throw new Error('Judgment guards should remain stationary while casting');
+  }
   if ((boss._dragonWingBuffetCasts || 0) !== preJudgmentCastCounts.wing || (boss._dragonCometCasts || 0) !== preJudgmentCastCounts.comet || (boss._dragonVoiceCasts || 0) !== preJudgmentCastCounts.voice || (boss._dragonMawCasts || 0) !== preJudgmentCastCounts.maw || (boss._dragonIceWallCasts || 0) !== preJudgmentCastCounts.wall) {
     throw new Error('Diamond Judgment should suppress all other Dragon casts while active');
   }

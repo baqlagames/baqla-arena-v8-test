@@ -1,5 +1,6 @@
 import { dist } from '../core/math.js';
 import { PLAYER_UNITS } from '../data/units.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function tickUnitMeteorAndSignature(unit, {
   frame,
@@ -45,7 +46,7 @@ function tickUnitMeteor(unit, {
 
   let target = null;
   for (const enemy of enemies) {
-    if (enemy.hp <= 0) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     if (enemy.isBoss || enemy.isElite) {
       target = enemy;
       break;
@@ -107,7 +108,7 @@ function tickUnitSignature(unit, {
   if (unit.signature.t < unit.signature.cd) return null;
 
   const sigRange = unit.signature.id === 'storm_anchor' ? 340 : (unit.arch === 'healer' ? 360 : Math.min(320, (unit.range || 60) + 160));
-  const hasEnemy = enemies.some(enemy => enemy.hp > 0 && dist(unit, enemy) < sigRange);
+  const hasEnemy = enemies.some(enemy => isValidPlayerOffensiveTarget(enemy) && dist(unit, enemy) < sigRange);
   if (!hasEnemy) return null;
 
   let fired = true;

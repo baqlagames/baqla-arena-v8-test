@@ -2,6 +2,9 @@
 
 import assert from 'node:assert/strict';
 import { findEnemyTargetForUnit, findRangedEnemyTargetForUnit } from '../src/systems/combat-targeting.js';
+import { tickUnitMeteorAndSignature } from '../src/systems/unit-signature-ticks.js';
+import { createArenaSignatures } from '../src/systems/unit-signatures.js';
+import { isValidPlayerOffensiveTarget } from '../src/systems/player-target-validity.js';
 
 const bounds = {
   inArena: true,
@@ -182,5 +185,68 @@ dragon.untargetable = false;
 dragon.flying = false;
 const dragonReturnPick = findEnemyTargetForUnit(hunter, view([dragon, colossus, juggernaut]));
 assert.equal(dragonReturnPick, dragon, 'units should return to Dragon after Judgment guards die');
+
+dragon._dragonSkyPhase = true;
+dragon._dragonJudgmentImmune = true;
+dragon.untargetable = true;
+assert.equal(isValidPlayerOffensiveTarget(dragon), false, 'immune Dragon should be invalid for player offensive abilities');
+assert.equal(isValidPlayerOffensiveTarget(colossus), false, 'dead guards should be invalid for player offensive abilities');
+colossus.hp = 1000;
+assert.equal(isValidPlayerOffensiveTarget(colossus), true, 'living Judgment guards should remain valid offensive targets');
+
+let firedSignature = false;
+const sigUnit = unit('Signature Rogue', 4, 'melee', 250, 690, {
+  signature: { t: 9, cd: 10, name: 'Test Strike', fire() { firedSignature = true; } },
+});
+const noBanner = tickUnitMeteorAndSignature(sigUnit, {
+  frame: 1,
+  enemies: [dragon],
+  bombs: [],
+  arenaTop: 42,
+  randomRange: () => 0,
+  groundEffects: [],
+  emitParticle() {},
+  addDamageText() {},
+});
+assert.equal(noBanner, null, 'signature should not fire when the only enemy is an immune Dragon');
+assert.equal(firedSignature, false, 'immune Dragon should not spend signature fire callbacks');
+assert.ok(sigUnit.signature.t >= sigUnit.signature.cd, 'signature cooldown should stay ready when no valid target exists');
+
+const meteorUnit = unit('Meteor Caster', 6, 'caster', 250, 690, {
+  meteor: { t: 9, cd: 10, dmg: 120, radius: 45 },
+});
+const bombs = [];
+tickUnitMeteorAndSignature(meteorUnit, {
+  frame: 2,
+  enemies: [dragon],
+  bombs,
+  arenaTop: 42,
+  randomRange: () => 0,
+  groundEffects: [],
+  emitParticle() {},
+  addDamageText() {},
+});
+assert.equal(bombs.length, 0, 'player meteors should not target an immune Dragon');
+
+const battle = { enemies: [dragon], units: [], projectiles: [], bombs: [], groundFx: [], beamFx: [] };
+const signatures = createArenaSignatures({
+  gameTickHz: 120,
+  getBattleArray: key => battle[key] || [],
+  randomRange: () => 0,
+  distance: (a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0)),
+  addDamageText() {},
+  emitParticle() {},
+  showFlash() {},
+  dealDamage() {},
+  shake() {},
+});
+const rogue = unit('Felfel', 4, 'melee', 250, 530, { size: 22, dmg: 100 });
+assert.equal(signatures.death_from_above.fire(rogue), false, 'Death from Above should not fire on immune Dragon');
+assert.equal(signatures.killing_spree.fire(rogue), false, 'Killing Spree should not fire on immune Dragon');
+assert.equal(signatures.deathmark.fire(rogue), false, 'Deathmark should not fire on immune Dragon');
+assert.equal(rogue.dfaTimer || 0, 0, 'Death from Above should not start when target is immune');
+assert.equal(rogue.killingSpree || null, null, 'Killing Spree should not queue immune Dragon targets');
+battle.enemies = [dragon, colossus];
+assert.notEqual(signatures.death_from_above.fire(rogue), false, 'Death from Above should fire on living Judgment guards');
 
 console.log('smoke-priority-targeting: ok');

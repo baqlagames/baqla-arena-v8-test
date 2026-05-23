@@ -1,4 +1,5 @@
 import { limitBurstLanding } from './combat-targeting.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function createArenaSignatures(deps = {}) {
   const {
@@ -36,11 +37,12 @@ export function createArenaSignatures(deps = {}) {
     updateUnit: arena_updateUnit = () => {},
     shake: shakeScreen = () => {},
   } = deps;
-  const liveArray = key => new Proxy([], {
+  const liveArray = (key, filterFn = null) => new Proxy([], {
     get(_target, prop) {
       const arr = getBattleArray(key) || [];
-      const value = arr[prop];
-      return typeof value === 'function' ? value.bind(arr) : value;
+      const source = filterFn ? arr.filter(filterFn) : arr;
+      const value = source[prop];
+      return typeof value === 'function' ? value.bind(source) : value;
     },
     set(_target, prop, value) {
       const arr = getBattleArray(key) || [];
@@ -51,13 +53,15 @@ export function createArenaSignatures(deps = {}) {
       return prop in (getBattleArray(key) || []);
     },
     ownKeys() {
-      return Reflect.ownKeys(getBattleArray(key) || []);
+      const arr = getBattleArray(key) || [];
+      return Reflect.ownKeys(filterFn ? arr.filter(filterFn) : arr);
     },
     getOwnPropertyDescriptor(_target, prop) {
-      return Object.getOwnPropertyDescriptor(getBattleArray(key) || [], prop) || { configurable: true };
+      const arr = getBattleArray(key) || [];
+      return Object.getOwnPropertyDescriptor(filterFn ? arr.filter(filterFn) : arr, prop) || { configurable: true };
     },
   });
-  const enemies = liveArray('enemies');
+  const enemies = liveArray('enemies', isValidPlayerOffensiveTarget);
   const units = liveArray('units');
   const projectiles = liveArray('projectiles');
   const bombs = liveArray('bombs');

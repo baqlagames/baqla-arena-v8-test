@@ -49,7 +49,7 @@ export const BOSSES=[
     frigidMawCD:1200,frigidMawFirst:600,frigidMawDmg:144,frigidMawRange:270,frigidMawArc:0.92,frigidMawTankMult:1.10,frigidMawMeleeMult:1.00,frigidMawBacklineMult:0.70,
     iceWallCD:1560,iceWallFirst:450,iceWallDmg:106,iceWallWarn:54,iceWallDur:210,iceWallWidth:34,iceWallLength:160,
     rimeVenomDur:600,rimeVenomHpPct:0.008,rimeVenomMinDmg:8,rimeVenomHealCut:0.08,
-    diamondStormCD:480,diamondStormAt:0.75,diamondStormThresholds:[0.75,0.50,0.25],diamondStormDur:3120,diamondStormTick:120,diamondStormDmg:42,
+    diamondStormCD:480,diamondStormAt:0.75,diamondStormThresholds:[0.75,0.50,0.25],diamondStormDur:5400,diamondStormTick:120,diamondStormDmg:42,
     diamondJudgmentDmg:360,diamondJudgmentSafeMult:0.30,diamondJudgmentOutsideMult:1.00,diamondSafeZoneRadius:112,diamondSafeZoneMoveLead:900,
     dragonGuardScales:[1.00,1.22,1.45],dragonGuardSizeScales:[1.00,1.16,1.32],
     dragonColossusHp:15000,dragonColossusDmg:92,dragonColossusAttack:92,dragonColossusSize:54,dragonColossusArmor:18,dragonColossusMagicRes:0,dragonColossusSurgeDmg:116,

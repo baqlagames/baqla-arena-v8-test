@@ -1,6 +1,7 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
 import { limitBurstLanding } from './combat-targeting.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function tickUnitPlagueAndJazarPassives(unit, {
   frame,
@@ -228,7 +229,7 @@ function tickOmnislash(unit, {
 
   unit._omnislashTimer = 0;
   const target = unit._omnislashTargets[unit._omnislashIdx];
-  if (target && target.hp > 0) {
+  if (isValidPlayerOffensiveTarget(target)) {
     const fromX = unit.x;
     const fromY = unit.y;
     const maxStep = unit._omnislashMaxStep || 135;

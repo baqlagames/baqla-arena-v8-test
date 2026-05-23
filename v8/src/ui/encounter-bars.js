@@ -202,6 +202,16 @@ function bossMechanicLookahead(boss,tickHz){
 }
 
 export function bossReadableSkillPills(boss){
+  if(boss&&boss.id===4&&boss._dragonSkyPhase){
+    return [{
+      key:'diamondStorm',
+      name:'JUDGMENT',
+      hint:boss._dragonSafeZoneActive?'SAFE ICE':'KILL GUARDS',
+      col:'#eef8ff',
+      cd:Math.max(0,Math.round(boss._dragonSkyTimer||0)),
+      max:Math.max(1,Math.round(boss._dragonSkyMax||boss.diamondStormDur||1))
+    }];
+  }
   const cd=boss.mechCD||{};
   const skills=[];
   const add=(key,cdProp,col,cdKey=key)=>{
@@ -299,6 +309,21 @@ export function bossCarapaceHudState(boss,tickHz=60){
   };
 }
 
+export function bossDragonJudgmentHudState(boss,tickHz=60){
+  if(!boss||boss.id!==4||!boss._dragonSkyPhase)return null;
+  const max=Math.max(1,Math.round(boss._dragonSkyMax||boss.diamondStormDur||1));
+  const remaining=Math.max(0,Math.round(boss._dragonSkyTimer||0));
+  return {
+    pct:Math.max(0,Math.min(1,1-(remaining/max))),
+    seconds:Math.max(0,Math.ceil(remaining/tickHz)),
+    remaining,
+    max,
+    immune:!!boss._dragonJudgmentImmune,
+    safeActive:!!boss._dragonSafeZoneActive,
+    danger:remaining<=tickHz*5
+  };
+}
+
 export function drawBossHpBar(ctx,view){
   const W=view.width,frame=view.frame,b=view.boss;
   if(!b)return;
@@ -320,14 +345,20 @@ export function drawBossHpBar(ctx,view){
   ctx.globalAlpha=1;
   const titleY=cardY+13;
   ctx.fillStyle='rgba(220,200,200,0.85)';ctx.font='600 8px Segoe UI';ctx.textAlign='left';
-  const tier=b.timeEnraged?'ENRAGED':(b.tier==='vs'?'BOSS':b.tier==='strong'?'BOSS':'MINI-BOSS');
-  if(b.timeEnraged)ctx.fillStyle='#ff5533';
+  const tier=b._dragonSkyPhase?'JUDGMENT':(b.timeEnraged?'ENRAGED':(b.tier==='vs'?'BOSS':b.tier==='strong'?'BOSS':'MINI-BOSS'));
+  if(b._dragonSkyPhase)ctx.fillStyle='#d8f8ff';
+  else if(b.timeEnraged)ctx.fillStyle='#ff5533';
   ctx.fillText(tier,cardX+10,titleY);
   ctx.fillStyle='#fff';ctx.font='bold 10px Segoe UI';
   ctx.fillText(b.name||'Boss',cardX+10+(tier.length*5)+6,titleY);
   const hpPct=Math.max(0,b.hp/b.maxHp);
   ctx.fillStyle='rgba(180,160,160,0.75)';ctx.font='bold 10px Segoe UI';ctx.textAlign='right';
   ctx.fillText(Math.ceil(b.hp)+' / '+b.maxHp,cardX+cardW-10,titleY);
+  if(b._dragonJudgmentImmune){
+    ctx.fillStyle='#d8f8ff';
+    ctx.font='900 8px Segoe UI';
+    ctx.fillText('IMMUNE',cardX+cardW-10,titleY+12);
+  }
   const barX=cardX+10,barW=cardW-20,barY=cardY+19,barH=8;
   ctx.fillStyle='rgba(0,0,0,0.6)';ctx.beginPath();ctx.roundRect(barX,barY,barW,barH,4);ctx.fill();
   const hpCol=hasShield?'#fbbf24':(hpPct>0.5?'#ef4444':(hpPct>0.25?'#ff6b35':'#dc2626'));
@@ -459,9 +490,47 @@ function drawBossUrgentSkillBar(ctx,{width:W,frame,boss,tickHz}){
   return true;
 }
 
+function drawDragonJudgmentCastBar(ctx,{width:W,frame,boss,tickHz}){
+  const state=bossDragonJudgmentHudState(boss,tickHz);
+  if(!state)return false;
+  const cardX=20,cardW=W-40,cardY=78,cardH=42;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.52)';ctx.shadowBlur=13;ctx.shadowOffsetY=4;
+  const bg=ctx.createLinearGradient(0,cardY,0,cardY+cardH);
+  bg.addColorStop(0,state.danger?'rgba(52,20,38,0.98)':'rgba(18,34,54,0.98)');
+  bg.addColorStop(1,'rgba(6,12,26,0.98)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(cardX,cardY,cardW,cardH,11);ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  const pulse=0.66+0.34*Math.sin(frame*0.20);
+  ctx.strokeStyle=state.danger?'rgba(255,245,255,'+pulse+')':'rgba(216,248,255,'+(0.55+0.25*pulse)+')';
+  ctx.lineWidth=state.danger?2:1.25;
+  ctx.beginPath();ctx.roundRect(cardX+0.5,cardY+0.5,cardW-1,cardH-1,11);ctx.stroke();
+  ctx.fillStyle=state.danger?'#ffffff':'#d8f8ff';
+  ctx.beginPath();ctx.roundRect(cardX,cardY,4,cardH,3);ctx.fill();
+  ctx.textAlign='left';
+  ctx.fillStyle='rgba(220,244,255,0.82)';ctx.font='800 8px Segoe UI';
+  ctx.fillText(state.safeActive?'SAFE ICE ACTIVE':'KILL GUARDS - PREPARE SAFE ICE',cardX+12,cardY+12);
+  ctx.fillStyle='#fff';ctx.font='900 14px Segoe UI';
+  ctx.fillText('DIAMOND JUDGMENT',cardX+12,cardY+27);
+  ctx.textAlign='right';
+  ctx.fillStyle=state.danger?'#ffffff':'#d8f8ff';ctx.font='900 18px Segoe UI';
+  ctx.fillText(state.seconds+'s',cardX+cardW-12,cardY+26);
+  ctx.fillStyle='rgba(216,248,255,0.85)';ctx.font='800 9px Segoe UI';
+  ctx.fillText(state.immune?'DRAGON IMMUNE':'JUDGMENT',cardX+cardW-12,cardY+38);
+  const barX=cardX+12,barW=cardW-24,barY=cardY+34,barH=5;
+  ctx.fillStyle='rgba(0,0,0,0.62)';ctx.beginPath();ctx.roundRect(barX,barY,barW,barH,3);ctx.fill();
+  const fg=ctx.createLinearGradient(barX,0,barX+barW,0);
+  fg.addColorStop(0,'#9fdcff');fg.addColorStop(0.55,'#eef8ff');fg.addColorStop(1,state.danger?'#ffffff':'#c7f7ff');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.roundRect(barX,barY,Math.max(3,barW*state.pct),barH,3);ctx.fill();
+  ctx.restore();
+  ctx.textAlign='left';
+  return true;
+}
+
 export function drawBossCastBar(ctx,view){
   const W=view.width,frame=view.frame,tickHz=view.tickHz,b=view.boss;
   if(!b)return;
+  if(drawDragonJudgmentCastBar(ctx,{width:W,frame,tickHz,boss:b}))return;
   const carapace=bossCarapaceHudState(b,tickHz);
   if(!carapace){
     const enrage=bossEnrageHudState(b,frame,tickHz);

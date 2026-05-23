@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import {
   bossCarapaceHudState,
+  bossDragonJudgmentHudState,
   bossEnrageHudState,
   bossReadableSkillHint,
   bossReadableSkillLabel,
@@ -66,6 +67,11 @@ assert.equal(bossReadableSkillHint(dragon, 'iceWall'), 'MOVING WALL', 'Wintergla
 assert.equal(bossReadableSkillHint(dragon, 'frozenScales'), 'MIXED DAMAGE', 'Winterglass Dragon scales should expose mixed-damage hint');
 assert.equal(bossReadableSkillHint(dragon, 'diamondStorm'), 'SAFE ZONE', 'Winterglass Dragon Judgment should expose safe-zone hint');
 assert.deepEqual(bossReadableSkillPills(dragon).map(skill => skill.name), ['SCALES', 'BUFFET', 'MAW', 'WALL', 'COMETS', 'VOICE', 'JUDGMENT', 'HUNT'], 'Winterglass Dragon skill pills should use dragon-specific labels');
+const judgingDragon = { ...dragon, _dragonSkyPhase: true, _dragonJudgmentImmune: true, _dragonSkyTimer: 5400, _dragonSkyMax: 5400, diamondStormDur: 5400 };
+assert.deepEqual(bossReadableSkillPills(judgingDragon).map(skill => skill.name), ['JUDGMENT'], 'Dragon Judgment phase should hide normal cast pills');
+const judgmentHud = bossDragonJudgmentHudState(judgingDragon, 120);
+assert.equal(judgmentHud.seconds, 45, 'Dragon Judgment HUD should show the full 45s cast');
+assert.equal(judgmentHud.immune, true, 'Dragon Judgment HUD should expose immunity state');
 
 const urgent = bossUrgentSkillHudState(dragon, tickHz);
 assert.equal(urgent.label, 'COMETS', 'urgent mechanic HUD should pick the nearest imminent Dragon mechanic');
