@@ -362,7 +362,7 @@ function tickShieldCharge(unit, {
   let target = null;
   let bestDistance = Infinity;
   for (const enemy of enemies) {
-    if (enemy.hp <= 0) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     if (isGripReserved(enemy, unit) || isGapCloserReserved(enemy, unit)) continue;
     const distance = dist(unit, enemy);
     if (distance > range) continue;
@@ -384,7 +384,7 @@ function tickShieldCharge(unit, {
   unit.y = target.y + 12;
   clampToLeash(unit);
   for (const enemy of enemies) {
-    if (enemy.hp <= 0) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     if (dist(unit, enemy) <= unit.tankCharge.radius) {
       dealDamage(enemy, Math.round(unit.dmg * unit.tankCharge.dmgMult), unit, 'normal');
       if (!enemy.isBoss) enemy.stunned = Math.max(enemy.stunned || 0, unit.tankCharge.stunDur);
@@ -418,7 +418,7 @@ function tickDeathGrip(unit, {
 
   const candidates = [];
   for (const enemy of enemies) {
-    if (enemy.hp <= 0 || enemy.isBoss) continue;
+    if (!isValidPlayerOffensiveTarget(enemy) || enemy.isBoss) continue;
     if (isGapCloserReserved(enemy, unit)) continue;
     const distance = dist(unit, enemy);
     if (distance > unit.deathGrip.range) continue;
@@ -499,7 +499,7 @@ function tickRemorselessWinter(unit, {
   if (unit.remorselessWinterTick >= GAME_TICK_HZ) {
     unit.remorselessWinterTick = 0;
     for (const enemy of enemies) {
-      if (enemy.hp <= 0) continue;
+      if (!isValidPlayerOffensiveTarget(enemy)) continue;
       if (dist(unit, enemy) > 120) continue;
       dealDamage(enemy, Math.round(unit.dmg * 0.8), unit, 'magic');
       enemy.slowTimer = Math.max(enemy.slowTimer || 0, 90);

@@ -1,5 +1,11 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
+
+function validProjectileDamageTarget(projectile, target) {
+  if (!target || target.hp <= 0) return false;
+  return !projectile.isPlayer || isValidPlayerOffensiveTarget(target);
+}
 
 export function projectileColor(type) {
   if (type === 'fire') return '#ff6600';
@@ -46,6 +52,7 @@ export function fireArenaProjectile(from, to, dmg, opts = {}, {
   emitParticle,
 }) {
   let nextLastAttackSfxFrame = lastAttackSfxFrame;
+  if (from.isPlayer && !opts.visualOnly && !isValidPlayerOffensiveTarget(to)) return nextLastAttackSfxFrame;
   if (from.isPlayer && !opts.visualOnly && frame - lastAttackSfxFrame >= 12) {
     nextLastAttackSfxFrame = frame;
     const projectileType = opts.projType || from.projType || 'normal';
@@ -133,7 +140,7 @@ export function updateArenaProjectile(projectile, {
     const targets = projectile.isPlayer ? enemies : units;
     if (projectile.stampedeBeast) {
       for (const target of targets) {
-        if (target.hp <= 0 || projectile._hitTargets.includes(target)) continue;
+        if (!validProjectileDamageTarget(projectile, target) || projectile._hitTargets.includes(target)) continue;
         if (dist(projectile, target) < target.size + (projectile.size || 4)) {
           projectile._hitTargets.push(target);
           dealDamage(target, projectile.dmg, projectile.attacker, 'physical');
@@ -144,7 +151,7 @@ export function updateArenaProjectile(projectile, {
       return true;
     }
     for (const target of targets) {
-      if (target.hp <= 0) continue;
+      if (!validProjectileDamageTarget(projectile, target)) continue;
       if (dist(projectile, target) < target.size + projectile.size) {
         dealDamage(target, projectile.dmg, projectile.attacker, 'normal');
         emitParticle(projectile.x, projectile.y, projectile.color || '#ffaa00', 6, 3);
@@ -154,6 +161,8 @@ export function updateArenaProjectile(projectile, {
     if (frame % 2 === 0) emitParticle(projectile.x, projectile.y, projectile.color || '#ffaa00', 1, 2);
     return true;
   }
+
+  if (projectile.isPlayer && !projectile.visualOnly && projectile.target && !isValidPlayerOffensiveTarget(projectile.target)) return false;
 
   if (projectile.target && projectile.target.hp > 0) {
     projectile.tx = projectile.target.x;
@@ -183,7 +192,7 @@ export function updateArenaProjectile(projectile, {
       return false;
     }
 
-    if (projectile.target && projectile.target.hp > 0) {
+    if (projectile.target && validProjectileDamageTarget(projectile, projectile.target)) {
       const dmgType = (projectile.projType === 'curse' || projectile.projType === 'fire' || projectile.projType === 'holy' || projectile.projType === 'frost' || projectile.projType === 'chaosBolt' || projectile.projType === 'blackArrow' || projectile.projType === 'voidShard' || projectile.projType === 'voidOrb') ? 'magic' : 'normal';
       dealDamage(projectile.target, projectile.dmg, projectile.attacker, dmgType, projectile.attackType, (projectile._isCrit || projectile.sourceLabel) ? {
         isCrit: !!projectile._isCrit,
@@ -206,7 +215,7 @@ export function updateArenaProjectile(projectile, {
         const list = projectile.isPlayer ? enemies : units;
         const chaosAoeMult = projectile._cbAoeMult || 0.45;
         for (const target of list) {
-          if (target !== projectile.target && target.hp > 0 && dist(projectile.target, target) < projectile.aoeRadius) {
+          if (target !== projectile.target && validProjectileDamageTarget(projectile, target) && dist(projectile.target, target) < projectile.aoeRadius) {
             dealDamage(target, Math.round(projectile.dmg * chaosAoeMult), projectile.attacker, 'magic', 'ignoreDefense', { sourceLabel: projectile.sourceLabel || 'CHAOS', sourceColor: projectile.sourceColor || '#88ffaa' });
             emitParticle(target.x, target.y, '#88ffaa', 10, 3);
           }
@@ -220,8 +229,8 @@ export function updateArenaProjectile(projectile, {
           const rest = projectile._chaosSplitPlan.slice(1);
           const seen = projectile._hitTargets ? [...projectile._hitTargets] : [];
           if (!seen.includes(projectile.target)) seen.push(projectile.target);
-          let candidates = list.filter(target => target && target.hp > 0 && !seen.includes(target) && dist(projectile.target, target) <= 230);
-          if (candidates.length < tier.count) candidates = list.filter(target => target && target.hp > 0 && !seen.includes(target));
+          let candidates = list.filter(target => target && validProjectileDamageTarget(projectile, target) && !seen.includes(target) && dist(projectile.target, target) <= 230);
+          if (candidates.length < tier.count) candidates = list.filter(target => target && validProjectileDamageTarget(projectile, target) && !seen.includes(target));
           candidates.sort((a, b) => dist(projectile.target, a) - dist(projectile.target, b));
           const chosen = candidates.slice(0, tier.count);
           const nextHit = [...seen, ...chosen];
@@ -257,7 +266,7 @@ export function updateArenaProjectile(projectile, {
         const level = projectile.attacker && projectile.attacker.level || 1;
         const aoeMult = projectile.attacker && projectile.attacker.aoeMult ? projectile.attacker.aoeMult : (0.30 + level * 0.05);
         for (const target of list) {
-          if (target !== projectile.target && target.hp > 0 && dist(projectile.target, target) < projectile.aoeRadius) dealDamage(target, projectile.dmg * aoeMult, projectile.attacker, dmgType, projectile.attackType, projectile.sourceLabel ? { sourceLabel: projectile.sourceLabel, sourceColor: projectile.sourceColor } : undefined);
+          if (target !== projectile.target && validProjectileDamageTarget(projectile, target) && dist(projectile.target, target) < projectile.aoeRadius) dealDamage(target, projectile.dmg * aoeMult, projectile.attacker, dmgType, projectile.attackType, projectile.sourceLabel ? { sourceLabel: projectile.sourceLabel, sourceColor: projectile.sourceColor } : undefined);
         }
       }
       if (projectile.poisonOnHit) {
@@ -290,7 +299,7 @@ export function updateArenaProjectile(projectile, {
         projectile._hitTargets.push(lastTarget);
         const bounceRange = projectile.projType === 'avengersShield' ? 350 : 160;
         for (const target of list) {
-          if (target.hp <= 0 || projectile._hitTargets.includes(target)) continue;
+          if (!validProjectileDamageTarget(projectile, target) || projectile._hitTargets.includes(target)) continue;
           const candidateDistance = dist(projectile, target);
           if (candidateDistance < bounceRange && candidateDistance < nextDistance) {
             nextDistance = candidateDistance;
@@ -377,7 +386,7 @@ export function explodeArenaBomb(bomb, {
   const baseMult = 0.45 + level * 0.07;
   const dmgType = bomb.dmgType || 'normal';
   for (const target of list) {
-    if (target.hp <= 0) continue;
+    if (!validProjectileDamageTarget(bomb, target)) continue;
     const distance = dist(bomb, target);
     if (distance <= bomb.radius) {
       const falloff = baseMult * (1 - (distance / bomb.radius) * 0.5);

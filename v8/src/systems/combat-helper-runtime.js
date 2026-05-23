@@ -7,6 +7,7 @@ import { clampCombatActorToArena, clampCombatActorToLeash, createCombatBounds, c
 import { batataCovers, batataHealingReceivedMultiplier, isBatataBacklineAlly, isZavsMeleeAlly, zavsAllyAttackSpeedFactor, zavsAllyDamageMultiplier, zavsBodyguardCovers } from './combat-protection.js';
 import { findEnemyTargetForUnit, findNearestTarget, findRangedEnemyTargetForUnit, isReachableFromLeash, isSaturatedCombatTarget, updateBossEngagementCounts } from './combat-targeting.js?v=20260523-dragon-judgment-hud';
 import { playerCombatColor, spawnPlayerAbilityCastVfx, spawnPlayerImpactVfx, spawnPlayerProjectileCastVfx } from './combat-vfx.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function createCombatHelperRuntime(deps = {}) {
   const tickHz = deps.tickHz || 60;
@@ -294,7 +295,7 @@ export function createCombatHelperRuntime(deps = {}) {
     let best = null;
     let bestD = Infinity;
     for (const enemy of enemies) {
-      if (enemy.hp <= 0 || enemy.charmed || enemy.burrowing || enemy.untargetable) continue;
+      if (!isValidPlayerOffensiveTarget(enemy)) continue;
       if (isGripReserved(enemy, unit) || isGapCloserReserved(enemy, unit)) continue;
       const d = dist(unit, enemy);
       if (d < (minRange || 0) || d > maxRange) continue;

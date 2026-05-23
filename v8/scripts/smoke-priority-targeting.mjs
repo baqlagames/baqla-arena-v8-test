@@ -2,6 +2,8 @@
 
 import assert from 'node:assert/strict';
 import { findEnemyTargetForUnit, findRangedEnemyTargetForUnit } from '../src/systems/combat-targeting.js';
+import { createUnitAbilityRuntime } from '../src/systems/unit-ability-runtime.js';
+import { tickUnitAlibabaPassives } from '../src/systems/unit-alibaba-ticks.js';
 import { tickUnitMeteorAndSignature } from '../src/systems/unit-signature-ticks.js';
 import { createArenaSignatures } from '../src/systems/unit-signatures.js';
 import { isValidPlayerOffensiveTarget } from '../src/systems/player-target-validity.js';
@@ -229,6 +231,29 @@ tickUnitMeteorAndSignature(meteorUnit, {
 assert.equal(bombs.length, 0, 'player meteors should not target an immune Dragon');
 
 const battle = { enemies: [dragon], units: [], projectiles: [], bombs: [], groundFx: [], beamFx: [] };
+const abilityRuntime = createUnitAbilityRuntime({
+  gameTickHz: 120,
+  view: () => ({
+    enemies: battle.enemies,
+    units: battle.units,
+    projectiles: battle.projectiles,
+    bombs: battle.bombs,
+    groundFx: battle.groundFx,
+    beamFx: battle.beamFx,
+    frame: 1,
+    arenaTop: 42,
+    arenaBottom: 932,
+    arenaLeft: 64,
+    arenaRight: 436,
+    width: 500,
+    height: 1000,
+  }),
+  distance: (a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0)),
+});
+assert.equal(abilityRuntime.findBestEnemyClusterPoint({ x: 250, y: 690 }, 999, 140), null, 'cluster targeting should ignore an immune Dragon');
+battle.enemies = [dragon, colossus];
+assert.equal(abilityRuntime.findBestEnemyClusterPoint({ x: 250, y: 690 }, 999, 140).target, colossus, 'cluster targeting should choose valid Judgment guards');
+battle.enemies = [dragon];
 const signatures = createArenaSignatures({
   gameTickHz: 120,
   getBattleArray: key => battle[key] || [],
@@ -238,6 +263,7 @@ const signatures = createArenaSignatures({
   emitParticle() {},
   showFlash() {},
   dealDamage() {},
+  findBestEnemyClusterPoint: (...args) => abilityRuntime.findBestEnemyClusterPoint(...args),
   shake() {},
 });
 const rogue = unit('Felfel', 4, 'melee', 250, 530, { size: 22, dmg: 100 });
@@ -246,6 +272,26 @@ assert.equal(signatures.killing_spree.fire(rogue), false, 'Killing Spree should 
 assert.equal(signatures.deathmark.fire(rogue), false, 'Deathmark should not fire on immune Dragon');
 assert.equal(rogue.dfaTimer || 0, 0, 'Death from Above should not start when target is immune');
 assert.equal(rogue.killingSpree || null, null, 'Killing Spree should not queue immune Dragon targets');
+const alibaba = unit('Alibaba', 6, 'caster', 250, 690, { size: 20, dmg: 100, range: 220 });
+assert.equal(signatures.inferno_orb.fire(alibaba), false, 'Inferno Orb should not fire on immune Dragon clusters');
+assert.equal(signatures.frozen_orb.fire(alibaba), false, 'Frozen Orb should not fire on immune Dragon');
+assert.equal(signatures.thunderstorm.fire(alibaba), false, 'Thunderstorm should not fire when the only enemy is immune');
+assert.equal(signatures.soul_harvest.fire(alibaba), false, 'Soul Harvest should not target immune Dragon clusters');
+let orbDamage = 0;
+alibaba._infernoOrb = { x: dragon.x, y: dragon.y, ang: 0, speed: 0, timer: 12, radius: 120, tickCD: 0, tickEvery: 12, dmg: 100, from: alibaba };
+tickUnitAlibabaPassives(alibaba, {
+  frame: 12,
+  enemies: [dragon],
+  arenaBounds: { left: 64, right: 436, top: 42, bottom: 932 },
+  groundEffects: [],
+  randomRange: () => 0,
+  dealDamage() { orbDamage++; },
+  findBestEnemyClusterPoint: (...args) => abilityRuntime.findBestEnemyClusterPoint(...args),
+  emitParticle() {},
+  addDamageText() {},
+  shake() {},
+});
+assert.equal(orbDamage, 0, 'ongoing Alibaba orb ticks should not damage immune Dragon');
 battle.enemies = [dragon, colossus];
 assert.notEqual(signatures.death_from_above.fire(rogue), false, 'Death from Above should fire on living Judgment guards');
 

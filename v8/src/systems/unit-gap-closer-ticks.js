@@ -1,5 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function tickUnitSupportAndGapClosers(unit, deps) {
   tickCleanse(unit, deps);
@@ -72,7 +73,7 @@ function tryStartShieldCharge(unit, {
   let rangedDistance = Infinity;
   let triggered = false;
   for (const enemy of enemies) {
-    if (enemy.hp <= 0) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     if (isGripReserved(enemy, unit) || isGapCloserReserved(enemy, unit)) continue;
     const distance = dist(unit, enemy);
     if (distance <= 100 && distance >= 50) {
@@ -140,7 +141,7 @@ function tickShieldChargeLeap(unit, {
     if (target && target.hp > 0) {
       const mult = unit.chargeFirstHitMult || 1.6;
       for (const enemy of enemies) {
-        if (enemy.hp <= 0) continue;
+        if (!isValidPlayerOffensiveTarget(enemy)) continue;
         if (dist(target, enemy) < 70) {
           dealDamage(enemy, Math.round(unit.dmg * mult), unit, 'normal');
           if (!enemy.isBoss) enemy.stunned = Math.max(enemy.stunned || 0, 90);
@@ -266,7 +267,7 @@ function tickLegacyDeathGrip(unit, {
   let best = null;
   let bestDistance = Infinity;
   for (const enemy of enemies) {
-    if (enemy.hp <= 0 || enemy.isBoss) continue;
+    if (!isValidPlayerOffensiveTarget(enemy) || enemy.isBoss) continue;
     if (isGapCloserReserved(enemy, unit)) continue;
     const distance = dist(unit, enemy);
     if (distance < 200 && distance < bestDistance) {
@@ -337,7 +338,7 @@ function tickMaulLeap(unit, {
       if (typeof clampToLeash === 'function') clampToLeash(unit);
       else clampToArena(unit);
       const target = leap.target;
-      if (target && target.hp > 0) {
+      if (isValidPlayerOffensiveTarget(target)) {
         dealDamage(target, Math.round(unit.dmg * 1.5), unit, 'normal');
         for (let i = 0; i < 3; i++) {
           const cleaveAngle = (-0.3 + i * 0.3) + Math.atan2(target.y - unit.y, target.x - unit.x);
@@ -363,7 +364,7 @@ function tickMaulLeap(unit, {
   let target = null;
   let targetDistance = Infinity;
   for (const enemy of enemies) {
-    if (enemy.hp <= 0) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     if (isGripReserved(enemy, unit) || isGapCloserReserved(enemy, unit)) continue;
     const distance = dist(unit, enemy);
     if (distance < 100 && distance < targetDistance) {
@@ -421,7 +422,7 @@ function tickHallowedLeap(unit, {
       const radius = unit.hallowedLeap.radius || 90;
       const damage = Math.max(1, Math.round(unit.dmg * (unit.hallowedLeap.dmgMult || 0.45)));
       for (const enemy of enemies) {
-        if (enemy.hp <= 0 || enemy.burrowing || enemy.untargetable || enemy.isBarrier) continue;
+        if (!isValidPlayerOffensiveTarget(enemy)) continue;
         if (dist(unit, enemy) > radius) continue;
         dealDamage(enemy, damage, unit, 'magic');
         emitParticle(enemy.x, enemy.y, '#ffe066', 5, 3);
@@ -448,7 +449,7 @@ function tickHallowedLeap(unit, {
 
   const range = unit.hallowedLeap.range || 320;
   const clusterRadius = 95;
-  const valid = enemy => enemy && enemy.hp > 0 && !enemy.burrowing && !enemy.untargetable && !enemy.isBarrier && dist(unit, enemy) <= range;
+  const valid = enemy => isValidPlayerOffensiveTarget(enemy) && dist(unit, enemy) <= range;
   let best = null;
   let bestScore = -Infinity;
   for (const enemy of enemies) {
@@ -456,7 +457,7 @@ function tickHallowedLeap(unit, {
     const casterish = enemy.arch === 'ranged' || enemy.arch === 'caster' || enemy.arch === 'support' || enemy.range > 70;
     if (!casterish) continue;
     let cluster = 0;
-    for (const other of enemies) if (other.hp > 0 && !other.untargetable && !other.isBarrier && dist(enemy, other) <= clusterRadius) cluster++;
+    for (const other of enemies) if (isValidPlayerOffensiveTarget(other) && dist(enemy, other) <= clusterRadius) cluster++;
     const distance = dist(unit, enemy);
     const score = 1000 + cluster * 45 - distance - (enemy.isBoss ? 180 : 0);
     if (score > bestScore) {
@@ -468,7 +469,7 @@ function tickHallowedLeap(unit, {
     for (const enemy of enemies) {
       if (!valid(enemy)) continue;
       let cluster = 0;
-      for (const other of enemies) if (other.hp > 0 && !other.untargetable && !other.isBarrier && dist(enemy, other) <= clusterRadius) cluster++;
+      for (const other of enemies) if (isValidPlayerOffensiveTarget(other) && dist(enemy, other) <= clusterRadius) cluster++;
       const distance = dist(unit, enemy);
       const score = cluster * 80 - distance - (enemy.isBoss ? 80 : 0);
       if (score > bestScore) {

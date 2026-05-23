@@ -1,5 +1,6 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function tickUnitAlibabaPassives(unit, {
   frame,
@@ -105,7 +106,7 @@ function tickFlameCircle(unit, {
   if (circle.tick <= 0) {
     circle.tick = 15;
     for (const enemy of enemies) {
-      if (enemy.hp > 0 && Math.hypot(enemy.x - circle.x, enemy.y - circle.y) <= circle.r) {
+      if (isValidPlayerOffensiveTarget(enemy) && Math.hypot(enemy.x - circle.x, enemy.y - circle.y) <= circle.r) {
         dealDamage(enemy, circle.dmg, circle.from, 'magic');
         if (frame % 6 < 2) emitParticle(enemy.x + randomRange(-7, 7), enemy.y + randomRange(-7, 7), '#ff6600', 2, 3);
       }
@@ -149,7 +150,7 @@ function tickInfernoOrb(unit, {
     orb.tickCD = orb.tickEvery || 12;
     let hit = 0;
     for (const enemy of enemies) {
-      if (enemy.hp > 0 && Math.hypot(enemy.x - orb.x, enemy.y - orb.y) <= orb.radius) {
+      if (isValidPlayerOffensiveTarget(enemy) && Math.hypot(enemy.x - orb.x, enemy.y - orb.y) <= orb.radius) {
         dealDamage(enemy, orb.dmg, orb.from, 'magic');
         const wasCursed = enemy._flameCurseTimer > 0;
         enemy._flameCurseTimer = 3 * GAME_TICK_HZ;
@@ -187,7 +188,7 @@ function tickBlizzard(unit, {
   if (frame % 15 === 0) {
     const radius = unit._blizzardRadius || 70;
     for (const enemy of enemies) {
-      if (enemy.hp > 0 && Math.hypot(enemy.x - unit._blizzardX, enemy.y - unit._blizzardY) <= radius) {
+      if (isValidPlayerOffensiveTarget(enemy) && Math.hypot(enemy.x - unit._blizzardX, enemy.y - unit._blizzardY) <= radius) {
         dealDamage(enemy, unit._blizzardDmg, unit, 'magic');
         enemy.slowTimer = Math.max(enemy.slowTimer || 0, 60);
         enemy.slowMult = Math.min(enemy.slowMult || 1, 0.60);
@@ -215,7 +216,7 @@ function tickIceBarrier(unit, {
 
   if (unit._iceBarrier.hp <= 0) {
     for (const enemy of enemies) {
-      if (enemy.hp > 0 && dist(unit, enemy) < 90 && !enemy.isBoss) {
+      if (isValidPlayerOffensiveTarget(enemy) && dist(unit, enemy) < 90 && !enemy.isBoss) {
         enemy.stunned = Math.max(enemy.stunned || 0, Math.round(1.5 * GAME_TICK_HZ));
         emitParticle(enemy.x, enemy.y, '#88ddff', 12, 4);
       }
@@ -253,7 +254,7 @@ function tickFrozenOrb(unit, {
   if (orb.tickCD <= 0) {
     orb.tickCD = orb.tickEvery || 12;
     for (const enemy of enemies) {
-      if (enemy.hp > 0 && Math.hypot(enemy.x - orb.x, enemy.y - orb.y) <= orb.radius) {
+      if (isValidPlayerOffensiveTarget(enemy) && Math.hypot(enemy.x - orb.x, enemy.y - orb.y) <= orb.radius) {
         dealDamage(enemy, orb.dmg, orb.from, 'magic');
         enemy.slowTimer = Math.max(enemy.slowTimer || 0, 96);
         enemy.slowMult = Math.min(enemy.slowMult || 1, 0.50);
@@ -305,7 +306,7 @@ function tickThunderstorm(unit, {
   if (storm.tickCD <= 0) {
     storm.tickCD = storm.tickEvery || 15;
     const targets = enemies
-      .filter(enemy => enemy.hp > 0 && dist(unit, enemy) <= storm.radius)
+      .filter(enemy => isValidPlayerOffensiveTarget(enemy) && dist(unit, enemy) <= storm.radius)
       .sort((a, b) => {
         const bossBiasA = a.isBoss ? 120 : 0;
         const bossBiasB = b.isBoss ? 120 : 0;

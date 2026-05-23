@@ -1,3 +1,5 @@
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
+
 export function createCombatTransientsRuntime(deps) {
   let frame = 0, screenShake = 0;
   let units = [], enemies = [], projectiles = [], bombs = [], particles = [], dmgNums = [], healFx = [], groundFx = [], beamFx = [];
@@ -42,8 +44,8 @@ export function createCombatTransientsRuntime(deps) {
     g.r=Math.min(g.maxR||60,g.r+_gfSpeed);
     if(g.banner){g.bannerTimer--;if(g.bannerTimer<=0)g.life=0}
     else if(g.wildGrowth){g.wgTimer--;g.wgTick++;if(g.wgTick%30===0&&g.wgFollow&&g.wgFollow.hp>0){g.wgFollow.hp=Math.min(g.wgFollow.maxHp,g.wgFollow.hp+g.wgHeal);addHealFx(g.wgFollow.x,g.wgFollow.y,g.wgHeal)}if(g.wgTimer<=0)g.life=0}
-    else if(g.volley){g.volleyTimer--;g.volleyTick++;if(g.volleyTick%15===0){for(const e of enemies){if(e.hp>0&&dist(g,e)<g.maxR)dealDamage(e,g.volleyDmg,g.volleyFrom,'normal')}}if(g.volleyTimer<=0)g.life=0}
-    else if(g.wildfirePatch){g.wfT++;if(frame%GAME_TICK_HZ===0){for(const e of enemies){if(e.hp>0&&dist(g,e)<=g.wfRadius){dealDamage(e,g.wfDmg,g.wfFrom,'physical');addP(e.x,e.y,'#ff6600',3,2)}}}if(g.wfT>=g.wfDur)g.life=0;if(frame%6===0)addP(g.x+rnd(-g.wfRadius*0.5,g.wfRadius*0.5),g.y+rnd(-g.wfRadius*0.3,g.wfRadius*0.3),'#ff6600',1,3)}
+    else if(g.volley){g.volleyTimer--;g.volleyTick++;if(g.volleyTick%15===0){for(const e of enemies){if(isValidPlayerOffensiveTarget(e)&&dist(g,e)<g.maxR)dealDamage(e,g.volleyDmg,g.volleyFrom,'normal')}}if(g.volleyTimer<=0)g.life=0}
+    else if(g.wildfirePatch){g.wfT++;if(frame%GAME_TICK_HZ===0){for(const e of enemies){if(isValidPlayerOffensiveTarget(e)&&dist(g,e)<=g.wfRadius){dealDamage(e,g.wfDmg,g.wfFrom,'physical');addP(e.x,e.y,'#ff6600',3,2)}}}if(g.wfT>=g.wfDur)g.life=0;if(frame%6===0)addP(g.x+rnd(-g.wfRadius*0.5,g.wfRadius*0.5),g.y+rnd(-g.wfRadius*0.3,g.wfRadius*0.3),'#ff6600',1,3)}
     else if(g.vineLash){g.vineTimer--;if(g.vineTimer<=0)g.life=0}
     else if(g.stormTile){g.stormTimer--;if(g.stormTimer===15){for(const u of units)if(u.hp>0&&dist(g,u)<g.maxR)dealDamage(u,g.stormDmg,g.stormFrom,'magic','stormTile',{sourceLabel:g.stormLabel||'STORM',sourceColor:g.stormColor||g.color})}if(g.stormTimer<=0)g.life=0}
     else if(g.enemyWarn){g.warnTimer--;g.life=Math.max(0,g.warnTimer/Math.max(1,g.warnMax||1));if(g.warnTimer<=0)g.life=0}
@@ -79,11 +81,11 @@ export function createCombatTransientsRuntime(deps) {
       g.btTimer--;
       if(g.btArmed){
         for(const e of enemies){
-          if(e.hp<=0)continue;
+          if(!isValidPlayerOffensiveTarget(e))continue;
           // Trigger radius matches the visible solid disc (0.55Ãƒâ€” ring).
           if(dist(g,e)<g.btRadius*0.55){
             // Detonate: AoE damage to all enemies inside the full radius.
-            for(const e2 of enemies)if(e2.hp>0&&dist(g,e2)<g.btRadius)dealDamage(e2,g.btDmg,g.btFrom,'normal');
+            for(const e2 of enemies)if(isValidPlayerOffensiveTarget(e2)&&dist(g,e2)<g.btRadius)dealDamage(e2,g.btDmg,g.btFrom,'normal');
             addP(g.x,g.y,'#ff8800',24,5);screenShake=Math.max(screenShake,6);
             g.btArmed=false;g.life=0;
             break;
@@ -96,9 +98,9 @@ export function createCombatTransientsRuntime(deps) {
       g.stTimer--;
       if(g.stArmed){
         for(const e of enemies){
-          if(e.hp<=0)continue;
+          if(!isValidPlayerOffensiveTarget(e))continue;
           if(dist(g,e)<g.stRadius*0.55){
-            for(const e2 of enemies)if(e2.hp>0&&dist(g,e2)<g.stRadius){e2.slowTimer=Math.max(e2.slowTimer||0,g.stDur);e2.slowMult=g.stMult}
+            for(const e2 of enemies)if(isValidPlayerOffensiveTarget(e2)&&dist(g,e2)<g.stRadius){e2.slowTimer=Math.max(e2.slowTimer||0,g.stDur);e2.slowMult=g.stMult}
             addP(g.x,g.y,'#aaeeff',16,4);
             g.stArmed=false;g.life=0;
             break;
@@ -115,7 +117,7 @@ export function createCombatTransientsRuntime(deps) {
       g.anchorTimer--;g.anchorTick++;
       const _jaR=g.anchorRadius||g.maxR||125;
       for(const e of enemies){
-        if(e.hp<=0||dist(g,e)>_jaR)continue;
+        if(!isValidPlayerOffensiveTarget(e)||dist(g,e)>_jaR)continue;
         const dx=g.x-e.x,dy=g.y-e.y,d=Math.hypot(dx,dy)||1;
         if(!e.isBoss&&!e.isBarrier&&!e.lockedAtTop&&!e.aerial){
           const pull=Math.min(g.anchorPull||2.4,Math.max(0,d-8)*0.20);
@@ -132,7 +134,7 @@ export function createCombatTransientsRuntime(deps) {
       }
       if(g.anchorTick%30===0){
         for(const e of enemies){
-          if(e.hp>0&&dist(g,e)<=_jaR){
+          if(isValidPlayerOffensiveTarget(e)&&dist(g,e)<=_jaR){
             dealDamage(e,g.anchorDmg||5,g.anchorFrom,'normal');
             addP(e.x,e.y,'#44ccff',4,2);addP(e.x,e.y,'#ffffff',2,1.5);
           }
@@ -157,7 +159,7 @@ export function createCombatTransientsRuntime(deps) {
       g.life=Math.max(0,g.cbTimer/Math.max(1,g.cbMax||1));
       if(g.cbTick%(g.cbTickEvery||Math.round(0.5*GAME_TICK_HZ))===0){
         for(const e of enemies){
-          if(e.hp<=0||dist(g,e)>g.maxR)continue;
+          if(!isValidPlayerOffensiveTarget(e)||dist(g,e)>g.maxR)continue;
           dealDamage(e,g.cbDmg||1,g.cbFrom||null,'magic');
           if(g.poisonBloom&&g.cbFrom&&g.cbFrom.hp>0&&g.cbFrom.deadlyPoison)arena_applyFelfelDeadlyPoison(g.cbFrom,e,1,true,false);
           else if(g.cbFrom&&g.cbFrom.hp>0&&g.cbFrom.agony)arena_applyJafaarAgony(g.cbFrom,e,true,false);
@@ -173,7 +175,7 @@ export function createCombatTransientsRuntime(deps) {
       if(g.cbTimer<=0)g.life=0;
     }
     else if(g.bladeVortex){g.bvTimer--;g.bvTick++;
-      if(g.bvTick%20===0){for(const e of enemies){if(e.hp>0&&dist(g,e)<g.maxR){dealDamage(e,g.bvDmg,g.bvFrom,'normal');addP(e.x,e.y,'#ffaa00',4,2)}}}
+      if(g.bvTick%20===0){for(const e of enemies){if(isValidPlayerOffensiveTarget(e)&&dist(g,e)<g.maxR){dealDamage(e,g.bvDmg,g.bvFrom,'normal');addP(e.x,e.y,'#ffaa00',4,2)}}}
       if(g.bvTick%8===0){const a=frame*0.15;addP(g.x+Math.cos(a)*g.maxR*0.7,g.y+Math.sin(a)*g.maxR*0.7,'#ff8800',2,3)}
       if(g.bvTimer<=0)g.life=0;
     }

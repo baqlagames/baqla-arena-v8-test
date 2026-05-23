@@ -1,4 +1,5 @@
 import { limitBurstLanding } from './combat-targeting.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function createUnitAbilityRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});
@@ -39,7 +40,7 @@ export function createUnitAbilityRuntime(deps = {}) {
     const v = view();
     arena = v.arena || {};
     units = v.units || [];
-    enemies = v.enemies || [];
+    enemies = (v.enemies || []).filter(isValidPlayerOffensiveTarget);
     projectiles = v.projectiles || [];
     bombs = v.bombs || [];
     groundFx = v.groundFx || [];
@@ -96,12 +97,12 @@ function arena_findBestEnemyClusterPoint(origin,maxRange,clusterRadius){
   const maxR=maxRange==null?99999:maxRange;
   const cr=clusterRadius||90;
   for(const e of enemies){
-    if(e.hp<=0)continue;
+    if(!isValidPlayerOffensiveTarget(e))continue;
     const od=origin?dist(origin,e):0;
     if(od>maxR)continue;
     let count=0,elite=0,hpScore=0;
     for(const f of enemies){
-      if(f.hp<=0)continue;
+      if(!isValidPlayerOffensiveTarget(f))continue;
       if(dist(e,f)>cr)continue;
       count++;
       if(f.isBoss||f.elite)elite++;

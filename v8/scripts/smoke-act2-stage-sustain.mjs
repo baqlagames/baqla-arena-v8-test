@@ -884,7 +884,7 @@ function simulateStage(stage, stageIndex, seed) {
     assert(logs.dragonGuardsSeen > 0, 'stage 10: Winterglass Dragon Judgment guards were not exercised');
     assert(logs.dragonGuardLifetimes.some(value => value > 5), 'stage 10: Dragon guards should live noticeably longer than 5 seconds');
     assert(logs.dragonFrostglassSurge > 0 && logs.dragonGuardTank > 0 && logs.dragonGuardMelee > 0 && logs.dragonGuardBackline > 0, 'stage 10: Frostglass Colossus did not pressure tank, melee, and backline');
-    assert(logs.dragonMirroriceCrush > 0 && logs.dragonGuardCrushTank > 0 && logs.dragonGuardCrushMelee > 0, 'stage 10: Mirrorice Juggernaut did not pressure tank and melee');
+    assert(logs.dragonMirroriceCrush > 0 && logs.dragonGuardCrushTank > 0 && logs.dragonGuardCrushMelee > 0, `stage 10: Mirrorice Juggernaut did not pressure tank and melee (total ${logs.dragonMirroriceCrush}, tank ${logs.dragonGuardCrushTank}, melee ${logs.dragonGuardCrushMelee})`);
     assert(logs.dragonSafeIce > 0, 'stage 10: Safe Ice was not exercised');
     assert(logs.dragonExposed > 0, 'stage 10: Winterglass Dragon exposed landing was not exercised');
     assert.equal(logs.sonsSeen, false, 'stage 10: Winterglass Dragon should not spawn Sons of Embers');

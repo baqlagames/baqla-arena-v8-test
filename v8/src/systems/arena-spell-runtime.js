@@ -1,5 +1,6 @@
 import { ARENA_ABILITIES } from '../data/abilities.js';
 import { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST, activateBloodlust as activateBloodlustCore, activateTranquility as activateTranquilityCore, tickActiveSkills as tickActiveSkillsCore } from './active-skills.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export { ARENA_BLOODLUST_COST, ARENA_TRANQUILITY_COST };
 
@@ -72,7 +73,7 @@ export function createArenaSpellRuntime(deps = {}) {
     if (ability.target === 'auto') {
       let bestD = Infinity;
       for (const enemy of enemies) {
-        if (enemy.hp <= 0) continue;
+        if (!isValidPlayerOffensiveTarget(enemy)) continue;
         const d = dist({ x: (v.width || 500) / 2, y: (v.arenaTop || 0) + 200 }, enemy);
         if (d < bestD) {
           bestD = d;
@@ -112,7 +113,7 @@ export function createArenaSpellRuntime(deps = {}) {
       const best = autoTarget;
       if (best) {
         dealDamage(best, ability.damage, spellSource, 'normal');
-        const around = enemies.filter(enemy => enemy.hp > 0 && enemy !== best && dist(best, enemy) < 120).slice(0, ability.chainCount);
+        const around = enemies.filter(enemy => isValidPlayerOffensiveTarget(enemy) && enemy !== best && dist(best, enemy) < 120).slice(0, ability.chainCount);
         for (const enemy of around) dealDamage(enemy, ability.chainDmg, spellSource, 'normal');
         addParticle(best.x, best.y, ability.color, 24, 5);
         if (typeof deps.shake === 'function') deps.shake(6);
@@ -125,6 +126,7 @@ export function createArenaSpellRuntime(deps = {}) {
       }
       if (ability.slowMult) {
         for (const enemy of enemies) {
+          if (!isValidPlayerOffensiveTarget(enemy)) continue;
           enemy.slowTimer = ability.slowDur;
           enemy.slowMult = ability.slowMult;
         }
@@ -139,7 +141,7 @@ export function createArenaSpellRuntime(deps = {}) {
       }
       if (ability.stunDur) {
         for (const enemy of enemies) {
-          if (enemy.hp <= 0 || enemy.isBoss) continue;
+          if (!isValidPlayerOffensiveTarget(enemy) || enemy.isBoss) continue;
           enemy.stunned = Math.max(enemy.stunned || 0, ability.stunDur);
           addParticle(enemy.x, enemy.y, ability.color, 8, 3);
         }

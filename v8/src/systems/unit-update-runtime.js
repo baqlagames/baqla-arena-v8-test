@@ -1,6 +1,9 @@
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
+
 export function createUnitUpdateRuntime(deps) {
   function updateUnit(u){
-    const {arena,units,enemies,projectiles,bombs,groundFx,beamFx,frame,arenaLeft:ARENA_L,arenaRight:ARENA_R,arenaTop:ARENA_TOP,arenaBottom:ARENA_BOT}=deps.view();
+    const {arena,units,enemies:allEnemies,projectiles,bombs,groundFx,beamFx,frame,arenaLeft:ARENA_L,arenaRight:ARENA_R,arenaTop:ARENA_TOP,arenaBottom:ARENA_BOT}=deps.view();
+    const enemies=(allEnemies||[]).filter(isValidPlayerOffensiveTarget);
     const GAME_TICK_HZ=deps.tickHz;
     const ABILITIES=deps.abilities;
     const SFX=deps.sound;
@@ -311,7 +314,7 @@ export function createUnitUpdateRuntime(deps) {
   }))return;
   const attackTargeting=prepareUnitAttackTarget(u,{
     arena,
-    enemies,
+    enemies:allEnemies||[],
     frame,
     arenaTop:ARENA_TOP,
     arenaBottom:ARENA_BOT,

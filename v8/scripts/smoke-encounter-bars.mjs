@@ -67,10 +67,10 @@ assert.equal(bossReadableSkillHint(dragon, 'iceWall'), 'MOVING WALL', 'Wintergla
 assert.equal(bossReadableSkillHint(dragon, 'frozenScales'), 'MIXED DAMAGE', 'Winterglass Dragon scales should expose mixed-damage hint');
 assert.equal(bossReadableSkillHint(dragon, 'diamondStorm'), 'SAFE ZONE', 'Winterglass Dragon Judgment should expose safe-zone hint');
 assert.deepEqual(bossReadableSkillPills(dragon).map(skill => skill.name), ['SCALES', 'BUFFET', 'MAW', 'WALL', 'COMETS', 'VOICE', 'JUDGMENT', 'HUNT'], 'Winterglass Dragon skill pills should use dragon-specific labels');
-const judgingDragon = { ...dragon, _dragonSkyPhase: true, _dragonJudgmentImmune: true, _dragonSkyTimer: 5400, _dragonSkyMax: 5400, diamondStormDur: 5400 };
+const judgingDragon = { ...dragon, _dragonSkyPhase: true, _dragonJudgmentImmune: true, _dragonSkyTimer: 4800, _dragonSkyMax: 4800, diamondStormDur: 4800 };
 assert.deepEqual(bossReadableSkillPills(judgingDragon).map(skill => skill.name), ['JUDGMENT'], 'Dragon Judgment phase should hide normal cast pills');
 const judgmentHud = bossDragonJudgmentHudState(judgingDragon, 120);
-assert.equal(judgmentHud.seconds, 45, 'Dragon Judgment HUD should show the full 45s cast');
+assert.equal(judgmentHud.seconds, 40, 'Dragon Judgment HUD should show the full 40s cast');
 assert.equal(judgmentHud.immune, true, 'Dragon Judgment HUD should expose immunity state');
 
 const urgent = bossUrgentSkillHudState(dragon, tickHz);
@@ -113,6 +113,8 @@ assert.ok(dragonIcons.some(icon => icon.title === 'Safe Ice'), 'boss status icon
 assert.ok(dragonIcons.some(icon => icon.title === 'Dragon Exposed'), 'boss status icons should expose Dragon exposed windows');
 assert.ok(dragonIcons.some(icon => icon.title === 'Dragon Hunt'), 'boss status icons should expose Dragon Hunt');
 assert.ok(dragonIcons.some(icon => icon.title === 'Ice Comets Soon'), 'boss status icons should expose imminent Dragon comets');
+const dragonShieldIcons = collectStatusIcons({ isBoss: true, hiveShield: { hp: 3200, maxHp: 5000, dragonLandingShield: true, color: '#d8f8ff' } }, tickHz);
+assert.ok(dragonShieldIcons.some(icon => icon.title === 'Winterglass Shield'), 'boss status icons should expose Dragon landing shield');
 const dragonMawIcons = collectStatusIcons({ isBoss: true, mechCD: { frigidMaw: 100 }, frigidMawCD: 1200 }, tickHz);
 assert.ok(dragonMawIcons.some(icon => icon.title === 'Frigid Maw Soon'), 'boss status icons should expose imminent Dragon cone');
 const dragonWallIcons = collectStatusIcons({ isBoss: true, mechCD: { iceWall: 110 }, iceWallCD: 1560 }, tickHz);

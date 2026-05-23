@@ -1520,7 +1520,7 @@ function tickDragonIceWalls(b,ctx){
 function dragonAnchorPoint(b,ctx,sky=false){
   const h=Math.max(360,(ctx.arenaBottom||820)-(ctx.arenaTop||88));
   const x=(ARENA_L+ARENA_R)/2;
-  const y=(ctx.arenaTop||88)+(sky?Math.max(96,h*0.12):Math.max(190,h*0.27));
+  const y=(ctx.arenaTop||88)+(sky?Math.max(185,h*0.22):Math.max(250,h*0.33));
   return clampBossPoint(x,y,ctx,{sideMargin:70,topMargin:78,bottomMargin:220});
 }
 function anchorWinterglassDragon(b,ctx,sky=false){
@@ -1620,11 +1620,11 @@ function tickDragonSkyGuard(guard,b,ctx){
   if(!players.length)return;
   const scale=guard._dragonGuardScale||1;
   if(guard.dragonGuardKind==='magic'){
-    guard._guardCastCd=Math.round(3.6*GAME_TICK_HZ);
+    guard._guardCastCd=b.dragonColossusSurgeEvery||Math.round(3.0*GAME_TICK_HZ);
     const dmg=Math.round((b.dragonColossusSurgeDmg||84)*scale);
     groundFx.push({x:guard.x,y:guard.y,r:0,maxR:150,life:0.48,color:'#bff4ff',enemyWarn:true,warnTimer:18,warnMax:18,label:'SURGE'});
     for(const u of players){
-      const mult=dragonIsTank(u)?0.95:(dragonIsMelee(u)?0.88:0.76);
+      const mult=dragonIsTank(u)?1.00:(dragonIsMelee(u)?0.92:0.82);
       beamFx.push({x1:guard.x,y1:guard.y-guard.size*0.22,x2:u.x,y2:u.y-u.size*0.15,life:16,maxLife:16,color:'#bff4ff',width:3.5,straight:false});
       dealDamage(u,Math.round(dmg*mult),guard,'magic','frostglassSurge',{sourceLabel:'FROSTGLASS SURGE',sourceColor:'#bff4ff'});
       addDmg(u.x,u.y-(u.size||20)-8,'FROSTGLASS SURGE','#bff4ff',{sz:10,bold:true,outline:'#061433'});
@@ -1634,11 +1634,11 @@ function tickDragonSkyGuard(guard,b,ctx){
     shake(4);
     return;
   }
-  guard._guardCastCd=Math.round(2.7*GAME_TICK_HZ);
+  guard._guardCastCd=b.dragonJuggernautCrushEvery||Math.round(2.2*GAME_TICK_HZ);
   const target=players.find(dragonIsTank)||players.find(dragonIsMelee)||players[0];
   if(!target)return;
   const angle=Math.atan2(target.y-guard.y,target.x-guard.x);
-  const range=128,spread=1.08;
+  const range=b.dragonJuggernautCrushRange||160,spread=1.20;
   groundFx.push({x:guard.x,y:guard.y,r:0,maxR:range,life:0.48,color:'#eef8ff',enemyWarn:true,warnTimer:18,warnMax:18,warnKind:'cleave',warnAngle:angle,warnSpread:spread,label:'CRUSH'});
   const hits=[];
   for(const u of players){
@@ -1648,10 +1648,14 @@ function tickDragonSkyGuard(guard,b,ctx){
     if(dragonAngleDiff(Math.atan2(dy,dx),angle)>spread*0.56)continue;
     hits.push(u);
   }
+  const closestTank=players.filter(u=>dragonIsTank(u)&&!hits.includes(u)).sort((a,c)=>Math.hypot(a.x-guard.x,a.y-guard.y)-Math.hypot(c.x-guard.x,c.y-guard.y))[0];
+  if(closestTank&&Math.hypot(closestTank.x-guard.x,closestTank.y-guard.y)<=Math.max(range+70,230))hits.push(closestTank);
+  const closestMelee=players.filter(u=>dragonIsMelee(u)&&!hits.includes(u)).sort((a,c)=>Math.hypot(a.x-guard.x,a.y-guard.y)-Math.hypot(c.x-guard.x,c.y-guard.y))[0];
+  if(closestMelee&&Math.hypot(closestMelee.x-guard.x,closestMelee.y-guard.y)<=Math.max(range+70,230))hits.push(closestMelee);
   if(!hits.length)hits.push(target);
   const dmg=Math.round((b.dragonJuggernautCrushDmg||138)*scale);
   for(const u of hits){
-    const mult=dragonIsTank(u)?1.05:0.86;
+    const mult=dragonIsTank(u)?1.25:1.00;
     beamFx.push({x1:guard.x,y1:guard.y-guard.size*0.10,x2:u.x,y2:u.y-u.size*0.12,life:14,maxLife:14,color:'#eef8ff',width:4.4,straight:true});
     dealDamage(u,Math.round(dmg*mult),guard,'magic','mirroriceCrush',{sourceLabel:'MIRRORICE CRUSH',sourceColor:'#eef8ff'});
     addDmg(u.x,u.y-(u.size||20)-8,'MIRRORICE CRUSH','#eef8ff',{sz:10,bold:true,outline:'#061433'});
@@ -1761,10 +1765,11 @@ function endDragonDiamondStorm(b,ctx){
   b.priorityTarget=!!b._dragonSavedPriority;
   b.preferredBy=b._dragonSavedPreferredBy;
   if(Number.isFinite(b._dragonSavedRange))b.range=b._dragonSavedRange;
-  b.hiveShield=null;
+  const landingShieldHp=Math.max(0,Math.round(b.dragonLandingShieldHp||0));
+  b.hiveShield=landingShieldHp>0?{hp:landingShieldHp,maxHp:landingShieldHp,dragonLandingShield:true,color:'#d8f8ff'}:null;
   if(safeSuccess){
     b._dragonExposedTimer=Math.max(b._dragonExposedTimer||0,b.dragonExposeDur||300);
-    b._dragonExposedDamageMult=b.dragonExposeMult||1.22;
+    b._dragonExposedDamageMult=b.dragonExposeMult||1.00;
   }
   for(const enemy of enemies||[]){
     if(enemy&&enemy._dragonBoss===b&&enemy.dragonSkyGuard&&enemy.hp>0){
@@ -1776,13 +1781,20 @@ function endDragonDiamondStorm(b,ctx){
   if(safeSuccess){
     groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(175,(b.size||70)*2.4),life:0.62,color:'#d8f8ff',celestialAuraFx:true,label:'EXPOSED'});
     addDmg(b.x,b.y-(b.size||70)-18,'DRAGON EXPOSED','#d8f8ff',{sz:14,bold:true,outline:'#061433'});
-    showFlash('DRAGON EXPOSED!','#d8f8ff',55);
+    if(landingShieldHp>0){
+      groundFx.push({x:b.x,y:b.y,r:0,maxR:Math.max(190,(b.size||70)*2.65),life:0.78,color:'#d8f8ff',celestialAuraFx:true,label:'SHIELD'});
+      addDmg(b.x,b.y-(b.size||70)-36,'WINTERGLASS SHIELD','#d8f8ff',{sz:13,bold:true,outline:'#061433'});
+      showFlash('WINTERGLASS SHIELD!','#d8f8ff',55);
+    }else{
+      showFlash('DRAGON EXPOSED!','#d8f8ff',55);
+    }
   }
   b._dragonSafeZone=null;
   b._dragonSafeZoneActive=false;
   for(const unit of dragonPlayers(ctx.units||[])){
     unit._dragonSafeZoneMoving=0;
     unit._dragonMechanicMove=0;
+    unit._dragonReturnFormationTimer=420;
     unit.target=null;
   }
   anchorWinterglassDragon(b,ctx,false);

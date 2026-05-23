@@ -189,7 +189,7 @@ export function collectStatusIcons(t,tickHz=120){
   if(t._royalStingTimer>0)icons.push({c:'#ffdd44',g:'S',title:'Royal Sting'});
   if(t.timeEnraged)icons.push({c:'#ff2200',g:'!',title:'Boss Enraged',pulse:true});
   if(t.royalCarapaceTimer>0)icons.push({c:'#ffdd44',g:'C',title:'Carapace Casting',pulse:true});
-  if(t.hiveShield&&t.hiveShield.hp>0)icons.push({c:t.hiveShield.color||'#ffdd44',g:t.hiveShield.astralWard?'W':'S',title:t.hiveShield.astralWard?'Lantern Ward':'Boss Shield',pulse:true});
+  if(t.hiveShield&&t.hiveShield.hp>0)icons.push({c:t.hiveShield.color||'#ffdd44',g:t.hiveShield.astralWard?'W':'S',title:t.hiveShield.astralWard?'Lantern Ward':(t.hiveShield.dragonLandingShield?'Winterglass Shield':'Boss Shield'),pulse:true});
   if(t.stealth&&t.vanishCD&&!(t.stealthHits>0))icons.push({c:'#aa66cc',g:'A',title:'Ambush Ready',pulse:true});
   const bossSoon=imminentBossSkillIcon(t,tickHz);
   if(bossSoon)icons.push(bossSoon);

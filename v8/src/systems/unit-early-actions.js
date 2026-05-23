@@ -1,6 +1,7 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
 import { PLAYER_UNITS, VODKA } from '../data/units.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 export function tickUnitEarlyActions(unit, {
   frame,
@@ -167,7 +168,7 @@ function tickBannerfallCrash(unit, { frame, enemies, arenaTop, randomRange, grou
       unit.y = unit.bannerfallTargetY;
       clampToLeash(unit);
       for (const enemy of enemies) {
-        if (enemy.hp > 0 && dist(unit, enemy) <= 130) {
+        if (isValidPlayerOffensiveTarget(enemy) && dist(unit, enemy) <= 130) {
           dealDamage(enemy, Math.round(unit.dmg * 2.0), unit, 'normal');
           if (!enemy.isBoss) enemy.stunned = Math.max(enemy.stunned || 0, Math.round(0.75 * GAME_TICK_HZ));
         }

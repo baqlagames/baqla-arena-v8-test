@@ -15,6 +15,7 @@ export function stopInvalidDamageTarget(target, {
     return true;
   }
   if (target.burrowing) return true;
+  if (target._dragonJudgmentImmune) return true;
   if (target.untargetable && target.isEnemy) return true;
   if (target.isBarrier) return true;
   return false;
@@ -45,11 +46,12 @@ export function absorbHiveShield(target, raw, attacker, {
   }
   const shieldColor = target.hiveShield.color || '#ffdd44';
   const isAstralWard = !!target.hiveShield.astralWard;
+  const isDragonLandingShield = !!target.hiveShield.dragonLandingShield;
   emitShieldAbsorbFx(target, { type: 'hive', color: shieldColor, amount: absorb, frame, emitParticle, groundEffects, particleCount: 4, particleSize: 3 });
   if (target.hiveShield.hp <= 0) {
     if (target.hiveShield.royalCarapace) target._royalCarapaceBroken = true;
-    if (!target.hiveShield.royalCarapace) showFlash(isAstralWard ? 'WARD BROKEN!' : 'HIVE SHIELD BROKEN!', shieldColor, 40);
-    emitShieldAbsorbFx(target, { type: 'hive', color: shieldColor, amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: isAstralWard ? 'WARD BREAK' : 'HIVE BREAK', groundPulse: true });
+    if (!target.hiveShield.royalCarapace) showFlash(isAstralWard ? 'WARD BROKEN!' : (isDragonLandingShield ? 'WINTERGLASS SHIELD BROKEN!' : 'HIVE SHIELD BROKEN!'), shieldColor, 40);
+    emitShieldAbsorbFx(target, { type: 'hive', color: shieldColor, amount: absorb, broken: true, frame, emitParticle, groundEffects, addDamageText, breakText: isAstralWard ? 'WARD BREAK' : (isDragonLandingShield ? 'SHIELD BREAK' : 'HIVE BREAK'), groundPulse: true });
     target.hiveShield = null;
   }
   return { raw: leftover, blocked: leftover <= 0 };

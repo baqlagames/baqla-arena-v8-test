@@ -1,5 +1,6 @@
 import { dist } from '../core/math.js';
 import { ARENA_ATTACK_TYPE_BY_UNIT } from '../data/tuning.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 const MOVE_SPEED_SCALE = 0.55;
 const ENEMY_SPEED_SCALE = 0.85;
@@ -225,10 +226,7 @@ export function isReachableFromLeash(unit, target, bounds) {
 export function findEnemyTargetForUnit(unit, view) {
   const candidates = [];
   for (const enemy of view.enemies) {
-    if (enemy.hp <= 0 || enemy.charmed) continue;
-    if (enemy.burrowing) continue;
-    if (enemy.untargetable) continue;
-    if (enemy.isBarrier) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     candidates.push(enemy);
   }
   if (view.enemyCastle && view.enemyCastle.hp > 0) candidates.push(view.enemyCastle);
@@ -296,8 +294,7 @@ export function findRangedEnemyTargetForUnit(unit, view) {
   let bestPriority = null;
   let bestPriorityScore = Infinity;
   for (const enemy of view.enemies) {
-    if (enemy.hp <= 0 || enemy.charmed) continue;
-    if (enemy.untargetable || enemy.isBarrier) continue;
+    if (!isValidPlayerOffensiveTarget(enemy)) continue;
     const priorityScore = priorityTargetScore(unit, enemy, dist(unit, enemy));
     if (priorityScore < bestPriorityScore && (!view.inArena || isReachableFromLeash(unit, enemy, view) || isShieldedStormWard(enemy))) {
       bestPriorityScore = priorityScore;

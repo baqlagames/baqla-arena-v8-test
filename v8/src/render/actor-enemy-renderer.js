@@ -391,6 +391,7 @@ export function createActorEnemyRenderer({
       const pulse = 0.7 + 0.3 * Math.sin(f * 0.1);
       const shieldColor = enemy.hiveShield.color || '#ffdd44';
       const astralWard = !!enemy.hiveShield.astralWard;
+      const dragonLandingShield = !!enemy.hiveShield.dragonLandingShield;
       ctx.strokeStyle = shieldColor;
       ctx.globalAlpha = (astralWard ? 0.46 : 0.6) * pulse * Math.max(0.35, shPct);
       ctx.lineWidth = astralWard ? 3 : 4;
@@ -402,12 +403,12 @@ export function createActorEnemyRenderer({
       ctx.beginPath();
       ctx.arc(x, y, size + (astralWard ? 6 : 6), 0, Math.PI * 2);
       ctx.fill();
-      if (astralWard) {
+      if (astralWard || dragonLandingShield) {
         ctx.globalAlpha = 0.9;
         ctx.font = 'bold 8px Segoe UI';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#d8f4ff';
-        ctx.fillText('WARD ' + Math.ceil(enemy.hiveShield.hp), x, Math.max(top + 6, y - size - 28));
+        ctx.fillText((astralWard ? 'WARD ' : 'SHIELD ') + Math.ceil(enemy.hiveShield.hp), x, Math.max(top + 6, y - size - 28));
       }
       ctx.restore();
     }

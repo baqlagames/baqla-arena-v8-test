@@ -41,6 +41,22 @@ function dragonSafeZoneMovePoint(unit, enemies) {
   return { x: zone.x + slot.x, y: zone.y + slot.y, dragon };
 }
 
+function dragonReturnFormationPoint(unit, enemies, arenaTop, arenaBottom) {
+  if (!unit || !unit.isPlayer || unit.isMinion || unit.isGhost || unit.isMirror) return null;
+  if (!(unit._dragonReturnFormationTimer > 0)) return null;
+  const dragon = (enemies || []).find(enemy => enemy && enemy.hp > 0 && (enemy.winterglassDragon || enemy.id === 4 || enemy.name === 'Winterglass Dragon') && !enemy._dragonSkyPhase && !enemy.untargetable);
+  if (!dragon) return null;
+  const isRanged = isArenaRangedActor(unit);
+  if (!isRanged) return { ...meleeBossOrbitPoint(unit, dragon), dragon };
+  const attackRange = effectiveArenaAttackRange(unit, { inArena: true });
+  const desiredGap = Math.max(136, Math.min(210, attackRange - 10));
+  const baseY = dragon.y + desiredGap;
+  const homeX = Number.isFinite(unit.homeX) ? unit.homeX : unit.x;
+  const id = Math.abs((unit.unitIdx ?? unit.id ?? 0) | 0);
+  const spread = [-42, 42, -82, 82, 0, -118, 118][id % 7];
+  return { x: homeX + spread * 0.35, y: Math.min(baseY, (unit.homeY || baseY) + 6), dragon };
+}
+
 function moveMechanicDirect(unit, x, y, speed, clampToArena) {
   const dx = x - unit.x;
   const dy = y - unit.y;
@@ -85,6 +101,14 @@ export function prepareUnitAttackTarget(unit, {
       return { canAttack: false };
     }
     if (unit._dragonSafeZoneMoving > 0) unit._dragonSafeZoneMoving--;
+    if (unit._dragonReturnFormationTimer > 0) {
+      const returnMove = dragonReturnFormationPoint(unit, enemies, arenaTop, arenaBottom);
+      unit._dragonReturnFormationTimer--;
+      if (returnMove) {
+        unit._dragonMechanicMove = 10;
+        moveMechanicDirect(unit, returnMove.x, returnMove.y, Math.max(2.7, (unit.speed || 1) * 2.35), clampToArena);
+      }
+    }
   }
   let target = unit.prefersRanged ? findRangedEnemyForUnit(unit) : findEnemyForUnit(unit);
   if (!target) {
@@ -99,7 +123,7 @@ export function prepareUnitAttackTarget(unit, {
     const marchSpeed = unit.speed * ((unit._bullCharging > 0 || unit._dgCharging > 0) ? 3 : 1);
     if (arena && arena.phase === 'wave') {
       const bands = arenaEngagementBands({ arenaTop, arenaBot: arenaBottom });
-      const targetableEnemies = enemies.filter(enemy => enemy.hp > 0 && !enemy.charmed && !enemy.burrowing && !enemy.untargetable && !enemy.isBarrier);
+      const targetableEnemies = enemies.filter(isValidPlayerOffensiveTarget);
       if (targetableEnemies.length === 0) {
         if (unit.homeX != null && Math.hypot(unit.x - unit.homeX, unit.y - unit.homeY) > 4) moveToward(unit, unit.homeX, unit.homeY, unit.speed * 0.45);
         return { canAttack: false };
@@ -196,7 +220,7 @@ export function prepareUnitAttackTarget(unit, {
     let inRangeTarget = null;
     let inRangeDistance = Infinity;
     for (const enemy of enemies) {
-      if (enemy.hp > 0 && !enemy.charmed && !enemy.burrowing && !enemy.untargetable) {
+      if (isValidPlayerOffensiveTarget(enemy)) {
         const enemyDistance = dist(unit, enemy);
         if (enemyDistance <= attackRange && enemyDistance < inRangeDistance) {
           inRangeDistance = enemyDistance;
