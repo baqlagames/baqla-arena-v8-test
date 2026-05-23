@@ -42,14 +42,14 @@ export const BOSS_CODEX_ENTRIES = [
   {
     bossId: 4,
     stage: 10,
-    title: 'Sultan of Embers',
-    subtitle: 'Command, cleave, burn',
-    color: '#dc6020',
-    tags: ['BURST', 'CASTER', 'POISON'],
+    title: 'Winterglass Dragon',
+    subtitle: 'Scales, comets, sky storm',
+    color: '#9fdcff',
+    tags: ['FROST', 'BURST', 'BACKLINE THREAT', 'SOFT CONTROL', 'MIXED DAMAGE', 'FLYERS'],
     mechanics: [
-      ['Inferno Pulse', 'Wide fire pulses reward spacing and healing cadence.'],
-      ['Meteor', 'Danger rings mark where burst damage will land.'],
-      ['Cinder Pact', 'Imp support and Sons of Embers punish slow boss damage.'],
+      ['Frozen Scales', 'Rime and Glass Scales alternate physical and magic resistance.'],
+      ['Ice Comets', 'Four visible comet targets test team healing.'],
+      ['Diamond Storm', 'The dragon flies while ranged units keep firing and melee clears whelps.'],
     ],
   },
   {

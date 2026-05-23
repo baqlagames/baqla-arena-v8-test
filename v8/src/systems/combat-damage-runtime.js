@@ -5,7 +5,7 @@ import { createEnemyKillRewardEvent, resolveDeathPresentation, startSummonerCool
 import { applyArenaDeathReactionHooks, applyDeathBoom, tryAngelOfMercySave, tryArdentDefenderSave, tryArenaDeathBranchHooks, tryCheatDeathSave, tryGhostOnDeath } from './combat-death-hooks.js';
 import { applyPlayerSpecialDefenses, applyPreShieldPlayerReactions, applySoulLinkRedirect, triggerGalacticGuardian, triggerPrayerOfMending, tryGuardianSpiritSave } from './combat-defense-reactions.js';
 import { applyIronSkinReduction, applyPlayerProtectionReductions, stopPlayerDefenseGates } from './combat-defense-procs.js';
-import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=20260522-winterglass-enrage-economy';
+import { applyAttackerOpeningDamageModifiers, applyBossAndRecordModifiers, applyDamageHit, applyJudgmentOfLightHit, applyLegacyPostDamageHooks, applyLegacyPreDamageHooks, showDamageHitFeedback } from './combat-hit-resolution.js?v=20260523-winterglass-dragon';
 import { applyArenaIncomingScalarModifiers, applyPostDefenseDamageModifiers } from './combat-modifiers.js';
 import { WARMUP_GOLD_BONUS } from './enemy-spawn.js';
 import { arena_campaignKillBountyStageMult, arena_lateStageNormalGoldMult, arena_roundGoldMult } from './stage-economy.js';
@@ -383,7 +383,7 @@ export function dealDamageRuntime(ctx, target, raw, attacker, dmgType, attackTyp
     dmg = legacy.dmg;
     if (legacy.blocked) return;
   }
-  dmg = applyBossAndRecordModifiers(dmg, { target });
+  dmg = applyBossAndRecordModifiers(dmg, { target, attacker, dmgType, attackTypeOverride });
   dmg = applyEarlyOneShotCap(ctx, target, attacker, dmg);
   const combatRatio = startingRaw > 0 ? dmg / startingRaw : 1;
   applyDamageHit(target, dmg, {

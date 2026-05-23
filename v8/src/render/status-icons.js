@@ -20,6 +20,12 @@ function imminentBossSkillIcon(t,tickHz){
     ['courtPulse','courtPulseCD','#d8f8ff','W','Whiteout Soon'],
     ['silencingDecree','silencingDecreeCD','#d8f8ff','V','Frozen Voice Soon'],
     ['tankCurse','tankCurseCD','#9fdcff','C','Rime Curse Soon'],
+    ['frozenScales','frozenScalesCD','#d8f8ff','S','Scales Soon'],
+    ['wingBuffet','wingBuffetCD','#9fdcff','B','Wing Buffet Soon'],
+    ['iceComet','iceCometCD','#d8f8ff','C','Ice Comets Soon'],
+    ['frozenVoice','frozenVoiceCD','#d8f8ff','V','Frozen Voice Soon'],
+    ['diamondStorm','diamondStormCD','#eef8ff','D','Diamond Storm Soon'],
+    ['dragonHunt','dragonHuntCD','#9fdcff','H','Dragon Hunt'],
     ['burrow','burrowCD','#8b6f3d','B','Burrow Soon'],
     ['lunge','lungeCD','#ff4444','L','Lunge Soon'],
     ['royalDive','royalDiveCD','#ff5a3a','D','Dive Soon'],
@@ -169,6 +175,12 @@ export function collectStatusIcons(t,tickHz=120){
   if(t.stormMote)icons.push({c:'#8bdfff',g:'M',title:'Storm Mote',pulse:true});
   if(t._stormShieldActive)icons.push({c:'#d8f8ff',g:'B',title:'Winterglass Barrier',pulse:true});
   if(t._stormExposedTimer>0)icons.push({c:'#d8f8ff',g:'E',title:'Magistrate Exposed',pulse:true});
+  if(t._dragonScaleMode==='rime')icons.push({c:'#9fdcff',g:'R',title:'Rime Scales',pulse:true});
+  if(t._dragonScaleMode==='glass')icons.push({c:'#eef8ff',g:'G',title:'Glass Scales',pulse:true});
+  if(t._dragonSkyPhase)icons.push({c:'#d8f8ff',g:'D',title:'Diamond Storm',pulse:true});
+  if(t._dragonExposedTimer>0)icons.push({c:'#d8f8ff',g:'E',title:'Dragon Exposed',pulse:true});
+  if(t._dragonHuntActive)icons.push({c:'#9fdcff',g:'H',title:'Dragon Hunt',pulse:true});
+  if(t.winterWhelp)icons.push({c:'#d8f8ff',g:'W',title:'Winter Whelp',pulse:true});
   if(t._royalStingTimer>0)icons.push({c:'#ffdd44',g:'S',title:'Royal Sting'});
   if(t.timeEnraged)icons.push({c:'#ff2200',g:'!',title:'Boss Enraged',pulse:true});
   if(t.royalCarapaceTimer>0)icons.push({c:'#ffdd44',g:'C',title:'Carapace Casting',pulse:true});

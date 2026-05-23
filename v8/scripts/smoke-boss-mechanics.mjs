@@ -4,6 +4,7 @@ import { ARENA_L, ARENA_R } from '../src/data/tuning.js';
 import { spawnBossById } from '../src/systems/boss-spawn.js';
 import { drainHealToBarrier, tickAerialBombs, updateBoss } from '../src/systems/boss-mechanics.js';
 import { calculateEnemyKillReward } from '../src/systems/combat-death.js';
+import { applyBossAndRecordModifiers } from '../src/systems/combat-hit-resolution.js';
 
 const WIDTH = 500;
 const ARENA_TOP = 42;
@@ -605,15 +606,95 @@ function smokeStormboundVizier(ctx, boss) {
   return 'winterglass-magistrate';
 }
 
+function smokeWinterglassDragon(ctx, boss) {
+  if (boss.id !== 4) return null;
+  const dragonTemplate = BOSSES.find(row => row.id === 4);
+  if (dragonTemplate.name !== 'Winterglass Dragon') throw new Error('boss id 4 should be Winterglass Dragon');
+  if (dragonTemplate.hp !== 36000 || dragonTemplate.dmg !== 150 || dragonTemplate.size !== 70) throw new Error('Winterglass Dragon core tuning drifted');
+  if (dragonTemplate.timeEnrageAt !== 36000) throw new Error('Winterglass Dragon enrage should be 36000 frames');
+  if (dragonTemplate.meteorCD || dragonTemplate.aoeCD || dragonTemplate.debuffCD || dragonTemplate.sonsAt || dragonTemplate.searingBrandEvery) throw new Error('Winterglass Dragon should not keep old Sultan fire mechanics');
+  if (dragonTemplate.spawnCD !== 0) throw new Error('Winterglass Dragon should not spawn old fire support');
+
+  tickBoss(ctx, boss, 2);
+  ctx.units[0].x = boss.x - 8;
+  ctx.units[0].y = boss.y + 76;
+  ctx.units[1].x = boss.x + 58;
+  ctx.units[1].y = boss.y + 88;
+  ctx.units[2].x = boss.x - 92;
+  ctx.units[2].y = boss.y + 210;
+  ctx.units[3].x = boss.x + 88;
+  ctx.units[3].y = boss.y + 238;
+  if (boss._dragonScaleMode !== 'rime') throw new Error('Winterglass Dragon should start in Rime Scales');
+  const rimePhysical = applyBossAndRecordModifiers(100, { target: boss, attacker: { arch: 'melee', attackType: 'physical' }, dmgType: 'normal', attackTypeOverride: 'physical' });
+  const rimeMagic = applyBossAndRecordModifiers(100, { target: boss, attacker: { arch: 'caster', attackType: 'magic' }, dmgType: 'magic', attackTypeOverride: 'magic' });
+  if (!(rimePhysical < rimeMagic)) throw new Error('Rime Scales should reduce physical more than magic');
+  boss._dragonScaleCd = 0;
+  tickBoss(ctx, boss, 1);
+  if (boss._dragonScaleMode !== 'glass') throw new Error('Winterglass Dragon did not alternate to Glass Scales');
+  const glassMagic = applyBossAndRecordModifiers(100, { target: boss, attacker: { arch: 'caster', attackType: 'magic' }, dmgType: 'magic', attackTypeOverride: 'magic' });
+  const glassPhysical = applyBossAndRecordModifiers(100, { target: boss, attacker: { arch: 'melee', attackType: 'physical' }, dmgType: 'normal', attackTypeOverride: 'physical' });
+  if (!(glassMagic < glassPhysical)) throw new Error('Glass Scales should reduce magic more than physical');
+
+  boss._dragonCastLock = 0;
+  boss._dragonWingCd = 0;
+  boss._dragonCometCd = 9999;
+  boss._dragonVoiceCd = 9999;
+  tickBoss(ctx, boss, 1);
+  if (!ctx.damageHits.some(hit => hit.attackType === 'wingBuffet')) throw new Error('Winterglass Dragon Wing Buffet did not hit tank/melee');
+  if (!ctx.units[0]._groundingBrandTimer || !ctx.units[1]._groundingBrandTimer) throw new Error('Wing Buffet should apply Frostbite to tank and melee');
+
+  boss._dragonCastLock = 0;
+  boss._dragonWingCd = 9999;
+  boss._dragonCometCd = 0;
+  boss._dragonVoiceCd = 9999;
+  tickBoss(ctx, boss, 1);
+  tickBoss(ctx, boss, 90);
+  const cometTargets = new Set(ctx.damageHits.filter(hit => hit.attackType === 'iceComet').map(hit => hit.target));
+  if (cometTargets.size < 4) throw new Error('Ice Comet Barrage should hit four unique living units in the smoke');
+
+  boss._dragonCastLock = 0;
+  boss._dragonWingCd = 9999;
+  boss._dragonCometCd = 9999;
+  boss._dragonVoiceCd = 0;
+  tickBoss(ctx, boss, 1);
+  const voiced = ctx.units.filter(unit => unit._stormSilenceTimer > 0);
+  if (voiced.length < 2 || !voiced.some(unit => unit.arch === 'healer')) throw new Error('Frozen Voice should silence two targets, healer first');
+
+  boss._dragonCastLock = 0;
+  boss.hp = Math.round(boss.maxHp * 0.49);
+  tickBoss(ctx, boss, 1);
+  if (!boss._dragonSkyPhase || !boss.flying) throw new Error('Diamond Storm should make the Dragon airborne at 50% HP');
+  tickBoss(ctx, boss, 130);
+  if (!ctx.enemies.some(enemy => enemy.winterWhelp)) throw new Error('Diamond Storm should spawn Winter Whelps for melee');
+  if (!ctx.damageHits.some(hit => hit.attackType === 'diamondStorm')) throw new Error('Diamond Storm should apply light team pressure');
+  tickBoss(ctx, boss, 420);
+  if (boss._dragonSkyPhase || !(boss._dragonExposedTimer > 0)) throw new Error('Dragon should land exposed after Diamond Storm');
+
+  ctx.units[0].hp = 0;
+  boss._dragonCastLock = 0;
+  tickBoss(ctx, boss, 1);
+  if (!boss._dragonHuntActive || !ctx.damageText.some(item => item.text === 'HUNT')) throw new Error('Dragon Hunt should trigger when no tank remains');
+
+  const texts = ctx.damageText.map(item => String(item.text));
+  if (texts.some(text => text.includes('Sultan') || text.includes('EMBER') || text.includes('INFERNO') || text.includes('BURNING DOT'))) {
+    throw new Error('Winterglass Dragon should not show old Sultan/fire labels');
+  }
+  if (ctx.enemies.some(enemy => enemy && enemy.name === 'Son of Embers')) throw new Error('Winterglass Dragon should not spawn Sons of Embers');
+  return 'winterglass-dragon';
+}
+
 function assertBossReadability(ctx, boss) {
   const texts = (ctx.damageText || []).map(item => item.text);
   const labels = (ctx.groundFx || []).map(item => item && item.label).filter(Boolean);
   const warnLabels = (ctx.groundFx || []).filter(item => item && item.enemyWarn).map(item => item.label);
   if (boss.id === 4) {
-    if (!labels.includes('INFERNO')) throw new Error('Sultan missing Inferno danger-ring label');
-    if (!warnLabels.includes('METEOR')) throw new Error('Sultan missing Meteor warning ring label');
-    if (!texts.includes('BURNING DOT')) throw new Error('Sultan missing target debuff hit callout');
-    if (!texts.includes('METEOR TARGET')) throw new Error('Sultan missing meteor target callout');
+    for (const text of ['RIME SCALES', 'GLASS SCALES', 'WING BUFFET', 'FROSTBITE', 'ICE COMET BARRAGE', 'ICE COMET', 'FROZEN VOICE', 'DIAMOND STORM', 'WINTER WHELP', 'DRAGON EXPOSED', 'HUNT']) {
+      if (!texts.includes(text)) throw new Error(`Winterglass Dragon missing ${text} callout`);
+    }
+    for (const label of ['SCALES', 'BUFFET', 'COMET', 'VOICE', 'STORM', 'WHELP', 'EXPOSED', 'HUNT']) {
+      if (!labels.includes(label)) throw new Error(`Winterglass Dragon missing ${label} warning label`);
+    }
+    if (texts.some(text => String(text).includes('EMBER') || String(text).includes('INFERNO') || String(text).includes('BURNING DOT'))) throw new Error('Winterglass Dragon should not use old Sultan/fire text');
   }
   if (boss.id === 10) {
     for (const text of ['LANTERN WARD', 'LANTERN WARD BROKEN', 'ASTRAL BLIGHT', 'GRAVITY BRAND', 'ASTRAL TOLL', 'STARFALL LANTERNS', 'ECLIPSE BEAM', 'GRAVITY TOLL', 'LANTERN ORBIT']) {
@@ -700,6 +781,9 @@ function smokeBoss(bossTemplate) {
 
   const aerialNote = smokeAerialBoss(ctx, boss);
   if (aerialNote) notes.push(aerialNote);
+
+  const dragonNote = smokeWinterglassDragon(ctx, boss);
+  if (dragonNote) notes.push(dragonNote);
 
   for (const hpPct of [0.9, 0.5, 0.25]) forcePhase(ctx, boss, hpPct);
   const astralNote = smokeAstralWarden(ctx, boss);

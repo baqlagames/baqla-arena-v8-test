@@ -37,18 +37,20 @@ export const BOSSES=[
     vanishCD:621,vanishMult:3.0,vanishPhase:2,
     debuffCD:552,debuffType:'mark',debuffDur:300,debuffPhase:3,
     timeEnrageAt:8250},
-  {id:4,name:'Sultan of Embers',tier:'vs',act:2,color:'#dc6020',accent:'#7a3008',hp:33000,dmg:145,speed:0.35,atkSpd:54,range:80,size:54,armor:5,magicRes:6,points:1500,raidAoeDmg:51,
-    // arena stage 10 boss: Inferno Pulse AoE every 6s. Meteor every ~12s on a
-    // random unit (P2). Cinder Pact spawns 1 fire imp every 15s (replaces the
-    // unfair livingBomb chain). Burning DoT debuff applied every 10s.
-    // At 25% HP, summons 3 fire elementals (Sons of Embers).
-    aoeCD:480,aoeRadius:100,aoeDmg:86,aoePhase:1,aoeColor:'#ff6600',
-    meteorCD:720,meteorDmg:135,meteorRadius:80,meteorPhase:2,
-    debuffCD:600,debuffType:'poison',debuffDmg:9,debuffDur:240,debuffPhase:2,
-    spawnCD:900,spawnEnemy:0,spawnCount:1,spawnPhase:1, // Cinder Pact Ã¢â‚¬â€ 1 imp every 15s
-    sonsAt:0.25,sonsCount:3,
-    searingBrandEvery:4,searingBrandHpPct:0.063,searingBrandHealCut:0.10,searingBrandDur:480,
-    projType:'fire',timeEnrageAt:12000},
+  {id:4,name:'Winterglass Dragon',tier:'vs',act:2,color:'#9fdcff',accent:'#eef8ff',hp:36000,dmg:150,speed:0.35,atkSpd:54,range:92,size:70,armor:5,magicRes:6,points:1500,raidAoeDmg:44,
+    // Stage 10 final boss: role-check frost dragon. Frozen Scales reward mixed
+    // damage, Diamond Storm creates a brief air phase, and Hunt prevents
+    // healer/ranged stall endings after the tank dies.
+    winterglassDragon:true,frostBoss:true,projType:'frost',
+    frozenScalesCD:720,frozenScaleResistMult:0.55,
+    wingBuffetCD:420,wingBuffetFirst:210,wingBuffetDmg:118,wingBuffetRadius:150,wingBuffetTankMult:1.12,wingBuffetMeleeMult:0.86,wingBuffetStun:27,frostbiteDur:210,frostbiteHealCut:0.10,
+    iceCometCD:690,iceCometFirst:360,iceCometDmg:138,iceCometRadius:58,iceCometWarn:54,iceCometTargets:4,
+    frozenVoiceCD:840,frozenVoiceCDMin:720,frozenVoiceCDMax:900,frozenVoiceFirst:510,frozenVoiceDur:120,frozenVoiceTargets:2,
+    diamondStormCD:480,diamondStormAt:0.50,diamondStormDur:480,diamondStormTick:60,diamondStormDmg:44,diamondStormWhelps:4,diamondStormWhelpEvery:96,dragonExposeDur:300,dragonExposeMult:1.22,
+    winterWhelpHp:760,winterWhelpDmg:38,winterWhelpSize:23,
+    dragonHuntCD:240,dragonHuntDmgMult:1.14,
+    spawnCD:0,spawnCount:0,
+    timeEnrageAt:36000},
   {id:5,name:'Dune Worm',tier:'mini',act:3,color:'#8e6a3a',accent:'#5a3f1a',hp:7600,dmg:68,speed:0.20,atkSpd:72,range:46,size:50,armor:6,magicRes:2,points:700,
     // Buffed 2026-05-03: HP 4500Ã¢â€ â€™5400 (+20%), dmg 50Ã¢â€ â€™55, burrowCD 552Ã¢â€ â€™432 (every 7s),
     // aoeCD 621Ã¢â€ â€™480, added magicBolt (sand-spear ranged magic at random unit).

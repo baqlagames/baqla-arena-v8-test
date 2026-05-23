@@ -34,7 +34,7 @@ for (const expected of ['BOSS SHIELD', 'POISON', 'ARMOR']) {
   assert(tagKeys(hornetThreat).includes(expected), `Hornet boss preview should expose ${expected}`);
 }
 
-const sultanThreat = buildWaveThreats({
+const dragonThreat = buildWaveThreats({
   round: 6,
   total: 6,
   isBoss: true,
@@ -42,8 +42,9 @@ const sultanThreat = buildWaveThreats({
 });
 assert.equal(STAGES[9].name, 'Winterglass Palace', 'stage 10 should use the Winterglass Palace presentation');
 assert.equal(STAGES[9].weather, 'blizzard', 'stage 10 should use blizzard weather');
-for (const expected of ['BURST', 'CASTER', 'POISON']) {
-  assert(tagKeys(sultanThreat).includes(expected), `Sultan boss preview should expose ${expected}`);
+assert.equal(dragonThreat.bossName, 'Winterglass Dragon', 'stage 10 final preview should name Winterglass Dragon');
+for (const expected of ['FROST', 'BURST', 'BACKLINE THREAT', 'SOFT CONTROL', 'MIXED DAMAGE', 'FLYERS']) {
+  assert(tagKeys(dragonThreat).includes(expected), `Winterglass Dragon preview should expose ${expected}`);
 }
 
 const vizierThreat = buildWaveThreats({

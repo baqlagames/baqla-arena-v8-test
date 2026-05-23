@@ -46,15 +46,25 @@ const danger = bossCarapaceHudState({
 }, tickHz);
 assert.equal(danger.danger, true, 'carapace HUD should mark the final 2s as danger state');
 
-const sultan = { id: 4, name: 'Sultan of Embers', aoeCD: 480, meteorCD: 720, debuffCD: 600, spawnCD: 900, mechCD: { aoe: 150, meteor: 90, debuff: 240, spawn: 500 } };
-assert.equal(bossReadableSkillLabel(sultan, 'aoe'), 'INFERNO', 'Sultan AoE should be readable as Inferno');
-assert.equal(bossReadableSkillLabel(sultan, 'debuff'), 'BURN', 'Sultan debuff should be readable as Burn');
-assert.equal(bossReadableSkillHint(sultan, 'meteor'), 'DODGE RING', 'Sultan meteor should expose a player-facing hint');
-assert.deepEqual(bossReadableSkillPills(sultan).map(skill => skill.name), ['INFERNO', 'BURN', 'IMP', 'METEOR'], 'Sultan skill pills should use boss-specific labels');
+const dragon = {
+  id: 4,
+  name: 'Winterglass Dragon',
+  frozenScalesCD: 720,
+  wingBuffetCD: 420,
+  iceCometCD: 690,
+  frozenVoiceCD: 840,
+  diamondStormCD: 480,
+  dragonHuntCD: 240,
+  mechCD: { frozenScales: 600, wingBuffet: 210, iceComet: 90, frozenVoice: 510, diamondStorm: 400, dragonHunt: 9999 },
+};
+assert.equal(bossReadableSkillLabel(dragon, 'iceComet'), 'COMETS', 'Winterglass Dragon comets should use readable labels');
+assert.equal(bossReadableSkillLabel(dragon, 'diamondStorm'), 'STORM', 'Winterglass Dragon sky phase should use readable labels');
+assert.equal(bossReadableSkillHint(dragon, 'frozenScales'), 'MIXED DAMAGE', 'Winterglass Dragon scales should expose mixed-damage hint');
+assert.deepEqual(bossReadableSkillPills(dragon).map(skill => skill.name), ['SCALES', 'BUFFET', 'COMETS', 'VOICE', 'STORM', 'HUNT'], 'Winterglass Dragon skill pills should use dragon-specific labels');
 
-const urgent = bossUrgentSkillHudState(sultan, tickHz);
-assert.equal(urgent.label, 'METEOR', 'urgent mechanic HUD should pick the nearest imminent mechanic');
-assert.equal(urgent.hint, 'DODGE RING', 'urgent mechanic HUD should expose the mechanic hint');
+const urgent = bossUrgentSkillHudState(dragon, tickHz);
+assert.equal(urgent.label, 'COMETS', 'urgent mechanic HUD should pick the nearest imminent Dragon mechanic');
+assert.equal(urgent.hint, '4 TARGETS', 'urgent mechanic HUD should expose the Dragon mechanic hint');
 assert.equal(urgent.seconds, 2, 'urgent mechanic HUD should expose seconds remaining');
 assert.equal(urgent.danger, false, 'urgent mechanic HUD should distinguish final-second danger');
 assert.equal(urgent.soonWindow, tickHz * 4, 'Act 2/3 bosses should use a wider readability warning window');
@@ -83,6 +93,13 @@ assert.ok(earlyBossIcons.some(icon => icon.title === 'Bolt Soon'), 'boss status 
 
 const wardenIcons = collectStatusIcons({ isBoss: true, mechCD: { starfall: 80 }, starfallCD: 420 }, tickHz);
 assert.ok(wardenIcons.some(icon => icon.title === 'Starfall Soon'), 'boss status icons should expose Warden mechanic warnings');
+
+const dragonIcons = collectStatusIcons({ isBoss: true, _dragonScaleMode: 'rime', _dragonSkyPhase: true, _dragonExposedTimer: 120, _dragonHuntActive: true, mechCD: { iceComet: 80 }, iceCometCD: 690 }, tickHz);
+assert.ok(dragonIcons.some(icon => icon.title === 'Rime Scales'), 'boss status icons should expose Dragon scales');
+assert.ok(dragonIcons.some(icon => icon.title === 'Diamond Storm'), 'boss status icons should expose Dragon sky phase');
+assert.ok(dragonIcons.some(icon => icon.title === 'Dragon Exposed'), 'boss status icons should expose Dragon exposed windows');
+assert.ok(dragonIcons.some(icon => icon.title === 'Dragon Hunt'), 'boss status icons should expose Dragon Hunt');
+assert.ok(dragonIcons.some(icon => icon.title === 'Ice Comets Soon'), 'boss status icons should expose imminent Dragon comets');
 
 const vizier = {
   id: 13,

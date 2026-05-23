@@ -1,4 +1,4 @@
-import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260522-winterglass-enrage-economy';
+import { createArenaScreenUiRuntime } from './arena-screen-ui-runtime.js?v=20260523-winterglass-dragon';
 
 export function createArenaScreenUiComposition(deps) {
   const states = deps.states;

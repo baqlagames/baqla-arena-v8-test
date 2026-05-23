@@ -35,7 +35,7 @@ function roundWavePlan(stage, round, totalRounds, previousWaveGoldMult) {
     || arena_themedWaveQueue(round, stage.n || 1, stage.act || 1);
   let queue = [...(wave.queue || [])];
   if ((stage.n || 0) === 10 && round === 4) {
-    queue = [{ boss: 13, label: 'MINI BOSS - STORMBOUND VIZIER', color: '#3f8cff' }];
+    queue = [{ boss: 13, label: 'MINI BOSS - WINTERGLASS MAGISTRATE', color: '#9fdcff' }];
   }
   return { queue, waveGoldMult: wave.goldMult || 1, theme: wave.theme || 'WAVE' };
 }
@@ -164,7 +164,8 @@ assert.equal(lowGoldReward.roundBonus, highGoldReward.roundBonus, 'round bonus s
 assert.equal(lowGoldReward.gold - 0, highGoldReward.gold - 9999, 'wave-end bonus should be fixed for the same stage/round');
 for (const summary of summaries) {
   const round5 = summary.rounds.find(round => round.round === 5);
-  assert(round5 && round5.waveBonus === 25, `stage ${summary.stage}: round 5 should grant fixed 25g wave bonus`);
+  const expectedRound5Bonus = summary.stage === 10 ? 85 : 25;
+  assert(round5 && round5.waveBonus === expectedRound5Bonus, `stage ${summary.stage}: round 5 should grant fixed ${expectedRound5Bonus}g wave bonus`);
 }
 assert.equal(stage10EarlyRounds.length, 3, 'stage 10 should have three early-wave bonus rounds');
 for (const round of stage10EarlyRounds) {
@@ -174,6 +175,8 @@ assert(stage6.startGold <= 170, `stage 6 start gold too high: ${stage6.startGold
 assert(stage6.finalGold <= 950, `stage 6 no-spend clear gold too high: ${stage6.finalGold}`);
 assert(stage6.maxRoundGold <= 170, `stage 6 round payout spike too high: ${stage6.maxRoundGold}`);
 assert(stage10Round4 && stage10Round4.killGold === 200, `stage 10 round 4 mini-boss should award 200g, got ${stage10Round4?.killGold}`);
+assert(stage10Round4 && stage10Round4.waveBonus === 78, `stage 10 round 4 should add fixed 78g Winterglass bonus, got ${stage10Round4?.waveBonus}`);
+assert(stage10Round4 && stage10Round4.totalGold === 330, `stage 10 round 4 full-clear total should be 330g, got ${stage10Round4?.totalGold}`);
 assert(
   Math.floor(stage6.finalGold / LEVEL_3_CHEAP_UNIT_COST) <= 4,
   `stage 6 still funds too many cheap level-3 units: ${stage6.finalGold}g`
@@ -184,7 +187,7 @@ const finalGoldCaps = new Map([
   [7, 1050],
   [8, 1250],
   [9, 1375],
-  [10, 1575],
+  [10, 1725],
 ]);
 
 let previousFinal = 0;
@@ -195,7 +198,7 @@ for (const summary of summaries) {
   previousFinal = summary.finalGold;
 
   for (const round of summary.rounds) {
-    const capRound = summary.stage < 10 ? 285 : 310;
+    const capRound = summary.stage < 10 ? 285 : 360;
     assert(round.totalGold <= capRound, `stage ${summary.stage} round ${round.round} paid ${round.totalGold}g`);
   }
 }

@@ -60,13 +60,35 @@ export function applyLegacyPreDamageHooks(dmg, {
   return { dmg: next, blocked: false };
 }
 
+function isWinterglassDragonTarget(target) {
+  return !!(target && (target.winterglassDragon || target.id === 4 || target.name === 'Winterglass Dragon'));
+}
+
+function winterglassDamageIsMagic({ attacker, dmgType, attackTypeOverride }) {
+  const type = String(attackTypeOverride || (attacker && (attacker.attackType || attacker.projType)) || '').toLowerCase();
+  if (dmgType === 'magic') return true;
+  if (attacker && (attacker.arch === 'caster' || attacker.arch === 'healer')) return true;
+  return ['magic', 'fire', 'frost', 'ice', 'curse', 'holy', 'shadow', 'lightning', 'void'].some(key => type.includes(key));
+}
+
 export function applyBossAndRecordModifiers(dmg, {
   target,
+  attacker,
+  dmgType,
+  attackTypeOverride,
 }) {
   let next = dmg;
   if (target.ampTimer > 0) next *= (target.ampMult || 1.3);
   if (target._stormShieldActive && (target.stormVizier || target.id === 13)) next = Math.max(1, Math.round(next * (target._stormShieldDamageMult || target.stormShieldDamageMult || 0.24)));
   if (target._stormExposedTimer > 0) next *= (target._stormExposedDamageMult || 1.35);
+  if (isWinterglassDragonTarget(target)) {
+    const mode = target._dragonScaleMode || 'rime';
+    const isMagic = winterglassDamageIsMagic({ attacker, dmgType, attackTypeOverride });
+    if ((mode === 'rime' && !isMagic) || (mode === 'glass' && isMagic)) {
+      next = Math.max(1, Math.round(next * (target.frozenScaleResistMult || 0.55)));
+    }
+    if (target._dragonExposedTimer > 0) next *= (target._dragonExposedDamageMult || target.dragonExposeMult || 1.22);
+  }
   if (target._corrosiveAmp && target._corrosiveTimer > 0) next = Math.round(next * (1 + target._corrosiveAmp));
   if (target.markTimer > 0) next *= (target.markMult || 1.5);
   if (target.deathmarkTimer > 0) target.deathmarkDmg = (target.deathmarkDmg || 0) + next;
@@ -214,7 +236,7 @@ function hitSourceFeedbackInfo({ opts, dmgType, attacker, attackTypeOverride }) 
   if (type.includes('poison') || type.includes('toxic')) return { label: 'POISON', color: '#78d64b' };
   if (type.includes('holy')) return { label: 'HOLY', color: '#ffe066' };
   if (attacker && attacker.isBoss) {
-    if (attacker.id === 4) return { label: 'EMBER HIT', color: '#ff6600' };
+    if (attacker.id === 4) return { label: 'DRAGON HIT', color: '#88ddff' };
     if (attacker.id === 10) return { label: 'ASTRAL HIT', color: '#8bdfff' };
     if (attacker.id === 3) return { label: 'AMBUSH', color: '#aa66cc' };
     if (attacker.id === 6) return { label: 'PHARAOH', color: '#d4a857' };

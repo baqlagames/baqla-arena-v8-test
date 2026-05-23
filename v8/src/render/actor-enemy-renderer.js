@@ -1,4 +1,4 @@
-import { createBossSpriteRenderer } from './boss-sprites.js?v=20260522-winterglass-enrage-economy';
+import { createBossSpriteRenderer } from './boss-sprites.js?v=20260523-winterglass-dragon';
 import { createEnemySpriteRenderer } from './enemy-sprites.js';
 
 export function createActorEnemyRenderer({

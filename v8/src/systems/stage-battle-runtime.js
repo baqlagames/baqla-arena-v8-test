@@ -1,13 +1,13 @@
 import { startStageRun } from './stage-runner.js';
-import { createStageRunSetup } from './stage-lifecycle.js?v=20260522-winterglass-enrage-economy';
+import { createStageRunSetup } from './stage-lifecycle.js?v=20260523-winterglass-dragon';
 import {
   completeWavePhase,
   configureWaveSpawning,
   spawnNextEnemyBatch,
   startBuildPhase,
   startWavePhase,
-} from './wave-lifecycle.js?v=20260522-winterglass-enrage-economy';
-import { createRiftRuntime } from './rift-runtime.js?v=20260522-winterglass-enrage-economy';
+} from './wave-lifecycle.js?v=20260523-winterglass-dragon';
+import { createRiftRuntime } from './rift-runtime.js?v=20260523-winterglass-dragon';
 
 export function createStageBattleRuntime(deps = {}) {
   const view = () => (typeof deps.view === 'function' ? deps.view() || {} : {});

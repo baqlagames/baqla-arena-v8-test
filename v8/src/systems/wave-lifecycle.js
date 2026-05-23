@@ -1,9 +1,11 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-enrage-economy';
+import { BOSSES } from '../data/bosses.js?v=20260523-winterglass-dragon';
 import { ENEMIES } from '../data/enemies.js';
 import { arena_pickWaveMechanic, arena_themedWaveQueue } from './wave-planner.js';
 
 const WAVE_5_CLEAR_BONUS_GOLD = 25;
 const STAGE_10_EARLY_WAVE_BONUS_GOLD = 15;
+const STAGE_10_ROUND_4_WINTERGLASS_BONUS_GOLD = 78;
+const STAGE_10_ROUND_5_WINTERGLASS_BONUS_GOLD = 60;
 
 function stageWaveBonus(stageN,round){
   let amount=0;
@@ -12,9 +14,17 @@ function stageWaveBonus(stageN,round){
     amount+=STAGE_10_EARLY_WAVE_BONUS_GOLD;
     labels.push('early wave bonus');
   }
+  if(stageN===10&&round===4){
+    amount+=STAGE_10_ROUND_4_WINTERGLASS_BONUS_GOLD;
+    labels.push('winterglass round 4 bonus');
+  }
   if(round===5){
     amount+=WAVE_5_CLEAR_BONUS_GOLD;
     labels.push('wave 5 bonus');
+  }
+  if(stageN===10&&round===5){
+    amount+=STAGE_10_ROUND_5_WINTERGLASS_BONUS_GOLD;
+    labels.push('winterglass finale bonus');
   }
   return { amount, label:labels.join(' + ') };
 }

@@ -82,7 +82,7 @@ export function drawLieutenantsBar(ctx,view){
 const BOSS_SKILL_LABELS={
   2:{aoe:'TOXIC',debuff:'DISEASE',pcloud:'CLOUD'},
   3:{aoe:'SMOKE',debuff:'MARK',vanish:'AMBUSH'},
-  4:{aoe:'INFERNO',debuff:'BURN',spawn:'IMP',meteor:'METEOR'},
+  4:{frozenScales:'SCALES',wingBuffet:'BUFFET',iceComet:'COMETS',frozenVoice:'VOICE',diamondStorm:'STORM',dragonHunt:'HUNT'},
   5:{aoe:'QUAKE',burrow:'BURROW',debuff:'SLOW',magicBolt:'SAND'},
   6:{aoe:'SUN',debuff:'DEATH',spawn:'MUMMY',magicBolt:'BOLT'},
   10:{starfall:'STARFALL',eclipseBeam:'ECLIPSE',gravityToll:'GRAVITY',lanternOrbit:'ORBIT'},
@@ -121,12 +121,18 @@ const DEFAULT_SKILL_LABELS={
   groundingPulse:'RING',
   courtPulse:'WHITEOUT',
   silencingDecree:'VOICE',
-  tankCurse:'CURSE'
+  tankCurse:'CURSE',
+  frozenScales:'SCALES',
+  wingBuffet:'BUFFET',
+  iceComet:'COMETS',
+  frozenVoice:'VOICE',
+  diamondStorm:'STORM',
+  dragonHunt:'HUNT'
 };
 
 const BOSS_SKILL_HINTS={
   3:{aoe:'MOVE OUT',debuff:'MARKED TARGET',vanish:'BACKLINE AMBUSH'},
-  4:{aoe:'WIDE FIRE',debuff:'BURNING TARGET',spawn:'ADDS',meteor:'DODGE RING'},
+  4:{frozenScales:'MIXED DAMAGE',wingBuffet:'FRONTLINE HIT',iceComet:'4 TARGETS',frozenVoice:'HEALER LOCK',diamondStorm:'SKY PHASE',dragonHunt:'NO TANK'},
   5:{aoe:'GROUND SLAM',burrow:'MOVE AWAY',debuff:'SLOW TARGET',magicBolt:'RANGED HIT'},
   6:{aoe:'WIDE SUN',debuff:'DEATH MARK',spawn:'ADDS',magicBolt:'RANGED HIT'},
   10:{starfall:'FALLING RINGS',eclipseBeam:'LINE BEAM',gravityToll:'RAID PULSE',lanternOrbit:'BACKLINE BOLTS'},
@@ -164,7 +170,13 @@ const DEFAULT_SKILL_HINTS={
   groundingPulse:'FRONTLINE HIT',
   courtPulse:'RAID WHITEOUT',
   silencingDecree:'HEALER LOCK',
-  tankCurse:'TANK DOT'
+  tankCurse:'TANK DOT',
+  frozenScales:'MIXED DAMAGE',
+  wingBuffet:'FRONTLINE HIT',
+  iceComet:'4 TARGETS',
+  frozenVoice:'HEALER LOCK',
+  diamondStorm:'SKY PHASE',
+  dragonHunt:'NO TANK'
 };
 
 const READABILITY_BOSS_IDS=new Set([3,4,5,6,10,11,12,13,14]);
@@ -209,6 +221,12 @@ export function bossReadableSkillPills(boss){
   add('courtPulse','courtPulseCD','#d8f8ff');
   add('silencingDecree','silencingDecreeCD','#d8f8ff');
   add('tankCurse','tankCurseCD','#9fdcff');
+  add('frozenScales','frozenScalesCD','#d8f8ff');
+  add('wingBuffet','wingBuffetCD','#9fdcff');
+  add('iceComet','iceCometCD','#d8f8ff');
+  add('frozenVoice','frozenVoiceCD','#d8f8ff');
+  add('diamondStorm','diamondStormCD','#eef8ff');
+  add('dragonHunt','dragonHuntCD','#9fdcff');
   add('royalDive','royalDiveCD','#ff5a3a');
   add('bliz','blizzardCD','#88ddff');
   add('stomp','stompCD','#7a8a9a');

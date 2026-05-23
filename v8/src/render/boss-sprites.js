@@ -22,7 +22,7 @@ function _drawBossBody(e,x,y,s){
     case 1:_drawBoss_Hornet(e,x,y,s);break;
     case 2:_drawBoss_SpiceLord(e,x,y,s);break;
     case 3:_drawBoss_VeiledAssassin(e,x,y,s);break;
-    case 4:_drawBoss_Sultan(e,x,y,s);break;
+    case 4:_drawBoss_WinterglassDragon(e,x,y,s);break;
     case 5:_drawBoss_DuneWorm(e,x,y,s);break;
     case 6:_drawBoss_Pharaoh(e,x,y,s);break;
     case 7:_drawBoss_IceWraith(e,x,y,s);break;
@@ -107,6 +107,50 @@ function _drawBoss_HornetV2(e,x,y,s){
   ctx.fillStyle='#ff3333';ctx.beginPath();ctx.arc(-s*0.10,-s*0.73,2.8,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(s*0.10,-s*0.73,2.8,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='rgba(255,216,74,0.50)';ctx.lineWidth=1.4;ctx.setLineDash([5,5]);ctx.beginPath();ctx.ellipse(0,-s*0.02,s*0.78,s*0.44,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
   if(frame%4===0)addP(x+rnd(-s*0.6,s*0.6),y+rnd(-s*0.7,s*0.2),'#ffdc5c',1,2);
+  ctx.restore();
+}
+function _drawBoss_WinterglassDragon(e,x,y,s){
+  const pulse=0.72+0.28*Math.sin(frame*0.08);
+  const wing=Math.sin(frame*0.11)*s*0.06;
+  const sky=e._dragonSkyPhase;
+  const scale=e._dragonScaleMode==='glass';
+  ctx.save();ctx.translate(x,y-(sky?s*0.18:0));
+  ctx.fillStyle='rgba(0,0,0,0.52)';ctx.beginPath();ctx.ellipse(0,s*0.98,s*1.05,s*0.25,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=0.16+0.10*pulse;ctx.fillStyle=scale?'#eef8ff':'#8fd8ff';
+  ctx.beginPath();ctx.ellipse(0,-s*0.04,s*1.45,s*0.92,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  const wingGrad=ctx.createLinearGradient(0,-s*0.9,0,s*0.45);
+  wingGrad.addColorStop(0,'#eef8ff');wingGrad.addColorStop(0.55,e.color||'#9fdcff');wingGrad.addColorStop(1,'#2a5a78');
+  ctx.fillStyle=wingGrad;ctx.strokeStyle='#061433';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(-s*0.22,-s*0.32);ctx.quadraticCurveTo(-s*1.26,-s*(0.86+wing),-s*1.54,s*0.12);ctx.quadraticCurveTo(-s*0.78,-s*0.06,-s*0.28,s*0.30);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(s*0.22,-s*0.32);ctx.quadraticCurveTo(s*1.26,-s*(0.86+wing),s*1.54,s*0.12);ctx.quadraticCurveTo(s*0.78,-s*0.06,s*0.28,s*0.30);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(238,248,255,0.72)';ctx.lineWidth=1.5;
+  for(let i=0;i<4;i++){
+    const yy=-s*0.22+i*s*0.16;
+    ctx.beginPath();ctx.moveTo(-s*0.36,yy);ctx.quadraticCurveTo(-s*(0.78+i*0.12),yy-s*0.22,-s*(1.18+i*0.06),yy+s*0.08);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(s*0.36,yy);ctx.quadraticCurveTo(s*(0.78+i*0.12),yy-s*0.22,s*(1.18+i*0.06),yy+s*0.08);ctx.stroke();
+  }
+  const body=ctx.createLinearGradient(0,-s*0.72,0,s*0.84);
+  body.addColorStop(0,'#ffffff');body.addColorStop(0.35,e.color||'#9fdcff');body.addColorStop(1,'#173b5a');
+  ctx.fillStyle=body;ctx.strokeStyle='#061433';ctx.lineWidth=3;
+  ctx.beginPath();ctx.ellipse(0,s*0.08,s*0.48,s*0.82,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(238,248,255,0.7)';ctx.beginPath();ctx.ellipse(0,s*0.10,s*0.22,s*0.44,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#d8f8ff';ctx.strokeStyle='#061433';ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.ellipse(0,-s*0.72,s*0.38,s*0.30,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#eef8ff';ctx.beginPath();ctx.moveTo(-s*0.25,-s*0.86);ctx.lineTo(-s*0.46,-s*1.18);ctx.lineTo(-s*0.05,-s*0.94);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(s*0.25,-s*0.86);ctx.lineTo(s*0.46,-s*1.18);ctx.lineTo(s*0.05,-s*0.94);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#063b56';ctx.beginPath();ctx.arc(-s*0.12,-s*0.74,s*0.045,0,Math.PI*2);ctx.arc(s*0.12,-s*0.74,s*0.045,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(216,248,255,0.85)';ctx.lineWidth=2;ctx.setLineDash([5,5]);
+  ctx.beginPath();ctx.ellipse(0,-s*0.42,s*0.72,s*0.28,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#eef8ff';ctx.strokeStyle='#061433';ctx.lineWidth=1.2;
+  for(let i=0;i<5;i++){
+    const a=frame*0.035+i*Math.PI*2/5;
+    const sx=Math.cos(a)*s*0.62,sy=-s*0.42+Math.sin(a)*s*0.20;
+    ctx.beginPath();ctx.moveTo(sx,sy-s*0.10);ctx.lineTo(sx-s*0.055,sy+s*0.08);ctx.lineTo(sx+s*0.055,sy+s*0.08);ctx.closePath();ctx.fill();ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(238,248,255,0.55)';ctx.lineWidth=2.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-s*0.08,-s*0.58);ctx.quadraticCurveTo(-s*0.36,-s*0.66,-s*0.54,-s*0.58);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(s*0.08,-s*0.58);ctx.quadraticCurveTo(s*0.36,-s*0.66,s*0.54,-s*0.58);ctx.stroke();
+  if(frame%4===0)addP(x+rnd(-s*0.74,s*0.74),y+rnd(-s*0.88,s*0.36),scale?'#ffffff':'#d8f8ff',1,3);
   ctx.restore();
 }
 function _drawBoss_SultanV2(e,x,y,s){

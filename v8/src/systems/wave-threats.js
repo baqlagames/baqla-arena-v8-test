@@ -1,4 +1,4 @@
-import { BOSSES } from '../data/bosses.js?v=20260522-winterglass-enrage-economy';
+import { BOSSES } from '../data/bosses.js?v=20260523-winterglass-dragon';
 import { ENEMIES } from '../data/enemies.js';
 
 function defaultEnemyAttackType(e){
@@ -58,6 +58,15 @@ function bossHasCasterPressure(boss){
 function deriveBossTags(boss){
   const tags=[];
   if(!boss)return tags;
+  if(boss.winterglassDragon||boss.id===4){
+    pushThreatTag(tags,'FROST','Frost pressure');
+    pushThreatTag(tags,'BURST','Comets and storm');
+    pushThreatTag(tags,'BACKLINE THREAT','Voice and Hunt');
+    pushThreatTag(tags,'SOFT CONTROL','Brief silence/stun');
+    pushThreatTag(tags,'MIXED DAMAGE','Alternating scales');
+    pushThreatTag(tags,'FLYERS','Sky phase');
+    return tags.slice(0,6);
+  }
   if(boss.frostBoss||boss.projType==='frost'||boss.projType==='ice'||boss.blizzardCD)pushThreatTag(tags,'FROST','Frost pressure');
   if(boss.isAerial||boss.flying)pushThreatTag(tags,'FLYERS','Air phase');
   if(bossHasArmor(boss))pushThreatTag(tags,'ARMOR','Durable boss');

@@ -97,7 +97,7 @@ const melee = unit('Melee', 5, 'melee', 235, 665, { attackType: 'physical', pref
 const meleePick = findEnemyTargetForUnit(melee, view([boss, ironWard, mirrorWard]));
 assert.equal(meleePick, mirrorWard, 'physical melee should prefer Mirrorice Bulwark over shielded boss');
 
-const tank = unit('Tank', 0, 'tank', 250, 660, { attackType: 'physical', prefersRanged: false, taunt: true });
+const tank = unit('Tank', 0, 'tank', 250, 660, { attackType: 'physical', prefersRanged: false, taunt: true, range: 44 });
 const tankPick = findEnemyTargetForUnit(tank, view([boss, ironWard, mirrorWard]));
 assert.equal(tankPick, mirrorWard, 'tank should prefer Mirrorice Bulwark over shielded boss');
 
@@ -130,5 +130,30 @@ const rangedPick = findRangedEnemyTargetForUnit(hunter, view([boss, futureFlying
 assert.equal(rangedPick, futureFlyingPriority, 'ranged units should still handle future flying priority targets');
 const meleeFlyingPick = findEnemyTargetForUnit(melee, view([boss, futureFlyingPriority]));
 assert.equal(meleeFlyingPick, boss, 'melee should not get stuck trying to target unreachable flying priority targets');
+
+const dragon = enemy('Winterglass Dragon', 250, 420, {
+  id: 4,
+  isBoss: true,
+  winterglassDragon: true,
+  _dragonSkyPhase: true,
+  flying: true,
+  priorityTarget: true,
+  preferredBy: 'ranged',
+});
+const whelp = enemy('Winter Whelp', 250, 560, {
+  winterWhelp: true,
+  _dragonBoss: dragon,
+  priorityTarget: true,
+  preferredBy: 'melee',
+  arch: 'melee',
+});
+const skyMeleePick = findEnemyTargetForUnit(melee, view([dragon, whelp]));
+assert.equal(skyMeleePick, whelp, 'melee should switch to grounded Winter Whelps during Dragon sky phase');
+const skyTankPick = findEnemyTargetForUnit(tank, view([dragon, whelp]));
+assert.equal(skyTankPick, whelp, 'tank should switch to grounded Winter Whelps during Dragon sky phase');
+const skyCasterPick = findEnemyTargetForUnit(caster, view([dragon, whelp]));
+assert.equal(skyCasterPick, dragon, 'caster should keep attacking airborne Winterglass Dragon during sky phase');
+const skyHunterPick = findEnemyTargetForUnit(hunter, view([dragon, whelp]));
+assert.equal(skyHunterPick, dragon, 'ranged physical unit should keep attacking airborne Winterglass Dragon during sky phase');
 
 console.log('smoke-priority-targeting: ok');
