@@ -493,7 +493,7 @@ function arena_passiveShort(id){
     twinSync:'Three Mirror clones; siblings get speed buff on clone death',
     bladeRush:'Dashes through enemies every 8s and gains short Blade Guard',
     risingSlash:'Every 4th hit: uppercut for 160% + mini stun',
-    azureSen:'3/5/10 attacks grant Setsu, Getsu, Ka Sen; each Sen gives +3% damage',
+    azureSen:'3/5/10 attacks grant Setsu, Getsu, Ka Sen; each Sen gives +5% damage',
     thirdEye:'5th/10th procs and CD moves grant 20% damage reduction for 1.5s',
     mortalStrike:'Every 3rd hit: 160% damage + heal reduction',
     executeBlade:'2.5Ãƒâ€” damage to enemies below 25% HP',
@@ -544,7 +544,7 @@ function arena_passiveShort(id){
     // (raiseSwarm + raiseElite descriptions removed)
     meteor:'Sky-drops a meteor on the strongest enemy every 8s',
     swordSaintCycle:'3/5/10 cycles Stasis, Lightning, and Holy blade arts with short guard/speed/boss-burst windows',
-    judgmentSeals:'Combo and cooldown moves apply self-only seals; King deals +6% damage per seal and Divine Ruination consumes them',
+    judgmentSeals:'Combo and cooldown moves apply self-only seals; King deals +8% damage per seal and Divine Ruination consumes them',
     wingsOfLight:'Always-on +20% damage and +20% crit chance',
     shieldOfVengeance:'Absorb 20% max HP, then burst all absorbed damage as holy AoE (15s CD)',
     avengersShield:'Every 6s throw bouncing shield hitting 3 enemies; at L4 hits 5 for 1.65x and 16% shield cap.',
@@ -781,7 +781,7 @@ function passiveLabel(u){
     // Kharroob codex entry removed
     Vodka:"P1 Champion's Aura: passive damage bonus to all allies. P2 (L3) Devour: heal a portion of damage dealt + chance to insta-kill weak enemies."
   };
-  m.King='Holy Sword Saint. Built-in: Crusader Aura mount charge. P1 Sword Saint Cycle: 3/5/10 Stasis Sword, Lightning Stab, Holy Explosion. P2 Judgment Seals: combo and CD moves apply self-only seals for +6% damage per seal. A3 Crush Judgment. A5 Hallowed Bladefall. Signature Divine Ruination consumes seals for burst and a 3-seal echo hit.';
+  m.King='Holy Sword Saint. Built-in: Crusader Aura mount charge. P1 Sword Saint Cycle: 3/5/10 Stasis Sword, Lightning Stab, Holy Explosion. P2 Judgment Seals: combo and CD moves apply self-only seals for +8% damage per seal. A3 Crush Judgment. A5 Hallowed Bladefall. Signature Divine Ruination consumes seals for burst and a 3-seal echo hit.';
   return m[u.name]||'';
 }
 function abilityLabel(name){
@@ -817,9 +817,9 @@ function abilityLabel(name){
     natureStomp:'AoE root + damage 110px, roots enemies 2.5s (14s CD)',
     incarnationTree:'10s: become Tree of Life Ã¢â‚¬â€ +40% HP, +50% armor, heals all allies 3%/sec in 160px (40s CD)',
     divineJudgment:'Holy burst (3Ãƒâ€” dmg) + 40% splash to nearby enemies (8s CD)',
-    crushJudgment:'Dash to a priority enemy within 210px, 2.1x holy damage, applies a Judgment Seal, stuns non-bosses (12s CD)',
+    crushJudgment:'Dash to a priority enemy within 230px, 3x holy damage, applies a Judgment Seal, stuns non-bosses (12s CD)',
     hallowedLeap:'Jump toward ranged/caster threats, shield King, and force non-boss targeting (12s CD)',
-    hallowedBladefall:'Leap to a boss/elite/cluster, 3x main and 1.35x splash damage, applies a seal and stronger Crystal Guard (24s CD)',
+    hallowedBladefall:'Leap to a boss/elite/cluster, 4.4x main and 2.05x splash damage, applies a seal and stronger Crystal Guard (24s CD)',
     bladeOfWrath:'Leap + 2.5Ãƒâ€” holy damage + 2s stun + 4s dmg buff (12s CD, Prot only)',
     wakeOfAshes:'Frontal cone 200px: 3Ãƒâ€” holy damage + 3s stun (22s CD)',
     finalReckoning:'Marks all enemies in 100px Ã¢â‚¬â€ 300% holy burst + marked take 20% more dmg for 6s (22s CD)',
@@ -832,8 +832,8 @@ function abilityLabel(name){
     fanOfKnives:'Hit all enemies within 120px + apply Deadly Poison (6s CD)',
     bladeStorm:'Spin AoE: hit all nearby enemies for 2s (12s CD)',
     shadowClones:'Summon 2 shadow clones that attack for 5s (25s CD)',
-    hissatsuGyoten:'Dash to a priority enemy within 220px, 2x damage, grants Third Eye (12s CD)',
-    geirskogulDive:'Leap to a nearby cluster, 2.7x AoE damage, grants 5s Life of Dragon (24s CD)',
+    hissatsuGyoten:'Dash to a priority enemy within 245px, 2.8x damage, grants Third Eye (12s CD)',
+    geirskogulDive:'Leap to a nearby cluster, 4x AoE damage, grants 5s Life of Dragon (24s CD)',
     colossusSmash:'AoE slam: 200% damage + armor shred (15s CD)',
     windSlash:'Dash forward slashing all enemies in line (12s CD)',
     thousandCuts:'5s hyper mode: double attack speed + phantom slashes (18s CD)',

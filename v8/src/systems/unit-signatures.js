@@ -1050,8 +1050,8 @@ return {
   }},
   midare_stardiver:{name:'Midare Stardiver',cd:35,fire(u){
     const cfg=u.roninDragoonCombo||{};
-    const radius=110;
-    const best=findRoninStardiverTarget(u,320,radius);
+    const radius=cfg.stardiverRadius||125;
+    const best=findRoninStardiverTarget(u,cfg.stardiverRange||340,radius);
     if(!best||!best.target)return false;
     const main=best.target;
     const fromX=u.x,fromY=u.y;
@@ -1066,9 +1066,9 @@ return {
     u.x=land.x;u.y=land.y;
     arena_clampToLeash(u);
     const sen=roninSenStacks(u);
-    const sigMult=roninDamageMult(u)*(1+sen*0.12);
-    const mainDamage=Math.round(u.dmg*4.5*sigMult);
-    const splashDamage=Math.round(u.dmg*2.0*sigMult);
+    const sigMult=roninDamageMult(u)*(1+sen*(cfg.stardiverSenBonus||0.18));
+    const mainDamage=Math.round(u.dmg*(cfg.stardiverMainMult||7.5)*sigMult);
+    const splashDamage=Math.round(u.dmg*(cfg.stardiverSplashMult||3.2)*sigMult);
     dealDamage(main,mainDamage,u,'normal');
     let splashHits=0;
     for(const e of enemies){
@@ -1083,18 +1083,23 @@ return {
       u.lifeOfDragonTimer=(u.lifeOfDragonTimer||0)+4*GAME_TICK_HZ;
       u.lifeOfDragonAtkMult=cfg.lifeOfDragonAtkMult||0.85;
     }
-    beamFx.push({x1:fromX,y1:fromY-70,x2:u.x,y2:u.y,color:'#48c7ffcc',width:8,life:0.32,maxLife:0.32,straight:true});
-    beamFx.push({x1:fromX,y1:fromY-50,x2:u.x,y2:u.y,color:'#ff4f5ecc',width:4,life:0.28,maxLife:0.28,straight:true});
+    for(let i=0;i<8;i++){
+      const off=(i-3.5)*16;
+      beamFx.push({x1:best.x+off,y1:best.y-145-rnd(0,18),x2:best.x+off*0.2,y2:best.y+8,color:i%2?'#48c7ffcc':'#ff4f5ecc',width:i%2?3.5:4.5,life:0.36,maxLife:0.36,straight:true});
+    }
+    beamFx.push({x1:fromX,y1:fromY-80,x2:u.x,y2:u.y,color:'#48c7ffcc',width:10,life:0.38,maxLife:0.38,straight:true});
+    beamFx.push({x1:fromX,y1:fromY-56,x2:u.x,y2:u.y,color:'#ff4f5ecc',width:5.5,life:0.34,maxLife:0.34,straight:true});
     for(let i=0;i<18;i++){
       const f=i/18;
       addP(fromX+(u.x-fromX)*f+rnd(-4,4),fromY-50+(u.y-fromY+50)*f+rnd(-4,4),i%2?'#48c7ff':'#ff4f5e',2,4);
     }
-    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.8,color:'#ff4f5e'});
-    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius+36,life:0.45,color:'#48c7ff'});
-    groundFx.push({x:best.x,y:best.y,r:0,maxR:58,life:0.5,swipeSlam:true,color:'#ffffff'});
-    addP(best.x,best.y,'#ff4f5e',54,8);
-    addP(best.x,best.y,'#48c7ff',42,7);
-    addP(best.x,best.y,'#ffffff',18,4);
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:1.0,color:'#ff4f5e'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius+52,life:0.70,color:'#48c7ff'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius+78,life:0.45,color:'#ffffff'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:72,life:0.62,swipeSlam:true,color:'#ffffff'});
+    addP(best.x,best.y,'#ff4f5e',80,9);
+    addP(best.x,best.y,'#48c7ff',62,8);
+    addP(best.x,best.y,'#ffffff',28,5);
     addDmg(best.x,best.y-(main.size||24)-10,'MIDARE STARDIVER','#48c7ff',{sz:16,bold:true});
     addDmg(best.x,best.y-(main.size||24)-28,'-'+mainDamage,'#ff4f5e',{sz:13,bold:true});
     if(splashHits)addDmg(best.x,best.y+22,'SPLASH x'+splashHits,'#48c7ff',{sz:12,bold:true});

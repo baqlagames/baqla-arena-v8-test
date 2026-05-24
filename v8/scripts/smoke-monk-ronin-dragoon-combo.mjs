@@ -258,7 +258,7 @@ function runAttack(unit, enemy, context) {
 
   const gyotenBefore = gyotenTarget.hp;
   runtime.abilities.hissatsuGyoten(monk);
-  assert.ok(gyotenTarget.hp < gyotenBefore, 'Hissatsu Gyoten should damage a priority target within 220px');
+  assert.ok(gyotenTarget.hp < gyotenBefore, 'Hissatsu Gyoten should damage a priority target within 245px');
   assert.equal(monk.thirdEyeDR, 0.20, 'Hissatsu Gyoten should grant Third Eye');
   assert.ok(events.includes('HISSATSU: GYOTEN'), 'Hissatsu Gyoten should emit readable VFX text');
 
@@ -267,7 +267,7 @@ function runAttack(unit, enemy, context) {
   runtime.abilities.geirskogulDive(monk);
   assert.ok(geirTarget.hp < geirBefore, 'Geirskogul Dive should damage a nearby cluster');
   assert.equal(monk.lifeOfDragonTimer, 5 * GAME_TICK_HZ, 'Geirskogul Dive should grant 5s Life of Dragon');
-  assert.equal(monk.lifeOfDragonAtkMult, 0.85, 'Life of Dragon should store a 15% faster attack multiplier');
+  assert.equal(monk.lifeOfDragonAtkMult, 0.80, 'Life of Dragon should store a stronger faster attack multiplier');
   assert.ok(events.includes('GEIRSKOGUL DIVE'), 'Geirskogul Dive should emit readable VFX text');
 }
 

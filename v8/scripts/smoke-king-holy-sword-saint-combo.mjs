@@ -154,7 +154,7 @@ function runAttack(unit, enemy, context) {
   assert.deepEqual(tiers, [0, 0, 3, 0, 5], 'L3 should add Lightning Stab on the literal 5th attack');
   assert.ok(events.includes('LIGHTNING STAB'), 'Lightning Stab text should be emitted');
   assert.equal(king.saintSwiftnessTimer, 3 * GAME_TICK_HZ, 'Lightning Stab should grant 3s Saint Swiftness');
-  assert.equal(king.saintSwiftnessAtkMult, 0.90, 'Saint Swiftness should store a 10% faster attack multiplier');
+  assert.equal(king.saintSwiftnessAtkMult, 0.86, 'Saint Swiftness should store a stronger faster attack multiplier');
   assert.ok(lineEnemy.hp < lineBefore, 'Lightning Stab should hit enemies in the line');
   assert.equal(enemy.judgmentSealStacks, 2, 'Stasis + Lightning should build Judgment Seals after P2 unlock');
 }
@@ -288,7 +288,7 @@ function runAttack(unit, enemy, context) {
 
   const mainBefore = main.hp;
   runtime.abilities.crushJudgment(king);
-  assert.ok(main.hp < mainBefore, 'Crush Judgment should damage a priority target within 210px');
+  assert.ok(main.hp < mainBefore, 'Crush Judgment should damage a priority target within 230px');
   assert.equal(main.judgmentSealStacks, 1, 'Crush Judgment should apply one Judgment Seal');
   assert.ok(events.includes('CRUSH JUDGMENT'), 'Crush Judgment should emit readable VFX text');
 

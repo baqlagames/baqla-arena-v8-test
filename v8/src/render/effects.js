@@ -4,7 +4,14 @@ export function drawBeamEffects(ctx,view){
   const beams=view.beams||[];
   const randomRange=view.randomRange||((a,b)=>a+Math.random()*(b-a));
   for(let i=beams.length-1;i>=0;i--){
-    const b=beams[i];b.life--;
+    const b=beams[i];
+    if(!b._lifeFramesNormalized&&b.maxLife>0&&b.maxLife<=1){
+      const frames=Math.max(8,Math.round(b.maxLife*60));
+      b.life=frames;
+      b.maxLife=frames;
+      b._lifeFramesNormalized=true;
+    }
+    b.life--;
     if(b.life<=0){beams.splice(i,1);continue}
     const alpha=b.life/b.maxLife;
     ctx.save();ctx.strokeStyle=b.color;ctx.lineWidth=b.width||2;

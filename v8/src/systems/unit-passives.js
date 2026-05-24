@@ -129,29 +129,30 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
     u.artOfWar=false;
     u.hammerOfWrath=false;
     u.holySwordSaintCombo={
-      stasisMult:0.75,stasisBossSlow:0.75,stasisBossSlowDur:Math.round(1.5*GAME_TICK_HZ),stasisStunDur:Math.round(0.7*GAME_TICK_HZ),
+      stasisMult:1.05,stasisBossSlow:0.72,stasisBossSlowDur:Math.round(1.5*GAME_TICK_HZ),stasisStunDur:Math.round(0.7*GAME_TICK_HZ),
       crystalGuardDr:0.08,crystalGuardDur:3*GAME_TICK_HZ,
-      lightningMult:1.35,lightningLineMult:0.55,lightningLineLength:175,lightningLineWidth:34,
-      saintSwiftnessAtkMult:0.90,saintSwiftnessDur:3*GAME_TICK_HZ,
-      holyExplosionMult:2.35,holyExplosionSplashMult:1.15,holyExplosionRadius:85,holyExplosionFullSealBonus:0.20,
-      exaltedEdgeMult:1.10,exaltedEdgeDur:4*GAME_TICK_HZ,
-      sealMax:3,sealDur:7*GAME_TICK_HZ,sealDamagePer:0.06,
-      crushRange:210,crushMult:2.10,crushPerSealBonus:0.10,crushStunDur:GAME_TICK_HZ,
-      bladefallRange:260,bladefallRadius:90,bladefallMainMult:3.0,bladefallSplashMult:1.35,bladefallGuardDr:0.12,bladefallGuardDur:Math.round(2.5*GAME_TICK_HZ),
-      divineRange:320,divineRadius:110,divineMainMult:5.0,divineSplashMult:2.0,divinePerSealBonus:0.15,divineEchoMult:1.0,divineEchoDelay:Math.round(0.45*GAME_TICK_HZ)
+      lightningMult:1.90,lightningLineMult:0.85,lightningLineLength:220,lightningLineWidth:48,
+      saintSwiftnessAtkMult:0.86,saintSwiftnessDur:3*GAME_TICK_HZ,
+      holyExplosionMult:3.40,holyExplosionSplashMult:1.70,holyExplosionRadius:105,holyExplosionFullSealBonus:0.35,
+      exaltedEdgeMult:1.15,exaltedEdgeDur:4*GAME_TICK_HZ,
+      sealMax:3,sealDur:7*GAME_TICK_HZ,sealDamagePer:0.08,
+      crushRange:230,crushMult:3.00,crushPerSealBonus:0.15,crushStunDur:GAME_TICK_HZ,
+      bladefallRange:285,bladefallRadius:112,bladefallMainMult:4.40,bladefallSplashMult:2.05,bladefallGuardDr:0.12,bladefallGuardDur:Math.round(2.5*GAME_TICK_HZ),
+      divineRange:340,divineRadius:125,divineMainMult:8.0,divineSplashMult:3.0,divinePerSealBonus:0.20,divineEchoMult:2.0,divineEchoDelay:Math.round(0.45*GAME_TICK_HZ)
     };
     u.swordSaintCycle=u.swordSaintCycle||'stasis';
     u.judgmentSealMax=u.holySwordSaintCombo.sealMax;
   }
   if(unitIdx===13&&!u.branch){
     u.roninDragoonCombo={
-      senDmgPerStack:0.03,maxSen:3,
-      hakazeMult:0.65,
-      gekkoMult:1.25,gekkoSplashMult:0.45,gekkoSplashRadius:55,
-      nastrondMult:2.20,nastrondLineMult:1.10,nastrondLength:210,nastrondWidth:54,
+      senDmgPerStack:0.05,maxSen:3,
+      hakazeMult:0.90,
+      gekkoMult:1.75,gekkoSplashMult:0.75,gekkoSplashRadius:72,
+      nastrondMult:3.25,nastrondLineMult:1.65,nastrondLength:250,nastrondWidth:72,
       thirdEyeDr:0.20,thirdEyeDur:Math.round(1.5*GAME_TICK_HZ),
-      gyotenRange:220,gyotenMult:2.00,
-      geirskogulRange:260,geirskogulRadius:95,geirskogulMult:2.70,lifeOfDragonDur:5*GAME_TICK_HZ,lifeOfDragonAtkMult:0.85
+      gyotenRange:245,gyotenMult:2.80,
+      geirskogulRange:285,geirskogulRadius:115,geirskogulMult:4.00,lifeOfDragonDur:5*GAME_TICK_HZ,lifeOfDragonAtkMult:0.80,
+      stardiverRange:340,stardiverRadius:125,stardiverMainMult:7.5,stardiverSplashMult:3.2,stardiverSenBonus:0.18
     };
     if(!u.azureSenFlags)u.azureSenFlags={setsu:false,getsu:false,ka:false};
     u.azureSenStacks=Math.min(3,u.azureSenStacks||0);
