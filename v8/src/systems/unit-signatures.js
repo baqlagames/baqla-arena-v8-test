@@ -206,9 +206,16 @@ return {
       addP(e.x,e.y,'#dff5ff',8,3);
       splashHits++;
     }
-    if(seals>=3){
-      u.divineRuinationEcho={target:main,timer:cfg.divineEchoDelay||Math.round(0.45*GAME_TICK_HZ),dmg:Math.round(u.dmg*(cfg.divineEchoMult||1.0)),x:main.x,y:main.y};
-    }
+    u.divineRuinationEcho={
+      target:main,
+      timer:cfg.divineEchoDelay||Math.round(0.45*GAME_TICK_HZ),
+      dmg:Math.round(u.dmg*(seals>=3?(cfg.divineEchoMult||2.0):1.1)*sigMult),
+      splashDmg:Math.round(u.dmg*(seals>=3?0.95:0.45)*sigMult),
+      x:main.x,
+      y:main.y,
+      radius:seals>=3?86:64,
+      label:seals>=3?'THREE-SEAL RUINATION':'RUINATION ECHO'
+    };
     beamFx.push({x1:fromX,y1:fromY-72,x2:u.x,y2:u.y,color:'#fff2a8cc',width:8,life:0.34,maxLife:0.34,straight:true});
     beamFx.push({x1:fromX,y1:fromY-50,x2:u.x,y2:u.y,color:'#dff5ffcc',width:4,life:0.30,maxLife:0.30,straight:true});
     groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.82,color:'#ffd966'});
@@ -1079,6 +1086,18 @@ return {
       splashHits++;
     }
     clearRoninSen(u);
+    u.roninEchoes=u.roninEchoes||[];
+    u.roninEchoes.push({
+      type:'stardiver',
+      timer:14,
+      target:main,
+      x:best.x,
+      y:best.y,
+      radius:radius+50,
+      dmg:Math.round(u.dmg*(sen>=3?3.0:2.0)*sigMult),
+      splashDmg:Math.round(u.dmg*(sen>=3?1.40:0.90)*sigMult),
+      label:sen>=3?'THREE-SEN STARDIVER':'STARDIVER ECHO'
+    });
     if(sen>=3){
       u.lifeOfDragonTimer=(u.lifeOfDragonTimer||0)+4*GAME_TICK_HZ;
       u.lifeOfDragonAtkMult=cfg.lifeOfDragonAtkMult||0.85;

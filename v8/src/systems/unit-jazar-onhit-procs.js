@@ -88,10 +88,13 @@ export function applyJazarOnHitProcs(unit, target, {
       beamFx.push({ x1: fromX, y1: fromY, x2: u.x, y2: u.y, color: '#48c7ffaa', width: 5, life: 0.24, maxLife: 0.24, straight: true });
       beamFx.push({ x1: fromX, y1: fromY - 18, x2: u.x, y2: u.y, color: '#ffffffaa', width: 2, life: 0.20, maxLife: 0.20, straight: true });
       groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius, life: 0.45, color: '#48c7ff' });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius + 24, life: 0.34, color: '#ff4f5e' });
       addP(t.x, t.y, '#48c7ff', 24, 5);
       addP(u.x, u.y, '#7fd7ff', 10, 3);
       addDmg(t.x, t.y - t.size - 8, 'GEKKO DIVE', '#48c7ff', { sz: 13, bold: true });
       if (splashHits) addDmg(t.x, t.y + 16, 'SPLASH x' + splashHits, '#7fd7ff', { sz: 11, bold: true });
+      u.roninEchoes = u.roninEchoes || [];
+      u.roninEchoes.push({ type: 'gekko', timer: 9, x: t.x, y: t.y, radius: radius + 34, dmg: Math.round(u.dmg * 0.95 * roninDamageMult(u)), label: 'DRAGOON AFTERIMAGE' });
     }
     if (_ohTier === 10) {
       const angle = Math.atan2(t.y - u.y, t.x - u.x);
@@ -122,10 +125,16 @@ export function applyJazarOnHitProcs(unit, target, {
       beamFx.push({ x1: u.x, y1: u.y, x2: endX, y2: endY, color: '#ff4f5ecc', width: 3.5, life: 0.24, maxLife: 0.24, straight: true });
       groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 86, life: 0.55, color: '#ff4f5e', swipeArc: true, swipeAngle: angle });
       groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 62, life: 0.38, color: '#48c7ff' });
+      for (let i = 0; i < 5; i++) {
+        const f = (i + 1) / 6;
+        groundFx.push({ x: u.x + Math.cos(angle) * len * f, y: u.y + Math.sin(angle) * len * f, r: 0, maxR: 28 + i * 8, life: 0.36, color: i % 2 ? '#48c7ff' : '#ff4f5e' });
+      }
       addP(t.x, t.y, '#ff4f5e', 32, 5);
       addP(t.x, t.y, '#48c7ff', 24, 5);
       addDmg(t.x, t.y - t.size - 10, 'MIDARE NASTROND', '#ff4f5e', { sz: 14, bold: true });
       if (lineHits) addDmg(t.x, t.y + 20, 'LINE x' + lineHits, '#48c7ff', { sz: 11, bold: true });
+      u.roninEchoes = u.roninEchoes || [];
+      u.roninEchoes.push({ type: 'nastrond', timer: 11, x: u.x, y: u.y, angle, len, width: width + 22, dmg: Math.round(u.dmg * 1.20 * roninDamageMult(u)), label: 'NASTROND ECHO' });
       showFlash('MIDARE NASTROND', '#48c7ff', 35);
       shake(7);
     }

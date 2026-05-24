@@ -105,7 +105,7 @@ export const PLAYER_UNITS=[
     up:[{hp:260,dmg:7,healAmt:78,speed:0.21,atkSpd:110},{hp:310,dmg:8,healAmt:90,magicRes:3,speed:0.23,atkSpd:104},{hp:380,dmg:10,healAmt:103,speed:0.25,atkSpd:98},{hp:495,dmg:13,healAmt:120,magicRes:3,speed:0.28,atkSpd:92}]},
   {id:13,name:'Monk',ar:'Monk',role:'Ronin Dragoon',arch:'melee',color:'#2f6fc7',accent:'#ff4f5e',cost:45,
     hp:360,dmg:27,armor:2,magicRes:2,speed:0.38,atkSpd:58,range:42,size:23,
-    drawFn:'drawHabaq',a3:'hissatsuGyoten',a5:'geirskogulDive',
+    drawFn:'drawRoninDragoon',a3:'hissatsuGyoten',a5:'geirskogulDive',
     desc:'Ronin Dragoon melee DPS. Hakaze Thrust, Gekko Dive, and Midare Nastrond build Azure Sen, then Midare Stardiver spends it in a leap burst.',
     src:'Samurai + Dragoon inspired burst skirmisher',
     up:[{hp:430,dmg:33,armor:3,magicRes:2,speed:0.40,atkSpd:54},{hp:520,dmg:40,armor:4,magicRes:3,speed:0.43,atkSpd:50},{hp:650,dmg:50,armor:5,magicRes:3,speed:0.46,atkSpd:46},{hp:830,dmg:63,armor:6,magicRes:4,speed:0.50,atkSpd:42}]}

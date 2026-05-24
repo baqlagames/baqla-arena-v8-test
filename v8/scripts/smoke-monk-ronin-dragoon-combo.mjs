@@ -99,6 +99,7 @@ function runAttack(unit, enemy, context) {
 
 {
   assert.equal(PLAYER_UNITS[13].role, 'Ronin Dragoon', 'Unit 13 visible role should be Ronin Dragoon');
+  assert.equal(PLAYER_UNITS[13].drawFn, 'drawRoninDragoon', 'Unit 13 should use the custom Ronin Dragoon sprite');
   assert.equal(PLAYER_UNITS[13].a3, 'hissatsuGyoten', 'Unit 13 should use Hissatsu Gyoten as A3');
   assert.equal(PLAYER_UNITS[13].a5, 'geirskogulDive', 'Unit 13 should use Geirskogul Dive as A5');
   assert.equal(ARENA_UNIT_PASSIVES[13].p1, 'azureSen', 'Monk should no longer receive bladeRush');
@@ -148,6 +149,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(monk.thirdEyeDR, 0.20, 'Gekko Dive should grant Third Eye DR');
   assert.equal(monk.thirdEyeTimer, Math.round(1.5 * GAME_TICK_HZ), 'Gekko Dive should grant a 1.5s Third Eye window');
   assert.ok(splash.hp < splashBefore, 'Gekko Dive should damage nearby enemies');
+  assert.ok(monk.roninEchoes?.some(e => e.type === 'gekko' && e.label === 'DRAGOON AFTERIMAGE'), 'Gekko Dive should queue a flashy delayed afterimage hit');
 }
 
 {
@@ -165,6 +167,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(monk.azureSenFlags.ka, true, 'Midare Nastrond should grant Ka Sen');
   assert.equal(monk.azureSenStacks, 3, 'The three unique Sen should cap at 3');
   assert.ok(lineEnemy.hp < lineBefore, 'Midare Nastrond should damage enemies in the path');
+  assert.ok(monk.roninEchoes?.some(e => e.type === 'nastrond' && e.label === 'NASTROND ECHO'), 'Midare Nastrond should queue a delayed Nastrond echo');
 }
 
 {
@@ -214,6 +217,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(monk.lifeOfDragonTimer, 4 * GAME_TICK_HZ, 'Three Sen should extend Life of Dragon by 4s');
   assert.ok(damageEvents.find(event => event.target === main && event.amount > monk.dmg * 4.5), 'Signature should apply Sen bonus damage to the main target');
   assert.ok(splash.hp < splash.maxHp, 'Signature should splash nearby enemies');
+  assert.ok(monk.roninEchoes?.some(e => e.type === 'stardiver' && e.label === 'THREE-SEN STARDIVER'), 'Midare Stardiver should queue a delayed second-impact Stardiver echo');
 }
 
 {
@@ -261,6 +265,7 @@ function runAttack(unit, enemy, context) {
   assert.ok(gyotenTarget.hp < gyotenBefore, 'Hissatsu Gyoten should damage a priority target within 245px');
   assert.equal(monk.thirdEyeDR, 0.20, 'Hissatsu Gyoten should grant Third Eye');
   assert.ok(events.includes('HISSATSU: GYOTEN'), 'Hissatsu Gyoten should emit readable VFX text');
+  assert.ok(monk.roninEchoes?.some(e => e.label === 'IAI AFTERIMAGE'), 'Hissatsu Gyoten should queue an iai afterimage hit');
 
   monk.abilCD.geirskogulDive = 0;
   const geirBefore = geirTarget.hp;
@@ -269,6 +274,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(monk.lifeOfDragonTimer, 5 * GAME_TICK_HZ, 'Geirskogul Dive should grant 5s Life of Dragon');
   assert.equal(monk.lifeOfDragonAtkMult, 0.80, 'Life of Dragon should store a stronger faster attack multiplier');
   assert.ok(events.includes('GEIRSKOGUL DIVE'), 'Geirskogul Dive should emit readable VFX text');
+  assert.ok(monk.roninEchoes?.some(e => e.label === 'DRAGONFALL AFTERSHOCK'), 'Geirskogul Dive should queue a delayed dragonfall aftershock');
 }
 
 console.log('Monk Ronin Dragoon 3/5/10 smoke passed');

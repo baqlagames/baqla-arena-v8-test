@@ -157,6 +157,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(king.saintSwiftnessAtkMult, 0.86, 'Saint Swiftness should store a stronger faster attack multiplier');
   assert.ok(lineEnemy.hp < lineBefore, 'Lightning Stab should hit enemies in the line');
   assert.equal(enemy.judgmentSealStacks, 2, 'Stasis + Lightning should build Judgment Seals after P2 unlock');
+  assert.ok(king.holySwordEchoes?.some(e => e.type === 'lightning' && e.label === 'SAINT AFTERIMAGE'), 'Lightning Stab should queue a delayed holy afterimage hit');
 }
 
 {
@@ -174,6 +175,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(enemy.judgmentSealStacks, 3, 'Holy Explosion should bring Judgment Seals to the cap');
   assert.ok(splash.hp < splashBefore, 'Holy Explosion should splash nearby enemies');
   assert.equal(king.exaltedEdgeTimer, 4 * GAME_TICK_HZ, 'Holy Explosion should grant 4s Exalted Edge');
+  assert.ok(king.holySwordEchoes?.some(e => e.type === 'pillar' && e.label === 'EXALTED DETONATION'), 'Holy Explosion should queue a delayed exalted detonation');
 }
 
 {
@@ -245,6 +247,8 @@ function runAttack(unit, enemy, context) {
   assert.ok(damageEvents.find(event => event.target === main && event.amount > king.dmg * 5.0), 'Divine Ruination should gain seal bonus damage');
   assert.ok(splash.hp < splash.maxHp, 'Divine Ruination should splash nearby enemies');
   assert.ok(king.divineRuinationEcho, 'Divine Ruination should queue the 3-seal echo hit');
+  assert.equal(king.divineRuinationEcho.label, 'THREE-SEAL RUINATION', 'Three-seal Divine Ruination should queue the stronger named echo');
+  assert.ok(king.divineRuinationEcho.splashDmg > 0, 'Divine Ruination echo should include second-impact splash damage');
 }
 
 {
@@ -291,6 +295,7 @@ function runAttack(unit, enemy, context) {
   assert.ok(main.hp < mainBefore, 'Crush Judgment should damage a priority target within 230px');
   assert.equal(main.judgmentSealStacks, 1, 'Crush Judgment should apply one Judgment Seal');
   assert.ok(events.includes('CRUSH JUDGMENT'), 'Crush Judgment should emit readable VFX text');
+  assert.ok(king.holySwordEchoes?.some(e => e.label === 'CRYSTAL AFTERIMAGE'), 'Crush Judgment should queue a crystal afterimage hit');
 
   king.abilCD.hallowedBladefall = 0;
   const splashBefore = splash.hp;
@@ -299,6 +304,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(main.judgmentSealStacks, 2, 'Hallowed Bladefall should apply one more Judgment Seal to the main target');
   assert.equal(king.crystalGuardDR, 0.12, 'Hallowed Bladefall should grant stronger Crystal Guard');
   assert.ok(events.includes('HALLOWED BLADEFALL'), 'Hallowed Bladefall should emit readable VFX text');
+  assert.ok(king.holySwordEchoes?.some(e => e.label === 'BLADEFALL ECHO'), 'Hallowed Bladefall should queue a delayed bladefall echo');
 }
 
 console.log('King Holy Sword Saint 3/5/10 smoke passed');

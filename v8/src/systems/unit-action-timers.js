@@ -37,8 +37,8 @@ export function tickUnitActionTimers(unit, {
   tickBoneShield(unit, { emitParticle });
   tickRemorselessWinter(unit, { frame, enemies, groundEffects, dealDamage, emitParticle, playFrostBolt, shake });
   tickDancingRuneWeapon(unit);
-  tickRoninDragoonTimers(unit, { frame, emitParticle });
-  tickKingHolySwordTimers(unit, { frame, beamEffects, groundEffects, dealDamage, emitParticle, addDamageText, shake });
+  tickRoninDragoonTimers(unit, { frame, enemies, beamEffects, groundEffects, dealDamage, emitParticle, addDamageText, shake });
+  tickKingHolySwordTimers(unit, { frame, enemies, beamEffects, groundEffects, dealDamage, emitParticle, addDamageText, shake });
 }
 
 function tickBarrage(unit, {
@@ -525,7 +525,13 @@ function tickDancingRuneWeapon(unit) {
 
 function tickRoninDragoonTimers(unit, {
   frame,
+  enemies,
+  beamEffects,
+  groundEffects,
+  dealDamage,
   emitParticle,
+  addDamageText,
+  shake,
 }) {
   if (unit.thirdEyeTimer > 0) {
     unit.thirdEyeTimer--;
@@ -537,10 +543,84 @@ function tickRoninDragoonTimers(unit, {
     if (frame % 5 === 0) emitParticle(unit.x, unit.y - unit.size * 0.4, frame % 10 === 0 ? '#ff4f5e' : '#48c7ff', 2, 2);
     if (unit.lifeOfDragonTimer <= 0) unit.lifeOfDragonAtkMult = 0;
   }
+  if (Array.isArray(unit.roninEchoes) && unit.roninEchoes.length > 0) {
+    for (let i = unit.roninEchoes.length - 1; i >= 0; i--) {
+      const echo = unit.roninEchoes[i];
+      echo.timer--;
+      if (echo.timer > 0) {
+        if (frame % 3 === 0) emitParticle(echo.x, echo.y - 18, echo.type === 'nastrond' ? '#ff4f5e' : '#48c7ff', 2, 3);
+        continue;
+      }
+      unit.roninEchoes.splice(i, 1);
+      if (echo.type === 'gekko') {
+        let hits = 0;
+        for (const enemy of enemies) {
+          if (!isValidPlayerOffensiveTarget(enemy) || dist({ x: echo.x, y: echo.y }, enemy) > (echo.radius || 90)) continue;
+          dealDamage(enemy, echo.dmg || Math.round((unit.dmg || 1) * 1.0), unit, 'normal');
+          emitParticle(enemy.x, enemy.y, '#48c7ff', 10, 4);
+          emitParticle(enemy.x, enemy.y, '#ff4f5e', 6, 3);
+          hits++;
+        }
+        beamEffects.push({ x1: echo.x, y1: echo.y - 95, x2: echo.x, y2: echo.y + 8, color: '#48c7ffcc', width: 7, life: 0.30, maxLife: 0.30, straight: true });
+        groundEffects.push({ x: echo.x, y: echo.y, r: 0, maxR: echo.radius || 90, life: 0.62, color: '#48c7ff' });
+        groundEffects.push({ x: echo.x, y: echo.y, r: 0, maxR: (echo.radius || 90) + 30, life: 0.42, color: '#ff4f5e' });
+        addDamageText(echo.x, echo.y - 28, echo.label || 'DRAGOON ECHO', '#48c7ff', { sz: 12, bold: true });
+        if (hits) shake(5);
+      } else if (echo.type === 'nastrond') {
+        const len = echo.len || 240;
+        const width = echo.width || 80;
+        const angle = echo.angle || 0;
+        let hits = 0;
+        for (const enemy of enemies) {
+          if (!isValidPlayerOffensiveTarget(enemy)) continue;
+          const ex = enemy.x - echo.x;
+          const ey = enemy.y - echo.y;
+          const proj = ex * Math.cos(angle) + ey * Math.sin(angle);
+          if (proj < 0 || proj > len) continue;
+          const perp = Math.abs(ex * -Math.sin(angle) + ey * Math.cos(angle));
+          if (perp > width) continue;
+          dealDamage(enemy, echo.dmg || Math.round((unit.dmg || 1) * 1.2), unit, 'normal');
+          emitParticle(enemy.x, enemy.y, '#ff4f5e', 10, 4);
+          emitParticle(enemy.x, enemy.y, '#48c7ff', 8, 3);
+          hits++;
+        }
+        const endX = echo.x + Math.cos(angle) * len;
+        const endY = echo.y + Math.sin(angle) * len;
+        beamEffects.push({ x1: echo.x, y1: echo.y - 8, x2: endX, y2: endY - 8, color: '#ff4f5ecc', width: 8, life: 0.34, maxLife: 0.34, straight: true });
+        beamEffects.push({ x1: echo.x, y1: echo.y + 5, x2: endX, y2: endY + 5, color: '#48c7ffcc', width: 5, life: 0.28, maxLife: 0.28, straight: true });
+        groundEffects.push({ x: echo.x + Math.cos(angle) * len * 0.55, y: echo.y + Math.sin(angle) * len * 0.55, r: 0, maxR: len * 0.42, life: 0.48, color: '#ff4f5e', flatten: true });
+        addDamageText(echo.x + Math.cos(angle) * len * 0.45, echo.y + Math.sin(angle) * len * 0.45 - 24, echo.label || 'NASTROND ECHO', '#ff4f5e', { sz: 12, bold: true });
+        if (hits) shake(7);
+      } else if (echo.type === 'stardiver') {
+        const target = echo.target;
+        if (isValidPlayerOffensiveTarget(target)) {
+          dealDamage(target, echo.dmg || Math.round((unit.dmg || 1) * 2.0), unit, 'normal');
+          let splashHits = 0;
+          for (const enemy of enemies) {
+            if (enemy === target || !isValidPlayerOffensiveTarget(enemy) || dist(target, enemy) > (echo.radius || 100)) continue;
+            dealDamage(enemy, echo.splashDmg || Math.round((unit.dmg || 1) * 0.8), unit, 'normal');
+            emitParticle(enemy.x, enemy.y, '#48c7ff', 8, 3);
+            emitParticle(enemy.x, enemy.y, '#ff4f5e', 6, 3);
+            splashHits++;
+          }
+          beamEffects.push({ x1: target.x, y1: target.y - 130, x2: target.x, y2: target.y + 8, color: '#ff4f5ecc', width: 8, life: 0.34, maxLife: 0.34, straight: true });
+          beamEffects.push({ x1: target.x - 20, y1: target.y - 110, x2: target.x + 8, y2: target.y + 8, color: '#48c7ffcc', width: 5, life: 0.30, maxLife: 0.30, straight: true });
+          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: echo.radius || 100, life: 0.72, color: '#ff4f5e' });
+          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: (echo.radius || 100) + 42, life: 0.45, color: '#48c7ff' });
+          emitParticle(target.x, target.y, '#ff4f5e', 42, 7);
+          emitParticle(target.x, target.y, '#48c7ff', 28, 5);
+          addDamageText(target.x, target.y - target.size - 18, echo.label || 'STARDIVER ECHO', '#ff4f5e', { sz: 13, bold: true });
+          if (splashHits) addDamageText(target.x, target.y + 20, 'ECHO SPLASH x' + splashHits, '#48c7ff', { sz: 11, bold: true });
+          shake(10);
+        }
+      }
+    }
+  }
 }
 
 function tickKingHolySwordTimers(unit, {
   frame,
+  enemies,
   beamEffects,
   groundEffects,
   dealDamage,
@@ -562,6 +642,60 @@ function tickKingHolySwordTimers(unit, {
     unit.exaltedEdgeTimer--;
     if (frame % 7 === 0) emitParticle(unit.x - 4, unit.y - unit.size * 0.5, '#ffd966', 2, 2);
   }
+  if (Array.isArray(unit.holySwordEchoes) && unit.holySwordEchoes.length > 0) {
+    for (let i = unit.holySwordEchoes.length - 1; i >= 0; i--) {
+      const echo = unit.holySwordEchoes[i];
+      echo.timer--;
+      if (echo.timer > 0) {
+        if (frame % 3 === 0) emitParticle(echo.x, echo.y - 22, echo.type === 'pillar' ? '#fff2a8' : '#dff5ff', 2, 3);
+        continue;
+      }
+      unit.holySwordEchoes.splice(i, 1);
+      if (echo.type === 'lightning') {
+        const len = echo.len || 220;
+        const width = echo.width || 50;
+        const angle = echo.angle || 0;
+        let hits = 0;
+        for (const enemy of enemies) {
+          if (!isValidPlayerOffensiveTarget(enemy)) continue;
+          const dx = enemy.x - echo.x;
+          const dy = enemy.y - echo.y;
+          const proj = dx * Math.cos(angle) + dy * Math.sin(angle);
+          if (proj < 0 || proj > len) continue;
+          const perp = Math.abs(dx * -Math.sin(angle) + dy * Math.cos(angle));
+          if (perp > width) continue;
+          dealDamage(enemy, echo.dmg || Math.round((unit.dmg || 1) * 0.9), unit, 'magic');
+          emitParticle(enemy.x, enemy.y, '#fff2a8', 10, 4);
+          emitParticle(enemy.x, enemy.y, '#ffffff', 6, 3);
+          hits++;
+        }
+        const endX = echo.x + Math.cos(angle) * len;
+        const endY = echo.y + Math.sin(angle) * len;
+        beamEffects.push({ x1: echo.x, y1: echo.y, x2: endX, y2: endY, life: 0.34, maxLife: 0.34, color: '#ffffff', width: 8, straight: true });
+        beamEffects.push({ x1: echo.x, y1: echo.y - 8, x2: endX, y2: endY - 8, life: 0.28, maxLife: 0.28, color: '#ffd966', width: 4, straight: true });
+        groundEffects.push({ x: echo.x + Math.cos(angle) * len * 0.55, y: echo.y + Math.sin(angle) * len * 0.55, r: 0, maxR: len * 0.44, life: 0.48, color: '#fff2a8', flatten: true });
+        addDamageText(echo.x + Math.cos(angle) * len * 0.45, echo.y + Math.sin(angle) * len * 0.45 - 22, echo.label || 'SAINT AFTERIMAGE', '#fff2a8', { sz: 12, bold: true });
+        if (hits) shake(7);
+      } else if (echo.type === 'pillar') {
+        let hits = 0;
+        for (const enemy of enemies) {
+          if (!isValidPlayerOffensiveTarget(enemy) || dist({ x: echo.x, y: echo.y }, enemy) > (echo.radius || 100)) continue;
+          dealDamage(enemy, echo.dmg || Math.round((unit.dmg || 1) * 1.4), unit, 'magic');
+          emitParticle(enemy.x, enemy.y, '#ffd966', 12, 5);
+          emitParticle(enemy.x, enemy.y, '#dff5ff', 8, 3);
+          hits++;
+        }
+        for (let j = 0; j < 7; j++) {
+          const off = (j - 3) * 16;
+          beamEffects.push({ x1: echo.x + off, y1: echo.y - 125, x2: echo.x + off * 0.25, y2: echo.y + 8, life: 0.38, maxLife: 0.38, color: j % 2 ? '#dff5ffcc' : '#ffd966cc', width: 3.5, straight: true });
+        }
+        groundEffects.push({ x: echo.x, y: echo.y, r: 0, maxR: echo.radius || 100, life: 0.76, color: '#ffd966' });
+        groundEffects.push({ x: echo.x, y: echo.y, r: 0, maxR: (echo.radius || 100) + 42, life: 0.48, color: '#dff5ff' });
+        addDamageText(echo.x, echo.y - 30, echo.label || 'EXALTED DETONATION', '#fff2a8', { sz: 13, bold: true });
+        if (hits) shake(9);
+      }
+    }
+  }
   if (!unit.divineRuinationEcho) return;
   unit.divineRuinationEcho.timer--;
   const echo = unit.divineRuinationEcho;
@@ -573,10 +707,19 @@ function tickKingHolySwordTimers(unit, {
   unit.divineRuinationEcho = null;
   if (!isValidPlayerOffensiveTarget(target)) return;
   dealDamage(target, echo.dmg || Math.round((unit.dmg || 1) * 1.0), unit, 'magic');
+  let splashHits = 0;
+  for (const enemy of enemies) {
+    if (enemy === target || !isValidPlayerOffensiveTarget(enemy) || dist(target, enemy) > (echo.radius || 64)) continue;
+    dealDamage(enemy, echo.splashDmg || Math.round((unit.dmg || 1) * 0.45), unit, 'magic');
+    emitParticle(enemy.x, enemy.y, '#ffd966', 8, 4);
+    emitParticle(enemy.x, enemy.y, '#dff5ff', 5, 3);
+    splashHits++;
+  }
   beamEffects.push({ x1: target.x, y1: target.y - 95, x2: target.x, y2: target.y + 8, life: 0.30, maxLife: 0.30, color: '#fff2a8', width: 6, straight: true });
-  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: 62, life: 0.48, color: '#dff5ff' });
+  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: echo.radius || 62, life: 0.48, color: '#dff5ff' });
   emitParticle(target.x, target.y, '#ffd966', 28, 6);
   emitParticle(target.x, target.y, '#ffffff', 12, 4);
-  addDamageText(target.x, target.y - target.size - 10, 'RUINATION ECHO', '#fff2a8', { sz: 12, bold: true });
+  addDamageText(target.x, target.y - target.size - 10, echo.label || 'RUINATION ECHO', '#fff2a8', { sz: 12, bold: true });
+  if (splashHits) addDamageText(target.x, target.y + 18, 'ECHO SPLASH x' + splashHits, '#dff5ff', { sz: 11, bold: true });
   shake(8);
 }

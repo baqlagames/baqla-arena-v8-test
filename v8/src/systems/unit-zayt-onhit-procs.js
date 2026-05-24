@@ -131,10 +131,13 @@ export function applyZaytOnHitProcs(unit, target, {
       beamFx.push({ x1: u.x, y1: u.y, x2: u.x + Math.cos(angle) * length, y2: u.y + Math.sin(angle) * length, life: 0.24, maxLife: 0.24, color: '#fff2a8', width: 6, straight: true });
       beamFx.push({ x1: u.x, y1: u.y - 6, x2: u.x + Math.cos(angle) * length, y2: u.y + Math.sin(angle) * length - 6, life: 0.18, maxLife: 0.18, color: '#ffffff', width: 2, straight: true });
       groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 50, life: 0.36, swipeArc: true, swipeAngle: angle, color: '#ffd966' });
+      groundFx.push({ x: u.x + Math.cos(angle) * (length * 0.52), y: u.y + Math.sin(angle) * (length * 0.52), r: 0, maxR: length * 0.40, life: 0.42, color: '#fff2a8', flatten: true });
       addP(t.x, t.y, '#ffd966', 20, 4);
       addP(t.x, t.y, '#ffffff', 10, 3);
       addDmg(t.x, t.y - t.size - 8, 'LIGHTNING STAB', '#fff2a8', { sz: 13, bold: true, outline: '#5a4a10' });
       if (lineHits) addDmg(t.x, t.y + 16, 'LINE x' + lineHits, '#ffffff', { sz: 10, bold: true });
+      u.holySwordEchoes = u.holySwordEchoes || [];
+      u.holySwordEchoes.push({ type: 'lightning', timer: 10, x: u.x, y: u.y, angle, len: length, width: width + 18, dmg: Math.round((u.dmg || dmg || 1) * 0.95), label: 'SAINT AFTERIMAGE' });
       u.swordSaintCycle = 'holy';
       if (SFX.holyLight) SFX.holyLight();
     }
@@ -159,10 +162,16 @@ export function applyZaytOnHitProcs(unit, target, {
       beamFx.push({ x1: t.x - 12, y1: t.y - 70, x2: t.x + 12, y2: t.y + 8, life: 0.28, maxLife: 0.28, color: '#dff5ff', width: 3, straight: true });
       groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius, life: 0.68, color: '#ffd966' });
       groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius + 34, life: 0.4, color: '#dff5ff' });
+      for (let i = 0; i < 6; i++) {
+        const swordAngle = Math.PI * 2 * i / 6;
+        beamFx.push({ x1: t.x + Math.cos(swordAngle) * radius * 0.55, y1: t.y - 95 + Math.sin(swordAngle) * 8, x2: t.x + Math.cos(swordAngle) * radius * 0.12, y2: t.y + Math.sin(swordAngle) * radius * 0.12, life: 0.32, maxLife: 0.32, color: i % 2 ? '#dff5ffcc' : '#ffd966cc', width: 3, straight: true });
+      }
       addP(t.x, t.y, '#ffd966', 34, 6);
       addP(t.x, t.y, '#ffffff', 14, 4);
       addDmg(t.x, t.y - t.size - 12, 'HOLY EXPLOSION', '#fff2a8', { sz: 14, bold: true, outline: '#5a4a10' });
       if (splashHits) addDmg(t.x, t.y + 20, 'SPLASH x' + splashHits, '#fff2a8', { sz: 11, bold: true });
+      u.holySwordEchoes = u.holySwordEchoes || [];
+      u.holySwordEchoes.push({ type: 'pillar', timer: 12, x: t.x, y: t.y, radius: radius + 22, dmg: Math.round((u.dmg || dmg || 1) * 1.45), label: 'EXALTED DETONATION' });
       showFlash('HOLY EXPLOSION', '#fff2a8', 42);
       shake(9);
       u.swordSaintCycle = 'stasis';

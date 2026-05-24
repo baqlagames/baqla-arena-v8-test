@@ -27,6 +27,80 @@ export function createActorPlayerDamageRenderer({
 
   const drawFns = {};
 
+drawFns.drawRoninDragoon=function(x,y,u){
+  const s=u.size,f=u.facing||1;
+  const sen=u.azureSenStacks||0;
+  const life=u.lifeOfDragonTimer>0;
+  const guard=u.thirdEyeTimer>0;
+  ctx.save();
+  ctx.fillStyle='#0007';ctx.beginPath();ctx.ellipse(x,y+s+2,s*0.66,s*0.14,0,0,Math.PI*2);ctx.fill();
+  if(life||sen>=3){
+    ctx.globalAlpha=life?0.28:0.18;
+    const grad=ctx.createRadialGradient(x,y,0,x,y,s*2.0);
+    grad.addColorStop(0,life?'#48c7ff':'#ff4f5e');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.arc(x,y,s*2.0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  if(guard){
+    ctx.strokeStyle='#7fd7ff';ctx.lineWidth=2;ctx.globalAlpha=0.55+Math.sin(frame*0.2)*0.15;
+    ctx.beginPath();ctx.arc(x,y,s*1.25,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  // Slim root-warrior body with samurai armor plates.
+  ctx.fillStyle='#d9eef8';
+  ctx.beginPath();
+  ctx.moveTo(x,y-s*1.02);
+  ctx.bezierCurveTo(x+s*0.42,y-s*0.86,x+s*0.48,y+s*0.36,x,y+s*0.96);
+  ctx.bezierCurveTo(x-s*0.48,y+s*0.36,x-s*0.42,y-s*0.86,x,y-s*1.02);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#4b6c82';ctx.lineWidth=1.1;ctx.stroke();
+  ctx.fillStyle='#1b2940';
+  ctx.beginPath();ctx.moveTo(x-s*0.42,y-s*0.42);ctx.lineTo(x+s*0.42,y-s*0.42);ctx.lineTo(x+s*0.34,y+s*0.32);ctx.lineTo(x-s*0.34,y+s*0.32);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#2f6fc7';ctx.fillRect(x-s*0.34,y-s*0.28,s*0.68,s*0.13);
+  ctx.fillStyle='#ff4f5e';ctx.fillRect(x-s*0.30,y+s*0.04,s*0.60,s*0.12);
+  ctx.fillStyle='#0f1a2d';
+  ctx.beginPath();ctx.ellipse(x-s*0.48,y-s*0.24,s*0.22,s*0.16,0.25,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x+s*0.48,y-s*0.24,s*0.22,s*0.16,-0.25,0,Math.PI*2);ctx.fill();
+  // Kabuto helm with crescent/dragoon horns.
+  ctx.fillStyle='#122038';
+  ctx.beginPath();ctx.ellipse(x,y-s*0.72,s*0.42,s*0.30,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#ffd166';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x-s*0.22,y-s*0.92);ctx.quadraticCurveTo(x-s*0.50,y-s*1.24,x-s*0.05,y-s*1.05);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+s*0.22,y-s*0.92);ctx.quadraticCurveTo(x+s*0.50,y-s*1.24,x+s*0.05,y-s*1.05);ctx.stroke();
+  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(x-s*0.12,y-s*0.74,s*0.045,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+s*0.12,y-s*0.74,s*0.045,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#48c7ff';ctx.beginPath();ctx.arc(x-s*0.12,y-s*0.74,s*0.022,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ff4f5e';ctx.beginPath();ctx.arc(x+s*0.12,y-s*0.74,s*0.022,0,Math.PI*2);ctx.fill();
+  // Katana sweep behind body.
+  ctx.strokeStyle='#1a2030';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(x-f*s*0.52,y+s*0.58);ctx.lineTo(x+f*s*0.72,y-s*0.58);ctx.stroke();
+  ctx.strokeStyle='#e8fbff';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x-f*s*0.48,y+s*0.50);ctx.lineTo(x+f*s*0.84,y-s*0.82);ctx.stroke();
+  ctx.strokeStyle='#48c7ff';ctx.lineWidth=1;ctx.globalAlpha=0.8;
+  ctx.beginPath();ctx.moveTo(x+f*s*0.18,y-s*0.12);ctx.lineTo(x+f*s*0.84,y-s*0.82);ctx.stroke();
+  ctx.globalAlpha=1;
+  // Dragoon lance on front side.
+  ctx.strokeStyle='#5b1b2a';ctx.lineWidth=2.6;
+  ctx.beginPath();ctx.moveTo(x+f*s*0.48,y+s*0.68);ctx.lineTo(x+f*s*0.88,y-s*1.15);ctx.stroke();
+  ctx.fillStyle='#ff4f5e';
+  ctx.beginPath();ctx.moveTo(x+f*s*0.88,y-s*1.15);ctx.lineTo(x+f*s*1.02,y-s*0.86);ctx.lineTo(x+f*s*0.72,y-s*0.92);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ffd166';ctx.beginPath();ctx.arc(x+f*s*0.55,y+s*0.28,s*0.055,0,Math.PI*2);ctx.fill();
+  // Sen gems under the sprite.
+  for(let i=0;i<3;i++){
+    const lit=i<sen;
+    const gx=x+(i-1)*s*0.22,gy=y+s*1.08;
+    ctx.fillStyle=lit?(['#ffd166','#48c7ff','#ff4f5e'][i]):'#111827';
+    ctx.beginPath();ctx.arc(gx,gy,s*0.045,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#0008';ctx.lineWidth=0.8;ctx.stroke();
+  }
+  if(frame%12===0){
+    const col=life?(frame%24===0?'#ff4f5e':'#48c7ff'):(sen>=2?'#ffd166':'#48c7ff');
+    addP(x+rnd(-s*0.6,s*0.6),y+rnd(-s*0.9,s*0.55),col,1,2.5);
+  }
+  ctx.restore();
+};
+
 drawFns.drawFelfel=function(x,y,u){
   const s=u.size,f=u.facing||1;
   const isStealth=u.stealth&&u.stealthHits===0;

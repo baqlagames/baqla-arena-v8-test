@@ -372,6 +372,8 @@ const ABILITIES={
     beamFx.push({x1:target.x,y1:target.y-50,x2:target.x,y2:target.y+10,color:'#ffd966cc',width:6,life:0.25,maxLife:0.25,straight:true});
     groundFx.push({x:target.x,y:target.y,r:0,maxR:56,life:0.45,swipeSlam:true,color:'#ffd966'});
     groundFx.push({x:target.x,y:target.y,r:0,maxR:78,life:0.32,color:'#dff5ff'});
+    u.holySwordEchoes=u.holySwordEchoes||[];
+    u.holySwordEchoes.push({type:'lightning',timer:8,x:fromX,y:fromY,angle,len:Math.max(140,Math.min((cfg.crushRange||210)+55,dist({x:fromX,y:fromY},target)+90)),width:64,dmg:Math.round(u.dmg*1.15),label:'CRYSTAL AFTERIMAGE'});
     addP(target.x,target.y,'#ffd966',24,5);
     addP(target.x,target.y,'#ffffff',10,3);
     addDmg(target.x,target.y-target.size-8,'CRUSH JUDGMENT','#fff2a8',{sz:13,bold:true,outline:'#5a4a10'});
@@ -413,6 +415,8 @@ const ABILITIES={
     }
     groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.70,color:'#ffd966',warningRing:true});
     groundFx.push({x:best.x,y:best.y,r:0,maxR:radius+38,life:0.44,color:'#dff5ff'});
+    u.holySwordEchoes=u.holySwordEchoes||[];
+    u.holySwordEchoes.push({type:'pillar',timer:12,x:best.x,y:best.y,radius:radius+42,dmg:Math.round(u.dmg*1.90),label:'BLADEFALL ECHO'});
     addP(best.x,best.y,'#ffd966',42,7);
     addP(best.x,best.y,'#ffffff',18,4);
     addDmg(best.x,best.y-(main.size||24)-10,'HALLOWED BLADEFALL','#fff2a8',{sz:14,bold:true,outline:'#5a4a10'});
@@ -678,6 +682,8 @@ const ABILITIES={
     beamFx.push({x1:fromX,y1:fromY-10,x2:u.x,y2:u.y-4,color:'#48c7ffaa',width:2,life:0.18,maxLife:0.18,straight:true});
     for(let i=0;i<9;i++){const f=i/9;addP(fromX+(u.x-fromX)*f+rnd(-3,3),fromY+(u.y-fromY)*f+rnd(-3,3),'#ffd166',1.5,3)}
     groundFx.push({x:target.x,y:target.y,r:0,maxR:50,life:0.38,swipeArc:true,swipeAngle:angle,color:'#ffd166'});
+    u.roninEchoes=u.roninEchoes||[];
+    u.roninEchoes.push({type:'gekko',timer:8,x:target.x,y:target.y,radius:72,dmg:Math.round(u.dmg*1.10*arena_roninDamageMult(u)),label:'IAI AFTERIMAGE'});
     addP(target.x,target.y,'#ffd166',20,4);
     addDmg(target.x,target.y-target.size-8,'HISSATSU: GYOTEN','#ffd166',{sz:13,bold:true});
     screenShake=Math.max(screenShake,5);
@@ -713,6 +719,8 @@ const ABILITIES={
     beamFx.push({x1:fromX,y1:fromY-24,x2:u.x,y2:u.y,color:'#ff4f5ecc',width:3,life:0.24,maxLife:0.24,straight:true});
     groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.65,color:'#ff4f5e'});
     groundFx.push({x:best.x,y:best.y,r:0,maxR:radius*0.62,life:0.45,color:'#48c7ff'});
+    u.roninEchoes=u.roninEchoes||[];
+    u.roninEchoes.push({type:'gekko',timer:12,x:best.x,y:best.y,radius:radius+45,dmg:Math.round(u.dmg*1.85*arena_roninDamageMult(u)),label:'DRAGONFALL AFTERSHOCK'});
     addP(best.x,best.y,'#ff4f5e',34,6);
     addP(best.x,best.y,'#48c7ff',24,5);
     addDmg(best.x,best.y-28,'GEIRSKOGUL DIVE','#48c7ff',{sz:14,bold:true});
