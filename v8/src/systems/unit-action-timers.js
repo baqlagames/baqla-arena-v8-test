@@ -37,6 +37,8 @@ export function tickUnitActionTimers(unit, {
   tickBoneShield(unit, { emitParticle });
   tickRemorselessWinter(unit, { frame, enemies, groundEffects, dealDamage, emitParticle, playFrostBolt, shake });
   tickDancingRuneWeapon(unit);
+  tickRoninDragoonTimers(unit, { frame, emitParticle });
+  tickKingHolySwordTimers(unit, { frame, beamEffects, groundEffects, dealDamage, emitParticle, addDamageText, shake });
 }
 
 function tickBarrage(unit, {
@@ -519,4 +521,62 @@ function tickDancingRuneWeapon(unit) {
 
   unit.dancingRuneWeaponTimer--;
   if (unit.dancingRuneWeaponTimer <= 0) unit.drwMirrorDmg = 0;
+}
+
+function tickRoninDragoonTimers(unit, {
+  frame,
+  emitParticle,
+}) {
+  if (unit.thirdEyeTimer > 0) {
+    unit.thirdEyeTimer--;
+    if (frame % 6 === 0) emitParticle(unit.x, unit.y - unit.size * 0.35, '#7fd7ff', 2, 2);
+    if (unit.thirdEyeTimer <= 0) unit.thirdEyeDR = 0;
+  }
+  if (unit.lifeOfDragonTimer > 0) {
+    unit.lifeOfDragonTimer--;
+    if (frame % 5 === 0) emitParticle(unit.x, unit.y - unit.size * 0.4, frame % 10 === 0 ? '#ff4f5e' : '#48c7ff', 2, 2);
+    if (unit.lifeOfDragonTimer <= 0) unit.lifeOfDragonAtkMult = 0;
+  }
+}
+
+function tickKingHolySwordTimers(unit, {
+  frame,
+  beamEffects,
+  groundEffects,
+  dealDamage,
+  emitParticle,
+  addDamageText,
+  shake,
+}) {
+  if (unit.crystalGuardTimer > 0) {
+    unit.crystalGuardTimer--;
+    if (frame % 8 === 0) emitParticle(unit.x, unit.y - unit.size * 0.35, '#fff2a8', 2, 2);
+    if (unit.crystalGuardTimer <= 0) unit.crystalGuardDR = 0;
+  }
+  if (unit.saintSwiftnessTimer > 0) {
+    unit.saintSwiftnessTimer--;
+    if (frame % 6 === 0) emitParticle(unit.x + 4, unit.y - unit.size * 0.3, '#dff5ff', 2, 2);
+    if (unit.saintSwiftnessTimer <= 0) unit.saintSwiftnessAtkMult = 0;
+  }
+  if (unit.exaltedEdgeTimer > 0) {
+    unit.exaltedEdgeTimer--;
+    if (frame % 7 === 0) emitParticle(unit.x - 4, unit.y - unit.size * 0.5, '#ffd966', 2, 2);
+  }
+  if (!unit.divineRuinationEcho) return;
+  unit.divineRuinationEcho.timer--;
+  const echo = unit.divineRuinationEcho;
+  const target = echo.target;
+  if (echo.timer > 0) {
+    if (frame % 4 === 0) emitParticle(echo.x, echo.y - 36, '#fff2a8', 2, 3);
+    return;
+  }
+  unit.divineRuinationEcho = null;
+  if (!isValidPlayerOffensiveTarget(target)) return;
+  dealDamage(target, echo.dmg || Math.round((unit.dmg || 1) * 1.0), unit, 'magic');
+  beamEffects.push({ x1: target.x, y1: target.y - 95, x2: target.x, y2: target.y + 8, life: 0.30, maxLife: 0.30, color: '#fff2a8', width: 6, straight: true });
+  groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: 62, life: 0.48, color: '#dff5ff' });
+  emitParticle(target.x, target.y, '#ffd966', 28, 6);
+  emitParticle(target.x, target.y, '#ffffff', 12, 4);
+  addDamageText(target.x, target.y - target.size - 10, 'RUINATION ECHO', '#fff2a8', { sz: 12, bold: true });
+  shake(8);
 }

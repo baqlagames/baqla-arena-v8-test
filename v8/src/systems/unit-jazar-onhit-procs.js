@@ -1,5 +1,32 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
+import { limitBurstLanding } from './combat-targeting.js';
+
+function roninSenStacks(u) {
+  return Math.min(3, u.azureSenStacks || 0);
+}
+
+function roninDamageMult(u) {
+  const cfg = u.roninDragoonCombo || {};
+  return 1 + roninSenStacks(u) * (cfg.senDmgPerStack || 0.03);
+}
+
+function syncRoninSenStacks(u) {
+  const flags = u.azureSenFlags || {};
+  u.azureSenStacks = Math.min(3, (flags.setsu ? 1 : 0) + (flags.getsu ? 1 : 0) + (flags.ka ? 1 : 0));
+}
+
+function grantRoninSen(u, key) {
+  if (!u.azureSenFlags) u.azureSenFlags = { setsu: false, getsu: false, ka: false };
+  u.azureSenFlags[key] = true;
+  syncRoninSenStacks(u);
+}
+
+function grantRoninThirdEye(u) {
+  const cfg = u.thirdEye || u.roninDragoonCombo || {};
+  u.thirdEyeTimer = Math.max(u.thirdEyeTimer || 0, cfg.dur || cfg.thirdEyeDur || Math.round(1.5 * GAME_TICK_HZ));
+  u.thirdEyeDR = Math.max(u.thirdEyeDR || 0, cfg.dr || cfg.thirdEyeDr || 0.20);
+}
 
 export function applyJazarOnHitProcs(unit, target, {
   frame,
@@ -23,6 +50,86 @@ export function applyJazarOnHitProcs(unit, target, {
   const groundFx = groundEffects;
   const addP = emitParticle;
   const addDmg = addDamageText;
+
+  if (u.unitIdx === 13 && u.roninDragoonCombo && t.hp > 0) {
+    const cfg = u.roninDragoonCombo;
+    if (_ohTier === 3) {
+      const bonusDamage = Math.round(u.dmg * (cfg.hakazeMult || 0.65) * roninDamageMult(u));
+      dealDamage(t, bonusDamage, u, 'normal');
+      grantRoninSen(u, 'setsu');
+      const angle = Math.atan2(t.y - u.y, t.x - u.x);
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 42, life: 0.45, swipeArc: true, swipeAngle: angle, color: '#ffd166' });
+      beamFx.push({ x1: u.x, y1: u.y, x2: t.x, y2: t.y, color: '#ffd166aa', width: 2.5, life: 0.18, maxLife: 0.18, straight: true });
+      addP(t.x, t.y, '#ffd166', 16, 4);
+      addP(t.x, t.y, '#ffffff', 6, 2);
+      addDmg(t.x, t.y - t.size - 6, 'HAKAZE THRUST', '#ffd166', { sz: 12, bold: true });
+    }
+    if (_ohTier === 5) {
+      const fromX = u.x;
+      const fromY = u.y;
+      const angle = Math.atan2(t.y - u.y, t.x - u.x);
+      const land = limitBurstLanding(u, t.x - Math.cos(angle) * 18, t.y - Math.sin(angle) * 18, 90);
+      u.x = land.x;
+      u.y = land.y;
+      if (typeof clampToArena === 'function') clampToArena(u);
+      const damage = Math.round(u.dmg * (cfg.gekkoMult || 1.25) * roninDamageMult(u));
+      dealDamage(t, damage, u, 'normal');
+      let splashHits = 0;
+      const radius = cfg.gekkoSplashRadius || 55;
+      const splashDamage = Math.round(u.dmg * (cfg.gekkoSplashMult || 0.45) * roninDamageMult(u));
+      for (const enemy of enemies) {
+        if (enemy === t || enemy.hp <= 0 || dist(t, enemy) > radius) continue;
+        dealDamage(enemy, splashDamage, u, 'normal');
+        addP(enemy.x, enemy.y, '#48c7ff', 8, 3);
+        splashHits++;
+      }
+      grantRoninSen(u, 'getsu');
+      grantRoninThirdEye(u);
+      beamFx.push({ x1: fromX, y1: fromY, x2: u.x, y2: u.y, color: '#48c7ffaa', width: 5, life: 0.24, maxLife: 0.24, straight: true });
+      beamFx.push({ x1: fromX, y1: fromY - 18, x2: u.x, y2: u.y, color: '#ffffffaa', width: 2, life: 0.20, maxLife: 0.20, straight: true });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius, life: 0.45, color: '#48c7ff' });
+      addP(t.x, t.y, '#48c7ff', 24, 5);
+      addP(u.x, u.y, '#7fd7ff', 10, 3);
+      addDmg(t.x, t.y - t.size - 8, 'GEKKO DIVE', '#48c7ff', { sz: 13, bold: true });
+      if (splashHits) addDmg(t.x, t.y + 16, 'SPLASH x' + splashHits, '#7fd7ff', { sz: 11, bold: true });
+    }
+    if (_ohTier === 10) {
+      const angle = Math.atan2(t.y - u.y, t.x - u.x);
+      const primaryDamage = Math.round(u.dmg * (cfg.nastrondMult || 2.20) * roninDamageMult(u));
+      dealDamage(t, primaryDamage, u, 'normal');
+      const lineDamage = Math.round(u.dmg * (cfg.nastrondLineMult || 1.10) * roninDamageMult(u));
+      const len = cfg.nastrondLength || 210;
+      const width = cfg.nastrondWidth || 54;
+      let lineHits = 0;
+      for (const enemy of enemies) {
+        if (enemy === t || enemy.hp <= 0) continue;
+        const ex = enemy.x - u.x;
+        const ey = enemy.y - u.y;
+        const proj = ex * Math.cos(angle) + ey * Math.sin(angle);
+        if (proj < 0 || proj > len) continue;
+        const perp = Math.abs(ex * -Math.sin(angle) + ey * Math.cos(angle));
+        if (perp > width) continue;
+        dealDamage(enemy, lineDamage, u, 'normal');
+        addP(enemy.x, enemy.y, '#48c7ff', 10, 3);
+        addP(enemy.x, enemy.y, '#ff4f5e', 6, 3);
+        lineHits++;
+      }
+      grantRoninSen(u, 'ka');
+      grantRoninThirdEye(u);
+      const endX = u.x + Math.cos(angle) * len;
+      const endY = u.y + Math.sin(angle) * len;
+      beamFx.push({ x1: u.x, y1: u.y, x2: endX, y2: endY, color: '#48c7ffcc', width: 7, life: 0.28, maxLife: 0.28, straight: true });
+      beamFx.push({ x1: u.x, y1: u.y, x2: endX, y2: endY, color: '#ff4f5ecc', width: 3.5, life: 0.24, maxLife: 0.24, straight: true });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 86, life: 0.55, color: '#ff4f5e', swipeArc: true, swipeAngle: angle });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 62, life: 0.38, color: '#48c7ff' });
+      addP(t.x, t.y, '#ff4f5e', 32, 5);
+      addP(t.x, t.y, '#48c7ff', 24, 5);
+      addDmg(t.x, t.y - t.size - 10, 'MIDARE NASTROND', '#ff4f5e', { sz: 14, bold: true });
+      if (lineHits) addDmg(t.x, t.y + 20, 'LINE x' + lineHits, '#48c7ff', { sz: 11, bold: true });
+      showFlash('MIDARE NASTROND', '#48c7ff', 35);
+      shake(7);
+    }
+  }
 
   if (u.risingSlash) {
     u.risingSlash.counter++;

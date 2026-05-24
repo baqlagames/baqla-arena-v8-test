@@ -92,6 +92,33 @@ function arena_jazarSignatureSurge(u,durSec,opts){
   groundFx.push({x:u.x,y:u.y,r:0,maxR:(o.aoe?u._jazarSigAoeRadius:55),life:0.45,color:col});
   addDmg(u.x,u.y-u.size-10,o.label||'BLADE HASTE!','#ffdd66',{sz:13,bold:true});
 }
+function arena_roninSenStacks(u){
+  return Math.min(3,u.azureSenStacks||0);
+}
+function arena_roninDamageMult(u){
+  const cfg=u.roninDragoonCombo||{};
+  return 1+arena_roninSenStacks(u)*(cfg.senDmgPerStack||0.03);
+}
+function arena_roninThirdEye(u){
+  if(!u||u.unitIdx!==13)return;
+  const cfg=u.thirdEye||u.roninDragoonCombo||{};
+  u.thirdEyeTimer=Math.max(u.thirdEyeTimer||0,cfg.dur||cfg.thirdEyeDur||Math.round(1.5*GAME_TICK_HZ));
+  u.thirdEyeDR=Math.max(u.thirdEyeDR||0,cfg.dr||cfg.thirdEyeDr||0.20);
+}
+function arena_findRoninPriorityTarget(u,maxRange){
+  let best=null,bestScore=Infinity;
+  for(const e of enemies){
+    if(!isValidPlayerOffensiveTarget(e))continue;
+    const d=dist(u,e);
+    if(d>maxRange)continue;
+    let score=d;
+    if(e.isBoss)score-=120;
+    if(e.elite||e.isElite)score-=70;
+    if(e.range>80)score-=20;
+    if(score<bestScore){bestScore=score;best=e}
+  }
+  return best;
+}
 function arena_findBestEnemyClusterPoint(origin,maxRange,clusterRadius){
   let best=null,bestScore=-Infinity;
   const maxR=maxRange==null?99999:maxRange;
@@ -112,6 +139,48 @@ function arena_findBestEnemyClusterPoint(origin,maxRange,clusterRadius){
     if(score>bestScore){bestScore=score;best=e}
   }
   return best?{x:best.x,y:best.y,target:best,score:bestScore}:null;
+}
+function arena_kingHolySwordConfig(u){
+  return u&&u.unitIdx===3&&!u.branch?(u.holySwordSaintCombo||null):null;
+}
+function arena_kingSealStacks(u,target){
+  if(!u||!target||target.judgmentSealSource!==u||!(target.judgmentSealTimer>0))return 0;
+  return Math.min(3,target.judgmentSealStacks||0);
+}
+function arena_applyKingJudgmentSeal(u,target){
+  const cfg=arena_kingHolySwordConfig(u);
+  if(!cfg||!u.judgmentSeals||!target||target.hp<=0)return 0;
+  if(target.judgmentSealSource!==u||!(target.judgmentSealTimer>0))target.judgmentSealStacks=0;
+  target.judgmentSealSource=u;
+  target.judgmentSealStacks=Math.min(cfg.sealMax||3,(target.judgmentSealStacks||0)+1);
+  target.judgmentSealTimer=cfg.sealDur||7*GAME_TICK_HZ;
+  addP(target.x,target.y,'#ffd966',9,3);
+  addP(target.x,target.y,'#dff5ff',4,2);
+  return target.judgmentSealStacks;
+}
+function arena_kingGrantCrystalGuard(u,dr,dur){
+  if(!u||u.unitIdx!==3||u.branch)return;
+  u.crystalGuardDR=Math.max(u.crystalGuardDR||0,dr||0.08);
+  u.crystalGuardTimer=Math.max(u.crystalGuardTimer||0,dur||3*GAME_TICK_HZ);
+}
+function arena_findKingHolySwordTarget(u,maxRange){
+  let best=null,bestScore=-Infinity;
+  for(const e of enemies){
+    if(!isValidPlayerOffensiveTarget(e))continue;
+    const d=dist(u,e);
+    if(d>maxRange)continue;
+    let count=0,hpScore=0;
+    for(const f of enemies){
+      if(!isValidPlayerOffensiveTarget(f)||dist(e,f)>90)continue;
+      count++;
+      hpScore+=Math.min(f.hp||0,900);
+    }
+    let score=count*80+hpScore*0.02-d*0.03;
+    if(e.isBoss)score+=160;
+    if(e.elite||e.isElite)score+=90;
+    if(score>bestScore){bestScore=score;best=e}
+  }
+  return best;
 }
 const ABILITIES={
   // ----- TANKS -----
@@ -283,6 +352,75 @@ const ABILITIES={
     addDmg(u.x,u.y-u.size-4,'TREE OF LIFE!','#33cc33');showFlash('INCARNATION: TREE OF LIFE!','#33cc33',75);screenShake=Math.max(screenShake,12);
   },
   // ----- ZAYT (Retribution Paladin) -----
+  crushJudgment(u){ // King Holy Sword Saint A3 - priority dash strike
+    const cfg=arena_kingHolySwordConfig(u);
+    if(!cfg)return;
+    const target=arena_findKingHolySwordTarget(u,cfg.crushRange||210);
+    if(!target)return;
+    if(!tryAbility(u,'crushJudgment','crushJudgment',12*GAME_TICK_HZ))return;
+    const fromX=u.x,fromY=u.y;
+    const angle=Math.atan2(target.y-u.y,target.x-u.x);
+    const land=limitBurstLanding(u,target.x-Math.cos(angle)*18,target.y-Math.sin(angle)*18,160);
+    u.x=land.x;u.y=land.y;
+    arena_clampToLeash(u);
+    const sealStacks=arena_kingSealStacks(u,target);
+    const damage=Math.round(u.dmg*(cfg.crushMult||2.10)*(1+sealStacks*(cfg.crushPerSealBonus||0.10)));
+    dealDamage(target,damage,u,'magic');
+    arena_applyKingJudgmentSeal(u,target);
+    if(!target.isBoss)target.stunned=Math.max(target.stunned||0,cfg.crushStunDur||GAME_TICK_HZ);
+    beamFx.push({x1:fromX,y1:fromY,x2:u.x,y2:u.y,color:'#fff2a8cc',width:5,life:0.24,maxLife:0.24,straight:true});
+    beamFx.push({x1:target.x,y1:target.y-50,x2:target.x,y2:target.y+10,color:'#ffd966cc',width:6,life:0.25,maxLife:0.25,straight:true});
+    groundFx.push({x:target.x,y:target.y,r:0,maxR:56,life:0.45,swipeSlam:true,color:'#ffd966'});
+    groundFx.push({x:target.x,y:target.y,r:0,maxR:78,life:0.32,color:'#dff5ff'});
+    addP(target.x,target.y,'#ffd966',24,5);
+    addP(target.x,target.y,'#ffffff',10,3);
+    addDmg(target.x,target.y-target.size-8,'CRUSH JUDGMENT','#fff2a8',{sz:13,bold:true,outline:'#5a4a10'});
+    screenShake=Math.max(screenShake,6);
+    if(SFX.heavySlash)SFX.heavySlash();
+  },
+  hallowedBladefall(u){ // King Holy Sword Saint A5 - leap into boss/elite/cluster
+    const cfg=arena_kingHolySwordConfig(u);
+    if(!cfg)return;
+    let best=arena_findBestEnemyClusterPoint(u,cfg.bladefallRange||260,cfg.bladefallRadius||90);
+    const priority=arena_findKingHolySwordTarget(u,cfg.bladefallRange||260);
+    if(priority&&(priority.isBoss||priority.elite||priority.isElite))best={x:priority.x,y:priority.y,target:priority};
+    if(!best||!best.target)return;
+    if(!tryAbility(u,'hallowedBladefall','hallowedBladefall',24*GAME_TICK_HZ))return;
+    const fromX=u.x,fromY=u.y;
+    const angle=Math.atan2(best.y-u.y,best.x-u.x);
+    const land=limitBurstLanding(u,best.x-Math.cos(angle)*14,best.y-Math.sin(angle)*14,220);
+    u.x=land.x;u.y=land.y;
+    arena_clampToLeash(u);
+    const radius=cfg.bladefallRadius||90;
+    const main=best.target;
+    const mainDamage=Math.round(u.dmg*(cfg.bladefallMainMult||3.0));
+    const splashDamage=Math.round(u.dmg*(cfg.bladefallSplashMult||1.35));
+    dealDamage(main,mainDamage,u,'magic');
+    arena_applyKingJudgmentSeal(u,main);
+    let splashHits=0;
+    for(const e of enemies){
+      if(e===main||!isValidPlayerOffensiveTarget(e)||dist({x:best.x,y:best.y},e)>radius)continue;
+      dealDamage(e,splashDamage,u,'magic');
+      addP(e.x,e.y,'#ffd966',12,4);
+      addP(e.x,e.y,'#dff5ff',6,3);
+      splashHits++;
+    }
+    arena_kingGrantCrystalGuard(u,cfg.bladefallGuardDr||0.12,cfg.bladefallGuardDur||Math.round(2.5*GAME_TICK_HZ));
+    beamFx.push({x1:fromX,y1:fromY-55,x2:u.x,y2:u.y,color:'#fff2a8cc',width:7,life:0.30,maxLife:0.30,straight:true});
+    for(let i=0;i<5;i++){
+      const ox=(i-2)*18;
+      beamFx.push({x1:best.x+ox,y1:best.y-95,x2:best.x+ox*0.35,y2:best.y+8,color:i%2?'#dff5ffcc':'#ffd966cc',width:3,life:0.34,maxLife:0.34,straight:true});
+    }
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.70,color:'#ffd966',warningRing:true});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius+38,life:0.44,color:'#dff5ff'});
+    addP(best.x,best.y,'#ffd966',42,7);
+    addP(best.x,best.y,'#ffffff',18,4);
+    addDmg(best.x,best.y-(main.size||24)-10,'HALLOWED BLADEFALL','#fff2a8',{sz:14,bold:true,outline:'#5a4a10'});
+    if(splashHits)addDmg(best.x,best.y+20,'SPLASH x'+splashHits,'#fff2a8',{sz:11,bold:true});
+    showFlash('HALLOWED BLADEFALL','#fff2a8',45);
+    screenShake=Math.max(screenShake,9);
+    if(SFX.heavySlash)SFX.heavySlash();
+  },
   divineJudgment(u){ // Zayt base L3 Ã¢â‚¬â€ holy burst on target + nearby enemies take splash
     if(!tryAbility(u,'divineJudgment','divineJudgment',8*GAME_TICK_HZ))return;
     const t=u.target;
@@ -522,6 +660,65 @@ const ABILITIES={
       units.push(clone);addP(cx,cy,'#ffaa44',16,4);
     }
     showFlash('SHADOW CLONES!','#ff8800',50);screenShake=Math.max(screenShake,4);
+  },
+  hissatsuGyoten(u){ // Ronin Dragoon A3 - dash strike
+    const cfg=u.roninDragoonCombo||{};
+    const target=arena_findRoninPriorityTarget(u,cfg.gyotenRange||220);
+    if(!target)return;
+    if(!tryAbility(u,'hissatsuGyoten','hissatsuGyoten',12*GAME_TICK_HZ))return;
+    const fromX=u.x,fromY=u.y;
+    const angle=Math.atan2(target.y-u.y,target.x-u.x);
+    const land=limitBurstLanding(u,target.x-Math.cos(angle)*18,target.y-Math.sin(angle)*18,170);
+    u.x=land.x;u.y=land.y;
+    arena_clampToLeash(u);
+    const damage=Math.round(u.dmg*(cfg.gyotenMult||2.0)*arena_roninDamageMult(u));
+    dealDamage(target,damage,u,'normal');
+    arena_roninThirdEye(u);
+    beamFx.push({x1:fromX,y1:fromY,x2:u.x,y2:u.y,color:'#ffd166cc',width:4.5,life:0.22,maxLife:0.22,straight:true});
+    beamFx.push({x1:fromX,y1:fromY-10,x2:u.x,y2:u.y-4,color:'#48c7ffaa',width:2,life:0.18,maxLife:0.18,straight:true});
+    for(let i=0;i<9;i++){const f=i/9;addP(fromX+(u.x-fromX)*f+rnd(-3,3),fromY+(u.y-fromY)*f+rnd(-3,3),'#ffd166',1.5,3)}
+    groundFx.push({x:target.x,y:target.y,r:0,maxR:50,life:0.38,swipeArc:true,swipeAngle:angle,color:'#ffd166'});
+    addP(target.x,target.y,'#ffd166',20,4);
+    addDmg(target.x,target.y-target.size-8,'HISSATSU: GYOTEN','#ffd166',{sz:13,bold:true});
+    screenShake=Math.max(screenShake,5);
+  },
+  geirskogulDive(u){ // Ronin Dragoon A5 - cluster leap
+    const cfg=u.roninDragoonCombo||{};
+    let best=arena_findBestEnemyClusterPoint(u,cfg.geirskogulRange||260,cfg.geirskogulRadius||95);
+    if(!best){
+      const target=arena_findRoninPriorityTarget(u,cfg.geirskogulRange||260);
+      if(target)best={x:target.x,y:target.y,target};
+    }
+    if(!best)return;
+    if(!tryAbility(u,'geirskogulDive','geirskogulDive',24*GAME_TICK_HZ))return;
+    const fromX=u.x,fromY=u.y;
+    const angle=Math.atan2(best.y-u.y,best.x-u.x);
+    const land=limitBurstLanding(u,best.x-Math.cos(angle)*12,best.y-Math.sin(angle)*12,220);
+    u.x=land.x;u.y=land.y;
+    arena_clampToLeash(u);
+    const radius=cfg.geirskogulRadius||95;
+    const damage=Math.round(u.dmg*(cfg.geirskogulMult||2.7)*arena_roninDamageMult(u));
+    let hits=0;
+    for(const e of enemies){
+      if(!isValidPlayerOffensiveTarget(e)||dist({x:best.x,y:best.y},e)>radius)continue;
+      dealDamage(e,damage,u,'normal');
+      addP(e.x,e.y,'#ff4f5e',12,4);
+      addP(e.x,e.y,'#48c7ff',8,3);
+      hits++;
+    }
+    arena_roninThirdEye(u);
+    u.lifeOfDragonTimer=Math.max(u.lifeOfDragonTimer||0,cfg.lifeOfDragonDur||5*GAME_TICK_HZ);
+    u.lifeOfDragonAtkMult=cfg.lifeOfDragonAtkMult||0.85;
+    beamFx.push({x1:fromX,y1:fromY-40,x2:u.x,y2:u.y,color:'#48c7ffcc',width:5.5,life:0.28,maxLife:0.28,straight:true});
+    beamFx.push({x1:fromX,y1:fromY-24,x2:u.x,y2:u.y,color:'#ff4f5ecc',width:3,life:0.24,maxLife:0.24,straight:true});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.65,color:'#ff4f5e'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius*0.62,life:0.45,color:'#48c7ff'});
+    addP(best.x,best.y,'#ff4f5e',34,6);
+    addP(best.x,best.y,'#48c7ff',24,5);
+    addDmg(best.x,best.y-28,'GEIRSKOGUL DIVE','#48c7ff',{sz:14,bold:true});
+    if(hits)addDmg(best.x,best.y+18,'LIFE OF DRAGON','#ff4f5e',{sz:12,bold:true});
+    showFlash('GEIRSKOGUL DIVE','#48c7ff',45);
+    screenShake=Math.max(screenShake,9);
   },
   colossusSmash(u){ // Jazar Sword Saint A3 Ã¢â‚¬â€ AoE armor shred
     if(!tryAbility(u,'colossusSmash','smash',900))return;

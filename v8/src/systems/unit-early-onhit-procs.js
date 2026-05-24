@@ -191,6 +191,141 @@ export function applyEarlyOnHitProcs(unit, target, {
     }
   }
 
+  if (u.bakdounesRestoCombo && t.hp > 0 && _ohTier > 0) {
+    const cfg = u.bakdounesRestoCombo;
+    const woundedAllies = units
+      .filter(ally => ally.isPlayer && ally.hp > 0 && !ally.isMinion && ally.maxHp > 0 && ally.hp < ally.maxHp)
+      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+
+    if (_ohTier === 3 && woundedAllies.length > 0) {
+      const ally = woundedAllies[0];
+      const heal = applyTrackedHeal(ally, Math.max(8, Math.round((u.healAmt || 60) * cfg.regrowthHealMult)), u, true);
+      if (ally._lifebloomStacks) {
+        for (const stack of ally._lifebloomStacks) if (stack.from === u) stack.timer = 8 * GAME_TICK_HZ;
+      }
+      addP(ally.x, ally.y - ally.size, '#88ffaa', 10, 4);
+      addP(ally.x + rnd(-8, 8), ally.y - ally.size - 4, '#ffffff', 4, 2);
+      beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.18, maxLife: 0.18, color: '#88ffaa', width: 2, straight: true });
+      if (heal > 0) addDmg(ally.x, ally.y - ally.size - 8, 'REGROWTH', '#88ffaa', { sz: 12, bold: true });
+    }
+
+    if (_ohTier === 5 && woundedAllies.length > 0) {
+      const heal = Math.max(8, Math.round((u.healAmt || 60) * cfg.medicaHealMult));
+      const targets = woundedAllies.slice(0, cfg.medicaTargets || 3);
+      for (const ally of targets) {
+        applyTrackedHeal(ally, heal, u, false);
+        const currentHot = ally._wgHot && ally._wgHot.timer > 0 ? ally._wgHot : null;
+        ally._wgHot = {
+          timer: Math.max((currentHot && currentHot.timer) || 0, cfg.medicaHotDur),
+          tick: 0,
+          healPct: Math.max((currentHot && currentHot.healPct) || 0, cfg.medicaHotPct),
+          from: u
+        };
+        addP(ally.x, ally.y, '#66ffcc', 8, 4);
+        beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.2, maxLife: 0.2, color: '#66ffcc', width: 2, straight: true });
+      }
+      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 80, life: 0.4, color: '#66ffcc' });
+      addDmg(u.x, u.y - u.size - 10, 'MEDICA BLOOM', '#66ffcc', { sz: 12, bold: true });
+    }
+
+    if (_ohTier === 10 && woundedAllies.length > 0) {
+      const ally = woundedAllies[0];
+      const allyPct = ally.hp / ally.maxHp;
+      const healPct = allyPct < cfg.benedictionThreshold ? cfg.benedictionLowPct : cfg.benedictionHighPct;
+      applyTrackedHeal(ally, Math.round(ally.maxHp * healPct), u, true);
+      for (const splash of units) {
+        if (splash === ally || !splash.isPlayer || splash.hp <= 0 || splash.isMinion || !splash.maxHp || splash.hp >= splash.maxHp) continue;
+        if (dist(ally, splash) > cfg.benedictionRadius) continue;
+        applyTrackedHeal(splash, Math.round(splash.maxHp * cfg.benedictionSplashPct), u, false);
+        addP(splash.x, splash.y, '#ccffee', 10, 4);
+        beamFx.push({ x1: ally.x, y1: ally.y, x2: splash.x, y2: splash.y, life: 0.22, maxLife: 0.22, color: '#ccffee', width: 2, straight: true });
+      }
+      addP(ally.x, ally.y - ally.size, '#ffffff', 16, 5);
+      addP(ally.x, ally.y, '#88ffaa', 22, 5);
+      groundFx.push({ x: ally.x, y: ally.y, r: 0, maxR: cfg.benedictionRadius, life: 0.5, color: '#88ffaa' });
+      addDmg(ally.x, ally.y - ally.size - 12, 'BENEDICTION BLOOM', '#ccffee', { sz: 13, bold: true });
+      showFlash('BENEDICTION BLOOM', '#88ffaa', 30);
+      shake(4);
+    }
+  }
+
+  if (u.habaqAromancerCombo && t.hp > 0 && _ohTier > 0) {
+    const cfg = u.habaqAromancerCombo;
+    const woundedAllies = units
+      .filter(ally => ally.isPlayer && ally.hp > 0 && !ally.isGhost && !ally.isMinion && ally.maxHp > 0 && ally.hp < ally.maxHp)
+      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+
+    if (_ohTier === 3 && woundedAllies.length > 0) {
+      const ally = woundedAllies[0];
+      applyTrackedHeal(ally, Math.max(8, Math.round((u.healAmt || 60) * cfg.aromaBoltHealMult)), u, false);
+      addP(ally.x, ally.y, '#aaffaa', 9, 4);
+      addP(ally.x + rnd(-6, 6), ally.y - ally.size, '#88cc66', 4, 3);
+      beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.18, maxLife: 0.18, color: '#aaffaa', width: 2, straight: true });
+      if (u._aromaStatues && u._aromaStatues.length > 0) {
+        const statue = u._aromaStatues.reduce((best, st) => (!best || dist(st, ally) < dist(best, ally)) ? st : best, null);
+        if (statue) {
+          applyTrackedHeal(ally, Math.max(4, Math.round((u.healAmt || 60) * cfg.aromaBoltEchoMult)), u, false);
+          addP(statue.x, statue.y - 10, '#88cc66', 6, 3);
+          beamFx.push({ x1: statue.x, y1: statue.y - 12, x2: ally.x, y2: ally.y, life: 0.2, maxLife: 0.2, color: '#88cc66', width: 2, straight: false });
+        }
+      }
+      addDmg(ally.x, ally.y - ally.size - 8, 'AROMA BOLT', '#aaffaa', { sz: 12, bold: true });
+    }
+
+    if (_ohTier === 5 && woundedAllies.length > 0) {
+      const ally = woundedAllies[0];
+      applyTrackedHeal(ally, Math.max(8, Math.round((u.healAmt || 60) * cfg.infusionInitialHealMult)), u, false);
+      const currentHot = ally._essenceHot && ally._essenceHot.timer > 0 ? ally._essenceHot : null;
+      const hotHealMult = u.essenceInfusion && u.essenceInfusion.healMult ? u.essenceInfusion.healMult : cfg.infusionHotHealMult;
+      const hotDur = u.essenceInfusion && u.essenceInfusion.dur ? u.essenceInfusion.dur : cfg.infusionDur;
+      ally._essenceHot = {
+        timer: Math.max((currentHot && currentHot.timer) || 0, hotDur),
+        tick: 0,
+        heal: Math.max((currentHot && currentHot.heal) || 0, Math.round((u.healAmt || 60) * hotHealMult)),
+        from: u
+      };
+      addP(ally.x, ally.y, '#ffd700', 10, 4);
+      addP(ally.x, ally.y - ally.size, '#ffffff', 5, 2);
+      beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.22, maxLife: 0.22, color: '#ffd700', width: 3, straight: true });
+      groundFx.push({ x: ally.x, y: ally.y, r: 0, maxR: 24, life: 0.3, color: '#aaffaa' });
+      addDmg(ally.x, ally.y - ally.size - 10, 'ESSENCE INFUSION', '#ffd700', { sz: 12, bold: true });
+    }
+
+    if (_ohTier === 10 && woundedAllies.length > 0) {
+      if (!u._aromaStatues) u._aromaStatues = [];
+      u._aromaStatues = u._aromaStatues.filter(st => !st.bloomingShrine || st.timer > 0);
+      if (u._aromaStatues.length === 0) {
+        u._aromaStatues.push({
+          x: u.x,
+          y: u.y,
+          timer: cfg.shrineDur,
+          maxTimer: cfg.shrineDur,
+          boltCD: 0,
+          boltEvery: cfg.shrineBoltEvery,
+          healAmt: Math.max(8, Math.round((u.healAmt || 60) * cfg.shrineHealMult)),
+          born: frame,
+          bloomingShrine: true
+        });
+      }
+      const pulsed = new Set();
+      for (const statue of u._aromaStatues) {
+        addP(statue.x, statue.y - 10, '#aaffaa', 14, 5);
+        addP(statue.x, statue.y, '#ffd700', 6, 3);
+        groundFx.push({ x: statue.x, y: statue.y, r: 0, maxR: cfg.shrineRadius, life: 0.45, color: '#88cc66' });
+        for (const ally of woundedAllies) {
+          if (pulsed.has(ally) || dist(statue, ally) > cfg.shrineRadius) continue;
+          pulsed.add(ally);
+          applyTrackedHeal(ally, Math.max(10, Math.round((u.healAmt || 60) * cfg.shrinePulseHealMult)), u, false);
+          addP(ally.x, ally.y, '#aaffaa', 12, 4);
+          beamFx.push({ x1: statue.x, y1: statue.y - 12, x2: ally.x, y2: ally.y, life: 0.24, maxLife: 0.24, color: '#aaffaa', width: 2, straight: false });
+        }
+      }
+      addDmg(u.x, u.y - u.size - 12, 'BLOOMING SHRINE', '#aaffaa', { sz: 13, bold: true });
+      showFlash('BLOOMING SHRINE', '#88cc66', 35);
+      shake(3);
+    }
+  }
+
   if (u.toxicFlask && t.hp > 0) {
     if (!t._toxicStacks) t._toxicStacks = [];
     let myPoison = 0;

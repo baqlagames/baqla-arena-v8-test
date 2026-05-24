@@ -106,6 +106,17 @@ export function tickEnemyPostUpdateStatusEffects(enemy, {
       enemy._deathMark = null;
     }
   }
+  if (enemy.judgmentSealTimer > 0) {
+    enemy.judgmentSealTimer--;
+    if (frame % 12 === 0 && enemy.judgmentSealSource) {
+      emitParticle(enemy.x, enemy.y - enemy.size * 0.4, '#fff2a8', 1, 2);
+    }
+    if (enemy.judgmentSealTimer <= 0) {
+      enemy.judgmentSealTimer = 0;
+      enemy.judgmentSealStacks = 0;
+      enemy.judgmentSealSource = null;
+    }
+  }
   if (enemy.slowTimer > 0) {
     enemy.slowTimer--;
     if (enemy.slowTimer <= 0) enemy.slowMult = 1;

@@ -2,6 +2,7 @@
 // Extracted from the v8 runtime without behavior changes.
 
 export const ARENA_BASE_SPECS={
+  13: {name:'Ronin Dragoon', role:'BURST MELEE',   icon:'RD'},  // Monk
   3:  {name:'Retribution',   role:'DPS PALADIN',   icon:'Ã¢Å¡â€'},  // Zayt
   6:  {name:'Pyromancer',    role:'FIRE MAGE',     icon:'Ã°Å¸â€Â¥'},  // Alibaba
   7:  {name:'Affliction',    role:'DOT WARLOCK',   icon:'Ã¢ËœÂ '},  // Jafaar
@@ -11,11 +12,13 @@ export const ARENA_BASE_SPECS={
   12: {name:'Aromancer',     role:'ESSENCE HEALER',icon:'Ã°Å¸Å’Â¿'}  // Habaq
 };
 
+ARENA_BASE_SPECS[3] = {name:'Holy Sword Saint', role:'BOSS BURST', icon:'HS'};
+
 export const ARENA_ROLE_ROOT_ORDER=['tank','melee','magic','pierce','healer'];
 
 export const ARENA_ROLE_ROOTS={
   tank:{id:'tank',name:'Tank Root',role:'DEFENDER',unitIdx:0,cost:50,color:'#3a8e3a',accent:'#266026',desc:'Start as a simple shield tank, then choose a dedicated defender.'},
-  melee:{id:'melee',name:'Melee DPS Root',role:'FRONTLINE DPS',unitIdx:5,cost:40,color:'#e07a1f',accent:'#9c4d0d',desc:'Start as a skirmisher, then choose assassin, blademaster, paladin, or monk.'},
+  melee:{id:'melee',name:'Melee DPS Root',role:'FRONTLINE DPS',unitIdx:5,cost:40,color:'#e07a1f',accent:'#9c4d0d',desc:'Start as a skirmisher, then choose assassin, blademaster, paladin, or ronin dragoon.'},
   magic:{id:'magic',name:'Magic Ranged Root',role:'MAGIC DPS',unitIdx:6,cost:50,color:'#8866cc',accent:'#44aadd',desc:'Start as a basic caster, then choose frost, thunder, poison, destruction, shadow, or moonkin.'},
   pierce:{id:'pierce',name:'Pierce Ranged Root',role:'PHYSICAL RANGED',unitIdx:8,cost:45,color:'#3d8a3d',accent:'#ffd700',desc:'Start as a marksman, then choose hunter or engineer paths.'},
   healer:{id:'healer',name:'Healer Root',role:'SUPPORT',unitIdx:10,cost:50,color:'#4cd97a',accent:'#1f8a3d',desc:'Start as a basic healer, then choose priest, aromancer, druid, or holy paladin.'}
@@ -36,8 +39,8 @@ export const ARENA_ROLE_PATHS={
     {id:'felfel_poison',unitIdx:4,branch:'b',name:'Felfel Poison',role:'Assassin',headline:'Poison - blade flurry, toxic bloom, venom meteor, deathmark.'},
     {id:'jazar_sword',unitIdx:5,branch:'a',name:'Jazar Sword Saint',role:'Blademaster',headline:'Sword Saint - mortal strike, execute, colossus smash, final strike.'},
     {id:'jazar_storm',unitIdx:5,branch:'b',name:'Jazar Storm Binder',role:'Control Melee',headline:'Storm Binder - wind step, blade dance, pulls, and anchor haste.'},
-    {id:'king_retribution',unitIdx:3,branch:null,name:'Retribution Paladin',role:'Melee DPS',headline:'Retribution only - holy strikes, wings, shield burst, and final reckoning.'},
-    {id:'monk_dps',unitIdx:13,branch:null,name:'Monk DPS',role:'Melee DPS',headline:'Monk only - fast melee pressure, guard windows, blade storm capstone.'}
+    {id:'king_retribution',unitIdx:3,branch:null,name:'Holy Sword Saint',role:'Melee DPS',headline:'Holy Sword Saint only - 3/5/10 holy blade arts, Judgment Seals, and Divine Ruination.'},
+    {id:'monk_dps',unitIdx:13,branch:null,name:'Ronin Dragoon',role:'Melee DPS',headline:'Ronin Dragoon only - 3/5/10 sword rhythm, jump dives, Azure Sen, and Midare Stardiver.'}
   ],
   magic:[
     {id:'alibaba_frost',unitIdx:6,branch:'a',name:'Alibaba Frost',role:'Frost Mage',headline:'Frost - slows, roots normal enemies with Frozen Orb, and controls clusters.'},
@@ -56,9 +59,9 @@ export const ARENA_ROLE_PATHS={
   healer:[
     {id:'naana_holy',unitIdx:10,branch:null,name:'Naana Holy',role:'Healer',headline:'Holy - reactive raid healing with Prayer, Renew, Sanctify, and Divine Hymn.'},
     {id:'naana_discipline',unitIdx:10,branch:'a',name:'Naana Discipline',role:'Shield Healer',headline:'Discipline - Penance healing, barriers, and Rapture shields.'},
-    {id:'habaq_base',unitIdx:12,branch:null,name:'Habaq Aromancer',role:'Healer',headline:'Base only - aroma statues, essence infusion, and Herbal Tempest.'},
-    {id:'bakdounes_base',unitIdx:11,branch:null,name:'Bakdounes Resto',role:'Healer',headline:'Base only for now - healing tonic, Lifebloom, mushrooms, Tree of Life.'},
-    {id:'king_holy',unitIdx:3,branch:'b',name:'King Holy',role:'Healer',headline:'Holy only - holy shocks, Beacon of Virtue, and Divine Toll healing.'}
+    {id:'habaq_base',unitIdx:12,branch:null,name:'Habaq Aromancer',role:'Healer',headline:'Aromancer - 3/5/10 Aroma Bolt, Essence Infusion, Blooming Shrine, plus Herbal Tempest.'},
+    {id:'bakdounes_base',unitIdx:11,branch:null,name:'Bakdounes Resto',role:'Healer',headline:'Resto only - Lifebloom, 3/5/10 Regrowth-Medica-Benediction, mushrooms, Tree of Life.'},
+    {id:'king_holy',unitIdx:3,branch:'b',name:'King Holy',role:'Healer',headline:"Holy only - 3/5/10 tank saves, Holy Shock, Beacon of Virtue, and Divine Toll."}
   ]
 };
 
@@ -72,8 +75,8 @@ export const ARENA_ROLE_SPECS={
   melee:[
     {id:'felfel',unitIdx:4,name:'Felfel',role:'Assassin',identity:'High-risk melee with shadow or poison execution tools.',paths:['felfel_shadow','felfel_poison']},
     {id:'jazar',unitIdx:5,name:'Jazar',role:'Blademaster',identity:'Weapon master that chooses pure sword damage or storm control.',paths:['jazar_sword','jazar_storm']},
-    {id:'king_retribution',unitIdx:3,name:'Retribution Paladin',role:'Melee DPS',identity:'One-path holy striker with burst windows and final reckoning.',paths:['king_retribution']},
-    {id:'monk_dps',unitIdx:13,name:'Monk DPS',role:'Melee DPS',identity:'One-path fast fighter with guard windows and combo pressure.',paths:['monk_dps']}
+    {id:'king_retribution',unitIdx:3,name:'Holy Sword Saint',role:'Melee DPS',identity:'One-path FFT-style holy blade striker with Judgment Seals, guard windows, boss burst, and Divine Ruination.',paths:['king_retribution']},
+    {id:'monk_dps',unitIdx:13,name:'Ronin Dragoon',role:'Melee DPS',identity:'One-path Samurai and Dragoon burst skirmisher with Azure Sen, jump dives, and short Third Eye guard windows.',paths:['monk_dps']}
   ],
   magic:[
     {id:'alibaba',unitIdx:6,name:'Alibaba',role:'Mage',identity:'Control caster choosing frost lockdown or thunder disruption.',paths:['alibaba_frost','alibaba_thunder']},
@@ -87,9 +90,9 @@ export const ARENA_ROLE_SPECS={
   ],
   healer:[
     {id:'naana',unitIdx:10,name:'Naana',role:'Priest Healer',identity:'Tank-saving healer choosing holy recovery or discipline shields.',paths:['naana_holy','naana_discipline']},
-    {id:'habaq',unitIdx:12,name:'Habaq',role:'Aromancer',identity:'Base-only sustain healer with aromas, infusion, and tempest.',paths:['habaq_base']},
-    {id:'bakdounes',unitIdx:11,name:'Bakdounes',role:'Herbalist',identity:'Base-only plant healer with tonic, lifebloom, and mushrooms.',paths:['bakdounes_base']},
-    {id:'king_holy',unitIdx:3,name:'King Holy',role:'Holy Healer',identity:'One-path holy support with beacon and divine toll healing.',paths:['king_holy']}
+    {id:'habaq',unitIdx:12,name:'Habaq',role:'Aromancer',identity:'Sustain healer with aroma statues, 3/5/10 infusion rhythm, and Herbal Tempest.',paths:['habaq_base']},
+    {id:'bakdounes',unitIdx:11,name:'Bakdounes',role:'Herbalist',identity:'Resto plant healer with Lifebloom, 3/5/10 recovery, mushrooms, and Tree of Life.',paths:['bakdounes_base']},
+    {id:'king_holy',unitIdx:3,name:'King Holy',role:'Holy Healer',identity:'Tank-saving holy support with Word of Glory, Guardian mercy, Beacon, and Divine Toll.',paths:['king_holy']}
   ]
 };
 
@@ -101,8 +104,8 @@ export const ARENA_PATH_DETAIL_LINES={
   batata_nature:['Stats: +22% HP, +10% MR, -5% damage','Backline Garden: healer/ranged allies -10% damage taken','Living Bulwark: 22% HP shield, -30% damage, shelter bonuses'],
   batata_berserker:['Stats: +14% HP, +12% armor, +6% damage, 4% faster attacks','Mirebreaker: Batata -10% damage while swarmed','Quakebreak: 20% HP shield, -25% damage, mud weakens swarms'],
   king_protection:['Stats: +120% HP/armor, +65% MR, -15% damage','Hallowed Leap: jumps toward ranged/caster threats and shields King','Avenger Shield: 6s, 3 targets; L4 hits 5 at 1.65x with 16% shield cap','Ashen Hallow: 20% shield, -30% damage, ally DR inside'],
-  king_retribution:['Wings: +20% damage and +20% crit','Shield of Vengeance: 20% max HP absorb then burst','Final Reckoning: marked enemies take +20% damage'],
-  monk_dps:['Fast melee pressure with guard windows','Combo attacks focus on uptime and survival','One-path spec: no branch fork'],
+  king_retribution:['3rd/5th/10th: Stasis Sword, Lightning Stab, Holy Explosion','Passive: Sword Saint Cycle + Judgment Seals','A3/A5: Crush Judgment, Hallowed Bladefall','Signature: Divine Ruination'],
+  monk_dps:['3rd/5th/10th: Hakaze Thrust, Gekko Dive, Midare Nastrond','Passive: Azure Sen + Third Eye','A3/A5: Hissatsu Gyoten, Geirskogul Dive','Signature: Midare Stardiver'],
   alibaba_frost:['Stats: -10% damage, 10% faster attacks','Frost hits slow by 35%; Frozen Orb slows 50%','Frozen Orb roots normal enemies for 0.5s per hit'],
   alibaba_thunder:['Stats: +10% damage','Chain Thunder: 0.5s stun to non-boss enemies','Stormkeeper: every 8th hit deals 250% damage'],
   jafaar_poison:['Agony: stacking DoT with Curse Bloom at 3 stacks','Fel Meteor after 5 curse applications','Soul Harvest: 4s rift, 90px radius'],
@@ -115,9 +118,9 @@ export const ARENA_PATH_DETAIL_LINES={
   rommana_cannon:['Flying cannon with 2 pearl escorts','Shield Generator protects frontline','Overdrive boosts self and drones, then vents AoE'],
   naana_holy:['Prayer of Mending: 6s cooldown, 5 bounces, 18% max HP heal','Renew: every 3s on two wounded allies; L5 strengthens it','Flash Heal: every 3rd hit heals the lowest wounded ally','Sanctify: every 5th hit heals the lowest allies'],
   naana_discipline:['Penance: 5 bolts every 5th attack plus healing','Power Word Barrier: 12s cooldown absorb','Rapture: team shields for 8s'],
-  habaq_base:['Soothing Aroma: healing statues every 5s, max 2','Essence Infusion: every 5th heal adds HoT','Herbal Tempest empowers 4 statues'],
-  bakdounes_base:['Lifebloom: 3% max HP/sec stacks','At 3 stacks: 20% AoE Bloom heal','Efflorescence: healing mushroom circles'],
-  king_holy:['Holy Shock heals 3 allies every 6s','Beacon: all heals splash during signature','Divine Toll: 5 holy shocks on low allies']
+  habaq_base:['Soothing Aroma: healing statues every 5s; L5 raises max to 3','3rd/5th/10th: Aroma Bolt, Essence Infusion, Blooming Shrine','Aromatic Rain, Transcendence, Herbal Tempest empower shrine healing'],
+  bakdounes_base:['Lifebloom: attacks stack HoTs and bloom at 3 stacks','3rd/5th/10th: Regrowth, Medica Bloom, Benediction Bloom','Efflorescence mushrooms, Swiftmend, Tranquility, Tree of Life'],
+  king_holy:['3rd/5th/10th: Judgment of Light, Word of Glory, Guardian\'s Mercy','Holy Shock, Holy Prism, Barrier of Faith keep tank saves active','Beacon: all heals splash during signature; Divine Toll hits 5 low allies']
 };
 
 export const ARENA_SPEC_HALO_COLORS={
@@ -136,5 +139,7 @@ export const ARENA_SPEC_HALO_COLORS={
   // Bakdounes Ã¢â‚¬â€ Herbalist: Apothecary green, Moonkin indigo, Witch Doctor brown
   '11_base':'#3aa84e', '11_a':'#4466cc', '11_b':'#8a5a2a',
   // Habaq Ã¢â‚¬â€ Aromancer: base sage, Oracle gold, Brewer purple
-  '12_base':'#5e8a3a', '12_a':'#d4a842', '12_b':'#7a3a9a'
+  '12_base':'#5e8a3a', '12_a':'#d4a842', '12_b':'#7a3a9a',
+  // Monk - Ronin Dragoon: azure/crimson burst
+  '13_base':'#2f6fc7'
 };

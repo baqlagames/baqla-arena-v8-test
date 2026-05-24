@@ -68,6 +68,79 @@ export function createArenaSignatures(deps = {}) {
   const groundFx = liveArray('groundFx');
   const beamFx = liveArray('beamFx');
   const shake = amount => shakeScreen(amount);
+  function roninSenStacks(u) {
+    return Math.min(3, u.azureSenStacks || 0);
+  }
+  function roninDamageMult(u) {
+    const cfg = u.roninDragoonCombo || {};
+    return 1 + roninSenStacks(u) * (cfg.senDmgPerStack || 0.03);
+  }
+  function clearRoninSen(u) {
+    u.azureSenFlags = { setsu: false, getsu: false, ka: false };
+    u.azureSenStacks = 0;
+  }
+  function findRoninStardiverTarget(u, range = 320, radius = 110) {
+    const external = arena_findBestEnemyClusterPoint(u, range, radius);
+    if (external && external.target && isValidPlayerOffensiveTarget(external.target)) return external;
+    let best = null;
+    let bestScore = -Infinity;
+    for (const e of enemies) {
+      if (!isValidPlayerOffensiveTarget(e)) continue;
+      const d = dist(u, e);
+      if (d > range) continue;
+      let count = 0;
+      let elite = 0;
+      let hpScore = 0;
+      for (const f of enemies) {
+        if (!isValidPlayerOffensiveTarget(f) || dist(e, f) > radius) continue;
+        count++;
+        if (f.isBoss || f.elite || f.isElite) elite++;
+        hpScore += Math.min(f.hp || 0, 800);
+      }
+      const score = count * 120 + elite * 120 + hpScore * 0.025 - d * 0.02;
+      if (score > bestScore) {
+        bestScore = score;
+        best = e;
+      }
+    }
+    return best ? { x: best.x, y: best.y, target: best, score: bestScore } : null;
+  }
+  function kingSealStacks(u, target) {
+    if (!u || !target || target.judgmentSealSource !== u || !(target.judgmentSealTimer > 0)) return 0;
+    return Math.min(3, target.judgmentSealStacks || 0);
+  }
+  function clearKingJudgmentSeals(u, target) {
+    if (!u || !target || target.judgmentSealSource !== u) return;
+    target.judgmentSealTimer = 0;
+    target.judgmentSealStacks = 0;
+    target.judgmentSealSource = null;
+  }
+  function findKingDivineRuinationTarget(u, range = 320, radius = 110) {
+    const external = arena_findBestEnemyClusterPoint(u, range, radius);
+    if (external && external.target && isValidPlayerOffensiveTarget(external.target)) return external;
+    let best = null;
+    let bestScore = -Infinity;
+    for (const e of enemies) {
+      if (!isValidPlayerOffensiveTarget(e)) continue;
+      const d = dist(u, e);
+      if (d > range) continue;
+      let count = 0;
+      let elite = 0;
+      let hpScore = 0;
+      for (const f of enemies) {
+        if (!isValidPlayerOffensiveTarget(f) || dist(e, f) > radius) continue;
+        count++;
+        if (f.isBoss || f.elite || f.isElite) elite++;
+        hpScore += Math.min(f.hp || 0, 1000);
+      }
+      const score = count * 110 + elite * 150 + hpScore * 0.025 + (e.isBoss ? 180 : 0) - d * 0.02;
+      if (score > bestScore) {
+        bestScore = score;
+        best = e;
+      }
+    }
+    return best ? { x: best.x, y: best.y, target: best, score: bestScore } : null;
+  }
 return {
   // ----- BASE TANK SIGNATURES -----
   taunt_wave:{name:'Taunt Wave',cd:15,fire(u){
@@ -101,6 +174,55 @@ return {
     let best=null,bestHp=Infinity;
     for(const e of enemies){if(e.hp<=0||e.isBoss)continue;if(dist(u,e)>(u.range||40)+50)continue;if(e.hp<bestHp){bestHp=e.hp;best=e}}
     if(best){dealDamage(best,Math.round(u.dmg*4),u,'normal');addP(best.x,best.y,'#ff2222',24,5);addDmg(best.x,best.y-20,'EXECUTION!','#ff5555');shake(6)}
+  }},
+  divine_ruination:{name:'Sword Saint: Divine Ruination',cd:35,fire(u){
+    const cfg=u.holySwordSaintCombo||{};
+    const radius=cfg.divineRadius||110;
+    const best=findKingDivineRuinationTarget(u,cfg.divineRange||320,radius);
+    if(!best||!best.target)return false;
+    const main=best.target;
+    const fromX=u.x,fromY=u.y;
+    const angle=Math.atan2(best.y-u.y,best.x-u.x);
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.80,color:'#ffd966',warningRing:true});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius*0.62,life:0.48,color:'#dff5ff'});
+    for(let i=0;i<10;i++){
+      const ox=(i-4.5)*18;
+      beamFx.push({x1:best.x+ox,y1:best.y-130-rnd(0,20),x2:best.x+ox*0.25,y2:best.y+10,color:i%2?'#dff5ffcc':'#ffd966cc',width:2.5,life:0.38,maxLife:0.38,straight:true});
+    }
+    const land=limitBurstLanding(u,best.x-Math.cos(angle)*14,best.y-Math.sin(angle)*14,260);
+    u.x=land.x;u.y=land.y;
+    arena_clampToLeash(u);
+    const seals=kingSealStacks(u,main);
+    const sigMult=1+seals*(cfg.divinePerSealBonus||0.15);
+    clearKingJudgmentSeals(u,main);
+    const mainDamage=Math.round(u.dmg*(cfg.divineMainMult||5.0)*sigMult);
+    const splashDamage=Math.round(u.dmg*(cfg.divineSplashMult||2.0)*sigMult);
+    dealDamage(main,mainDamage,u,'magic');
+    let splashHits=0;
+    for(const e of enemies){
+      if(e===main||!isValidPlayerOffensiveTarget(e)||dist({x:best.x,y:best.y},e)>radius)continue;
+      dealDamage(e,splashDamage,u,'magic');
+      addP(e.x,e.y,'#ffd966',14,5);
+      addP(e.x,e.y,'#dff5ff',8,3);
+      splashHits++;
+    }
+    if(seals>=3){
+      u.divineRuinationEcho={target:main,timer:cfg.divineEchoDelay||Math.round(0.45*GAME_TICK_HZ),dmg:Math.round(u.dmg*(cfg.divineEchoMult||1.0)),x:main.x,y:main.y};
+    }
+    beamFx.push({x1:fromX,y1:fromY-72,x2:u.x,y2:u.y,color:'#fff2a8cc',width:8,life:0.34,maxLife:0.34,straight:true});
+    beamFx.push({x1:fromX,y1:fromY-50,x2:u.x,y2:u.y,color:'#dff5ffcc',width:4,life:0.30,maxLife:0.30,straight:true});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.82,color:'#ffd966'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius+42,life:0.48,color:'#dff5ff'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:58,life:0.55,swipeSlam:true,color:'#ffffff'});
+    addP(best.x,best.y,'#ffd966',58,8);
+    addP(best.x,best.y,'#dff5ff',38,6);
+    addP(best.x,best.y,'#ffffff',18,4);
+    addDmg(best.x,best.y-(main.size||24)-12,'DIVINE RUINATION','#fff2a8',{sz:16,bold:true,outline:'#5a4a10'});
+    addDmg(best.x,best.y-(main.size||24)-30,'-'+mainDamage,'#ffd966',{sz:13,bold:true});
+    if(seals>=3)addDmg(best.x,best.y-(main.size||24)-46,'3 SEAL ECHO','#dff5ff',{sz:11,bold:true});
+    if(splashHits)addDmg(best.x,best.y+22,'SPLASH x'+splashHits,'#fff2a8',{sz:12,bold:true});
+    showFlash('DIVINE RUINATION','#fff2a8',82);
+    shake(20);
   }},
   // ===== ZAYT (Retribution Paladin) SIGNATURE =====
   // Divine Storm: 4 holy waves radiate from the caster in cardinal directions.
@@ -925,6 +1047,59 @@ return {
     shake(22);
     SFX.heavySlash();
     if(best.hp<=0){u._sigCdOverride=Math.round((u._sigCdOverride||0)*0.5);addDmg(u.x,u.y-u.size,'CD HALVED!','#ffcc00')}
+  }},
+  midare_stardiver:{name:'Midare Stardiver',cd:35,fire(u){
+    const cfg=u.roninDragoonCombo||{};
+    const radius=110;
+    const best=findRoninStardiverTarget(u,320,radius);
+    if(!best||!best.target)return false;
+    const main=best.target;
+    const fromX=u.x,fromY=u.y;
+    const angle=Math.atan2(best.y-u.y,best.x-u.x);
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.75,color:'#ff4f5e',warningRing:true});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius*0.62,life:0.45,color:'#48c7ff'});
+    for(let i=0;i<12;i++){
+      const a=Math.PI*2*i/12;
+      addP(best.x+Math.cos(a)*radius*0.8,best.y+Math.sin(a)*radius*0.8,i%2?'#48c7ff':'#ff4f5e',1.5,4);
+    }
+    const land=limitBurstLanding(u,best.x-Math.cos(angle)*12,best.y-Math.sin(angle)*12,260);
+    u.x=land.x;u.y=land.y;
+    arena_clampToLeash(u);
+    const sen=roninSenStacks(u);
+    const sigMult=roninDamageMult(u)*(1+sen*0.12);
+    const mainDamage=Math.round(u.dmg*4.5*sigMult);
+    const splashDamage=Math.round(u.dmg*2.0*sigMult);
+    dealDamage(main,mainDamage,u,'normal');
+    let splashHits=0;
+    for(const e of enemies){
+      if(e===main||!isValidPlayerOffensiveTarget(e)||dist({x:best.x,y:best.y},e)>radius)continue;
+      dealDamage(e,splashDamage,u,'normal');
+      addP(e.x,e.y,'#48c7ff',12,4);
+      addP(e.x,e.y,'#ff4f5e',8,3);
+      splashHits++;
+    }
+    clearRoninSen(u);
+    if(sen>=3){
+      u.lifeOfDragonTimer=(u.lifeOfDragonTimer||0)+4*GAME_TICK_HZ;
+      u.lifeOfDragonAtkMult=cfg.lifeOfDragonAtkMult||0.85;
+    }
+    beamFx.push({x1:fromX,y1:fromY-70,x2:u.x,y2:u.y,color:'#48c7ffcc',width:8,life:0.32,maxLife:0.32,straight:true});
+    beamFx.push({x1:fromX,y1:fromY-50,x2:u.x,y2:u.y,color:'#ff4f5ecc',width:4,life:0.28,maxLife:0.28,straight:true});
+    for(let i=0;i<18;i++){
+      const f=i/18;
+      addP(fromX+(u.x-fromX)*f+rnd(-4,4),fromY-50+(u.y-fromY+50)*f+rnd(-4,4),i%2?'#48c7ff':'#ff4f5e',2,4);
+    }
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius,life:0.8,color:'#ff4f5e'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:radius+36,life:0.45,color:'#48c7ff'});
+    groundFx.push({x:best.x,y:best.y,r:0,maxR:58,life:0.5,swipeSlam:true,color:'#ffffff'});
+    addP(best.x,best.y,'#ff4f5e',54,8);
+    addP(best.x,best.y,'#48c7ff',42,7);
+    addP(best.x,best.y,'#ffffff',18,4);
+    addDmg(best.x,best.y-(main.size||24)-10,'MIDARE STARDIVER','#48c7ff',{sz:16,bold:true});
+    addDmg(best.x,best.y-(main.size||24)-28,'-'+mainDamage,'#ff4f5e',{sz:13,bold:true});
+    if(splashHits)addDmg(best.x,best.y+22,'SPLASH x'+splashHits,'#48c7ff',{sz:12,bold:true});
+    showFlash('MIDARE STARDIVER','#48c7ff',80);
+    shake(18);
   }},
   storm_of_blades:{name:'Storm of Blades',cd:30,fire(u){
     groundFx.push({x:u.x,y:u.y,r:0,maxR:110,life:1,color:'#ffaa00',bladeVortex:true,bvTimer:360,bvTick:0,bvDmg:Math.round(u.dmg*0.8),bvFrom:u});

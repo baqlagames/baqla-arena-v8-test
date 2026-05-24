@@ -103,19 +103,73 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
   }
   // Bakdounes L5: Purify Ã¢â‚¬â€ cleanse grants 4s debuff immunity (base path only)
   if(unitIdx===11&&arena_isCapstoneLevel(lv)&&!u.branch)arena_setPassive(u,'purify',linear,boost);
+  if(unitIdx===11&&!u.branch){
+    u.bakdounesRestoCombo={
+      regrowthHealMult:0.55,
+      medicaHealMult:0.38,medicaTargets:3,medicaHotPct:0.012,medicaHotDur:3*GAME_TICK_HZ,
+      benedictionThreshold:0.50,benedictionLowPct:0.22,benedictionHighPct:0.12,benedictionSplashPct:0.06,benedictionRadius:100
+    };
+  }
+  if(unitIdx===12&&!u.branch){
+    u.habaqAromancerCombo={
+      aromaBoltHealMult:0.42,aromaBoltEchoMult:0.18,
+      infusionInitialHealMult:0.20,infusionHotHealMult:0.16,infusionDur:4*GAME_TICK_HZ,
+      shrinePulseHealMult:0.50,shrineRadius:110,shrineDur:5*GAME_TICK_HZ,shrineHealMult:0.32,shrineBoltEvery:Math.round(0.75*GAME_TICK_HZ)
+    };
+  }
+  if(unitIdx===3&&u.branch==='b'){
+    u.kingHolyCombo={
+      judgmentHealMult:0.70,judgmentTankThreshold:0.65,
+      wordHealPct:0.16,wordLowThreshold:0.50,wordLowHealPct:0.20,wordHotPct:0.025,wordHotDur:4*GAME_TICK_HZ,
+      mercyTankThreshold:0.75,mercyLowThreshold:0.40,mercyHealPct:0.12,mercyLowHealPct:0.18,
+      mercyShieldPct:0.10,mercyLowShieldPct:0.14,mercyDr:0.10,mercyDur:4*GAME_TICK_HZ
+    };
+  }
+  if(unitIdx===3&&!u.branch){
+    u.artOfWar=false;
+    u.hammerOfWrath=false;
+    u.holySwordSaintCombo={
+      stasisMult:0.75,stasisBossSlow:0.75,stasisBossSlowDur:Math.round(1.5*GAME_TICK_HZ),stasisStunDur:Math.round(0.7*GAME_TICK_HZ),
+      crystalGuardDr:0.08,crystalGuardDur:3*GAME_TICK_HZ,
+      lightningMult:1.35,lightningLineMult:0.55,lightningLineLength:175,lightningLineWidth:34,
+      saintSwiftnessAtkMult:0.90,saintSwiftnessDur:3*GAME_TICK_HZ,
+      holyExplosionMult:2.35,holyExplosionSplashMult:1.15,holyExplosionRadius:85,holyExplosionFullSealBonus:0.20,
+      exaltedEdgeMult:1.10,exaltedEdgeDur:4*GAME_TICK_HZ,
+      sealMax:3,sealDur:7*GAME_TICK_HZ,sealDamagePer:0.06,
+      crushRange:210,crushMult:2.10,crushPerSealBonus:0.10,crushStunDur:GAME_TICK_HZ,
+      bladefallRange:260,bladefallRadius:90,bladefallMainMult:3.0,bladefallSplashMult:1.35,bladefallGuardDr:0.12,bladefallGuardDur:Math.round(2.5*GAME_TICK_HZ),
+      divineRange:320,divineRadius:110,divineMainMult:5.0,divineSplashMult:2.0,divinePerSealBonus:0.15,divineEchoMult:1.0,divineEchoDelay:Math.round(0.45*GAME_TICK_HZ)
+    };
+    u.swordSaintCycle=u.swordSaintCycle||'stasis';
+    u.judgmentSealMax=u.holySwordSaintCombo.sealMax;
+  }
+  if(unitIdx===13&&!u.branch){
+    u.roninDragoonCombo={
+      senDmgPerStack:0.03,maxSen:3,
+      hakazeMult:0.65,
+      gekkoMult:1.25,gekkoSplashMult:0.45,gekkoSplashRadius:55,
+      nastrondMult:2.20,nastrondLineMult:1.10,nastrondLength:210,nastrondWidth:54,
+      thirdEyeDr:0.20,thirdEyeDur:Math.round(1.5*GAME_TICK_HZ),
+      gyotenRange:220,gyotenMult:2.00,
+      geirskogulRange:260,geirskogulRadius:95,geirskogulMult:2.70,lifeOfDragonDur:5*GAME_TICK_HZ,lifeOfDragonAtkMult:0.85
+    };
+    if(!u.azureSenFlags)u.azureSenFlags={setsu:false,getsu:false,ka:false};
+    u.azureSenStacks=Math.min(3,u.azureSenStacks||0);
+  }
   // Divine Storm Ã¢â‚¬â€ class passive shared by ALL paladin builds (base + Muqaddas
   // + Mubarak). Every 4th basic attack triggers a 4-wave holy AoE. Attached
   // here AFTER branch passives so it stacks on whichever P1/P2 the build has.
-  if(u.paladinHybrid)arena_setPassive(u,'divineStorm',linear,boost);
+  if(u.paladinHybrid&&!(unitIdx===3&&!u.branch))arena_setPassive(u,'divineStorm',linear,boost);
   // ===== SHARED ON-HIT COUNTER (3/5/10 system) =====
   // All units with 3rd/5th/10th hit procs share one counter that resets at max.
   // Level gating: L2=3rd-hit, L3=5th-hit, L4=10th-hit.
-  const _hasOnHit=[0,1,2,3,4,5,6,7,8,9,10].includes(unitIdx);
+  const _hasOnHit=[0,1,2,3,4,5,6,7,8,9,10].includes(unitIdx)||((unitIdx===11||unitIdx===12)&&!u.branch)||(unitIdx===13&&!u.branch);
   if(_hasOnHit){
-    u._onHitMax=boost>=1.5?8:10;
-    u._hit3=boost>=1.5?2:3;
-    u._hit5=boost>=1.5?4:5;
-    u._hit10=boost>=1.5?8:10;
+    const _literalHealerCombo=((unitIdx===11||unitIdx===12)&&!u.branch)||(unitIdx===3&&u.branch==='b')||(unitIdx===13&&!u.branch)||(unitIdx===3&&!u.branch);
+    u._onHitMax=_literalHealerCombo?10:(boost>=1.5?8:10);
+    u._hit3=_literalHealerCombo?3:(boost>=1.5?2:3);
+    u._hit5=_literalHealerCombo?5:(boost>=1.5?4:5);
+    u._hit10=_literalHealerCombo?10:(boost>=1.5?8:10);
     u._onHitCount=0;
   }
   // Built-in AoE from level 1 Ã¢â‚¬â€ independent 3rd-hit cleave/pierce
@@ -363,6 +417,16 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
     }
     case 'armorRegen': u.armorRegen={every:60,t:0,amount:2}; break;
     case 'reviveOnce': u.reviveOnce={used:false,pct:0.40,cleaveBonus:true}; break;
+    case 'swordSaintCycle':
+      u.swordSaintCycle=u.swordSaintCycle||'stasis';
+      u.crystalGuardDR=0;
+      u.saintSwiftnessAtkMult=0.90;
+      u.exaltedEdgeMult=1.10;
+      break;
+    case 'judgmentSeals':
+      u.judgmentSeals=true;
+      u.judgmentSealMax=3;
+      break;
     // ===== BATATA (Primal Guardian) passives =====
     case 'ironfur': u.ironfur={stacks:0,maxStacks:3,perStack:3,timer:0,dur:360,hitCount:0,every:3}; break;
     case 'thrashBleed': u.thrashBleedPassive=true; break;
@@ -410,6 +474,14 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
       u._warbreaker={every:10,counter:0};
       break;
     case 'risingSlash': u.risingSlash={every:4,counter:0,mult:1.6*boost,stunDur:30}; break;
+    case 'azureSen':
+      u.azureSen={max:3,dmgPerStack:0.03};
+      if(!u.azureSenFlags)u.azureSenFlags={setsu:false,getsu:false,ka:false};
+      u.azureSenStacks=Math.min(3,u.azureSenStacks||0);
+      break;
+    case 'thirdEye':
+      u.thirdEye={dr:0.20,dur:Math.round(1.5*GAME_TICK_HZ)};
+      break;
     case 'mortalStrike':
       u.mortalStrike={every:3,counter:0,mult:1.6*boost};
       u.bladeGuard={dur:Math.round(3*GAME_TICK_HZ),dr:0.35};
@@ -472,6 +544,7 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
     // ===== ZAYT (Retribution Paladin) PASSIVES =====
     // Wings of Light Ã¢â‚¬â€ always-on +20% damage + 20% crit chance
     case 'wingsOfLight':
+      if(u.unitIdx===3&&u.branch==='b')break;
       u.paladinWings=true;
       u.dmg=Math.round(u.dmg*1.20*boost);
       if(u.crit){u.crit.chance=Math.min(0.6,(u.crit.chance||0)+0.20*boost)}
@@ -482,6 +555,7 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
       break;
     // Shield of Vengeance Ã¢â‚¬â€ absorb 20% max HP, then burst AoE holy (15s CD)
     case 'shieldOfVengeance':
+      if(u.unitIdx===3&&u.branch==='b')break;
       u.shieldOfVengeance={cd:0,every:15*GAME_TICK_HZ,shieldPct:0.20*boost,radius:80,absorbed:0,active:false};
       break;
     // Avenger's Shield (Prot branch) - every 6s throw bouncing shield, 3 targets
@@ -496,9 +570,11 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
       u.ardentDefender={used:false,revivePct:0.32,invulnDur:1*GAME_TICK_HZ,resetCD:45*GAME_TICK_HZ,resetT:0};
       break;
     case 'lightOfDawn':
+      if(u.unitIdx===3&&u.branch==='b')break;
       u.lightOfDawn={counter:0,every:4,healPct:0.08*boost,range:140,arc:Math.PI*0.6};
       break;
     case 'wordOfGlory':
+      if(u.unitIdx===3&&u.branch==='b')break;
       u.wordOfGlory={counter:0,every:5,healPct:0.18*boost,hotPct:0.03*boost,hotDur:4*GAME_TICK_HZ};
       break;
     // Legacy passives kept for compat

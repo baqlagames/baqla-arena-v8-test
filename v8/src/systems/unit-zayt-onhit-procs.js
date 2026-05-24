@@ -1,6 +1,51 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
 
+function kingHolySwordCfg(u) {
+  return u && u.unitIdx === 3 && !u.branch ? (u.holySwordSaintCombo || null) : null;
+}
+
+function kingSealStacks(u, target) {
+  if (!u || !target || target.judgmentSealSource !== u || !(target.judgmentSealTimer > 0)) return 0;
+  return Math.min(3, target.judgmentSealStacks || 0);
+}
+
+function applyKingJudgmentSeal(u, target, addP, addDmg) {
+  const cfg = kingHolySwordCfg(u);
+  if (!cfg || !u.judgmentSeals || !target || target.hp <= 0) return 0;
+  const maxStacks = cfg.sealMax || u.judgmentSealMax || 3;
+  if (target.judgmentSealSource !== u || !(target.judgmentSealTimer > 0)) target.judgmentSealStacks = 0;
+  target.judgmentSealSource = u;
+  target.judgmentSealStacks = Math.min(maxStacks, (target.judgmentSealStacks || 0) + 1);
+  target.judgmentSealTimer = cfg.sealDur || 7 * GAME_TICK_HZ;
+  if (addP) {
+    addP(target.x, target.y, '#ffd966', 8, 3);
+    addP(target.x, target.y, '#dff5ff', 4, 2);
+  }
+  if (addDmg && target.judgmentSealStacks >= maxStacks) addDmg(target.x, target.y - target.size - 16, '3 SEALS', '#fff2a8', { sz: 11, bold: true });
+  return target.judgmentSealStacks;
+}
+
+function grantKingCrystalGuard(u, dr, dur) {
+  if (!u || u.unitIdx !== 3 || u.branch) return;
+  u.crystalGuardDR = Math.max(u.crystalGuardDR || 0, dr || 0.08);
+  u.crystalGuardTimer = Math.max(u.crystalGuardTimer || 0, dur || 3 * GAME_TICK_HZ);
+}
+
+function grantKingSaintSwiftness(u) {
+  const cfg = kingHolySwordCfg(u);
+  if (!cfg) return;
+  u.saintSwiftnessAtkMult = cfg.saintSwiftnessAtkMult || 0.90;
+  u.saintSwiftnessTimer = Math.max(u.saintSwiftnessTimer || 0, cfg.saintSwiftnessDur || 3 * GAME_TICK_HZ);
+}
+
+function grantKingExaltedEdge(u) {
+  const cfg = kingHolySwordCfg(u);
+  if (!cfg) return;
+  u.exaltedEdgeMult = cfg.exaltedEdgeMult || 1.10;
+  u.exaltedEdgeTimer = Math.max(u.exaltedEdgeTimer || 0, cfg.exaltedEdgeDur || 4 * GAME_TICK_HZ);
+}
+
 export function applyZaytOnHitProcs(unit, target, {
   arena,
   frame,
@@ -35,6 +80,95 @@ export function applyZaytOnHitProcs(unit, target, {
   const addP = emitParticle;
   const addDmg = addDamageText;
   const SFX = soundEffects;
+
+  const swordCfg = kingHolySwordCfg(u);
+  if (swordCfg && _ohTier > 0 && t.hp > 0) {
+    const angle = Math.atan2(t.y - u.y, t.x - u.x);
+    if (_ohTier === 3) {
+      applyKingJudgmentSeal(u, t, addP, addDmg);
+      const stasisDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.stasisMult || 0.75));
+      dealDamage(t, stasisDamage, u, 'magic');
+      if (t.isBoss || t.elite || t.isElite) {
+        t.slowTimer = Math.max(t.slowTimer || 0, swordCfg.stasisBossSlowDur || Math.round(1.5 * GAME_TICK_HZ));
+        t.slowMult = Math.min(t.slowMult || 1, swordCfg.stasisBossSlow || 0.75);
+      } else {
+        t.stunned = Math.max(t.stunned || 0, swordCfg.stasisStunDur || Math.round(0.7 * GAME_TICK_HZ));
+      }
+      grantKingCrystalGuard(u, swordCfg.crystalGuardDr || 0.08, swordCfg.crystalGuardDur || 3 * GAME_TICK_HZ);
+      beamFx.push({ x1: u.x, y1: u.y, x2: t.x, y2: t.y, life: 0.22, maxLife: 0.22, color: '#fff2a8', width: 4, straight: true });
+      beamFx.push({ x1: t.x - Math.cos(angle + Math.PI / 2) * 24, y1: t.y - Math.sin(angle + Math.PI / 2) * 24, x2: t.x + Math.cos(angle + Math.PI / 2) * 24, y2: t.y + Math.sin(angle + Math.PI / 2) * 24, life: 0.18, maxLife: 0.18, color: '#dff5ff', width: 3, straight: true });
+      beamFx.push({ x1: t.x - Math.cos(angle) * 24, y1: t.y - Math.sin(angle) * 24, x2: t.x + Math.cos(angle) * 24, y2: t.y + Math.sin(angle) * 24, life: 0.18, maxLife: 0.18, color: '#ffd966', width: 3, straight: true });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 42, life: 0.42, color: '#dff5ff' });
+      addP(t.x, t.y, '#ffd966', 18, 4);
+      addP(t.x, t.y, '#dff5ff', 10, 3);
+      addDmg(t.x, t.y - t.size - 8, 'STASIS SWORD', '#fff2a8', { sz: 12, bold: true, outline: '#5a4a10' });
+      u.swordSaintCycle = 'lightning';
+      if (SFX.holyLight) SFX.holyLight();
+    }
+
+    if (_ohTier === 5) {
+      applyKingJudgmentSeal(u, t, addP, addDmg);
+      const primaryDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.lightningMult || 1.35));
+      const lineDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.lightningLineMult || 0.55));
+      dealDamage(t, primaryDamage, u, 'magic');
+      let lineHits = 0;
+      const length = swordCfg.lightningLineLength || 175;
+      const width = swordCfg.lightningLineWidth || 34;
+      for (const enemy of enemies) {
+        if (enemy === t || enemy.hp <= 0) continue;
+        const dx = enemy.x - u.x;
+        const dy = enemy.y - u.y;
+        const proj = dx * Math.cos(angle) + dy * Math.sin(angle);
+        if (proj < 0 || proj > length) continue;
+        const perp = Math.abs(dx * -Math.sin(angle) + dy * Math.cos(angle));
+        if (perp > width) continue;
+        dealDamage(enemy, lineDamage, u, 'magic');
+        addP(enemy.x, enemy.y, '#fff2a8', 8, 3);
+        addP(enemy.x, enemy.y, '#ffffff', 4, 2);
+        lineHits++;
+      }
+      grantKingSaintSwiftness(u);
+      beamFx.push({ x1: u.x, y1: u.y, x2: u.x + Math.cos(angle) * length, y2: u.y + Math.sin(angle) * length, life: 0.24, maxLife: 0.24, color: '#fff2a8', width: 6, straight: true });
+      beamFx.push({ x1: u.x, y1: u.y - 6, x2: u.x + Math.cos(angle) * length, y2: u.y + Math.sin(angle) * length - 6, life: 0.18, maxLife: 0.18, color: '#ffffff', width: 2, straight: true });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 50, life: 0.36, swipeArc: true, swipeAngle: angle, color: '#ffd966' });
+      addP(t.x, t.y, '#ffd966', 20, 4);
+      addP(t.x, t.y, '#ffffff', 10, 3);
+      addDmg(t.x, t.y - t.size - 8, 'LIGHTNING STAB', '#fff2a8', { sz: 13, bold: true, outline: '#5a4a10' });
+      if (lineHits) addDmg(t.x, t.y + 16, 'LINE x' + lineHits, '#ffffff', { sz: 10, bold: true });
+      u.swordSaintCycle = 'holy';
+      if (SFX.holyLight) SFX.holyLight();
+    }
+
+    if (_ohTier === 10) {
+      const stacks = applyKingJudgmentSeal(u, t, addP, addDmg);
+      const fullSealBonus = stacks >= (swordCfg.sealMax || 3) ? (1 + (swordCfg.holyExplosionFullSealBonus || 0.20)) : 1;
+      const primaryDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.holyExplosionMult || 2.35) * fullSealBonus);
+      const splashDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.holyExplosionSplashMult || 1.15) * fullSealBonus);
+      const radius = swordCfg.holyExplosionRadius || 85;
+      dealDamage(t, primaryDamage, u, 'magic');
+      let splashHits = 0;
+      for (const enemy of enemies) {
+        if (enemy === t || enemy.hp <= 0 || dist(t, enemy) > radius) continue;
+        dealDamage(enemy, splashDamage, u, 'magic');
+        addP(enemy.x, enemy.y, '#ffd966', 12, 4);
+        addP(enemy.x, enemy.y, '#dff5ff', 6, 3);
+        splashHits++;
+      }
+      grantKingExaltedEdge(u);
+      beamFx.push({ x1: t.x, y1: t.y - 90, x2: t.x, y2: t.y + 12, life: 0.34, maxLife: 0.34, color: '#fff2a8', width: 8, straight: true });
+      beamFx.push({ x1: t.x - 12, y1: t.y - 70, x2: t.x + 12, y2: t.y + 8, life: 0.28, maxLife: 0.28, color: '#dff5ff', width: 3, straight: true });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius, life: 0.68, color: '#ffd966' });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius + 34, life: 0.4, color: '#dff5ff' });
+      addP(t.x, t.y, '#ffd966', 34, 6);
+      addP(t.x, t.y, '#ffffff', 14, 4);
+      addDmg(t.x, t.y - t.size - 12, 'HOLY EXPLOSION', '#fff2a8', { sz: 14, bold: true, outline: '#5a4a10' });
+      if (splashHits) addDmg(t.x, t.y + 20, 'SPLASH x' + splashHits, '#fff2a8', { sz: 11, bold: true });
+      showFlash('HOLY EXPLOSION', '#fff2a8', 42);
+      shake(9);
+      u.swordSaintCycle = 'stasis';
+      if (SFX.holyLight) SFX.holyLight();
+    }
+  }
 
   if (u.whirlwind) {
     u.whirlwind.counter++;
@@ -211,6 +345,76 @@ export function applyZaytOnHitProcs(unit, target, {
     addP(u.x, u.y, '#ffffff', 10, 3);
     addDmg(u.x, u.y - u.size, 'GUARDIAN OATH!', '#ffd700', { sz: 14, bold: true });
     SFX.shieldBlock();
+  }
+
+  if (u.kingHolyCombo && _ohTier > 0 && t.hp > 0) {
+    const cfg = u.kingHolyCombo;
+    const woundedAllies = units
+      .filter(ally => ally && ally.hp > 0 && ally.isPlayer && !ally.isGhost && !ally.isMinion && ally.maxHp > 0 && ally.hp < ally.maxHp)
+      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+    const tankUnder = threshold => woundedAllies.find(ally => ally.arch === 'tank' && ally.hp / ally.maxHp < threshold) || null;
+    const applyHolyHeal = (ally, amount, big = true) => {
+      if (!ally) return 0;
+      const heal = applyHealingReceived(ally, Math.max(1, Math.round(amount || 0)));
+      const before = ally.hp;
+      ally.hp = Math.min(ally.maxHp, ally.hp + heal);
+      const actual = Math.max(0, Math.round(ally.hp - before));
+      addHealFx(ally.x, ally.y, actual, big);
+      if (actual > 0) beaconSplash(u, ally, actual);
+      return actual;
+    };
+
+    if (_ohTier === 3 && woundedAllies.length > 0) {
+      const ally = tankUnder(cfg.judgmentTankThreshold) || woundedAllies[0];
+      const actual = applyHolyHeal(ally, (u.healAmt || 60) * cfg.judgmentHealMult, true);
+      addP(ally.x, ally.y, '#ffe066', 10, 4);
+      addP(ally.x, ally.y - ally.size, '#ffffff', 5, 2);
+      beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.2, maxLife: 0.2, color: '#fff7c4', width: 3, straight: true });
+      groundFx.push({ x: ally.x, y: ally.y, r: 0, maxR: 34, life: 0.3, color: '#ffe066' });
+      if (actual > 0) addDmg(ally.x, ally.y - ally.size - 8, 'JUDGMENT OF LIGHT', '#fff7c4', { sz: 12, bold: true, outline: '#553300' });
+      SFX.holyLight();
+    }
+
+    if (_ohTier === 5 && woundedAllies.length > 0) {
+      const ally = woundedAllies[0];
+      const low = ally.hp / ally.maxHp < cfg.wordLowThreshold;
+      const healPct = low ? cfg.wordLowHealPct : cfg.wordHealPct;
+      const actual = applyHolyHeal(ally, ally.maxHp * healPct, true);
+      ally.hotTimer = Math.max(ally.hotTimer || 0, cfg.wordHotDur);
+      ally.hotAmt = Math.round(ally.maxHp * cfg.wordHotPct);
+      ally.hotTick = 0;
+      ally._eternalFlame = cfg.wordHotDur;
+      projectiles.push({ x: u.x, y: u.y, target: ally, tx: ally.x, ty: ally.y, speed: 1.8, projType: 'wogFlame', visualOnly: true, color: '#ff8800', _arrN: 12, _arrSz: 4, isPlayer: true, dmg: 0 });
+      beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.35, maxLife: 0.35, color: '#ffcc66', width: 3, straight: true });
+      groundFx.push({ x: ally.x, y: ally.y, r: 0, maxR: 55, life: 0.6, color: '#ff8800' });
+      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 30, life: 0.3, color: '#ffaa00' });
+      addP(ally.x, ally.y, '#ff8800', 12, 4);
+      addP(ally.x, ally.y, '#fff7c4', 6, 2);
+      if (actual > 0) addDmg(u.x, u.y - u.size - 6, 'WORD OF GLORY', '#ffaa00', { sz: 13, bold: true, outline: '#553300' });
+      addDmg(ally.x, ally.y - ally.size - 6, 'ETERNAL FLAME', '#ff6600', { sz: 11, bold: true, outline: '#442200' });
+      SFX.holyLight();
+    }
+
+    if (_ohTier === 10 && woundedAllies.length > 0) {
+      const ally = tankUnder(cfg.mercyTankThreshold) || woundedAllies[0];
+      const low = ally.hp / ally.maxHp < cfg.mercyLowThreshold;
+      const healPct = low ? cfg.mercyLowHealPct : cfg.mercyHealPct;
+      const shieldPct = low ? cfg.mercyLowShieldPct : cfg.mercyShieldPct;
+      const actual = applyHolyHeal(ally, ally.maxHp * healPct, true);
+      const shieldAmount = Math.round(ally.maxHp * shieldPct);
+      addGoldShield(ally, shieldAmount, cfg.mercyDur, Math.round(ally.maxHp * 0.24), true);
+      ally.guardiansMercyTimer = Math.max(ally.guardiansMercyTimer || 0, cfg.mercyDur);
+      ally.guardiansMercyDR = Math.max(ally.guardiansMercyDR || 0, cfg.mercyDr);
+      addP(ally.x, ally.y, '#ffd700', 24, 6);
+      addP(ally.x, ally.y, '#ffffff', 14, 4);
+      groundFx.push({ x: ally.x, y: ally.y, r: 0, maxR: 72, life: 0.55, color: '#ffd700' });
+      groundFx.push({ x: ally.x, y: ally.y, r: 0, maxR: 42, life: 0.35, color: '#ffffff' });
+      beamFx.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, life: 0.28, maxLife: 0.28, color: '#ffd700', width: 4, straight: true });
+      if (actual > 0) addDmg(ally.x, ally.y - ally.size - 10, "GUARDIAN'S MERCY", '#ffd700', { sz: 14, bold: true, outline: '#553300' });
+      showFlash("GUARDIAN'S MERCY", '#ffd700', 35);
+      SFX.shieldBlock();
+      shake(4);
+    }
   }
 
   if (u.lightOfDawn) {

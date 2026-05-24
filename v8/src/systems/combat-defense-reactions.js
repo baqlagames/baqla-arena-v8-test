@@ -114,6 +114,9 @@ export function applyPlayerSpecialDefenses(dmg, {
     return { dmg: next, blocked: true };
   }
   if (target.ardentDefenderDR > 0) next = Math.round(next * (1 - target.ardentDefenderDR));
+  if (target.guardiansMercyDR > 0) next = Math.round(next * (1 - target.guardiansMercyDR));
+  if (target.thirdEyeDR > 0) next = Math.round(next * (1 - target.thirdEyeDR));
+  if (target.crystalGuardDR > 0) next = Math.round(next * (1 - target.crystalGuardDR));
   if (target.ardentDefenderTimer > 0) {
     emitParticle(target.x, target.y, '#ffd700', 6, 3);
     addDamageText(target.x, target.y - target.size, 'INVULN', '#ffd700');

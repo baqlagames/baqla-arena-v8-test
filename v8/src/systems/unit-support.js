@@ -20,6 +20,7 @@ export function calculateAllyDamageMultiplier(unit, {
   let multiplier = bestChampion * bestStandard;
   multiplier *= zavsAllyDamageMultiplier(unit);
   if (unit._astralPower && unit._astralPower.stacks > 0) multiplier *= (1 + unit._astralPower.stacks * unit._astralPower.dmgPerStack);
+  if (unit.unitIdx === 13 && unit.azureSenStacks > 0) multiplier *= (1 + Math.min(3, unit.azureSenStacks) * 0.03);
   if (unit._celestialAlignment) multiplier *= 1.25;
   if (unit.sisterhoodMult || (unit.isMirror && unit.parent && unit.parent.sisterhoodMult)) {
     const root = unit.isMirror ? unit.parent : unit;

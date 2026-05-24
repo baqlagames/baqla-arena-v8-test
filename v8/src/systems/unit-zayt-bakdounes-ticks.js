@@ -343,6 +343,11 @@ function tickPaladinTimers(unit, {
     if (frame % 8 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.5, unit.size * 0.5), unit.y - unit.size * 0.2, '#ffe066', 1, 2);
     if (unit.guardianOathTimer <= 0) unit.guardianOathDR = 0;
   }
+  if (unit.guardiansMercyTimer > 0) {
+    unit.guardiansMercyTimer--;
+    if (frame % 8 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.5, unit.size * 0.5), unit.y - unit.size * 0.2, '#ffd700', 1, 2);
+    if (unit.guardiansMercyTimer <= 0) unit.guardiansMercyDR = 0;
+  }
   if (unit.ashenGuardianTimer > 0) {
     unit.ashenGuardianTimer--;
     if (frame % 6 === 0) emitParticle(unit.x + randomRange(-unit.size * 0.55, unit.size * 0.55), unit.y - unit.size * 0.25, '#ff8844', 1, 3);

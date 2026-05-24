@@ -21,6 +21,8 @@ export function prepareUnitAttack(unit, target, {
   const zavsSpeed = allyAttackSpeedFactor(unit);
   if (zavsSpeed !== 1) attackSpeed = Math.max(18, Math.round(attackSpeed * zavsSpeed));
   if (unit._jazarSigHasteTimer > 0) attackSpeed = Math.max(8, Math.round(attackSpeed * (unit._jazarSigHasteMult || 0.70)));
+  if (unit.lifeOfDragonTimer > 0) attackSpeed = Math.max(18, Math.round(attackSpeed * (unit.lifeOfDragonAtkMult || 0.85)));
+  if (unit.saintSwiftnessTimer > 0) attackSpeed = Math.max(18, Math.round(attackSpeed * (unit.saintSwiftnessAtkMult || 0.90)));
   if (unit.sliceAndDice && unit.sliceAndDice.timer > 0) attackSpeed = Math.max(18, Math.round(attackSpeed / unit.sliceAndDice.spdMult));
   unit.cd = attackSpeed;
 

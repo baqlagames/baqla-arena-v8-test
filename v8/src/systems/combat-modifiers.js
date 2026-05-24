@@ -30,6 +30,14 @@ export function applyArenaIncomingScalarModifiers(dmg, {
   if (hasMaxShadowWordPainStacks(target)) next = Math.round(next * 1.07);
   if (target._finalReckoning && target._finalReckoning > 0) next = Math.round(next * 1.20);
   if (target._deathMark && target._deathMark.timer > 0) next = Math.round(next * 1.25);
+  if (attacker && attacker.unitIdx === 3 && !attacker.branch && target.judgmentSealSource === attacker && target.judgmentSealTimer > 0) {
+    const cfg = attacker.holySwordSaintCombo || {};
+    const stacks = Math.min(cfg.sealMax || 3, target.judgmentSealStacks || 0);
+    if (stacks > 0) next = Math.round(next * (1 + stacks * (cfg.sealDamagePer || 0.06)));
+  }
+  if (attacker && attacker.unitIdx === 3 && !attacker.branch && attacker.exaltedEdgeTimer > 0 && (target.isBoss || target.elite || target.isElite)) {
+    next = Math.round(next * (attacker.exaltedEdgeMult || 1.10));
+  }
   if (attacker && attacker.demoralizedTimer > 0) next = Math.round(next * (attacker.demoralizedMult || 0.80));
   if (attacker && attacker.isEnemy && attacker._flameCurseTimer > 0) next = Math.max(1, Math.round(next * (attacker._flameCurseDamageMult || 0.95)));
   if (attacker && attacker.isEnemy && attacker.dentedTimer > 0) next = Math.max(1, Math.round(next * (attacker.dentedMult || 0.90)));
