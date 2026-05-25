@@ -9,6 +9,7 @@ import { applyZaytOnHitProcs } from '../src/systems/unit-zayt-onhit-procs.js';
 import { advanceSharedOnHitCounter } from '../src/systems/unit-onhit-procs.js';
 import { createUnitAbilityRuntime } from '../src/systems/unit-ability-runtime.js';
 import { createArenaSignatures } from '../src/systems/unit-signatures.js';
+import { applyArenaIncomingScalarModifiers } from '../src/systems/combat-modifiers.js';
 
 const noop = () => {};
 const dist = (a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0));
@@ -146,6 +147,11 @@ function runAttack(unit, enemy, context) {
   assert.equal(context.projectiles.length, 5, 'Fivefold Judgment should create five sword projectile visuals');
   assert.ok(context.projectiles.every(p => p.projType === 'holySword' && p.speed <= 2.5 && p._swordLen >= 40), 'Fivefold Judgment swords should be large, slow, visible holySword projectiles');
   assert.equal(enemy.slowTimer, 2 * GAME_TICK_HZ, 'Thunder stance should slow the priority target');
+  assert.equal(king.crystalGuardDR, 0.10, '5th hit should grant a Saint Guard damage reduction window');
+  assert.equal(king.crystalGuardTimer, 2 * GAME_TICK_HZ, '5th hit guard should last 2s');
+  assert.equal(king.holySwordDamageBuffMult, 1.08, '5th hit should grant the +8% Saint Edge damage buff');
+  assert.equal(king.holySwordDamageBuffTimer, 4 * GAME_TICK_HZ, '5th hit damage buff should last 4s');
+  assert.equal(applyArenaIncomingScalarModifiers(100, { target: enemy, attacker: king }), 108, '5th hit damage buff should scale outgoing damage');
   assert.equal(king.holySwordCharges, 3, '3rd plus 5th hit should build to three sword charges');
   assert.equal(king.livingArsenalStance, 'crown', '5th hit should advance Thunder to Crown');
 }
@@ -162,6 +168,11 @@ function runAttack(unit, enemy, context) {
   assert.ok(events.includes('CROWN CROSS'), 'Crown Cross text should be emitted');
   assert.equal(king.holySwordCharges, 5, '10th hit should fill sword charges to five');
   assert.equal(king.livingArsenalStance, 'crystal', '10th hit should advance Crown back to Crystal');
+  assert.equal(king.crystalGuardDR, 0.12, '10th hit should grant the stronger Crown Cross guard window');
+  assert.equal(king.crystalGuardTimer, 3 * GAME_TICK_HZ, '10th hit guard should last 3s');
+  assert.equal(king.holySwordDamageBuffMult, 1.15, '10th hit should grant the +15% Arsenal Surge damage buff');
+  assert.equal(king.holySwordDamageBuffTimer, 5 * GAME_TICK_HZ, '10th hit damage buff should last 5s');
+  assert.equal(applyArenaIncomingScalarModifiers(100, { target: enemy, attacker: king }), 115, '10th hit damage buff should scale outgoing damage');
   assert.ok(king.holySwordEchoes?.some(e => e.type === 'crownCross'), 'Crown Cross should queue delayed lane damage');
   assert.ok(context.groundEffects.some(g => g.holyBladeWarn && g.warnKind === 'line'), 'Crown Cross should use player Holy Sword lane warnings instead of enemy warnings');
 }

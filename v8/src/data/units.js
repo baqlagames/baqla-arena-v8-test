@@ -35,7 +35,7 @@ export const PLAYER_UNITS=[
     role:'Holy Sword Saint',a3:'astralSever',a5:'fivefoldEdict',
     desc:'Crusader knight paladin. Blade of Justice (3rd), Hammer of Light (5th), Wake of Ashes (10th). Art of War: crits reset a3 CD. Hammer of Wrath: 2Ãƒâ€” to low HP. Final Reckoning: marks enemies +20% dmg taken.',
     src:'WoW Retribution Paladin',
-    desc:'Holy Sword Saint blade commander. Living Arsenal cycles Crystal, Thunder, and Crown sword stances into boss-style lanes, Fivefold Judgment volleys, Crown Cross, and Heavenly Arsenal.',
+    desc:'Holy Sword Saint blade commander. Living Arsenal cycles Crystal, Thunder, and Crown sword stances into boss-style lanes, Fivefold Judgment guard surges, Crown Cross damage surges, and Heavenly Arsenal.',
     src:'Final Fantasy Tactics Holy Sword + FF Dragoon/Samurai',
     up:[{hp:450,dmg:32,armor:3,speed:0.32,atkSpd:72},{hp:520,dmg:40,armor:4,magicRes:3,speed:0.34,atkSpd:66},{hp:660,dmg:50,armor:6,magicRes:4,speed:0.36,atkSpd:60},{hp:850,dmg:64,armor:8,magicRes:5,speed:0.40,atkSpd:54}]},
   {id:4,name:'Felfel',ar:'Ã™ÂÃ™â€žÃ™ÂÃ™â€ž Ã˜Â­Ã˜Â§Ã˜Â±',role:'Shadow Assassin',arch:'melee',color:'#a6262e',accent:'#5e1218',cost:3,

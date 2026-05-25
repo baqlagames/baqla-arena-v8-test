@@ -38,6 +38,9 @@ export function applyArenaIncomingScalarModifiers(dmg, {
   if (attacker && attacker.unitIdx === 3 && !attacker.branch && attacker.exaltedEdgeTimer > 0 && (target.isBoss || target.elite || target.isElite)) {
     next = Math.round(next * (attacker.exaltedEdgeMult || 1.10));
   }
+  if (attacker && attacker.unitIdx === 3 && !attacker.branch && attacker.holySwordDamageBuffTimer > 0) {
+    next = Math.round(next * (attacker.holySwordDamageBuffMult || 1.0));
+  }
   if (attacker && attacker.demoralizedTimer > 0) next = Math.round(next * (attacker.demoralizedMult || 0.80));
   if (attacker && attacker.isEnemy && attacker._flameCurseTimer > 0) next = Math.max(1, Math.round(next * (attacker._flameCurseDamageMult || 0.95)));
   if (attacker && attacker.isEnemy && attacker.dentedTimer > 0) next = Math.max(1, Math.round(next * (attacker.dentedMult || 0.90)));

@@ -730,6 +730,14 @@ function tickKingHolySwordTimers(unit, {
     if (frame % 8 === 0) emitParticle(unit.x, unit.y - unit.size * 0.35, '#ffd166', 2, 2);
     if (unit.crystalGuardTimer <= 0) unit.crystalGuardDR = 0;
   }
+  if (unit.holySwordDamageBuffTimer > 0) {
+    unit.holySwordDamageBuffTimer--;
+    if (frame % 6 === 0) {
+      const color = (unit.holySwordDamageBuffMult || 1) >= 1.15 ? '#ff3d8b' : '#ffb000';
+      emitParticle(unit.x, unit.y - unit.size * 0.55, color, 2.5, 3);
+    }
+    if (unit.holySwordDamageBuffTimer <= 0) unit.holySwordDamageBuffMult = 1;
+  }
   if (unit.saintSwiftnessTimer > 0) {
     unit.saintSwiftnessTimer--;
     if (frame % 6 === 0) emitParticle(unit.x + 4, unit.y - unit.size * 0.3, '#ffb000', 2, 2);

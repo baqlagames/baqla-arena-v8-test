@@ -547,7 +547,7 @@ function arena_passiveShort(id){
     swordSaintCycle:'Legacy holy blade cycle',
     judgmentSeals:'Legacy Judgment Seals',
     livingArsenal:'Crystal, Thunder, and Crown sword stances rotate through stun, slow, knockback, and boss verdict bonuses',
-    fiveSwordChoir:'King stores up to 5 spectral swords; Heavenly Arsenal consumes them for stronger burst',
+    fiveSwordChoir:'King stores up to 5 spectral swords; 5th/10th attacks grant guard windows and damage surges; Heavenly Arsenal consumes charges',
     wingsOfLight:'Always-on +20% damage and +20% crit chance',
     shieldOfVengeance:'Absorb 20% max HP, then burst all absorbed damage as holy AoE (15s CD)',
     avengersShield:'Every 6s throw bouncing shield hitting 3 enemies; at L4 hits 5 for 1.65x and 16% shield cap.',
@@ -719,7 +719,7 @@ function arena_baseHeadline(unitIdx){
     12:'AROMANCER: Soothing Aroma + Essence Infusion. Sig: Aromatic Burst Ã¢â‚¬â€ herb-essence healer',
     99:"Champion's Aura + Devour Ã¢â‚¬â€ hero buffer & finisher"
   };
-  m[3]='HOLY SWORD SAINT: Living Arsenal cycles Crystal, Thunder, and Crown sword stances. 3/5/10 Arsenal Cut, Fivefold Judgment, and Crown Cross create visible blade lanes and five-sword volleys. A3/A5 are Astral Sever and Fivefold Edict. Signature Heavenly Arsenal consumes sword charges.';
+  m[3]='HOLY SWORD SAINT: Living Arsenal cycles Crystal, Thunder, and Crown sword stances. 3/5/10 Arsenal Cut, Fivefold Judgment, and Crown Cross create visible blade lanes and five-sword volleys. 5th and 10th attacks also grant guard windows and damage surges. A3/A5 are Astral Sever and Fivefold Edict. Signature Heavenly Arsenal consumes sword charges.';
   return m[unitIdx]||'';
 }
 // One-line summary per branch variant Ã¢â‚¬â€ used by the codex detail page so
@@ -784,7 +784,7 @@ function passiveLabel(u){
     // Kharroob codex entry removed
     Vodka:"P1 Champion's Aura: passive damage bonus to all allies. P2 (L3) Devour: heal a portion of damage dealt + chance to insta-kill weak enemies."
   };
-  m.King='Holy Sword Saint. Built-in: Crusader Aura mount charge. P1 Living Arsenal cycles Crystal, Thunder, and Crown stances for stun, slow, knockback, and boss verdict effects. P2 Five-Sword Choir stores up to 5 spectral swords. 3/5/10: Arsenal Cut, Fivefold Judgment, Crown Cross. A3 Astral Sever. A5 Fivefold Edict. Signature Heavenly Arsenal consumes charges for stronger burst.';
+  m.King='Holy Sword Saint. Built-in: Crusader Aura mount charge. P1 Living Arsenal cycles Crystal, Thunder, and Crown stances for stun, slow, knockback, and boss verdict effects. P2 Five-Sword Choir stores up to 5 spectral swords; 5th/10th attacks grant guard windows and damage surges. 3/5/10: Arsenal Cut, Fivefold Judgment, Crown Cross. A3 Astral Sever. A5 Fivefold Edict. Signature Heavenly Arsenal consumes charges for stronger burst.';
   return m[u.name]||'';
 }
 function abilityLabel(name){

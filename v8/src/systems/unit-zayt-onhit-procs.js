@@ -45,6 +45,16 @@ function grantKingCrystalGuard(u, dr, dur) {
   u.crystalGuardTimer = Math.max(u.crystalGuardTimer || 0, dur || cfg.arsenalGuardDur || 2 * GAME_TICK_HZ);
 }
 
+function grantKingHolySwordDamageBuff(u, pct, dur) {
+  const cfg = kingHolySwordCfg(u);
+  if (!cfg) return;
+  const nextMult = 1 + (pct || 0);
+  const currentMult = u.holySwordDamageBuffTimer > 0 ? (u.holySwordDamageBuffMult || 1) : 1;
+  if (nextMult < currentMult) return;
+  u.holySwordDamageBuffMult = nextMult;
+  u.holySwordDamageBuffTimer = Math.max(u.holySwordDamageBuffTimer || 0, dur || 0);
+}
+
 function applyKingArsenalCc(u, target, stance, cfg, enemies, dealDamage, addP, addDmg) {
   if (!u || !target || !isValidPlayerOffensiveTarget(target)) return;
   const data = kingArsenalData(stance);
@@ -214,6 +224,8 @@ export function applyZaytOnHitProcs(unit, target, {
 
     if (_ohTier === 5) {
       grantKingHolySwordCharges(u, 2);
+      grantKingCrystalGuard(u, swordCfg.fivefoldGuardDr || 0.10, swordCfg.fivefoldGuardDur || 2 * GAME_TICK_HZ);
+      grantKingHolySwordDamageBuff(u, swordCfg.fivefoldDamageBuff || 0.08, swordCfg.fivefoldDamageBuffDur || 4 * GAME_TICK_HZ);
       const targets = pickKingSwordTargets(u, enemies, t, swordCfg.fivefoldRange || 300, 5);
       const priority = targets[0] || t;
       for (let i = 0; i < 5; i++) {
@@ -231,12 +243,15 @@ export function applyZaytOnHitProcs(unit, target, {
       addP(u.x, u.y, data.color, 24, 5);
       addP(u.x, u.y, data.alt, 14, 3);
       addDmg(priority.x, priority.y - priority.size - 8, 'FIVEFOLD JUDGMENT', data.color, { sz: 13, bold: true, outline: '#132033' });
+      addDmg(u.x, u.y - u.size - 14, 'SAINT EDGE +8%', data.alt, { sz: 11, bold: true, outline: '#2a0f2d' });
       advanceKingArsenalStance(u);
       if (SFX.holyLight) SFX.holyLight();
     }
 
     if (_ohTier === 10) {
       grantKingHolySwordCharges(u, 0, true);
+      grantKingCrystalGuard(u, swordCfg.crownCrossGuardDr || 0.12, swordCfg.crownCrossGuardDur || 3 * GAME_TICK_HZ);
+      grantKingHolySwordDamageBuff(u, swordCfg.crownCrossDamageBuff || 0.15, swordCfg.crownCrossDamageBuffDur || 5 * GAME_TICK_HZ);
       const targets = pickKingSwordTargets(u, enemies, t, swordCfg.crownCrossRange || 300, 5);
       const lanes = buildKingArsenalLanes(u, t, targets, 5, swordCfg.crownCrossLength || 300, swordCfg.crownCrossWidth || 44);
       for (const lane of lanes) pushKingArsenalLineWarn(groundFx, lane.x1, lane.y1, lane.x2, lane.y2, lane.width, data.color, 'CROSS', swordCfg.crownCrossDelay || 15);
@@ -257,6 +272,7 @@ export function applyZaytOnHitProcs(unit, target, {
       addP(t.x, t.y, data.color, 36, 6);
       addP(t.x, t.y, data.alt, 18, 4);
       addDmg(t.x, t.y - t.size - 12, 'CROWN CROSS', data.color, { sz: 14, bold: true, outline: '#132033' });
+      addDmg(u.x, u.y - u.size - 14, 'ARSENAL SURGE +15%', data.alt, { sz: 12, bold: true, outline: '#2a0f2d' });
       showFlash('CROWN CROSS', data.color, 42);
       shake(9);
       advanceKingArsenalStance(u);

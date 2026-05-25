@@ -104,7 +104,7 @@ export const ARENA_PATH_DETAIL_LINES={
   batata_nature:['Stats: +22% HP, +10% MR, -5% damage','Backline Garden: healer/ranged allies -10% damage taken','Living Bulwark: 22% HP shield, -30% damage, shelter bonuses'],
   batata_berserker:['Stats: +14% HP, +12% armor, +6% damage, 4% faster attacks','Mirebreaker: Batata -10% damage while swarmed','Quakebreak: 20% HP shield, -25% damage, mud weakens swarms'],
   king_protection:['Stats: +120% HP/armor, +65% MR, -15% damage','Hallowed Leap: jumps toward ranged/caster threats and shields King','Avenger Shield: 6s, 3 targets; L4 hits 5 at 1.65x with 16% shield cap','Ashen Hallow: 20% shield, -30% damage, ally DR inside'],
-  king_retribution:['3rd/5th/10th: Arsenal Cut, Fivefold Judgment, Crown Cross','Passive: Living Arsenal + Five-Sword Choir','A3/A5: Astral Sever, Fivefold Edict','Signature: Heavenly Arsenal'],
+  king_retribution:['3rd/5th/10th: Arsenal Cut, Fivefold Judgment, Crown Cross','5th/10th: Guard windows + damage surges','Passive: Living Arsenal + Five-Sword Choir','A3/A5: Astral Sever, Fivefold Edict','Signature: Heavenly Arsenal'],
   monk_dps:['3rd/5th/10th: Hakaze Thrust, Gekko Dive, Midare Nastrond','Passive: Azure Sen + Third Eye','A3/A5: Hissatsu Gyoten, Geirskogul Dive','Signature: Midare Stardiver'],
   alibaba_frost:['Stats: -10% damage, 10% faster attacks','Frost hits slow by 35%; Frozen Orb slows 50%','Frozen Orb roots normal enemies for 0.5s per hit'],
   alibaba_thunder:['Stats: +10% damage','Chain Thunder: 0.5s stun to non-boss enemies','Stormkeeper: every 8th hit deals 250% damage'],
