@@ -66,6 +66,56 @@ export function createProjectilesRuntime(deps) {
       ctx.stroke();
       // Trail particle every 2nd frame
       if(frame%2===0)addP(p.x,p.y,'#ffe066',1,2);
+    }else if(p.projType==='holySword'){
+      const _tx=p.target&&p.target.hp>0?p.target.x:(Number.isFinite(p.tx)?p.tx:p.x+1);
+      const _ty=p.target&&p.target.hp>0?p.target.y:(Number.isFinite(p.ty)?p.ty:p.y);
+      const _ang=Math.atan2(_ty-p.y,_tx-p.x);
+      const _len=p._swordLen||46;
+      const _w=p._swordW||11;
+      const _col=p.color||'#ff3d8b';
+      const _alt=p.altColor||'#fff4cc';
+      ctx.save();
+      ctx.translate(p.x,p.y);ctx.rotate(_ang);
+      ctx.shadowColor=_col;ctx.shadowBlur=18;
+      for(let i=3;i>=1;i--){
+        ctx.globalAlpha=0.12*i;
+        ctx.fillStyle=i%2?_col:_alt;
+        ctx.beginPath();
+        ctx.moveTo(-_len*0.18-i*8,0);
+        ctx.lineTo(-_len*0.70-i*11,-_w*0.45);
+        ctx.lineTo(-_len*0.88-i*13,0);
+        ctx.lineTo(-_len*0.70-i*11,_w*0.45);
+        ctx.closePath();ctx.fill();
+      }
+      ctx.globalAlpha=0.30;
+      ctx.fillStyle=_col;ctx.beginPath();ctx.ellipse(-_len*0.18,0,_len*0.72,_w*0.92,0,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.fillStyle=_col;
+      ctx.beginPath();
+      ctx.moveTo(_len*0.58,0);
+      ctx.lineTo(-_len*0.16,-_w*0.58);
+      ctx.lineTo(-_len*0.38,0);
+      ctx.lineTo(-_len*0.16,_w*0.58);
+      ctx.closePath();ctx.fill();
+      ctx.fillStyle=_alt;
+      ctx.beginPath();
+      ctx.moveTo(_len*0.45,0);
+      ctx.lineTo(-_len*0.10,-_w*0.25);
+      ctx.lineTo(-_len*0.24,0);
+      ctx.lineTo(-_len*0.10,_w*0.25);
+      ctx.closePath();ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.strokeStyle='#2a1230';ctx.lineWidth=2.2;
+      ctx.beginPath();ctx.moveTo(-_len*0.24,-_w*1.10);ctx.lineTo(-_len*0.24,_w*1.10);ctx.stroke();
+      ctx.strokeStyle=_alt;ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(-_len*0.32,-_w*0.78);ctx.lineTo(-_len*0.32,_w*0.78);ctx.stroke();
+      ctx.fillStyle='#2a1230';
+      ctx.beginPath();ctx.roundRect(-_len*0.50,-_w*0.22,_len*0.28,_w*0.44,_w*0.22);ctx.fill();
+      ctx.restore();
+      if(frame%2===0){
+        addP(p.x-Math.cos(_ang)*_len*0.30+rnd(-2,2),p.y-Math.sin(_ang)*_len*0.30+rnd(-2,2),p._trailColor||_col,2,3);
+        addP(p.x,p.y,_alt,1,2);
+      }
     }else if(p.blackArrow){
       const _bsz=p.size||12;
       const _dx=p.target?p.target.x-p.x:1,_dy=p.target?p.target.y-p.y:0;

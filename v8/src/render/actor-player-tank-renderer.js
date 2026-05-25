@@ -326,11 +326,11 @@ drawFns.drawZayton=function(x,y,u){
   const _isHoly=u.branch==='b';
   const _useProtSprite=_isProt&&unitSpriteAssets.isReady('kingProt');
   const _kingSprite=unitSpriteAssets.pick(_useProtSprite?'kingProt':'king',10);
-  const _kingGlow=_isProt?'#8ab4f8':(_isHoly?'#ffe066':'#ffd700');
+  const _kingGlow=_isProt?'#8ab4f8':(_isHoly?'#ffe066':(u.holySwordSaintCombo?'#ff3d8b':'#ffd700'));
   const drawLivingArsenal=function(){
     if(u.branch||!u.holySwordSaintCombo)return;
     const stance=u.livingArsenalStance||'crystal';
-    const data=stance==='thunder'?{c:'#5cc8ff',a:'#ffd966'}:(stance==='crown'?{c:'#ffd966',a:'#fff2a8'}:{c:'#dff5ff',a:'#ffffff'});
+    const data=stance==='thunder'?{c:'#ffb000',a:'#fff06a'}:(stance==='crown'?{c:'#ff3d8b',a:'#ffd166'}:{c:'#b95cff',a:'#f5d6ff'});
     const charges=Math.max(0,Math.min(5,u.holySwordCharges||0));
     ctx.save();
     ctx.globalAlpha=0.28+0.08*Math.sin(frame*0.08);

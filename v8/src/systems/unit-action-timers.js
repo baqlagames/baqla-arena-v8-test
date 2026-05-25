@@ -619,9 +619,9 @@ function tickRoninDragoonTimers(unit, {
 }
 
 const KING_TIMER_ARSENAL_DATA = {
-  crystal: { label: 'CRYSTAL', color: '#dff5ff', alt: '#ffffff' },
-  thunder: { label: 'THUNDER', color: '#5cc8ff', alt: '#ffd966' },
-  crown: { label: 'CROWN', color: '#ffd966', alt: '#fff2a8' },
+  crystal: { label: 'CRYSTAL', color: '#b95cff', alt: '#f5d6ff' },
+  thunder: { label: 'THUNDER', color: '#ffb000', alt: '#fff06a' },
+  crown: { label: 'CROWN', color: '#ff3d8b', alt: '#ffd166' },
 };
 
 function kingTimerArsenalData(stance) {
@@ -697,9 +697,9 @@ function resolveKingArsenalLanes(unit, echo, { enemies, beamEffects, groundEffec
     if (echo.applyCc !== false) applyKingTimerArsenalCc(unit, main, echo.stance, { enemies, dealDamage, emitParticle, addDamageText });
   }
   for (const lane of echo.lanes || []) {
-    beamEffects.push({ x1: lane.x1, y1: lane.y1 - 8, x2: lane.x2, y2: lane.y2 - 8, color: data.color, width: echo.type === 'crownCrossEcho' ? 5 : 8, life: 0.30, maxLife: 0.30, straight: true });
-    beamEffects.push({ x1: lane.x1, y1: lane.y1 + 4, x2: lane.x2, y2: lane.y2 + 4, color: data.alt, width: 2.5, life: 0.24, maxLife: 0.24, straight: true });
-    groundEffects.push({ x: (lane.x1 + lane.x2) / 2, y: (lane.y1 + lane.y2) / 2, r: 0, maxR: Math.max(46, Math.hypot(lane.x2 - lane.x1, lane.y2 - lane.y1) * 0.36), life: 0.35, color: data.color, flatten: true });
+    beamEffects.push({ x1: lane.x1, y1: lane.y1 - 8, x2: lane.x2, y2: lane.y2 - 8, color: data.color, width: echo.type === 'crownCrossEcho' ? 7 : 10, life: 0.58, maxLife: 0.58, straight: true });
+    beamEffects.push({ x1: lane.x1, y1: lane.y1 + 4, x2: lane.x2, y2: lane.y2 + 4, color: data.alt, width: 4, life: 0.48, maxLife: 0.48, straight: true });
+    groundEffects.push({ x: (lane.x1 + lane.x2) / 2, y: (lane.y1 + lane.y2) / 2, r: 0, maxR: Math.max(56, Math.hypot(lane.x2 - lane.x1, lane.y2 - lane.y1) * 0.40), life: 0.70, color: data.color, flatten: true });
     for (const enemy of enemies) {
       if (hit.has(enemy) || !isValidPlayerOffensiveTarget(enemy)) continue;
       if (kingTimerLineDistance(enemy, lane.x1, lane.y1, lane.x2, lane.y2) > (lane.width || 44)) continue;
@@ -727,24 +727,24 @@ function tickKingHolySwordTimers(unit, {
 }) {
   if (unit.crystalGuardTimer > 0) {
     unit.crystalGuardTimer--;
-    if (frame % 8 === 0) emitParticle(unit.x, unit.y - unit.size * 0.35, '#fff2a8', 2, 2);
+    if (frame % 8 === 0) emitParticle(unit.x, unit.y - unit.size * 0.35, '#ffd166', 2, 2);
     if (unit.crystalGuardTimer <= 0) unit.crystalGuardDR = 0;
   }
   if (unit.saintSwiftnessTimer > 0) {
     unit.saintSwiftnessTimer--;
-    if (frame % 6 === 0) emitParticle(unit.x + 4, unit.y - unit.size * 0.3, '#dff5ff', 2, 2);
+    if (frame % 6 === 0) emitParticle(unit.x + 4, unit.y - unit.size * 0.3, '#ffb000', 2, 2);
     if (unit.saintSwiftnessTimer <= 0) unit.saintSwiftnessAtkMult = 0;
   }
   if (unit.exaltedEdgeTimer > 0) {
     unit.exaltedEdgeTimer--;
-    if (frame % 7 === 0) emitParticle(unit.x - 4, unit.y - unit.size * 0.5, '#ffd966', 2, 2);
+    if (frame % 7 === 0) emitParticle(unit.x - 4, unit.y - unit.size * 0.5, '#ff3d8b', 2, 2);
   }
   if (Array.isArray(unit.holySwordEchoes) && unit.holySwordEchoes.length > 0) {
     for (let i = unit.holySwordEchoes.length - 1; i >= 0; i--) {
       const echo = unit.holySwordEchoes[i];
       echo.timer--;
       if (echo.timer > 0) {
-        if (frame % 3 === 0) emitParticle(echo.x, echo.y - 22, echo.type === 'pillar' ? '#fff2a8' : '#dff5ff', 2, 3);
+        if (frame % 3 === 0) emitParticle(echo.x, echo.y - 22, echo.type === 'pillar' ? '#ffd166' : '#b95cff', 2, 3);
         continue;
       }
       unit.holySwordEchoes.splice(i, 1);
@@ -766,16 +766,16 @@ function tickKingHolySwordTimers(unit, {
       } else if (echo.type === 'edictPulse') {
         const hit = new Set();
         for (const point of echo.points || []) {
-          groundEffects.push({ x: point.x, y: point.y, r: 0, maxR: echo.radius || 55, life: 0.45, color: '#fff2a8' });
-          beamEffects.push({ x1: point.x, y1: point.y - 95, x2: point.x, y2: point.y + 8, color: '#ffd966cc', width: 5, life: 0.28, maxLife: 0.28, straight: true });
+          groundEffects.push({ x: point.x, y: point.y, r: 0, maxR: echo.radius || 55, life: 0.75, color: '#ffb000' });
+          beamEffects.push({ x1: point.x, y1: point.y - 105, x2: point.x, y2: point.y + 8, color: '#ffb000dd', width: 7, life: 0.55, maxLife: 0.55, straight: true });
           for (const enemy of enemies) {
             if (hit.has(enemy) || !isValidPlayerOffensiveTarget(enemy) || dist(point, enemy) > (echo.radius || 55)) continue;
             dealDamage(enemy, echo.dmg || Math.round((unit.dmg || 1) * 0.8), unit, 'magic');
             hit.add(enemy);
-            emitParticle(enemy.x, enemy.y, '#ffd966', 8, 3);
+            emitParticle(enemy.x, enemy.y, '#ffb000', 8, 3);
           }
         }
-        if ((echo.points || []).length) addDamageText(echo.points[0].x, echo.points[0].y - 28, echo.label || 'EDICT PULSE', '#fff2a8', { sz: 12, bold: true });
+        if ((echo.points || []).length) addDamageText(echo.points[0].x, echo.points[0].y - 28, echo.label || 'EDICT PULSE', '#ffd166', { sz: 12, bold: true });
         if (hit.size) shake(7);
       } else if (echo.type === 'heavenlyCrown') {
         const target = echo.target;
@@ -789,14 +789,14 @@ function tickKingHolySwordTimers(unit, {
             const d = Math.hypot(dx, dy) || 1;
             enemy.x += dx / d * 34;
             enemy.y += dy / d * 34;
-            emitParticle(enemy.x, enemy.y, '#ffd966', 8, 3);
+            emitParticle(enemy.x, enemy.y, '#ff3d8b', 8, 3);
           }
-          beamEffects.push({ x1: target.x, y1: target.y - 140, x2: target.x, y2: target.y + 8, color: '#fff2a8', width: 10, life: 0.36, maxLife: 0.36, straight: true });
-          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: echo.radius || 110, life: 0.72, color: '#ffd966' });
-          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: (echo.radius || 110) + 42, life: 0.42, color: '#dff5ff' });
-          emitParticle(target.x, target.y, '#ffd966', 44, 8);
-          emitParticle(target.x, target.y, '#ffffff', 18, 4);
-          addDamageText(target.x, target.y - target.size - 20, echo.label || 'CROWN SWORD', '#fff2a8', { sz: 14, bold: true });
+          beamEffects.push({ x1: target.x, y1: target.y - 155, x2: target.x, y2: target.y + 8, color: '#ffd166', width: 12, life: 0.88, maxLife: 0.88, straight: true });
+          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: echo.radius || 110, life: 0.95, color: '#ff3d8b' });
+          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: (echo.radius || 110) + 42, life: 0.62, color: '#b95cff' });
+          emitParticle(target.x, target.y, '#ff3d8b', 52, 8);
+          emitParticle(target.x, target.y, '#ffd166', 24, 5);
+          addDamageText(target.x, target.y - target.size - 20, echo.label || 'CROWN SWORD', '#ffd166', { sz: 14, bold: true });
           shake(11);
         }
       } else if (echo.type === 'lightning') {

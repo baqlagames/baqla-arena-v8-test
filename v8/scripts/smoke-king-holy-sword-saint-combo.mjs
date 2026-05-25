@@ -144,6 +144,7 @@ function runAttack(unit, enemy, context) {
   assert.deepEqual(tiers, [0, 0, 3, 0, 5], 'L3 should add Fivefold Judgment on the literal 5th attack');
   assert.ok(events.includes('FIVEFOLD JUDGMENT'), 'Fivefold Judgment text should be emitted');
   assert.equal(context.projectiles.length, 5, 'Fivefold Judgment should create five sword projectile visuals');
+  assert.ok(context.projectiles.every(p => p.projType === 'holySword' && p.speed <= 2.5 && p._swordLen >= 40), 'Fivefold Judgment swords should be large, slow, visible holySword projectiles');
   assert.equal(enemy.slowTimer, 2 * GAME_TICK_HZ, 'Thunder stance should slow the priority target');
   assert.equal(king.holySwordCharges, 3, '3rd plus 5th hit should build to three sword charges');
   assert.equal(king.livingArsenalStance, 'crown', '5th hit should advance Thunder to Crown');
@@ -162,6 +163,7 @@ function runAttack(unit, enemy, context) {
   assert.equal(king.holySwordCharges, 5, '10th hit should fill sword charges to five');
   assert.equal(king.livingArsenalStance, 'crystal', '10th hit should advance Crown back to Crystal');
   assert.ok(king.holySwordEchoes?.some(e => e.type === 'crownCross'), 'Crown Cross should queue delayed lane damage');
+  assert.ok(context.groundEffects.some(g => g.holyBladeWarn && g.warnKind === 'line'), 'Crown Cross should use player Holy Sword lane warnings instead of enemy warnings');
 }
 
 {
@@ -236,11 +238,13 @@ function runAttack(unit, enemy, context) {
   assert.deepEqual({ x: king.x, y: king.y }, start, 'Astral Sever should not move King');
   assert.equal(king.crystalGuardDR, 0.08, 'Astral Sever should grant short Crystal Guard');
   assert.ok(king.holySwordEchoes?.some(e => e.type === 'astralSever'), 'Astral Sever should queue delayed lane damage');
+  assert.ok(battle.groundFx.some(g => g.holyBladeWarn && g.label === 'SEVER'), 'Astral Sever should create a player Holy Sword telegraph');
 
   king.abilCD.fivefoldEdict = 0;
   runtime.abilities.fivefoldEdict(king);
   assert.deepEqual({ x: king.x, y: king.y }, start, 'Fivefold Edict should not move King');
   assert.ok(battle.projectiles.length >= 5, 'Fivefold Edict should create sword projectile visuals');
+  assert.ok(battle.projectiles.slice(-5).every(p => p.projType === 'holySword' && p.speed <= 2.3 && p._swordLen >= 50), 'Fivefold Edict swords should be oversized and slower for readability');
   assert.ok(king.holySwordEchoes?.some(e => e.type === 'edictPulse'), 'Fivefold Edict should queue landing pulses');
 }
 
@@ -275,6 +279,8 @@ function runAttack(unit, enemy, context) {
   assert.equal(king.holySwordCharges, 0, 'Heavenly Arsenal should consume sword charges');
   assert.ok(damageEvents.find(event => event.target === main && event.amount > king.dmg * 5.0), 'Heavenly Arsenal should apply sword-charge bonus damage');
   assert.ok(splash.hp < splash.maxHp, 'Heavenly Arsenal should hit secondary enemies');
+  assert.ok(battle.projectiles.length >= 5 && battle.projectiles.every(p => p.projType === 'holySword' && p.speed <= 2.1 && p._swordLen >= 56), 'Heavenly Arsenal should create large slow visible sword projectiles');
+  assert.ok(battle.groundFx.some(g => g.holyBladeWarn), 'Heavenly Arsenal should create player Holy Sword warning visuals');
   assert.ok(king.holySwordEchoes?.some(e => e.type === 'heavenlyCrown'), 'Five charges should queue delayed Heavenly Crown hit');
 }
 

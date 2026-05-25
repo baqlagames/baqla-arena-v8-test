@@ -12,6 +12,7 @@ export function projectileColor(type) {
   if (type === 'curse') return '#aa66cc';
   if (type === 'lightning') return '#ffff44';
   if (type === 'holy') return '#ffe066';
+  if (type === 'holySword') return '#ff3d8b';
   if (type === 'frost' || type === 'ice') return '#88ddff';
   if (type === 'voidShard' || type === 'voidOrb' || type === 'voidBolt') return '#aa66ff';
   if (type === 'poison') return '#78d64b';

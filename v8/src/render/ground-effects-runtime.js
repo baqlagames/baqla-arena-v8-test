@@ -183,6 +183,53 @@ export function createGroundEffectsRuntime(deps) {
         ctx.fillText(label,g.x,g.y+4);
         ctx.textAlign='left';
       }
+    }else if(g.holyBladeWarn){
+      const p=clamp(1-(g.warnTimer/Math.max(1,g.warnMax||36)),0,1);
+      const c=g.color||'#ff3d8b';
+      ctx.save();
+      ctx.lineCap='round';
+      if(g.warnKind==='line'){
+        const x2=Number.isFinite(g.x2)?g.x2:g.x,y2=Number.isFinite(g.y2)?g.y2:g.y;
+        const dx=x2-g.x,dy=y2-g.y,len=Math.hypot(dx,dy)||1;
+        const angle=Math.atan2(dy,dx);
+        const width=Math.max(48,(g.width||44)*1.35);
+        ctx.globalAlpha=0.18+0.20*p;
+        ctx.strokeStyle='#1f0f28';ctx.lineWidth=width+8;
+        ctx.beginPath();ctx.moveTo(g.x,g.y);ctx.lineTo(x2,y2);ctx.stroke();
+        ctx.globalAlpha=Math.max(0.32,Math.min(0.92,(g.life||0.75)));
+        ctx.strokeStyle=c;ctx.lineWidth=width;
+        ctx.beginPath();ctx.moveTo(g.x,g.y);ctx.lineTo(x2,y2);ctx.stroke();
+        ctx.globalAlpha=0.78+0.16*Math.sin(frame*0.28);
+        ctx.strokeStyle='#fff4cc';ctx.lineWidth=3.4;
+        ctx.setLineDash([16,9]);ctx.lineDashOffset=-frame*1.4;
+        ctx.beginPath();ctx.moveTo(g.x,g.y);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);
+        ctx.globalAlpha=0.72;
+        for(let i=1;i<=3;i++){
+          const t=i/4;
+          const sx=g.x+dx*t,sy=g.y+dy*t;
+          ctx.save();ctx.translate(sx,sy);ctx.rotate(angle);
+          ctx.fillStyle=i%2?c:'#ffd166';
+          ctx.beginPath();ctx.moveTo(15,0);ctx.lineTo(-7,-5);ctx.lineTo(-13,0);ctx.lineTo(-7,5);ctx.closePath();ctx.fill();
+          ctx.restore();
+        }
+        ctx.globalAlpha=0.92;
+        ctx.fillStyle='#fff4cc';ctx.font='bold 10px Arial';ctx.textAlign='center';
+        ctx.fillText(g.label||'SWORD',g.x+dx*0.52,g.y+dy*0.52-10);
+        ctx.textAlign='left';
+      }else{
+        ctx.globalAlpha=Math.max(0.30,Math.min(0.88,g.life||0.85));
+        ctx.fillStyle=c;
+        ctx.beginPath();ctx.arc(g.x,g.y,g.maxR,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=0.92;
+        ctx.strokeStyle=c;ctx.lineWidth=3.2;ctx.setLineDash([14,7]);ctx.lineDashOffset=-frame*1.2;
+        ctx.beginPath();ctx.arc(g.x,g.y,g.maxR,0,Math.PI*2);ctx.stroke();
+        ctx.strokeStyle='#fff4cc';ctx.lineWidth=1.8;ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(g.x,g.y,Math.max(6,g.maxR*(0.28+0.72*p)),0,Math.PI*2);ctx.stroke();
+        ctx.fillStyle='#fff4cc';ctx.font='bold 11px Arial';ctx.textAlign='center';
+        ctx.fillText(g.label||'ARSENAL',g.x,g.y+4);
+        ctx.textAlign='left';
+      }
+      ctx.restore();
     }else if(g.enemyWarn){
       const p=clamp(1-(g.warnTimer/Math.max(1,g.warnMax||24)),0,1);
       const c=g.color||'#ff8c00';

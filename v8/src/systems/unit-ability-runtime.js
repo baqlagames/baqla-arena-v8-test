@@ -165,9 +165,9 @@ function arena_kingGrantCrystalGuard(u,dr,dur){
 }
 const KING_ARSENAL_STANCES=['crystal','thunder','crown'];
 const KING_ARSENAL_DATA={
-  crystal:{label:'CRYSTAL',color:'#dff5ff',alt:'#ffffff'},
-  thunder:{label:'THUNDER',color:'#5cc8ff',alt:'#ffd966'},
-  crown:{label:'CROWN',color:'#ffd966',alt:'#fff2a8'}
+  crystal:{label:'CRYSTAL',color:'#b95cff',alt:'#f5d6ff'},
+  thunder:{label:'THUNDER',color:'#ffb000',alt:'#fff06a'},
+  crown:{label:'CROWN',color:'#ff3d8b',alt:'#ffd166'}
 };
 function arena_kingArsenalStance(u){
   return KING_ARSENAL_DATA[u&&u.livingArsenalStance]?u.livingArsenalStance:'crystal';
@@ -239,7 +239,7 @@ function arena_pickKingSwordTargets(u,primary,range,count){
   return picked.slice(0,count);
 }
 function arena_pushKingLineWarn(x1,y1,x2,y2,width,color,label,frames){
-  groundFx.push({x:x1,y:y1,x2,y2,r:0,maxR:26,life:0.28,color,enemyWarn:true,warnTimer:frames,warnMax:frames,warnKind:'line',width,label});
+  groundFx.push({x:x1,y:y1,x2,y2,r:0,maxR:34,life:0.82,color,holyBladeWarn:true,warnTimer:frames,warnMax:frames,warnKind:'line',width,label});
 }
 function arena_buildKingLanes(u,primary,targets,count,len,width){
   const lanes=[];
@@ -453,11 +453,11 @@ const ABILITIES={
     const len=Math.max(120,Math.min(cfg.astralSeverRange||260,dist(u,target)+42));
     const width=cfg.astralSeverWidth||58;
     const x2=u.x+Math.cos(angle)*len,y2=u.y+Math.sin(angle)*len;
-    arena_pushKingLineWarn(u.x,u.y,x2,y2,width,data.color,'SEVER',cfg.astralSeverDelay||11);
-    beamFx.push({x1:u.x,y1:u.y-8,x2,y2:y2-8,color:data.color,width:4,life:0.22,maxLife:0.22,straight:true});
+    arena_pushKingLineWarn(u.x,u.y,x2,y2,width,data.color,'SEVER',cfg.astralSeverDelay||18);
+    beamFx.push({x1:u.x,y1:u.y-8,x2,y2:y2-8,color:data.color,width:5.5,life:0.42,maxLife:0.42,straight:true});
     u.holySwordEchoes=u.holySwordEchoes||[];
     u.holySwordEchoes.push({
-      type:'astralSever',timer:cfg.astralSeverDelay||11,stance,main:target,
+      type:'astralSever',timer:cfg.astralSeverDelay||18,stance,main:target,
       lanes:[{x1:u.x,y1:u.y,x2,y2,width,angle}],
       mainDmg:Math.round((u.dmg||1)*(cfg.astralSeverMainMult||2.35)*arena_kingArsenalDamageMult(stance,target)),
       lineDmg:Math.round((u.dmg||1)*(cfg.astralSeverLineMult||1.0)),
@@ -486,9 +486,9 @@ const ABILITIES={
       const primary=target===priority;
       const mult=primary?(cfg.fivefoldEdictMainMult||2.60):(cfg.fivefoldEdictSecondaryMult||1.45);
       dealDamage(target,Math.round((u.dmg||1)*mult*arena_kingArsenalDamageMult(stance,target)),u,'magic');
-      projectiles.push({x:u.x,y:u.y-u.size*0.75,target,tx:target.x,ty:target.y,speed:3.8+i*0.15,projType:'holySword',visualOnly:true,color:data.color,altColor:data.alt,_arrN:16,_arrSz:4,isPlayer:true,dmg:0});
-      beamFx.push({x1:u.x,y1:u.y-12,x2:target.x,y2:target.y,color:data.color+'aa',width:3,life:0.18,maxLife:0.18,straight:true});
-      groundFx.push({x:target.x,y:target.y,r:0,maxR:34,life:0.34,color:data.color});
+      projectiles.push({x:u.x+(i-2)*9,y:u.y-u.size*(0.96+i*0.04),target,tx:target.x,ty:target.y,speed:1.75+i*0.10,projType:'holySword',visualOnly:true,color:data.color,altColor:data.alt,_arrN:22,_arrSz:5.5,_swordLen:52,_swordW:12,_trailColor:data.alt,isPlayer:true,dmg:0});
+      beamFx.push({x1:u.x,y1:u.y-12,x2:target.x,y2:target.y,color:data.color+'cc',width:4.5,life:0.34,maxLife:0.34,straight:true});
+      groundFx.push({x:target.x,y:target.y,r:0,maxR:42,life:0.58,color:data.color});
       addP(target.x,target.y,data.color,10,4);
       points.push({x:target.x,y:target.y});
     }

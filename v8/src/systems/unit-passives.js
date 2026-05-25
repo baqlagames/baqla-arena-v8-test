@@ -135,11 +135,11 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
       crownKnockback:30,crownEliteDamageBonus:0.08,
       arsenalCutMult:0.85,arsenalCutLaneMult:0.45,arsenalCutLength:165,arsenalCutWidth:42,
       fivefoldRange:300,fivefoldSwordMult:0.62,fivefoldConvergeMult:0.35,
-      crownCrossRange:300,crownCrossLength:300,crownCrossWidth:44,crownCrossDelay:15,crownCrossMainMult:2.40,crownCrossLineMult:1.05,crownCrossEchoDelay:27,crownCrossEchoMainMult:1.20,crownCrossEchoLineMult:0.55,
+      crownCrossRange:300,crownCrossLength:300,crownCrossWidth:44,crownCrossDelay:24,crownCrossMainMult:2.40,crownCrossLineMult:1.05,crownCrossEchoDelay:36,crownCrossEchoMainMult:1.20,crownCrossEchoLineMult:0.55,
       arsenalGuardDr:0.08,arsenalGuardDur:2*GAME_TICK_HZ,
-      astralSeverRange:260,astralSeverWidth:58,astralSeverDelay:11,astralSeverMainMult:2.35,astralSeverLineMult:1.00,
-      fivefoldEdictRange:340,fivefoldEdictMainMult:2.60,fivefoldEdictSecondaryMult:1.45,fivefoldEdictPulseDelay:27,fivefoldEdictPulseRadius:55,fivefoldEdictPulseMult:0.80,
-      heavenlyRange:360,heavenlyRadius:125,heavenlyMainMult:5.0,heavenlySecondaryMult:2.0,heavenlyConvergeMult:0.75,heavenlyCrownDelay:27,heavenlyCrownMult:1.40,heavenlyCrownRadius:110
+      astralSeverRange:260,astralSeverWidth:58,astralSeverDelay:18,astralSeverMainMult:2.35,astralSeverLineMult:1.00,
+      fivefoldEdictRange:340,fivefoldEdictMainMult:2.60,fivefoldEdictSecondaryMult:1.45,fivefoldEdictPulseDelay:36,fivefoldEdictPulseRadius:55,fivefoldEdictPulseMult:0.80,
+      heavenlyRange:360,heavenlyRadius:125,heavenlyMainMult:5.0,heavenlySecondaryMult:2.0,heavenlyConvergeMult:0.75,heavenlyCrownDelay:48,heavenlyCrownMult:1.40,heavenlyCrownRadius:110
     };
     u.livingArsenalStance=u.livingArsenalStance||'crystal';
     u.holySwordChargeMax=u.holySwordSaintCombo.chargeMax;

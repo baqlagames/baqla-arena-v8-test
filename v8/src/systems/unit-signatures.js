@@ -143,9 +143,9 @@ export function createArenaSignatures(deps = {}) {
   }
   const KING_ARSENAL_STANCES = ['crystal', 'thunder', 'crown'];
   const KING_ARSENAL_DATA = {
-    crystal: { label: 'CRYSTAL', color: '#dff5ff', alt: '#ffffff' },
-    thunder: { label: 'THUNDER', color: '#5cc8ff', alt: '#ffd966' },
-    crown: { label: 'CROWN', color: '#ffd966', alt: '#fff2a8' },
+    crystal: { label: 'CRYSTAL', color: '#b95cff', alt: '#f5d6ff' },
+    thunder: { label: 'THUNDER', color: '#ffb000', alt: '#fff06a' },
+    crown: { label: 'CROWN', color: '#ff3d8b', alt: '#ffd166' },
   };
   function kingArsenalStance(u) {
     return KING_ARSENAL_DATA[u && u.livingArsenalStance] ? u.livingArsenalStance : 'crystal';
@@ -173,7 +173,7 @@ export function createArenaSignatures(deps = {}) {
   function pushKingHeavenlyWarn(u, target, color, label) {
     const angle = Math.atan2(target.y - u.y, target.x - u.x);
     const len = Math.max(120, Math.min(360, dist(u, target) + 42));
-    groundFx.push({ x: u.x, y: u.y, x2: u.x + Math.cos(angle) * len, y2: u.y + Math.sin(angle) * len, r: 0, maxR: 28, life: 0.30, color, enemyWarn: true, warnTimer: 22, warnMax: 22, warnKind: 'line', width: 64, label });
+    groundFx.push({ x: u.x, y: u.y, x2: u.x + Math.cos(angle) * len, y2: u.y + Math.sin(angle) * len, r: 0, maxR: 36, life: 1.05, color, holyBladeWarn: true, warnTimer: 46, warnMax: 46, warnKind: 'line', width: 82, label });
   }
 return {
   // ----- BASE TANK SIGNATURES -----
@@ -221,28 +221,32 @@ return {
     const charges=Math.min(cfg.chargeMax||5,u.holySwordCharges||0);
     const sigMult=1+charges*(cfg.chargeSigBonus||0.08);
     const targets=pickKingHeavenlyTargets(u,main,range,5);
+    const sigColors=['#ff3d8b','#ffb000','#b95cff','#ffd166','#ff6bd6'];
+    groundFx.push({x:main.x,y:main.y,r:0,maxR:radius+30,life:1.10,color:data.color,holyBladeWarn:true,warnTimer:48,warnMax:48,label:'HEAVENLY'});
     for(let i=0;i<5;i++){
       const target=targets[i]||main;
       if(!target||!isValidPlayerOffensiveTarget(target))continue;
-      pushKingHeavenlyWarn(u,target,i%3===0?'#ffd966':(i%3===1?'#dff5ff':'#fff2a8'),i===0?'ARSENAL':'SWORD');
-      projectiles.push({x:u.x+(i-2)*10,y:u.y-u.size*0.95,target,tx:target.x,ty:target.y,speed:3.4+i*0.18,projType:'holySword',visualOnly:true,color:i%2?data.alt:data.color,_arrN:20,_arrSz:5,isPlayer:true,dmg:0});
-      beamFx.push({x1:target.x+(i-2)*9,y1:target.y-150-rnd(0,20),x2:target.x,y2:target.y+8,color:i%2?'#dff5ffcc':'#ffd966cc',width:i===0?6:4,life:0.38,maxLife:0.38,straight:true});
+      const swordColor=sigColors[i%sigColors.length];
+      const swordAlt=i%2?data.alt:'#fff4cc';
+      pushKingHeavenlyWarn(u,target,swordColor,i===0?'ARSENAL':'SWORD');
+      projectiles.push({x:u.x+(i-2)*18,y:u.y-u.size*(1.08+i*0.04),target,tx:target.x,ty:target.y,speed:1.65+i*0.08,projType:'holySword',visualOnly:true,color:swordColor,altColor:swordAlt,_arrN:28,_arrSz:6,_swordLen:58,_swordW:14,_trailColor:swordAlt,isPlayer:true,dmg:0});
+      beamFx.push({x1:target.x+(i-2)*12,y1:target.y-170-rnd(0,26),x2:target.x,y2:target.y+8,color:swordColor+'dd',width:i===0?9:6,life:0.82,maxLife:0.82,straight:true});
       const mult=target===main?(cfg.heavenlyMainMult||5.0):(cfg.heavenlySecondaryMult||2.0);
       const extra=!targets[i];
       dealDamage(target,Math.round((u.dmg||1)*(extra?(cfg.heavenlyConvergeMult||0.75):mult)*sigMult),u,'magic');
-      groundFx.push({x:target.x,y:target.y,r:0,maxR:target===main?radius:58,life:0.55,color:i%2?data.alt:data.color});
-      addP(target.x,target.y,i%2?data.alt:data.color,target===main?30:16,target===main?6:4);
+      groundFx.push({x:target.x,y:target.y,r:0,maxR:target===main?radius:64,life:0.82,color:swordColor});
+      addP(target.x,target.y,swordColor,target===main?36:20,target===main?7:5);
     }
     if(charges>=5){
       u.holySwordEchoes=u.holySwordEchoes||[];
       u.holySwordEchoes.push({type:'heavenlyCrown',timer:cfg.heavenlyCrownDelay||27,target:main,radius:cfg.heavenlyCrownRadius||110,dmg:Math.round((u.dmg||1)*(cfg.heavenlyCrownMult||1.40)*sigMult),label:'HEAVENLY CROWN'});
-      addDmg(main.x,main.y-(main.size||24)-44,'5-SWORD CROWN','#fff2a8',{sz:11,bold:true});
+      addDmg(main.x,main.y-(main.size||24)-44,'5-SWORD CROWN','#ffd166',{sz:11,bold:true});
     }
     u.holySwordCharges=0;
     advanceKingArsenalStance(u);
-    addDmg(main.x,main.y-(main.size||24)-14,'HEAVENLY ARSENAL','#fff2a8',{sz:16,bold:true,outline:'#132033'});
-    addDmg(main.x,main.y-(main.size||24)-30,'CHARGES '+charges,'#ffd966',{sz:11,bold:true});
-    showFlash('HEAVENLY ARSENAL','#fff2a8',86);
+    addDmg(main.x,main.y-(main.size||24)-14,'HEAVENLY ARSENAL','#ffd166',{sz:16,bold:true,outline:'#2a0f2d'});
+    addDmg(main.x,main.y-(main.size||24)-30,'CHARGES '+charges,'#ffb000',{sz:11,bold:true});
+    showFlash('HEAVENLY ARSENAL','#ff3d8b',96);
     shake(20);
   }},
   divine_ruination:{name:'Sword Saint: Divine Ruination',cd:35,fire(u){

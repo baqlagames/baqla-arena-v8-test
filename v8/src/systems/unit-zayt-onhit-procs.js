@@ -8,9 +8,9 @@ function kingHolySwordCfg(u) {
 
 const KING_ARSENAL_STANCES = ['crystal', 'thunder', 'crown'];
 const KING_ARSENAL_DATA = {
-  crystal: { label: 'CRYSTAL', color: '#dff5ff', alt: '#ffffff' },
-  thunder: { label: 'THUNDER', color: '#5cc8ff', alt: '#ffd966' },
-  crown: { label: 'CROWN', color: '#ffd966', alt: '#fff2a8' },
+  crystal: { label: 'CRYSTAL', color: '#b95cff', alt: '#f5d6ff' },
+  thunder: { label: 'THUNDER', color: '#ffb000', alt: '#fff06a' },
+  crown: { label: 'CROWN', color: '#ff3d8b', alt: '#ffd166' },
 };
 
 function kingArsenalStance(u) {
@@ -117,8 +117,8 @@ function pickKingSwordTargets(u, enemies, primary, range, count) {
   return picked.slice(0, count);
 }
 
-function pushKingArsenalLineWarn(groundFx, x1, y1, x2, y2, width, color, label, frames = 18) {
-  groundFx.push({ x: x1, y: y1, x2, y2, r: 0, maxR: 26, life: 0.28, color, enemyWarn: true, warnTimer: frames, warnMax: frames, warnKind: 'line', width, label });
+function pushKingArsenalLineWarn(groundFx, x1, y1, x2, y2, width, color, label, frames = 30) {
+  groundFx.push({ x: x1, y: y1, x2, y2, r: 0, maxR: 34, life: 0.82, color, holyBladeWarn: true, warnTimer: frames, warnMax: frames, warnKind: 'line', width, label });
 }
 
 function buildKingArsenalLanes(u, primary, targets, count, len, width) {
@@ -173,7 +173,7 @@ export function applyZaytOnHitProcs(unit, target, {
     const angle = Math.atan2(t.y - u.y, t.x - u.x);
     const stance = kingArsenalStance(u);
     const stanceData = kingArsenalData(stance);
-    beamFx.push({ x1: u.x, y1: u.y - 4, x2: t.x, y2: t.y, life: 0.12, maxLife: 0.12, color: stanceData.color + '88', width: 2.4, straight: true });
+    beamFx.push({ x1: u.x, y1: u.y - 4, x2: t.x, y2: t.y, life: 0.18, maxLife: 0.18, color: stanceData.color + 'bb', width: 3.2, straight: true });
     if (_ohTier <= 0) {
       if (frame % 3 === 0) addP(t.x, t.y, stanceData.color, 1, 2);
     }
@@ -188,7 +188,7 @@ export function applyZaytOnHitProcs(unit, target, {
       const width = swordCfg.arsenalCutWidth || 42;
       const x2 = u.x + Math.cos(angle) * len;
       const y2 = u.y + Math.sin(angle) * len;
-      pushKingArsenalLineWarn(groundFx, u.x, u.y, x2, y2, width, data.color, data.label, 14);
+      pushKingArsenalLineWarn(groundFx, u.x, u.y, x2, y2, width, data.color, data.label, 24);
       const primaryDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.arsenalCutMult || 0.85) * kingArsenalDamageMult(stance, t));
       const laneDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.arsenalCutLaneMult || 0.45));
       dealDamage(t, primaryDamage, u, 'magic');
@@ -201,9 +201,9 @@ export function applyZaytOnHitProcs(unit, target, {
         laneHits++;
       }
       applyKingArsenalCc(u, t, stance, swordCfg, enemies, dealDamage, addP, addDmg);
-      beamFx.push({ x1: u.x, y1: u.y, x2, y2, life: 0.24, maxLife: 0.24, color: data.color, width: 5.5, straight: true });
-      beamFx.push({ x1: t.x - Math.cos(angle + Math.PI / 2) * 26, y1: t.y - Math.sin(angle + Math.PI / 2) * 26, x2: t.x + Math.cos(angle + Math.PI / 2) * 26, y2: t.y + Math.sin(angle + Math.PI / 2) * 26, life: 0.18, maxLife: 0.18, color: data.alt, width: 3, straight: true });
-      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 46, life: 0.42, color: data.color });
+      beamFx.push({ x1: u.x, y1: u.y, x2, y2, life: 0.42, maxLife: 0.42, color: data.color, width: 7.5, straight: true });
+      beamFx.push({ x1: t.x - Math.cos(angle + Math.PI / 2) * 26, y1: t.y - Math.sin(angle + Math.PI / 2) * 26, x2: t.x + Math.cos(angle + Math.PI / 2) * 26, y2: t.y + Math.sin(angle + Math.PI / 2) * 26, life: 0.34, maxLife: 0.34, color: data.alt, width: 4.5, straight: true });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 52, life: 0.62, color: data.color });
       addP(t.x, t.y, data.color, 18, 4);
       addP(t.x, t.y, data.alt, 10, 3);
       addDmg(t.x, t.y - t.size - 8, 'ARSENAL CUT', data.color, { sz: 12, bold: true, outline: '#132033' });
@@ -222,12 +222,12 @@ export function applyZaytOnHitProcs(unit, target, {
         const extra = !targets[i];
         const mult = (swordCfg.fivefoldSwordMult || 0.62) * (extra ? (swordCfg.fivefoldConvergeMult || 0.35) : 1);
         dealDamage(target, Math.round((u.dmg || dmg || 1) * mult * kingArsenalDamageMult(stance, target)), u, 'magic');
-        projectiles.push({ x: u.x, y: u.y - u.size * 0.55, target, tx: target.x, ty: target.y, speed: 4.2 + i * 0.08, projType: 'holySword', visualOnly: true, color: data.color, altColor: data.alt, _arrN: 12, _arrSz: 3.5, isPlayer: true, dmg: 0 });
-        beamFx.push({ x1: u.x, y1: u.y - 8, x2: target.x, y2: target.y, life: 0.16, maxLife: 0.16, color: data.color + '99', width: 2.5, straight: true });
+        projectiles.push({ x: u.x + (i - 2) * 7, y: u.y - u.size * (0.92 + i * 0.04), target, tx: target.x, ty: target.y, speed: 1.9 + i * 0.10, projType: 'holySword', visualOnly: true, color: data.color, altColor: data.alt, _arrN: 18, _arrSz: 5, _swordLen: 42, _swordW: 10, _trailColor: data.alt, isPlayer: true, dmg: 0 });
+        beamFx.push({ x1: u.x, y1: u.y - 8, x2: target.x, y2: target.y, life: 0.28, maxLife: 0.28, color: data.color + 'bb', width: 3.5, straight: true });
         addP(target.x, target.y, data.color, 6, 3);
       }
       applyKingArsenalCc(u, priority, stance, swordCfg, enemies, dealDamage, addP, addDmg);
-      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 72, life: 0.42, color: data.color, flatten: true });
+      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 82, life: 0.66, color: data.color, flatten: true });
       addP(u.x, u.y, data.color, 24, 5);
       addP(u.x, u.y, data.alt, 14, 3);
       addDmg(priority.x, priority.y - priority.size - 8, 'FIVEFOLD JUDGMENT', data.color, { sz: 13, bold: true, outline: '#132033' });
