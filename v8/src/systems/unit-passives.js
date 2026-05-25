@@ -129,19 +129,21 @@ export function applyUnitPassives(u,unitIdx,lv,{gameTickHz,signatures}){
     u.artOfWar=false;
     u.hammerOfWrath=false;
     u.holySwordSaintCombo={
-      stasisMult:1.05,stasisBossSlow:0.72,stasisBossSlowDur:Math.round(1.5*GAME_TICK_HZ),stasisStunDur:Math.round(0.7*GAME_TICK_HZ),
-      crystalGuardDr:0.08,crystalGuardDur:3*GAME_TICK_HZ,
-      lightningMult:1.90,lightningLineMult:0.85,lightningLineLength:220,lightningLineWidth:48,
-      saintSwiftnessAtkMult:0.86,saintSwiftnessDur:3*GAME_TICK_HZ,
-      holyExplosionMult:3.40,holyExplosionSplashMult:1.70,holyExplosionRadius:105,holyExplosionFullSealBonus:0.35,
-      exaltedEdgeMult:1.15,exaltedEdgeDur:4*GAME_TICK_HZ,
-      sealMax:3,sealDur:7*GAME_TICK_HZ,sealDamagePer:0.08,
-      crushRange:230,crushMult:3.00,crushPerSealBonus:0.15,crushStunDur:GAME_TICK_HZ,
-      bladefallRange:285,bladefallRadius:112,bladefallMainMult:4.40,bladefallSplashMult:2.05,bladefallGuardDr:0.12,bladefallGuardDur:Math.round(2.5*GAME_TICK_HZ),
-      divineRange:340,divineRadius:125,divineMainMult:8.0,divineSplashMult:3.0,divinePerSealBonus:0.20,divineEchoMult:2.0,divineEchoDelay:Math.round(0.45*GAME_TICK_HZ)
+      chargeMax:5,chargeSigBonus:0.08,
+      crystalStunDur:Math.round(0.55*GAME_TICK_HZ),crystalBossSlow:0.65,crystalBossSlowDur:Math.round(1.5*GAME_TICK_HZ),
+      thunderSlow:0.65,thunderSlowDur:2*GAME_TICK_HZ,thunderChainRange:120,thunderChainMult:0.35,
+      crownKnockback:30,crownEliteDamageBonus:0.08,
+      arsenalCutMult:0.85,arsenalCutLaneMult:0.45,arsenalCutLength:165,arsenalCutWidth:42,
+      fivefoldRange:300,fivefoldSwordMult:0.62,fivefoldConvergeMult:0.35,
+      crownCrossRange:300,crownCrossLength:300,crownCrossWidth:44,crownCrossDelay:15,crownCrossMainMult:2.40,crownCrossLineMult:1.05,crownCrossEchoDelay:27,crownCrossEchoMainMult:1.20,crownCrossEchoLineMult:0.55,
+      arsenalGuardDr:0.08,arsenalGuardDur:2*GAME_TICK_HZ,
+      astralSeverRange:260,astralSeverWidth:58,astralSeverDelay:11,astralSeverMainMult:2.35,astralSeverLineMult:1.00,
+      fivefoldEdictRange:340,fivefoldEdictMainMult:2.60,fivefoldEdictSecondaryMult:1.45,fivefoldEdictPulseDelay:27,fivefoldEdictPulseRadius:55,fivefoldEdictPulseMult:0.80,
+      heavenlyRange:360,heavenlyRadius:125,heavenlyMainMult:5.0,heavenlySecondaryMult:2.0,heavenlyConvergeMult:0.75,heavenlyCrownDelay:27,heavenlyCrownMult:1.40,heavenlyCrownRadius:110
     };
-    u.swordSaintCycle=u.swordSaintCycle||'stasis';
-    u.judgmentSealMax=u.holySwordSaintCombo.sealMax;
+    u.livingArsenalStance=u.livingArsenalStance||'crystal';
+    u.holySwordChargeMax=u.holySwordSaintCombo.chargeMax;
+    u.holySwordCharges=Math.min(u.holySwordChargeMax,u.holySwordCharges||0);
   }
   if(unitIdx===13&&!u.branch){
     u.roninDragoonCombo={
@@ -418,15 +420,13 @@ export function applyPassiveToUnit(u,id,sc,boost,{gameTickHz}){
     }
     case 'armorRegen': u.armorRegen={every:60,t:0,amount:2}; break;
     case 'reviveOnce': u.reviveOnce={used:false,pct:0.40,cleaveBonus:true}; break;
-    case 'swordSaintCycle':
-      u.swordSaintCycle=u.swordSaintCycle||'stasis';
+    case 'livingArsenal':
+      u.livingArsenalStance=u.livingArsenalStance||'crystal';
       u.crystalGuardDR=0;
-      u.saintSwiftnessAtkMult=0.90;
-      u.exaltedEdgeMult=1.10;
       break;
-    case 'judgmentSeals':
-      u.judgmentSeals=true;
-      u.judgmentSealMax=3;
+    case 'fiveSwordChoir':
+      u.holySwordChargeMax=5;
+      u.holySwordCharges=Math.min(5,u.holySwordCharges||0);
       break;
     // ===== BATATA (Primal Guardian) passives =====
     case 'ironfur': u.ironfur={stacks:0,maxStacks:3,perStack:3,timer:0,dur:360,hitCount:0,every:3}; break;

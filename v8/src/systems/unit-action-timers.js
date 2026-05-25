@@ -618,6 +618,103 @@ function tickRoninDragoonTimers(unit, {
   }
 }
 
+const KING_TIMER_ARSENAL_DATA = {
+  crystal: { label: 'CRYSTAL', color: '#dff5ff', alt: '#ffffff' },
+  thunder: { label: 'THUNDER', color: '#5cc8ff', alt: '#ffd966' },
+  crown: { label: 'CROWN', color: '#ffd966', alt: '#fff2a8' },
+};
+
+function kingTimerArsenalData(stance) {
+  return KING_TIMER_ARSENAL_DATA[stance] || KING_TIMER_ARSENAL_DATA.crystal;
+}
+
+function kingTimerDamageMult(stance, target) {
+  return stance === 'crown' && target && (target.isBoss || target.elite || target.isElite) ? 1.08 : 1;
+}
+
+function kingTimerLineDistance(target, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((target.x - x1) * dx + (target.y - y1) * dy) / lenSq));
+  return Math.hypot(target.x - (x1 + dx * t), target.y - (y1 + dy * t));
+}
+
+function applyKingTimerArsenalCc(unit, target, stance, { enemies, dealDamage, emitParticle, addDamageText }) {
+  if (!isValidPlayerOffensiveTarget(target)) return;
+  const cfg = unit.holySwordSaintCombo || {};
+  const data = kingTimerArsenalData(stance);
+  if (stance === 'crystal') {
+    if (target.isBoss || target.elite || target.isElite) {
+      target.slowTimer = Math.max(target.slowTimer || 0, cfg.crystalBossSlowDur || Math.round(1.5 * GAME_TICK_HZ));
+      target.slowMult = Math.min(target.slowMult || 1, cfg.crystalBossSlow || 0.65);
+      addDamageText(target.x, target.y - target.size - 16, 'CRYSTAL SLOW', data.color, { sz: 10, bold: true });
+    } else {
+      target.stunned = Math.max(target.stunned || 0, cfg.crystalStunDur || Math.round(0.55 * GAME_TICK_HZ));
+      addDamageText(target.x, target.y - target.size - 16, 'CRYSTAL STUN', data.color, { sz: 10, bold: true });
+    }
+  } else if (stance === 'thunder') {
+    target.slowTimer = Math.max(target.slowTimer || 0, cfg.thunderSlowDur || 2 * GAME_TICK_HZ);
+    target.slowMult = Math.min(target.slowMult || 1, cfg.thunderSlow || 0.65);
+    let chain = null;
+    let chainDist = Infinity;
+    for (const enemy of enemies) {
+      if (enemy === target || !isValidPlayerOffensiveTarget(enemy)) continue;
+      const d = dist(target, enemy);
+      if (d <= (cfg.thunderChainRange || 120) && d < chainDist) {
+        chain = enemy;
+        chainDist = d;
+      }
+    }
+    if (chain) {
+      dealDamage(chain, Math.round((unit.dmg || 1) * (cfg.thunderChainMult || 0.35)), unit, 'magic');
+      emitParticle(chain.x, chain.y, data.color, 8, 3);
+    }
+    addDamageText(target.x, target.y - target.size - 16, 'THUNDER SLOW', data.color, { sz: 10, bold: true });
+  } else if (stance === 'crown') {
+    if (target.isBoss || target.elite || target.isElite) {
+      addDamageText(target.x, target.y - target.size - 16, 'CROWN VERDICT', data.color, { sz: 10, bold: true });
+    } else {
+      const dx = target.x - unit.x;
+      const dy = target.y - unit.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const push = cfg.crownKnockback || 30;
+      target.x += dx / d * push;
+      target.y += dy / d * push;
+      addDamageText(target.x, target.y - target.size - 16, 'CROWN KNOCK', data.color, { sz: 10, bold: true });
+    }
+  }
+  emitParticle(target.x, target.y, data.color, 10, 3);
+}
+
+function resolveKingArsenalLanes(unit, echo, { enemies, beamEffects, groundEffects, dealDamage, emitParticle, addDamageText, shake }) {
+  const data = kingTimerArsenalData(echo.stance);
+  const hit = new Set();
+  const main = echo.main;
+  if (isValidPlayerOffensiveTarget(main)) {
+    dealDamage(main, echo.mainDmg || Math.round((unit.dmg || 1) * 1.0), unit, 'magic');
+    hit.add(main);
+    if (echo.applyCc !== false) applyKingTimerArsenalCc(unit, main, echo.stance, { enemies, dealDamage, emitParticle, addDamageText });
+  }
+  for (const lane of echo.lanes || []) {
+    beamEffects.push({ x1: lane.x1, y1: lane.y1 - 8, x2: lane.x2, y2: lane.y2 - 8, color: data.color, width: echo.type === 'crownCrossEcho' ? 5 : 8, life: 0.30, maxLife: 0.30, straight: true });
+    beamEffects.push({ x1: lane.x1, y1: lane.y1 + 4, x2: lane.x2, y2: lane.y2 + 4, color: data.alt, width: 2.5, life: 0.24, maxLife: 0.24, straight: true });
+    groundEffects.push({ x: (lane.x1 + lane.x2) / 2, y: (lane.y1 + lane.y2) / 2, r: 0, maxR: Math.max(46, Math.hypot(lane.x2 - lane.x1, lane.y2 - lane.y1) * 0.36), life: 0.35, color: data.color, flatten: true });
+    for (const enemy of enemies) {
+      if (hit.has(enemy) || !isValidPlayerOffensiveTarget(enemy)) continue;
+      if (kingTimerLineDistance(enemy, lane.x1, lane.y1, lane.x2, lane.y2) > (lane.width || 44)) continue;
+      dealDamage(enemy, Math.round((echo.lineDmg || Math.round((unit.dmg || 1) * 0.5)) * kingTimerDamageMult(echo.stance, enemy)), unit, 'magic');
+      hit.add(enemy);
+      emitParticle(enemy.x, enemy.y, data.color, 8, 3);
+    }
+  }
+  const labelX = isValidPlayerOffensiveTarget(main) ? main.x : ((echo.lanes && echo.lanes[0]) ? echo.lanes[0].x2 : unit.x);
+  const labelY = isValidPlayerOffensiveTarget(main) ? main.y : ((echo.lanes && echo.lanes[0]) ? echo.lanes[0].y2 : unit.y);
+  addDamageText(labelX, labelY - 28, echo.label || 'ARSENAL HIT', data.color, { sz: 13, bold: true });
+  emitParticle(labelX, labelY, data.color, 30, 6);
+  if (hit.size) shake(echo.type === 'crownCrossEcho' ? 7 : 9);
+}
+
 function tickKingHolySwordTimers(unit, {
   frame,
   enemies,
@@ -651,7 +748,58 @@ function tickKingHolySwordTimers(unit, {
         continue;
       }
       unit.holySwordEchoes.splice(i, 1);
-      if (echo.type === 'lightning') {
+      if (echo.type === 'crownCross' || echo.type === 'crownCrossEcho' || echo.type === 'astralSever') {
+        resolveKingArsenalLanes(unit, echo, { enemies, beamEffects, groundEffects, dealDamage, emitParticle, addDamageText, shake });
+        if (echo.type === 'crownCross') {
+          unit.holySwordEchoes.push({
+            type: 'crownCrossEcho',
+            timer: echo.echoTimer || 27,
+            stance: echo.stance,
+            main: echo.main,
+            lanes: echo.lanes,
+            mainDmg: echo.echoMainDmg,
+            lineDmg: echo.echoLineDmg,
+            label: 'CROSS ECHO',
+            applyCc: false,
+          });
+        }
+      } else if (echo.type === 'edictPulse') {
+        const hit = new Set();
+        for (const point of echo.points || []) {
+          groundEffects.push({ x: point.x, y: point.y, r: 0, maxR: echo.radius || 55, life: 0.45, color: '#fff2a8' });
+          beamEffects.push({ x1: point.x, y1: point.y - 95, x2: point.x, y2: point.y + 8, color: '#ffd966cc', width: 5, life: 0.28, maxLife: 0.28, straight: true });
+          for (const enemy of enemies) {
+            if (hit.has(enemy) || !isValidPlayerOffensiveTarget(enemy) || dist(point, enemy) > (echo.radius || 55)) continue;
+            dealDamage(enemy, echo.dmg || Math.round((unit.dmg || 1) * 0.8), unit, 'magic');
+            hit.add(enemy);
+            emitParticle(enemy.x, enemy.y, '#ffd966', 8, 3);
+          }
+        }
+        if ((echo.points || []).length) addDamageText(echo.points[0].x, echo.points[0].y - 28, echo.label || 'EDICT PULSE', '#fff2a8', { sz: 12, bold: true });
+        if (hit.size) shake(7);
+      } else if (echo.type === 'heavenlyCrown') {
+        const target = echo.target;
+        if (isValidPlayerOffensiveTarget(target)) {
+          dealDamage(target, echo.dmg || Math.round((unit.dmg || 1) * 1.4), unit, 'magic');
+          for (const enemy of enemies) {
+            if (enemy === target || !isValidPlayerOffensiveTarget(enemy) || dist(target, enemy) > (echo.radius || 110)) continue;
+            if (enemy.isBoss || enemy.elite || enemy.isElite) continue;
+            const dx = enemy.x - target.x;
+            const dy = enemy.y - target.y;
+            const d = Math.hypot(dx, dy) || 1;
+            enemy.x += dx / d * 34;
+            enemy.y += dy / d * 34;
+            emitParticle(enemy.x, enemy.y, '#ffd966', 8, 3);
+          }
+          beamEffects.push({ x1: target.x, y1: target.y - 140, x2: target.x, y2: target.y + 8, color: '#fff2a8', width: 10, life: 0.36, maxLife: 0.36, straight: true });
+          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: echo.radius || 110, life: 0.72, color: '#ffd966' });
+          groundEffects.push({ x: target.x, y: target.y, r: 0, maxR: (echo.radius || 110) + 42, life: 0.42, color: '#dff5ff' });
+          emitParticle(target.x, target.y, '#ffd966', 44, 8);
+          emitParticle(target.x, target.y, '#ffffff', 18, 4);
+          addDamageText(target.x, target.y - target.size - 20, echo.label || 'CROWN SWORD', '#fff2a8', { sz: 14, bold: true });
+          shake(11);
+        }
+      } else if (echo.type === 'lightning') {
         const len = echo.len || 220;
         const width = echo.width || 50;
         const angle = echo.angle || 0;

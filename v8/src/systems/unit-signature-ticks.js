@@ -107,7 +107,7 @@ function tickUnitSignature(unit, {
 
   if (unit.signature.t < unit.signature.cd) return null;
 
-  const sigRange = unit.signature.id === 'storm_anchor' ? 340 : (unit.signature.id === 'midare_stardiver' ? 340 : (unit.signature.id === 'divine_ruination' ? 340 : (unit.arch === 'healer' ? 360 : Math.min(320, (unit.range || 60) + 160))));
+  const sigRange = unit.signature.id === 'storm_anchor' ? 340 : (unit.signature.id === 'midare_stardiver' ? 340 : ((unit.signature.id === 'divine_ruination' || unit.signature.id === 'heavenly_arsenal') ? 360 : (unit.arch === 'healer' ? 360 : Math.min(320, (unit.range || 60) + 160))));
   const hasEnemy = enemies.some(enemy => isValidPlayerOffensiveTarget(enemy) && dist(unit, enemy) < sigRange);
   if (!hasEnemy) return null;
 

@@ -327,7 +327,32 @@ drawFns.drawZayton=function(x,y,u){
   const _useProtSprite=_isProt&&unitSpriteAssets.isReady('kingProt');
   const _kingSprite=unitSpriteAssets.pick(_useProtSprite?'kingProt':'king',10);
   const _kingGlow=_isProt?'#8ab4f8':(_isHoly?'#ffe066':'#ffd700');
+  const drawLivingArsenal=function(){
+    if(u.branch||!u.holySwordSaintCombo)return;
+    const stance=u.livingArsenalStance||'crystal';
+    const data=stance==='thunder'?{c:'#5cc8ff',a:'#ffd966'}:(stance==='crown'?{c:'#ffd966',a:'#fff2a8'}:{c:'#dff5ff',a:'#ffffff'});
+    const charges=Math.max(0,Math.min(5,u.holySwordCharges||0));
+    ctx.save();
+    ctx.globalAlpha=0.28+0.08*Math.sin(frame*0.08);
+    ctx.strokeStyle=data.c;ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(x,y-s*0.08,s*1.22,s*0.42,0,0,Math.PI*2);ctx.stroke();
+    for(let i=0;i<5;i++){
+      const ang=frame*0.035+i*Math.PI*2/5;
+      const active=i<charges;
+      const sx=x+Math.cos(ang)*s*1.05;
+      const sy=y-s*0.82+Math.sin(ang)*s*0.28;
+      ctx.save();ctx.translate(sx,sy);ctx.rotate(ang+Math.PI/2);
+      ctx.globalAlpha=active?0.95:0.32;
+      ctx.fillStyle=active?data.c:'rgba(255,255,255,0.45)';
+      ctx.beginPath();ctx.moveTo(0,-s*0.34);ctx.lineTo(s*0.07,s*0.06);ctx.lineTo(0,s*0.20);ctx.lineTo(-s*0.07,s*0.06);ctx.closePath();ctx.fill();
+      ctx.fillStyle=active?data.a:'rgba(255,255,255,0.25)';
+      ctx.fillRect(-s*0.16,s*0.04,s*0.32,s*0.05);
+      ctx.restore();
+    }
+    ctx.restore();
+  };
   if(arena_drawUnitSprite(_kingSprite,x,y,u,{buildScale:ARENA_SPRITE_BUILD_SCALE,waveScale:ARENA_SPRITE_WAVE_SCALE,anchor:_useProtSprite?0.49:0.45,glow:_kingGlow,glowAlpha:_isProt?0.14:0.10})){
+    drawLivingArsenal();
     return;
   }
   // Ground shadow
@@ -421,6 +446,7 @@ drawFns.drawZayton=function(x,y,u){
     const _a=frame*0.1;addP(x+Math.cos(_a)*s*0.8,y+Math.sin(_a)*s*0.8,'#88aaff',1,2);
   }
   if(_isHoly&&frame%18===0){addP(x+rnd(-s*0.3,s*0.3),y-rnd(0,s*0.8),'#ffe066',1,2)}
+  drawLivingArsenal();
   // Shield of Vengeance active glow
   if(u.shieldOfVengeance&&u.shieldOfVengeance.active&&u.shieldOfVengeanceHp>0){
     ctx.save();ctx.globalAlpha=0.3+Math.sin(frame*0.15)*0.1;

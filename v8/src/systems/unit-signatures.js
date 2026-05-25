@@ -141,6 +141,40 @@ export function createArenaSignatures(deps = {}) {
     }
     return best ? { x: best.x, y: best.y, target: best, score: bestScore } : null;
   }
+  const KING_ARSENAL_STANCES = ['crystal', 'thunder', 'crown'];
+  const KING_ARSENAL_DATA = {
+    crystal: { label: 'CRYSTAL', color: '#dff5ff', alt: '#ffffff' },
+    thunder: { label: 'THUNDER', color: '#5cc8ff', alt: '#ffd966' },
+    crown: { label: 'CROWN', color: '#ffd966', alt: '#fff2a8' },
+  };
+  function kingArsenalStance(u) {
+    return KING_ARSENAL_DATA[u && u.livingArsenalStance] ? u.livingArsenalStance : 'crystal';
+  }
+  function kingArsenalData(stance) {
+    return KING_ARSENAL_DATA[stance] || KING_ARSENAL_DATA.crystal;
+  }
+  function advanceKingArsenalStance(u) {
+    const idx = KING_ARSENAL_STANCES.indexOf(kingArsenalStance(u));
+    u.livingArsenalStance = KING_ARSENAL_STANCES[(idx + 1) % KING_ARSENAL_STANCES.length];
+  }
+  function pickKingHeavenlyTargets(u, primary, range, count) {
+    const picked = [];
+    for (const enemy of enemies) {
+      if (!isValidPlayerOffensiveTarget(enemy) || dist(u, enemy) > range) continue;
+      picked.push(enemy);
+    }
+    if (primary && isValidPlayerOffensiveTarget(primary) && !picked.includes(primary)) picked.push(primary);
+    picked.sort((a, b) => {
+      const score = e => (e === primary ? 10000 : 0) + (e.isBoss ? 800 : 0) + ((e.elite || e.isElite) ? 420 : 0) + Math.min(e.hp || 0, 3000) * 0.025 - dist(u, e) * 0.04;
+      return score(b) - score(a);
+    });
+    return picked.slice(0, count);
+  }
+  function pushKingHeavenlyWarn(u, target, color, label) {
+    const angle = Math.atan2(target.y - u.y, target.x - u.x);
+    const len = Math.max(120, Math.min(360, dist(u, target) + 42));
+    groundFx.push({ x: u.x, y: u.y, x2: u.x + Math.cos(angle) * len, y2: u.y + Math.sin(angle) * len, r: 0, maxR: 28, life: 0.30, color, enemyWarn: true, warnTimer: 22, warnMax: 22, warnKind: 'line', width: 64, label });
+  }
 return {
   // ----- BASE TANK SIGNATURES -----
   taunt_wave:{name:'Taunt Wave',cd:15,fire(u){
@@ -174,6 +208,42 @@ return {
     let best=null,bestHp=Infinity;
     for(const e of enemies){if(e.hp<=0||e.isBoss)continue;if(dist(u,e)>(u.range||40)+50)continue;if(e.hp<bestHp){bestHp=e.hp;best=e}}
     if(best){dealDamage(best,Math.round(u.dmg*4),u,'normal');addP(best.x,best.y,'#ff2222',24,5);addDmg(best.x,best.y-20,'EXECUTION!','#ff5555');shake(6)}
+  }},
+  heavenly_arsenal:{name:'Sword Saint: Heavenly Arsenal',cd:35,fire(u){
+    const cfg=u.holySwordSaintCombo||{};
+    const range=cfg.heavenlyRange||360;
+    const radius=cfg.heavenlyRadius||125;
+    const best=findKingDivineRuinationTarget(u,range,radius);
+    if(!best||!best.target)return false;
+    const main=best.target;
+    const stance=kingArsenalStance(u);
+    const data=kingArsenalData(stance);
+    const charges=Math.min(cfg.chargeMax||5,u.holySwordCharges||0);
+    const sigMult=1+charges*(cfg.chargeSigBonus||0.08);
+    const targets=pickKingHeavenlyTargets(u,main,range,5);
+    for(let i=0;i<5;i++){
+      const target=targets[i]||main;
+      if(!target||!isValidPlayerOffensiveTarget(target))continue;
+      pushKingHeavenlyWarn(u,target,i%3===0?'#ffd966':(i%3===1?'#dff5ff':'#fff2a8'),i===0?'ARSENAL':'SWORD');
+      projectiles.push({x:u.x+(i-2)*10,y:u.y-u.size*0.95,target,tx:target.x,ty:target.y,speed:3.4+i*0.18,projType:'holySword',visualOnly:true,color:i%2?data.alt:data.color,_arrN:20,_arrSz:5,isPlayer:true,dmg:0});
+      beamFx.push({x1:target.x+(i-2)*9,y1:target.y-150-rnd(0,20),x2:target.x,y2:target.y+8,color:i%2?'#dff5ffcc':'#ffd966cc',width:i===0?6:4,life:0.38,maxLife:0.38,straight:true});
+      const mult=target===main?(cfg.heavenlyMainMult||5.0):(cfg.heavenlySecondaryMult||2.0);
+      const extra=!targets[i];
+      dealDamage(target,Math.round((u.dmg||1)*(extra?(cfg.heavenlyConvergeMult||0.75):mult)*sigMult),u,'magic');
+      groundFx.push({x:target.x,y:target.y,r:0,maxR:target===main?radius:58,life:0.55,color:i%2?data.alt:data.color});
+      addP(target.x,target.y,i%2?data.alt:data.color,target===main?30:16,target===main?6:4);
+    }
+    if(charges>=5){
+      u.holySwordEchoes=u.holySwordEchoes||[];
+      u.holySwordEchoes.push({type:'heavenlyCrown',timer:cfg.heavenlyCrownDelay||27,target:main,radius:cfg.heavenlyCrownRadius||110,dmg:Math.round((u.dmg||1)*(cfg.heavenlyCrownMult||1.40)*sigMult),label:'HEAVENLY CROWN'});
+      addDmg(main.x,main.y-(main.size||24)-44,'5-SWORD CROWN','#fff2a8',{sz:11,bold:true});
+    }
+    u.holySwordCharges=0;
+    advanceKingArsenalStance(u);
+    addDmg(main.x,main.y-(main.size||24)-14,'HEAVENLY ARSENAL','#fff2a8',{sz:16,bold:true,outline:'#132033'});
+    addDmg(main.x,main.y-(main.size||24)-30,'CHARGES '+charges,'#ffd966',{sz:11,bold:true});
+    showFlash('HEAVENLY ARSENAL','#fff2a8',86);
+    shake(20);
   }},
   divine_ruination:{name:'Sword Saint: Divine Ruination',cd:35,fire(u){
     const cfg=u.holySwordSaintCombo||{};

@@ -39,7 +39,7 @@ export const ARENA_ROLE_PATHS={
     {id:'felfel_poison',unitIdx:4,branch:'b',name:'Felfel Poison',role:'Assassin',headline:'Poison - blade flurry, toxic bloom, venom meteor, deathmark.'},
     {id:'jazar_sword',unitIdx:5,branch:'a',name:'Jazar Sword Saint',role:'Blademaster',headline:'Sword Saint - mortal strike, execute, colossus smash, final strike.'},
     {id:'jazar_storm',unitIdx:5,branch:'b',name:'Jazar Storm Binder',role:'Control Melee',headline:'Storm Binder - wind step, blade dance, pulls, and anchor haste.'},
-    {id:'king_retribution',unitIdx:3,branch:null,name:'Holy Sword Saint',role:'Melee DPS',headline:'Holy Sword Saint only - 3/5/10 holy blade arts, Judgment Seals, and Divine Ruination.'},
+    {id:'king_retribution',unitIdx:3,branch:null,name:'Holy Sword Saint',role:'Melee DPS',headline:'Holy Sword Saint only - Living Arsenal stances, boss-style blade lanes, Fivefold Judgment, and Heavenly Arsenal.'},
     {id:'monk_dps',unitIdx:13,branch:null,name:'Ronin Dragoon',role:'Melee DPS',headline:'Ronin Dragoon only - 3/5/10 sword rhythm, jump dives, Azure Sen, and Midare Stardiver.'}
   ],
   magic:[
@@ -75,7 +75,7 @@ export const ARENA_ROLE_SPECS={
   melee:[
     {id:'felfel',unitIdx:4,name:'Felfel',role:'Assassin',identity:'High-risk melee with shadow or poison execution tools.',paths:['felfel_shadow','felfel_poison']},
     {id:'jazar',unitIdx:5,name:'Jazar',role:'Blademaster',identity:'Weapon master that chooses pure sword damage or storm control.',paths:['jazar_sword','jazar_storm']},
-    {id:'king_retribution',unitIdx:3,name:'Holy Sword Saint',role:'Melee DPS',identity:'One-path FFT-style holy blade striker with Judgment Seals, guard windows, boss burst, and Divine Ruination.',paths:['king_retribution']},
+    {id:'king_retribution',unitIdx:3,name:'Holy Sword Saint',role:'Melee DPS',identity:'One-path holy blade commander with Crystal, Thunder, and Crown sword stances, visible lanes, and five-sword volleys.',paths:['king_retribution']},
     {id:'monk_dps',unitIdx:13,name:'Ronin Dragoon',role:'Melee DPS',identity:'One-path Samurai and Dragoon burst skirmisher with Azure Sen, jump dives, and short Third Eye guard windows.',paths:['monk_dps']}
   ],
   magic:[
@@ -104,7 +104,7 @@ export const ARENA_PATH_DETAIL_LINES={
   batata_nature:['Stats: +22% HP, +10% MR, -5% damage','Backline Garden: healer/ranged allies -10% damage taken','Living Bulwark: 22% HP shield, -30% damage, shelter bonuses'],
   batata_berserker:['Stats: +14% HP, +12% armor, +6% damage, 4% faster attacks','Mirebreaker: Batata -10% damage while swarmed','Quakebreak: 20% HP shield, -25% damage, mud weakens swarms'],
   king_protection:['Stats: +120% HP/armor, +65% MR, -15% damage','Hallowed Leap: jumps toward ranged/caster threats and shields King','Avenger Shield: 6s, 3 targets; L4 hits 5 at 1.65x with 16% shield cap','Ashen Hallow: 20% shield, -30% damage, ally DR inside'],
-  king_retribution:['3rd/5th/10th: Stasis Sword, Lightning Stab, Holy Explosion','Passive: Sword Saint Cycle + Judgment Seals','A3/A5: Crush Judgment, Hallowed Bladefall','Signature: Divine Ruination'],
+  king_retribution:['3rd/5th/10th: Arsenal Cut, Fivefold Judgment, Crown Cross','Passive: Living Arsenal + Five-Sword Choir','A3/A5: Astral Sever, Fivefold Edict','Signature: Heavenly Arsenal'],
   monk_dps:['3rd/5th/10th: Hakaze Thrust, Gekko Dive, Midare Nastrond','Passive: Azure Sen + Third Eye','A3/A5: Hissatsu Gyoten, Geirskogul Dive','Signature: Midare Stardiver'],
   alibaba_frost:['Stats: -10% damage, 10% faster attacks','Frost hits slow by 35%; Frozen Orb slows 50%','Frozen Orb roots normal enemies for 0.5s per hit'],
   alibaba_thunder:['Stats: +10% damage','Chain Thunder: 0.5s stun to non-boss enemies','Stormkeeper: every 8th hit deals 250% damage'],

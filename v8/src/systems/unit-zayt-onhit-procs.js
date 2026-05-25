@@ -1,49 +1,136 @@
 import { GAME_TICK_HZ } from '../core/constants.js';
 import { dist } from '../core/math.js';
+import { isValidPlayerOffensiveTarget } from './player-target-validity.js';
 
 function kingHolySwordCfg(u) {
   return u && u.unitIdx === 3 && !u.branch ? (u.holySwordSaintCombo || null) : null;
 }
 
-function kingSealStacks(u, target) {
-  if (!u || !target || target.judgmentSealSource !== u || !(target.judgmentSealTimer > 0)) return 0;
-  return Math.min(3, target.judgmentSealStacks || 0);
+const KING_ARSENAL_STANCES = ['crystal', 'thunder', 'crown'];
+const KING_ARSENAL_DATA = {
+  crystal: { label: 'CRYSTAL', color: '#dff5ff', alt: '#ffffff' },
+  thunder: { label: 'THUNDER', color: '#5cc8ff', alt: '#ffd966' },
+  crown: { label: 'CROWN', color: '#ffd966', alt: '#fff2a8' },
+};
+
+function kingArsenalStance(u) {
+  return KING_ARSENAL_DATA[u && u.livingArsenalStance] ? u.livingArsenalStance : 'crystal';
 }
 
-function applyKingJudgmentSeal(u, target, addP, addDmg) {
-  const cfg = kingHolySwordCfg(u);
-  if (!cfg || !u.judgmentSeals || !target || target.hp <= 0) return 0;
-  const maxStacks = cfg.sealMax || u.judgmentSealMax || 3;
-  if (target.judgmentSealSource !== u || !(target.judgmentSealTimer > 0)) target.judgmentSealStacks = 0;
-  target.judgmentSealSource = u;
-  target.judgmentSealStacks = Math.min(maxStacks, (target.judgmentSealStacks || 0) + 1);
-  target.judgmentSealTimer = cfg.sealDur || 7 * GAME_TICK_HZ;
-  if (addP) {
-    addP(target.x, target.y, '#ffd966', 8, 3);
-    addP(target.x, target.y, '#dff5ff', 4, 2);
-  }
-  if (addDmg && target.judgmentSealStacks >= maxStacks) addDmg(target.x, target.y - target.size - 16, '3 SEALS', '#fff2a8', { sz: 11, bold: true });
-  return target.judgmentSealStacks;
+function kingArsenalData(stance) {
+  return KING_ARSENAL_DATA[stance] || KING_ARSENAL_DATA.crystal;
+}
+
+function advanceKingArsenalStance(u) {
+  const idx = KING_ARSENAL_STANCES.indexOf(kingArsenalStance(u));
+  u.livingArsenalStance = KING_ARSENAL_STANCES[(idx + 1) % KING_ARSENAL_STANCES.length];
+  return u.livingArsenalStance;
+}
+
+function kingArsenalDamageMult(stance, target) {
+  return stance === 'crown' && target && (target.isBoss || target.elite || target.isElite) ? 1.08 : 1;
+}
+
+function grantKingHolySwordCharges(u, amount, fill = false) {
+  const cfg = kingHolySwordCfg(u) || {};
+  const max = cfg.chargeMax || u.holySwordChargeMax || 5;
+  u.holySwordCharges = fill ? max : Math.min(max, (u.holySwordCharges || 0) + amount);
+  return u.holySwordCharges;
 }
 
 function grantKingCrystalGuard(u, dr, dur) {
-  if (!u || u.unitIdx !== 3 || u.branch) return;
-  u.crystalGuardDR = Math.max(u.crystalGuardDR || 0, dr || 0.08);
-  u.crystalGuardTimer = Math.max(u.crystalGuardTimer || 0, dur || 3 * GAME_TICK_HZ);
-}
-
-function grantKingSaintSwiftness(u) {
   const cfg = kingHolySwordCfg(u);
   if (!cfg) return;
-  u.saintSwiftnessAtkMult = cfg.saintSwiftnessAtkMult || 0.90;
-  u.saintSwiftnessTimer = Math.max(u.saintSwiftnessTimer || 0, cfg.saintSwiftnessDur || 3 * GAME_TICK_HZ);
+  u.crystalGuardDR = Math.max(u.crystalGuardDR || 0, dr || cfg.arsenalGuardDr || 0.08);
+  u.crystalGuardTimer = Math.max(u.crystalGuardTimer || 0, dur || cfg.arsenalGuardDur || 2 * GAME_TICK_HZ);
 }
 
-function grantKingExaltedEdge(u) {
-  const cfg = kingHolySwordCfg(u);
-  if (!cfg) return;
-  u.exaltedEdgeMult = cfg.exaltedEdgeMult || 1.10;
-  u.exaltedEdgeTimer = Math.max(u.exaltedEdgeTimer || 0, cfg.exaltedEdgeDur || 4 * GAME_TICK_HZ);
+function applyKingArsenalCc(u, target, stance, cfg, enemies, dealDamage, addP, addDmg) {
+  if (!u || !target || !isValidPlayerOffensiveTarget(target)) return;
+  const data = kingArsenalData(stance);
+  if (stance === 'crystal') {
+    if (target.isBoss || target.elite || target.isElite) {
+      target.slowTimer = Math.max(target.slowTimer || 0, cfg.crystalBossSlowDur || Math.round(1.5 * GAME_TICK_HZ));
+      target.slowMult = Math.min(target.slowMult || 1, cfg.crystalBossSlow || 0.65);
+      addDmg(target.x, target.y - target.size - 16, 'CRYSTAL SLOW', data.color, { sz: 10, bold: true });
+    } else {
+      target.stunned = Math.max(target.stunned || 0, cfg.crystalStunDur || Math.round(0.55 * GAME_TICK_HZ));
+      addDmg(target.x, target.y - target.size - 16, 'CRYSTAL STUN', data.color, { sz: 10, bold: true });
+    }
+  } else if (stance === 'thunder') {
+    target.slowTimer = Math.max(target.slowTimer || 0, cfg.thunderSlowDur || 2 * GAME_TICK_HZ);
+    target.slowMult = Math.min(target.slowMult || 1, cfg.thunderSlow || 0.65);
+    let chain = null;
+    let chainDist = Infinity;
+    for (const enemy of enemies) {
+      if (enemy === target || !isValidPlayerOffensiveTarget(enemy)) continue;
+      const d = dist(target, enemy);
+      if (d <= (cfg.thunderChainRange || 120) && d < chainDist) {
+        chain = enemy;
+        chainDist = d;
+      }
+    }
+    if (chain) {
+      const chainDmg = Math.round((u.dmg || 1) * (cfg.thunderChainMult || 0.35));
+      dealDamage(chain, chainDmg, u, 'magic');
+      addP(chain.x, chain.y, data.color, 8, 3);
+    }
+    addDmg(target.x, target.y - target.size - 16, 'THUNDER SLOW', data.color, { sz: 10, bold: true });
+  } else if (stance === 'crown') {
+    if (target.isBoss || target.elite || target.isElite) {
+      addDmg(target.x, target.y - target.size - 16, 'CROWN VERDICT', data.color, { sz: 10, bold: true });
+    } else {
+      const dx = target.x - u.x;
+      const dy = target.y - u.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const push = cfg.crownKnockback || 30;
+      target.x += dx / d * push;
+      target.y += dy / d * push;
+      addDmg(target.x, target.y - target.size - 16, 'CROWN KNOCK', data.color, { sz: 10, bold: true });
+    }
+  }
+  addP(target.x, target.y, data.color, 10, 3);
+  addP(target.x, target.y, data.alt, 5, 2);
+}
+
+function lineDistanceToSegment(target, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((target.x - x1) * dx + (target.y - y1) * dy) / lenSq));
+  const px = x1 + dx * t;
+  const py = y1 + dy * t;
+  return Math.hypot(target.x - px, target.y - py);
+}
+
+function pickKingSwordTargets(u, enemies, primary, range, count) {
+  const picked = [];
+  for (const enemy of enemies) {
+    if (!isValidPlayerOffensiveTarget(enemy) || dist(u, enemy) > range) continue;
+    picked.push(enemy);
+  }
+  if (primary && isValidPlayerOffensiveTarget(primary) && !picked.includes(primary)) picked.push(primary);
+  picked.sort((a, b) => {
+    const score = e => (e === primary ? 10000 : 0) + (e.isBoss ? 700 : 0) + ((e.elite || e.isElite) ? 350 : 0) + Math.min(e.hp || 0, 2500) * 0.02 - dist(u, e) * 0.05;
+    return score(b) - score(a);
+  });
+  return picked.slice(0, count);
+}
+
+function pushKingArsenalLineWarn(groundFx, x1, y1, x2, y2, width, color, label, frames = 18) {
+  groundFx.push({ x: x1, y: y1, x2, y2, r: 0, maxR: 26, life: 0.28, color, enemyWarn: true, warnTimer: frames, warnMax: frames, warnKind: 'line', width, label });
+}
+
+function buildKingArsenalLanes(u, primary, targets, count, len, width) {
+  const lanes = [];
+  const baseAngle = primary ? Math.atan2(primary.y - u.y, primary.x - u.x) : 0;
+  for (let i = 0; i < count; i++) {
+    const target = targets[i] || null;
+    const angle = target ? Math.atan2(target.y - u.y, target.x - u.x) : baseAngle + (i - Math.floor(count / 2)) * 0.28;
+    const laneLen = target ? Math.max(80, Math.min(len, dist(u, target) + 28)) : len;
+    lanes.push({ x1: u.x, y1: u.y, x2: u.x + Math.cos(angle) * laneLen, y2: u.y + Math.sin(angle) * laneLen, width, angle });
+  }
+  return lanes;
 }
 
 export function applyZaytOnHitProcs(unit, target, {
@@ -82,99 +169,97 @@ export function applyZaytOnHitProcs(unit, target, {
   const SFX = soundEffects;
 
   const swordCfg = kingHolySwordCfg(u);
+  if (swordCfg && t && t.hp > 0) {
+    const angle = Math.atan2(t.y - u.y, t.x - u.x);
+    const stance = kingArsenalStance(u);
+    const stanceData = kingArsenalData(stance);
+    beamFx.push({ x1: u.x, y1: u.y - 4, x2: t.x, y2: t.y, life: 0.12, maxLife: 0.12, color: stanceData.color + '88', width: 2.4, straight: true });
+    if (_ohTier <= 0) {
+      if (frame % 3 === 0) addP(t.x, t.y, stanceData.color, 1, 2);
+    }
+  }
   if (swordCfg && _ohTier > 0 && t.hp > 0) {
     const angle = Math.atan2(t.y - u.y, t.x - u.x);
+    const stance = kingArsenalStance(u);
+    const data = kingArsenalData(stance);
     if (_ohTier === 3) {
-      applyKingJudgmentSeal(u, t, addP, addDmg);
-      const stasisDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.stasisMult || 0.75));
-      dealDamage(t, stasisDamage, u, 'magic');
-      if (t.isBoss || t.elite || t.isElite) {
-        t.slowTimer = Math.max(t.slowTimer || 0, swordCfg.stasisBossSlowDur || Math.round(1.5 * GAME_TICK_HZ));
-        t.slowMult = Math.min(t.slowMult || 1, swordCfg.stasisBossSlow || 0.75);
-      } else {
-        t.stunned = Math.max(t.stunned || 0, swordCfg.stasisStunDur || Math.round(0.7 * GAME_TICK_HZ));
+      grantKingHolySwordCharges(u, 1);
+      const len = swordCfg.arsenalCutLength || 165;
+      const width = swordCfg.arsenalCutWidth || 42;
+      const x2 = u.x + Math.cos(angle) * len;
+      const y2 = u.y + Math.sin(angle) * len;
+      pushKingArsenalLineWarn(groundFx, u.x, u.y, x2, y2, width, data.color, data.label, 14);
+      const primaryDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.arsenalCutMult || 0.85) * kingArsenalDamageMult(stance, t));
+      const laneDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.arsenalCutLaneMult || 0.45));
+      dealDamage(t, primaryDamage, u, 'magic');
+      let laneHits = 0;
+      for (const enemy of enemies) {
+        if (enemy === t || !isValidPlayerOffensiveTarget(enemy)) continue;
+        if (lineDistanceToSegment(enemy, u.x, u.y, x2, y2) > width) continue;
+        dealDamage(enemy, Math.round(laneDamage * kingArsenalDamageMult(stance, enemy)), u, 'magic');
+        addP(enemy.x, enemy.y, data.color, 6, 3);
+        laneHits++;
       }
-      grantKingCrystalGuard(u, swordCfg.crystalGuardDr || 0.08, swordCfg.crystalGuardDur || 3 * GAME_TICK_HZ);
-      beamFx.push({ x1: u.x, y1: u.y, x2: t.x, y2: t.y, life: 0.22, maxLife: 0.22, color: '#fff2a8', width: 4, straight: true });
-      beamFx.push({ x1: t.x - Math.cos(angle + Math.PI / 2) * 24, y1: t.y - Math.sin(angle + Math.PI / 2) * 24, x2: t.x + Math.cos(angle + Math.PI / 2) * 24, y2: t.y + Math.sin(angle + Math.PI / 2) * 24, life: 0.18, maxLife: 0.18, color: '#dff5ff', width: 3, straight: true });
-      beamFx.push({ x1: t.x - Math.cos(angle) * 24, y1: t.y - Math.sin(angle) * 24, x2: t.x + Math.cos(angle) * 24, y2: t.y + Math.sin(angle) * 24, life: 0.18, maxLife: 0.18, color: '#ffd966', width: 3, straight: true });
-      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 42, life: 0.42, color: '#dff5ff' });
-      addP(t.x, t.y, '#ffd966', 18, 4);
-      addP(t.x, t.y, '#dff5ff', 10, 3);
-      addDmg(t.x, t.y - t.size - 8, 'STASIS SWORD', '#fff2a8', { sz: 12, bold: true, outline: '#5a4a10' });
-      u.swordSaintCycle = 'lightning';
+      applyKingArsenalCc(u, t, stance, swordCfg, enemies, dealDamage, addP, addDmg);
+      beamFx.push({ x1: u.x, y1: u.y, x2, y2, life: 0.24, maxLife: 0.24, color: data.color, width: 5.5, straight: true });
+      beamFx.push({ x1: t.x - Math.cos(angle + Math.PI / 2) * 26, y1: t.y - Math.sin(angle + Math.PI / 2) * 26, x2: t.x + Math.cos(angle + Math.PI / 2) * 26, y2: t.y + Math.sin(angle + Math.PI / 2) * 26, life: 0.18, maxLife: 0.18, color: data.alt, width: 3, straight: true });
+      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 46, life: 0.42, color: data.color });
+      addP(t.x, t.y, data.color, 18, 4);
+      addP(t.x, t.y, data.alt, 10, 3);
+      addDmg(t.x, t.y - t.size - 8, 'ARSENAL CUT', data.color, { sz: 12, bold: true, outline: '#132033' });
+      if (laneHits) addDmg(t.x, t.y + 16, 'LANE x' + laneHits, data.alt, { sz: 10, bold: true });
+      advanceKingArsenalStance(u);
       if (SFX.holyLight) SFX.holyLight();
     }
 
     if (_ohTier === 5) {
-      applyKingJudgmentSeal(u, t, addP, addDmg);
-      const primaryDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.lightningMult || 1.35));
-      const lineDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.lightningLineMult || 0.55));
-      dealDamage(t, primaryDamage, u, 'magic');
-      let lineHits = 0;
-      const length = swordCfg.lightningLineLength || 175;
-      const width = swordCfg.lightningLineWidth || 34;
-      for (const enemy of enemies) {
-        if (enemy === t || enemy.hp <= 0) continue;
-        const dx = enemy.x - u.x;
-        const dy = enemy.y - u.y;
-        const proj = dx * Math.cos(angle) + dy * Math.sin(angle);
-        if (proj < 0 || proj > length) continue;
-        const perp = Math.abs(dx * -Math.sin(angle) + dy * Math.cos(angle));
-        if (perp > width) continue;
-        dealDamage(enemy, lineDamage, u, 'magic');
-        addP(enemy.x, enemy.y, '#fff2a8', 8, 3);
-        addP(enemy.x, enemy.y, '#ffffff', 4, 2);
-        lineHits++;
+      grantKingHolySwordCharges(u, 2);
+      const targets = pickKingSwordTargets(u, enemies, t, swordCfg.fivefoldRange || 300, 5);
+      const priority = targets[0] || t;
+      for (let i = 0; i < 5; i++) {
+        const target = targets[i] || priority;
+        if (!target || !isValidPlayerOffensiveTarget(target)) continue;
+        const extra = !targets[i];
+        const mult = (swordCfg.fivefoldSwordMult || 0.62) * (extra ? (swordCfg.fivefoldConvergeMult || 0.35) : 1);
+        dealDamage(target, Math.round((u.dmg || dmg || 1) * mult * kingArsenalDamageMult(stance, target)), u, 'magic');
+        projectiles.push({ x: u.x, y: u.y - u.size * 0.55, target, tx: target.x, ty: target.y, speed: 4.2 + i * 0.08, projType: 'holySword', visualOnly: true, color: data.color, altColor: data.alt, _arrN: 12, _arrSz: 3.5, isPlayer: true, dmg: 0 });
+        beamFx.push({ x1: u.x, y1: u.y - 8, x2: target.x, y2: target.y, life: 0.16, maxLife: 0.16, color: data.color + '99', width: 2.5, straight: true });
+        addP(target.x, target.y, data.color, 6, 3);
       }
-      grantKingSaintSwiftness(u);
-      beamFx.push({ x1: u.x, y1: u.y, x2: u.x + Math.cos(angle) * length, y2: u.y + Math.sin(angle) * length, life: 0.24, maxLife: 0.24, color: '#fff2a8', width: 6, straight: true });
-      beamFx.push({ x1: u.x, y1: u.y - 6, x2: u.x + Math.cos(angle) * length, y2: u.y + Math.sin(angle) * length - 6, life: 0.18, maxLife: 0.18, color: '#ffffff', width: 2, straight: true });
-      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: 50, life: 0.36, swipeArc: true, swipeAngle: angle, color: '#ffd966' });
-      groundFx.push({ x: u.x + Math.cos(angle) * (length * 0.52), y: u.y + Math.sin(angle) * (length * 0.52), r: 0, maxR: length * 0.40, life: 0.42, color: '#fff2a8', flatten: true });
-      addP(t.x, t.y, '#ffd966', 20, 4);
-      addP(t.x, t.y, '#ffffff', 10, 3);
-      addDmg(t.x, t.y - t.size - 8, 'LIGHTNING STAB', '#fff2a8', { sz: 13, bold: true, outline: '#5a4a10' });
-      if (lineHits) addDmg(t.x, t.y + 16, 'LINE x' + lineHits, '#ffffff', { sz: 10, bold: true });
-      u.holySwordEchoes = u.holySwordEchoes || [];
-      u.holySwordEchoes.push({ type: 'lightning', timer: 10, x: u.x, y: u.y, angle, len: length, width: width + 18, dmg: Math.round((u.dmg || dmg || 1) * 0.95), label: 'SAINT AFTERIMAGE' });
-      u.swordSaintCycle = 'holy';
+      applyKingArsenalCc(u, priority, stance, swordCfg, enemies, dealDamage, addP, addDmg);
+      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 72, life: 0.42, color: data.color, flatten: true });
+      addP(u.x, u.y, data.color, 24, 5);
+      addP(u.x, u.y, data.alt, 14, 3);
+      addDmg(priority.x, priority.y - priority.size - 8, 'FIVEFOLD JUDGMENT', data.color, { sz: 13, bold: true, outline: '#132033' });
+      advanceKingArsenalStance(u);
       if (SFX.holyLight) SFX.holyLight();
     }
 
     if (_ohTier === 10) {
-      const stacks = applyKingJudgmentSeal(u, t, addP, addDmg);
-      const fullSealBonus = stacks >= (swordCfg.sealMax || 3) ? (1 + (swordCfg.holyExplosionFullSealBonus || 0.20)) : 1;
-      const primaryDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.holyExplosionMult || 2.35) * fullSealBonus);
-      const splashDamage = Math.round((u.dmg || dmg || 1) * (swordCfg.holyExplosionSplashMult || 1.15) * fullSealBonus);
-      const radius = swordCfg.holyExplosionRadius || 85;
-      dealDamage(t, primaryDamage, u, 'magic');
-      let splashHits = 0;
-      for (const enemy of enemies) {
-        if (enemy === t || enemy.hp <= 0 || dist(t, enemy) > radius) continue;
-        dealDamage(enemy, splashDamage, u, 'magic');
-        addP(enemy.x, enemy.y, '#ffd966', 12, 4);
-        addP(enemy.x, enemy.y, '#dff5ff', 6, 3);
-        splashHits++;
-      }
-      grantKingExaltedEdge(u);
-      beamFx.push({ x1: t.x, y1: t.y - 90, x2: t.x, y2: t.y + 12, life: 0.34, maxLife: 0.34, color: '#fff2a8', width: 8, straight: true });
-      beamFx.push({ x1: t.x - 12, y1: t.y - 70, x2: t.x + 12, y2: t.y + 8, life: 0.28, maxLife: 0.28, color: '#dff5ff', width: 3, straight: true });
-      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius, life: 0.68, color: '#ffd966' });
-      groundFx.push({ x: t.x, y: t.y, r: 0, maxR: radius + 34, life: 0.4, color: '#dff5ff' });
-      for (let i = 0; i < 6; i++) {
-        const swordAngle = Math.PI * 2 * i / 6;
-        beamFx.push({ x1: t.x + Math.cos(swordAngle) * radius * 0.55, y1: t.y - 95 + Math.sin(swordAngle) * 8, x2: t.x + Math.cos(swordAngle) * radius * 0.12, y2: t.y + Math.sin(swordAngle) * radius * 0.12, life: 0.32, maxLife: 0.32, color: i % 2 ? '#dff5ffcc' : '#ffd966cc', width: 3, straight: true });
-      }
-      addP(t.x, t.y, '#ffd966', 34, 6);
-      addP(t.x, t.y, '#ffffff', 14, 4);
-      addDmg(t.x, t.y - t.size - 12, 'HOLY EXPLOSION', '#fff2a8', { sz: 14, bold: true, outline: '#5a4a10' });
-      if (splashHits) addDmg(t.x, t.y + 20, 'SPLASH x' + splashHits, '#fff2a8', { sz: 11, bold: true });
+      grantKingHolySwordCharges(u, 0, true);
+      const targets = pickKingSwordTargets(u, enemies, t, swordCfg.crownCrossRange || 300, 5);
+      const lanes = buildKingArsenalLanes(u, t, targets, 5, swordCfg.crownCrossLength || 300, swordCfg.crownCrossWidth || 44);
+      for (const lane of lanes) pushKingArsenalLineWarn(groundFx, lane.x1, lane.y1, lane.x2, lane.y2, lane.width, data.color, 'CROSS', swordCfg.crownCrossDelay || 15);
       u.holySwordEchoes = u.holySwordEchoes || [];
-      u.holySwordEchoes.push({ type: 'pillar', timer: 12, x: t.x, y: t.y, radius: radius + 22, dmg: Math.round((u.dmg || dmg || 1) * 1.45), label: 'EXALTED DETONATION' });
-      showFlash('HOLY EXPLOSION', '#fff2a8', 42);
+      u.holySwordEchoes.push({
+        type: 'crownCross',
+        timer: swordCfg.crownCrossDelay || 15,
+        stance,
+        main: t,
+        lanes,
+        mainDmg: Math.round((u.dmg || dmg || 1) * (swordCfg.crownCrossMainMult || 2.40) * kingArsenalDamageMult(stance, t)),
+        lineDmg: Math.round((u.dmg || dmg || 1) * (swordCfg.crownCrossLineMult || 1.05)),
+        echoTimer: swordCfg.crownCrossEchoDelay || 27,
+        echoMainDmg: Math.round((u.dmg || dmg || 1) * (swordCfg.crownCrossEchoMainMult || 1.20)),
+        echoLineDmg: Math.round((u.dmg || dmg || 1) * (swordCfg.crownCrossEchoLineMult || 0.55)),
+        label: 'CROWN CROSS'
+      });
+      addP(t.x, t.y, data.color, 36, 6);
+      addP(t.x, t.y, data.alt, 18, 4);
+      addDmg(t.x, t.y - t.size - 12, 'CROWN CROSS', data.color, { sz: 14, bold: true, outline: '#132033' });
+      showFlash('CROWN CROSS', data.color, 42);
       shake(9);
-      u.swordSaintCycle = 'stasis';
+      advanceKingArsenalStance(u);
       if (SFX.holyLight) SFX.holyLight();
     }
   }

@@ -9,7 +9,6 @@ import { applyZaytOnHitProcs } from '../src/systems/unit-zayt-onhit-procs.js';
 import { advanceSharedOnHitCounter } from '../src/systems/unit-onhit-procs.js';
 import { createUnitAbilityRuntime } from '../src/systems/unit-ability-runtime.js';
 import { createArenaSignatures } from '../src/systems/unit-signatures.js';
-import { tickEnemyPostUpdateStatusEffects } from '../src/systems/combat-status-effects.js';
 
 const noop = () => {};
 const dist = (a, b) => Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0));
@@ -33,8 +32,8 @@ function makeKing(level = 5, branch = null) {
     x: 240,
     y: 500,
     facing: 1,
-    a3: branch === 'a' ? 'hallowedLeap' : (branch === 'b' ? 'holyPrism' : 'crushJudgment'),
-    a5: branch === 'a' ? 'guardianOfAncientKings' : (branch === 'b' ? 'barrierOfFaith' : 'hallowedBladefall'),
+    a3: branch === 'a' ? 'hallowedLeap' : (branch === 'b' ? 'holyPrism' : 'astralSever'),
+    a5: branch === 'a' ? 'guardianOfAncientKings' : (branch === 'b' ? 'barrierOfFaith' : 'fivefoldEdict'),
     hasL3: level >= 3,
     hasL5: level >= 5,
     artOfWar: branch ? undefined : PLAYER_UNITS[3].artOfWar,
@@ -44,7 +43,7 @@ function makeKing(level = 5, branch = null) {
   applyUnitPassives(unit, 3, level, {
     gameTickHz: GAME_TICK_HZ,
     signatures: {
-      divine_ruination: { name: 'Sword Saint: Divine Ruination', cd: 35, fire: noop },
+      heavenly_arsenal: { name: 'Sword Saint: Heavenly Arsenal', cd: 35, fire: noop },
       beacon_of_virtue: { name: 'Beacon of Virtue', cd: 35, fire: noop },
       ashen_hallow: { name: 'Ashen Hallow', cd: 35, fire: noop },
     },
@@ -94,34 +93,26 @@ function runAttack(unit, enemy, context) {
 }
 
 {
-  assert.equal(PLAYER_UNITS[3].role, 'Holy Sword Saint', 'Base King visible role should be Holy Sword Saint');
-  assert.equal(PLAYER_UNITS[3].a3, 'crushJudgment', 'Base King should use Crush Judgment as A3');
-  assert.equal(PLAYER_UNITS[3].a5, 'hallowedBladefall', 'Base King should use Hallowed Bladefall as A5');
-  assert.equal(ARENA_UNIT_PASSIVES[3].p1, 'swordSaintCycle', 'Base King should no longer receive Wings of Light');
-  assert.equal(ARENA_UNIT_PASSIVES[3].p2, 'judgmentSeals', 'Base King should no longer receive Shield of Vengeance');
-  assert.equal(ARENA_BASE_SIGNATURES[3], 'divine_ruination', 'Base King should use Divine Ruination signature');
+  assert.equal(PLAYER_UNITS[3].role, 'Holy Sword Saint', 'Base King visible role should remain Holy Sword Saint');
+  assert.equal(PLAYER_UNITS[3].a3, 'astralSever', 'Base King should use Astral Sever as A3');
+  assert.equal(PLAYER_UNITS[3].a5, 'fivefoldEdict', 'Base King should use Fivefold Edict as A5');
+  assert.equal(ARENA_UNIT_PASSIVES[3].p1, 'livingArsenal', 'Base King should use Living Arsenal as P1');
+  assert.equal(ARENA_UNIT_PASSIVES[3].p2, 'fiveSwordChoir', 'Base King should use Five-Sword Choir as P2');
+  assert.equal(ARENA_BASE_SIGNATURES[3], 'heavenly_arsenal', 'Base King should use Heavenly Arsenal signature');
 
   const king = makeKing(5);
-  assert.equal(king.artOfWar, false, 'Base King should no longer use old Art of War');
-  assert.equal(king.hammerOfWrath, false, 'Base King should no longer use old Hammer of Wrath');
-  assert.equal(king.paladinWings, undefined, 'Base King should not attach Wings of Light');
-  assert.equal(king.shieldOfVengeance, undefined, 'Base King should not attach Shield of Vengeance');
-  assert.equal(king._bladeOfJustice, undefined, 'Base King should not attach Blade of Justice');
-  assert.equal(king._hammerOfLight, undefined, 'Base King should not attach Hammer of Light');
-  assert.equal(king._wakeOfAshesProc, undefined, 'Base King should not attach Wake of Ashes proc');
-  assert.equal(king.divineStorm, undefined, 'Base King should no longer fire the old every-4 Divine Storm');
-  assert.equal(king.signature.id, 'divine_ruination', 'Base King should attach Divine Ruination when signatures are available');
+  assert.equal(king.artOfWar, false, 'Base King should not use old Art of War');
+  assert.equal(king.hammerOfWrath, false, 'Base King should not use old Hammer of Wrath');
+  assert.equal(king.judgmentSeals, undefined, 'Base King should not attach old Judgment Seals');
+  assert.equal(king.signature.id, 'heavenly_arsenal', 'Base King should attach Heavenly Arsenal when signatures are available');
 }
 
 {
   const holy = makeKing(5, 'b');
   assert.ok(holy.kingHolyCombo, 'King Holy should keep the healer combo');
   assert.equal(holy.holySwordSaintCombo, undefined, 'King Holy should not receive Holy Sword Saint config');
-  assert.equal(holy.lightOfDawn, undefined, 'King Holy should keep old independent Light of Dawn disabled');
-  assert.equal(holy.wordOfGlory, undefined, 'King Holy should keep old independent Word of Glory disabled');
 
   const prot = makeKing(5, 'a');
-  assert.equal(prot.artOfWar, undefined, 'King Protection test fixture should not force the base Ret Art of War flag');
   assert.ok(prot.avengersShield, 'King Protection should keep Avenger Shield');
   assert.ok(prot.ardentDefender, 'King Protection should keep Ardent Defender');
   assert.ok(prot.divineStorm, 'King Protection should keep the paladin Divine Storm passive');
@@ -134,48 +125,43 @@ function runAttack(unit, enemy, context) {
   const context = makeOnHitContext(king, [enemy], events);
   const tiers = [runAttack(king, enemy, context), runAttack(king, enemy, context), runAttack(king, enemy, context)];
 
-  assert.deepEqual(tiers, [0, 0, 3], 'L2 should trigger Stasis Sword on the literal 3rd attack');
-  assert.ok(events.includes('STASIS SWORD'), 'Stasis Sword text should be emitted');
-  assert.equal(king.crystalGuardDR, 0.08, 'Stasis Sword should grant Crystal Guard');
-  assert.equal(king.crystalGuardTimer, 3 * GAME_TICK_HZ, 'Crystal Guard should last 3s');
-  assert.equal(enemy.judgmentSealStacks || 0, 0, 'Judgment Seals should not apply before P2 unlocks');
+  assert.deepEqual(tiers, [0, 0, 3], 'L2 should trigger Arsenal Cut on the literal 3rd attack');
+  assert.ok(events.includes('ARSENAL CUT'), 'Arsenal Cut text should be emitted');
+  assert.equal(enemy.stunned, Math.round(0.55 * GAME_TICK_HZ), 'Crystal stance should stun non-bosses');
+  assert.equal(king.holySwordCharges, 1, '3rd hit should grant one sword charge');
+  assert.equal(king.livingArsenalStance, 'thunder', '3rd hit should advance Crystal to Thunder');
 }
 
 {
   const king = makeKing(3);
   const enemy = makeEnemy(300, 500);
-  const lineEnemy = makeEnemy(390, 500);
+  const others = [makeEnemy(330, 505), makeEnemy(360, 510), makeEnemy(390, 515), makeEnemy(420, 520)];
   const events = [];
-  const context = makeOnHitContext(king, [enemy, lineEnemy], events);
-  const lineBefore = lineEnemy.hp;
+  const context = makeOnHitContext(king, [enemy, ...others], events);
   const tiers = [];
   for (let i = 0; i < 5; i++) tiers.push(runAttack(king, enemy, context));
 
-  assert.deepEqual(tiers, [0, 0, 3, 0, 5], 'L3 should add Lightning Stab on the literal 5th attack');
-  assert.ok(events.includes('LIGHTNING STAB'), 'Lightning Stab text should be emitted');
-  assert.equal(king.saintSwiftnessTimer, 3 * GAME_TICK_HZ, 'Lightning Stab should grant 3s Saint Swiftness');
-  assert.equal(king.saintSwiftnessAtkMult, 0.86, 'Saint Swiftness should store a stronger faster attack multiplier');
-  assert.ok(lineEnemy.hp < lineBefore, 'Lightning Stab should hit enemies in the line');
-  assert.equal(enemy.judgmentSealStacks, 2, 'Stasis + Lightning should build Judgment Seals after P2 unlock');
-  assert.ok(king.holySwordEchoes?.some(e => e.type === 'lightning' && e.label === 'SAINT AFTERIMAGE'), 'Lightning Stab should queue a delayed holy afterimage hit');
+  assert.deepEqual(tiers, [0, 0, 3, 0, 5], 'L3 should add Fivefold Judgment on the literal 5th attack');
+  assert.ok(events.includes('FIVEFOLD JUDGMENT'), 'Fivefold Judgment text should be emitted');
+  assert.equal(context.projectiles.length, 5, 'Fivefold Judgment should create five sword projectile visuals');
+  assert.equal(enemy.slowTimer, 2 * GAME_TICK_HZ, 'Thunder stance should slow the priority target');
+  assert.equal(king.holySwordCharges, 3, '3rd plus 5th hit should build to three sword charges');
+  assert.equal(king.livingArsenalStance, 'crown', '5th hit should advance Thunder to Crown');
 }
 
 {
   const king = makeKing(4);
   const enemy = makeEnemy(300, 500);
-  const splash = makeEnemy(360, 520);
   const events = [];
-  const context = makeOnHitContext(king, [enemy, splash], events);
-  const splashBefore = splash.hp;
+  const context = makeOnHitContext(king, [enemy, makeEnemy(350, 520)], events);
   const tiers = [];
   for (let i = 0; i < 10; i++) tiers.push(runAttack(king, enemy, context));
 
-  assert.equal(tiers[9], 10, 'L4 should trigger Holy Explosion on the literal 10th attack');
-  assert.ok(events.includes('HOLY EXPLOSION'), 'Holy Explosion text should be emitted');
-  assert.equal(enemy.judgmentSealStacks, 3, 'Holy Explosion should bring Judgment Seals to the cap');
-  assert.ok(splash.hp < splashBefore, 'Holy Explosion should splash nearby enemies');
-  assert.equal(king.exaltedEdgeTimer, 4 * GAME_TICK_HZ, 'Holy Explosion should grant 4s Exalted Edge');
-  assert.ok(king.holySwordEchoes?.some(e => e.type === 'pillar' && e.label === 'EXALTED DETONATION'), 'Holy Explosion should queue a delayed exalted detonation');
+  assert.equal(tiers[9], 10, 'L4 should trigger Crown Cross on the literal 10th attack');
+  assert.ok(events.includes('CROWN CROSS'), 'Crown Cross text should be emitted');
+  assert.equal(king.holySwordCharges, 5, '10th hit should fill sword charges to five');
+  assert.equal(king.livingArsenalStance, 'crystal', '10th hit should advance Crown back to Crystal');
+  assert.ok(king.holySwordEchoes?.some(e => e.type === 'crownCross'), 'Crown Cross should queue delayed lane damage');
 }
 
 {
@@ -187,68 +173,24 @@ function runAttack(unit, enemy, context) {
   for (let i = 0; i < 10; i++) tiers.push(runAttack(king, enemy, context));
 
   assert.deepEqual(tiers, [0, 0, 3, 0, 5, 0, 0, 0, 0, 10], 'L5 Base King should keep literal 3/5/10 thresholds');
-  assert.equal(enemy.judgmentSealStacks, 3, 'Repeated combo should cap seals at 3');
-  for (let i = 0; i < 10; i++) runAttack(king, enemy, context);
-  assert.equal(enemy.judgmentSealStacks, 3, 'Judgment Seals should remain capped at 3');
 }
 
 {
-  const king = makeKing(5);
-  const enemy = makeEnemy();
-  enemy.judgmentSealSource = king;
-  enemy.judgmentSealStacks = 3;
-  enemy.judgmentSealTimer = 1;
-  tickEnemyPostUpdateStatusEffects(enemy, {
-    frame: 1,
-    enemies: [enemy],
-    dealDamage: noop,
-    emitParticle: noop,
-    groundEffects: [],
-    addDamageText: noop,
-    showFlash: noop,
-    onDeath: noop,
-    randomRange: () => 0,
-    shake: noop,
-  });
-  assert.equal(enemy.judgmentSealStacks, 0, 'Judgment Seals should clear when their timer expires');
-  assert.equal(enemy.judgmentSealSource, null, 'Expired Judgment Seals should clear their source');
-}
+  const king = makeKing(2);
+  king.livingArsenalStance = 'crown';
+  const enemy = makeEnemy(300, 500);
+  const boss = makeEnemy(300, 540, 100000, { isBoss: true });
+  const context = makeOnHitContext(king, [enemy, boss], []);
+  const enemyX = enemy.x;
+  for (let i = 0; i < 3; i++) runAttack(king, enemy, context);
+  assert.ok(enemy.x > enemyX, 'Crown stance should knock back non-bosses');
 
-{
-  const king = makeKing(5);
-  const main = makeEnemy(300, 500, 100000, { isBoss: true });
-  const splash = makeEnemy(350, 500);
-  main.judgmentSealSource = king;
-  main.judgmentSealStacks = 3;
-  main.judgmentSealTimer = 7 * GAME_TICK_HZ;
-  const battle = { units: [king], enemies: [main, splash], projectiles: [], bombs: [], groundFx: [], beamFx: [] };
-  const damageEvents = [];
-  const signatures = createArenaSignatures({
-    gameTickHz: GAME_TICK_HZ,
-    getBattleArray: key => battle[key] || [],
-    randomRange: (min = 0) => min,
-    distance: dist,
-    dealDamage: (target, amount) => {
-      const dmg = Math.round(amount || 0);
-      target.hp = Math.max(0, target.hp - dmg);
-      damageEvents.push({ target, amount: dmg });
-    },
-    addDamageText: noop,
-    emitParticle: noop,
-    showFlash: noop,
-    clampToLeash: noop,
-    shake: noop,
-  });
-  const result = signatures.divine_ruination.fire(king);
-
-  assert.notEqual(result, false, 'Divine Ruination should fire against a valid boss target');
-  assert.equal(main.judgmentSealStacks, 0, 'Divine Ruination should consume Judgment Seals');
-  assert.equal(main.judgmentSealSource, null, 'Divine Ruination should clear the seal source');
-  assert.ok(damageEvents.find(event => event.target === main && event.amount > king.dmg * 5.0), 'Divine Ruination should gain seal bonus damage');
-  assert.ok(splash.hp < splash.maxHp, 'Divine Ruination should splash nearby enemies');
-  assert.ok(king.divineRuinationEcho, 'Divine Ruination should queue the 3-seal echo hit');
-  assert.equal(king.divineRuinationEcho.label, 'THREE-SEAL RUINATION', 'Three-seal Divine Ruination should queue the stronger named echo');
-  assert.ok(king.divineRuinationEcho.splashDmg > 0, 'Divine Ruination echo should include second-impact splash damage');
+  const king2 = makeKing(2);
+  king2.livingArsenalStance = 'crown';
+  const bossX = boss.x;
+  const context2 = makeOnHitContext(king2, [boss], []);
+  for (let i = 0; i < 3; i++) runAttack(king2, boss, context2);
+  assert.equal(boss.x, bossX, 'Crown stance should not knock back bosses');
 }
 
 {
@@ -256,7 +198,6 @@ function runAttack(unit, enemy, context) {
   const main = makeEnemy(330, 500, 100000, { isBoss: true });
   const splash = makeEnemy(365, 515);
   const battle = { units: [king], enemies: [main, splash], projectiles: [], bombs: [], groundFx: [], beamFx: [] };
-  const events = [];
   const runtime = createUnitAbilityRuntime({
     gameTickHz: GAME_TICK_HZ,
     view: () => ({
@@ -283,28 +224,58 @@ function runAttack(unit, enemy, context) {
       target.hp = Math.max(0, target.hp - Math.round(amount || 0));
     },
     emitParticle: noop,
-    addDamageText: (_x, _y, text) => events.push(text),
-    showFlash: text => events.push(text),
+    addDamageText: noop,
+    showFlash: noop,
     clampToLeash: noop,
     clampToArena: noop,
     setScreenShake: noop,
   });
 
-  const mainBefore = main.hp;
-  runtime.abilities.crushJudgment(king);
-  assert.ok(main.hp < mainBefore, 'Crush Judgment should damage a priority target within 230px');
-  assert.equal(main.judgmentSealStacks, 1, 'Crush Judgment should apply one Judgment Seal');
-  assert.ok(events.includes('CRUSH JUDGMENT'), 'Crush Judgment should emit readable VFX text');
-  assert.ok(king.holySwordEchoes?.some(e => e.label === 'CRYSTAL AFTERIMAGE'), 'Crush Judgment should queue a crystal afterimage hit');
+  const start = { x: king.x, y: king.y };
+  runtime.abilities.astralSever(king);
+  assert.deepEqual({ x: king.x, y: king.y }, start, 'Astral Sever should not move King');
+  assert.equal(king.crystalGuardDR, 0.08, 'Astral Sever should grant short Crystal Guard');
+  assert.ok(king.holySwordEchoes?.some(e => e.type === 'astralSever'), 'Astral Sever should queue delayed lane damage');
 
-  king.abilCD.hallowedBladefall = 0;
-  const splashBefore = splash.hp;
-  runtime.abilities.hallowedBladefall(king);
-  assert.ok(splash.hp < splashBefore, 'Hallowed Bladefall should splash nearby enemies');
-  assert.equal(main.judgmentSealStacks, 2, 'Hallowed Bladefall should apply one more Judgment Seal to the main target');
-  assert.equal(king.crystalGuardDR, 0.12, 'Hallowed Bladefall should grant stronger Crystal Guard');
-  assert.ok(events.includes('HALLOWED BLADEFALL'), 'Hallowed Bladefall should emit readable VFX text');
-  assert.ok(king.holySwordEchoes?.some(e => e.label === 'BLADEFALL ECHO'), 'Hallowed Bladefall should queue a delayed bladefall echo');
+  king.abilCD.fivefoldEdict = 0;
+  runtime.abilities.fivefoldEdict(king);
+  assert.deepEqual({ x: king.x, y: king.y }, start, 'Fivefold Edict should not move King');
+  assert.ok(battle.projectiles.length >= 5, 'Fivefold Edict should create sword projectile visuals');
+  assert.ok(king.holySwordEchoes?.some(e => e.type === 'edictPulse'), 'Fivefold Edict should queue landing pulses');
 }
 
-console.log('King Holy Sword Saint 3/5/10 smoke passed');
+{
+  const king = makeKing(5);
+  king.holySwordCharges = 5;
+  const main = makeEnemy(300, 500, 100000, { isBoss: true });
+  const splash = makeEnemy(350, 500);
+  const battle = { units: [king], enemies: [main, splash], projectiles: [], bombs: [], groundFx: [], beamFx: [] };
+  const damageEvents = [];
+  const signatures = createArenaSignatures({
+    gameTickHz: GAME_TICK_HZ,
+    getBattleArray: key => battle[key] || [],
+    randomRange: () => 0,
+    distance: dist,
+    dealDamage: (target, amount) => {
+      const dmg = Math.round(amount || 0);
+      target.hp = Math.max(0, target.hp - dmg);
+      damageEvents.push({ target, amount: dmg });
+    },
+    addDamageText: noop,
+    emitParticle: noop,
+    showFlash: noop,
+    clampToLeash: noop,
+    shake: noop,
+  });
+  const start = { x: king.x, y: king.y };
+  const result = signatures.heavenly_arsenal.fire(king);
+
+  assert.notEqual(result, false, 'Heavenly Arsenal should fire against a valid boss target');
+  assert.deepEqual({ x: king.x, y: king.y }, start, 'Heavenly Arsenal should not move King');
+  assert.equal(king.holySwordCharges, 0, 'Heavenly Arsenal should consume sword charges');
+  assert.ok(damageEvents.find(event => event.target === main && event.amount > king.dmg * 5.0), 'Heavenly Arsenal should apply sword-charge bonus damage');
+  assert.ok(splash.hp < splash.maxHp, 'Heavenly Arsenal should hit secondary enemies');
+  assert.ok(king.holySwordEchoes?.some(e => e.type === 'heavenlyCrown'), 'Five charges should queue delayed Heavenly Crown hit');
+}
+
+console.log('King Holy Sword Saint Living Arsenal smoke passed');

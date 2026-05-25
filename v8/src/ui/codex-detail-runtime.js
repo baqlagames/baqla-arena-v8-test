@@ -394,6 +394,7 @@ function arena_passiveTitle(id){
     chainLightning:'Chain Lightning', waterElemental:'Water Elemental', stormElemental:'Storm Elemental',
     blizzard:'Blizzard',
     swordSaintCycle:'Sword Saint Cycle', judgmentSeals:'Judgment Seals',
+    livingArsenal:'Living Arsenal', fiveSwordChoir:'Five-Sword Choir',
     wingsOfLight:'Wings of Light', shieldOfVengeance:'Shield of Vengeance',
     avengersShield:"Avenger's Shield", ardentDefender:'Ardent Defender',
     lightOfDawn:'Light of Dawn', wordOfGlory:'Word of Glory',
@@ -543,8 +544,10 @@ function arena_passiveShort(id){
     battleStandard:'Drops a static buff zone for allies',
     // (raiseSwarm + raiseElite descriptions removed)
     meteor:'Sky-drops a meteor on the strongest enemy every 8s',
-    swordSaintCycle:'3/5/10 cycles Stasis, Lightning, and Holy blade arts with short guard/speed/boss-burst windows',
-    judgmentSeals:'Combo and cooldown moves apply self-only seals; King deals +8% damage per seal and Divine Ruination consumes them',
+    swordSaintCycle:'Legacy holy blade cycle',
+    judgmentSeals:'Legacy Judgment Seals',
+    livingArsenal:'Crystal, Thunder, and Crown sword stances rotate through stun, slow, knockback, and boss verdict bonuses',
+    fiveSwordChoir:'King stores up to 5 spectral swords; Heavenly Arsenal consumes them for stronger burst',
     wingsOfLight:'Always-on +20% damage and +20% crit chance',
     shieldOfVengeance:'Absorb 20% max HP, then burst all absorbed damage as holy AoE (15s CD)',
     avengersShield:'Every 6s throw bouncing shield hitting 3 enemies; at L4 hits 5 for 1.65x and 16% shield cap.',
@@ -716,7 +719,7 @@ function arena_baseHeadline(unitIdx){
     12:'AROMANCER: Soothing Aroma + Essence Infusion. Sig: Aromatic Burst Ã¢â‚¬â€ herb-essence healer',
     99:"Champion's Aura + Devour Ã¢â‚¬â€ hero buffer & finisher"
   };
-  m[3]='HOLY SWORD SAINT: 3/5/10 Stasis Sword, Lightning Stab, Holy Explosion. Judgment Seals add self-only bonus damage, A3/A5 apply more seals, and Divine Ruination consumes seals for a boss-burst payoff.';
+  m[3]='HOLY SWORD SAINT: Living Arsenal cycles Crystal, Thunder, and Crown sword stances. 3/5/10 Arsenal Cut, Fivefold Judgment, and Crown Cross create visible blade lanes and five-sword volleys. A3/A5 are Astral Sever and Fivefold Edict. Signature Heavenly Arsenal consumes sword charges.';
   return m[unitIdx]||'';
 }
 // One-line summary per branch variant Ã¢â‚¬â€ used by the codex detail page so
@@ -781,7 +784,7 @@ function passiveLabel(u){
     // Kharroob codex entry removed
     Vodka:"P1 Champion's Aura: passive damage bonus to all allies. P2 (L3) Devour: heal a portion of damage dealt + chance to insta-kill weak enemies."
   };
-  m.King='Holy Sword Saint. Built-in: Crusader Aura mount charge. P1 Sword Saint Cycle: 3/5/10 Stasis Sword, Lightning Stab, Holy Explosion. P2 Judgment Seals: combo and CD moves apply self-only seals for +8% damage per seal. A3 Crush Judgment. A5 Hallowed Bladefall. Signature Divine Ruination consumes seals for burst and a 3-seal echo hit.';
+  m.King='Holy Sword Saint. Built-in: Crusader Aura mount charge. P1 Living Arsenal cycles Crystal, Thunder, and Crown stances for stun, slow, knockback, and boss verdict effects. P2 Five-Sword Choir stores up to 5 spectral swords. 3/5/10: Arsenal Cut, Fivefold Judgment, Crown Cross. A3 Astral Sever. A5 Fivefold Edict. Signature Heavenly Arsenal consumes charges for stronger burst.';
   return m[u.name]||'';
 }
 function abilityLabel(name){
@@ -818,8 +821,10 @@ function abilityLabel(name){
     incarnationTree:'10s: become Tree of Life Ã¢â‚¬â€ +40% HP, +50% armor, heals all allies 3%/sec in 160px (40s CD)',
     divineJudgment:'Holy burst (3Ãƒâ€” dmg) + 40% splash to nearby enemies (8s CD)',
     crushJudgment:'Dash to a priority enemy within 230px, 3x holy damage, applies a Judgment Seal, stuns non-bosses (12s CD)',
+    astralSever:'No-jump holy line command: delayed wide lane hit, stance CC, and short Crystal Guard (12s CD)',
     hallowedLeap:'Jump toward ranged/caster threats, shield King, and force non-boss targeting (12s CD)',
     hallowedBladefall:'Leap to a boss/elite/cluster, 4.4x main and 2.05x splash damage, applies a seal and stronger Crystal Guard (24s CD)',
+    fivefoldEdict:'No-jump five-sword command: hits up to 5 enemies, then pulses each landing point (24s CD)',
     bladeOfWrath:'Leap + 2.5Ãƒâ€” holy damage + 2s stun + 4s dmg buff (12s CD, Prot only)',
     wakeOfAshes:'Frontal cone 200px: 3Ãƒâ€” holy damage + 3s stun (22s CD)',
     finalReckoning:'Marks all enemies in 100px Ã¢â‚¬â€ 300% holy burst + marked take 20% more dmg for 6s (22s CD)',

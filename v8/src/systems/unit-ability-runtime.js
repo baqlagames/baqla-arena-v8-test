@@ -163,6 +163,95 @@ function arena_kingGrantCrystalGuard(u,dr,dur){
   u.crystalGuardDR=Math.max(u.crystalGuardDR||0,dr||0.08);
   u.crystalGuardTimer=Math.max(u.crystalGuardTimer||0,dur||3*GAME_TICK_HZ);
 }
+const KING_ARSENAL_STANCES=['crystal','thunder','crown'];
+const KING_ARSENAL_DATA={
+  crystal:{label:'CRYSTAL',color:'#dff5ff',alt:'#ffffff'},
+  thunder:{label:'THUNDER',color:'#5cc8ff',alt:'#ffd966'},
+  crown:{label:'CROWN',color:'#ffd966',alt:'#fff2a8'}
+};
+function arena_kingArsenalStance(u){
+  return KING_ARSENAL_DATA[u&&u.livingArsenalStance]?u.livingArsenalStance:'crystal';
+}
+function arena_kingArsenalData(stance){
+  return KING_ARSENAL_DATA[stance]||KING_ARSENAL_DATA.crystal;
+}
+function arena_advanceKingArsenalStance(u){
+  const idx=KING_ARSENAL_STANCES.indexOf(arena_kingArsenalStance(u));
+  u.livingArsenalStance=KING_ARSENAL_STANCES[(idx+1)%KING_ARSENAL_STANCES.length];
+}
+function arena_kingArsenalDamageMult(stance,target){
+  return stance==='crown'&&target&&(target.isBoss||target.elite||target.isElite)?1.08:1;
+}
+function arena_applyKingArsenalCc(u,target,stance,cfg){
+  if(!u||!target||!isValidPlayerOffensiveTarget(target))return;
+  const data=arena_kingArsenalData(stance);
+  if(stance==='crystal'){
+    if(target.isBoss||target.elite||target.isElite){
+      target.slowTimer=Math.max(target.slowTimer||0,cfg.crystalBossSlowDur||Math.round(1.5*GAME_TICK_HZ));
+      target.slowMult=Math.min(target.slowMult||1,cfg.crystalBossSlow||0.65);
+      addDmg(target.x,target.y-target.size-16,'CRYSTAL SLOW',data.color,{sz:10,bold:true});
+    }else{
+      target.stunned=Math.max(target.stunned||0,cfg.crystalStunDur||Math.round(0.55*GAME_TICK_HZ));
+      addDmg(target.x,target.y-target.size-16,'CRYSTAL STUN',data.color,{sz:10,bold:true});
+    }
+  }else if(stance==='thunder'){
+    target.slowTimer=Math.max(target.slowTimer||0,cfg.thunderSlowDur||2*GAME_TICK_HZ);
+    target.slowMult=Math.min(target.slowMult||1,cfg.thunderSlow||0.65);
+    let chain=null,chainDist=Infinity;
+    for(const e of enemies){
+      if(e===target||!isValidPlayerOffensiveTarget(e))continue;
+      const d=dist(target,e);
+      if(d<=(cfg.thunderChainRange||120)&&d<chainDist){chain=e;chainDist=d}
+    }
+    if(chain){
+      dealDamage(chain,Math.round((u.dmg||1)*(cfg.thunderChainMult||0.35)),u,'magic');
+      beamFx.push({x1:target.x,y1:target.y,x2:chain.x,y2:chain.y,life:0.18,maxLife:0.18,color:data.color,width:3,straight:true});
+      addP(chain.x,chain.y,data.color,8,3);
+    }
+    addDmg(target.x,target.y-target.size-16,'THUNDER SLOW',data.color,{sz:10,bold:true});
+  }else if(stance==='crown'){
+    if(target.isBoss||target.elite||target.isElite){
+      addDmg(target.x,target.y-target.size-16,'CROWN VERDICT',data.color,{sz:10,bold:true});
+    }else{
+      const dx=target.x-u.x,dy=target.y-u.y,d=Math.hypot(dx,dy)||1,push=cfg.crownKnockback||30;
+      target.x+=dx/d*push;target.y+=dy/d*push;
+      addDmg(target.x,target.y-target.size-16,'CROWN KNOCK',data.color,{sz:10,bold:true});
+    }
+  }
+  addP(target.x,target.y,data.color,10,3);
+}
+function arena_lineDistanceToSegment(target,x1,y1,x2,y2){
+  const dx=x2-x1,dy=y2-y1,lenSq=dx*dx+dy*dy||1;
+  const t=Math.max(0,Math.min(1,((target.x-x1)*dx+(target.y-y1)*dy)/lenSq));
+  return Math.hypot(target.x-(x1+dx*t),target.y-(y1+dy*t));
+}
+function arena_pickKingSwordTargets(u,primary,range,count){
+  const picked=[];
+  for(const e of enemies){
+    if(!isValidPlayerOffensiveTarget(e)||dist(u,e)>range)continue;
+    picked.push(e);
+  }
+  if(primary&&isValidPlayerOffensiveTarget(primary)&&!picked.includes(primary))picked.push(primary);
+  picked.sort((a,b)=>{
+    const score=e=>(e===primary?10000:0)+(e.isBoss?700:0)+((e.elite||e.isElite)?350:0)+Math.min(e.hp||0,2500)*0.02-dist(u,e)*0.05;
+    return score(b)-score(a);
+  });
+  return picked.slice(0,count);
+}
+function arena_pushKingLineWarn(x1,y1,x2,y2,width,color,label,frames){
+  groundFx.push({x:x1,y:y1,x2,y2,r:0,maxR:26,life:0.28,color,enemyWarn:true,warnTimer:frames,warnMax:frames,warnKind:'line',width,label});
+}
+function arena_buildKingLanes(u,primary,targets,count,len,width){
+  const lanes=[];
+  const base=primary?Math.atan2(primary.y-u.y,primary.x-u.x):0;
+  for(let i=0;i<count;i++){
+    const target=targets[i]||null;
+    const angle=target?Math.atan2(target.y-u.y,target.x-u.x):base+(i-Math.floor(count/2))*0.28;
+    const laneLen=target?Math.max(80,Math.min(len,dist(u,target)+28)):len;
+    lanes.push({x1:u.x,y1:u.y,x2:u.x+Math.cos(angle)*laneLen,y2:u.y+Math.sin(angle)*laneLen,width,angle});
+  }
+  return lanes;
+}
 function arena_findKingHolySwordTarget(u,maxRange){
   let best=null,bestScore=-Infinity;
   for(const e of enemies){
@@ -352,6 +441,66 @@ const ABILITIES={
     addDmg(u.x,u.y-u.size-4,'TREE OF LIFE!','#33cc33');showFlash('INCARNATION: TREE OF LIFE!','#33cc33',75);screenShake=Math.max(screenShake,12);
   },
   // ----- ZAYT (Retribution Paladin) -----
+  astralSever(u){ // King Holy Sword Saint A3 - no-jump boss-style blade lane
+    const cfg=arena_kingHolySwordConfig(u);
+    if(!cfg)return;
+    const target=arena_findKingHolySwordTarget(u,cfg.astralSeverRange||260);
+    if(!target)return;
+    if(!tryAbility(u,'astralSever','astralSever',12*GAME_TICK_HZ))return;
+    const stance=arena_kingArsenalStance(u);
+    const data=arena_kingArsenalData(stance);
+    const angle=Math.atan2(target.y-u.y,target.x-u.x);
+    const len=Math.max(120,Math.min(cfg.astralSeverRange||260,dist(u,target)+42));
+    const width=cfg.astralSeverWidth||58;
+    const x2=u.x+Math.cos(angle)*len,y2=u.y+Math.sin(angle)*len;
+    arena_pushKingLineWarn(u.x,u.y,x2,y2,width,data.color,'SEVER',cfg.astralSeverDelay||11);
+    beamFx.push({x1:u.x,y1:u.y-8,x2,y2:y2-8,color:data.color,width:4,life:0.22,maxLife:0.22,straight:true});
+    u.holySwordEchoes=u.holySwordEchoes||[];
+    u.holySwordEchoes.push({
+      type:'astralSever',timer:cfg.astralSeverDelay||11,stance,main:target,
+      lanes:[{x1:u.x,y1:u.y,x2,y2,width,angle}],
+      mainDmg:Math.round((u.dmg||1)*(cfg.astralSeverMainMult||2.35)*arena_kingArsenalDamageMult(stance,target)),
+      lineDmg:Math.round((u.dmg||1)*(cfg.astralSeverLineMult||1.0)),
+      label:'ASTRAL SEVER'
+    });
+    arena_kingGrantCrystalGuard(u,cfg.arsenalGuardDr||0.08,cfg.arsenalGuardDur||2*GAME_TICK_HZ);
+    addP(u.x,u.y,data.color,20,4);
+    addDmg(u.x,u.y-u.size-8,'ASTRAL SEVER',data.color,{sz:13,bold:true,outline:'#132033'});
+    arena_advanceKingArsenalStance(u);
+    screenShake=Math.max(screenShake,5);
+    if(SFX.heavySlash)SFX.heavySlash();
+  },
+  fivefoldEdict(u){ // King Holy Sword Saint A5 - no-jump five-sword command
+    const cfg=arena_kingHolySwordConfig(u);
+    if(!cfg)return;
+    const priority=arena_findKingHolySwordTarget(u,cfg.fivefoldEdictRange||340);
+    if(!priority)return;
+    if(!tryAbility(u,'fivefoldEdict','fivefoldEdict',24*GAME_TICK_HZ))return;
+    const stance=arena_kingArsenalStance(u);
+    const data=arena_kingArsenalData(stance);
+    const targets=arena_pickKingSwordTargets(u,priority,cfg.fivefoldEdictRange||340,5);
+    const points=[];
+    for(let i=0;i<5;i++){
+      const target=targets[i]||priority;
+      if(!target||!isValidPlayerOffensiveTarget(target))continue;
+      const primary=target===priority;
+      const mult=primary?(cfg.fivefoldEdictMainMult||2.60):(cfg.fivefoldEdictSecondaryMult||1.45);
+      dealDamage(target,Math.round((u.dmg||1)*mult*arena_kingArsenalDamageMult(stance,target)),u,'magic');
+      projectiles.push({x:u.x,y:u.y-u.size*0.75,target,tx:target.x,ty:target.y,speed:3.8+i*0.15,projType:'holySword',visualOnly:true,color:data.color,altColor:data.alt,_arrN:16,_arrSz:4,isPlayer:true,dmg:0});
+      beamFx.push({x1:u.x,y1:u.y-12,x2:target.x,y2:target.y,color:data.color+'aa',width:3,life:0.18,maxLife:0.18,straight:true});
+      groundFx.push({x:target.x,y:target.y,r:0,maxR:34,life:0.34,color:data.color});
+      addP(target.x,target.y,data.color,10,4);
+      points.push({x:target.x,y:target.y});
+    }
+    arena_applyKingArsenalCc(u,priority,stance,cfg);
+    u.holySwordEchoes=u.holySwordEchoes||[];
+    u.holySwordEchoes.push({type:'edictPulse',timer:cfg.fivefoldEdictPulseDelay||27,points,radius:cfg.fivefoldEdictPulseRadius||55,dmg:Math.round((u.dmg||1)*(cfg.fivefoldEdictPulseMult||0.80)),label:'EDICT PULSE'});
+    addDmg(priority.x,priority.y-priority.size-10,'FIVEFOLD EDICT',data.color,{sz:14,bold:true,outline:'#132033'});
+    showFlash('FIVEFOLD EDICT',data.color,45);
+    arena_advanceKingArsenalStance(u);
+    screenShake=Math.max(screenShake,8);
+    if(SFX.heavySlash)SFX.heavySlash();
+  },
   crushJudgment(u){ // King Holy Sword Saint A3 - priority dash strike
     const cfg=arena_kingHolySwordConfig(u);
     if(!cfg)return;

@@ -19,7 +19,7 @@ export const ARENA_UNIT_PASSIVES={
   99:{p1:'champion',  p2:'devour'}     // Vodka
 };
 
-ARENA_UNIT_PASSIVES[3] = {p1:'swordSaintCycle', p2:'judgmentSeals'};
+ARENA_UNIT_PASSIVES[3] = {p1:'livingArsenal', p2:'fiveSwordChoir'};
 
 export const ARENA_UNIT_BRANCHES={
   0: { // Zavs
@@ -206,7 +206,7 @@ export const ARENA_UNIT_BRANCHES={
 
 export const ARENA_BASE_SIGNATURES={
   0:null, 1:null, 2:null,
-  3:'divine_ruination', 4:'death_from_above', 5:'omnislash',
+  3:'heavenly_arsenal', 4:'death_from_above', 5:'omnislash',
   6:'inferno_orb', 7:'soul_harvest', 8:'trueshot', 9:'omega_cannon',
   10:'divine_hymn',
   11:'incarnation_tree',     // Bakdounes Resto Druid base sig
