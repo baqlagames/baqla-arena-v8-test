@@ -76,9 +76,9 @@ export function createProjectilesRuntime(deps) {
       const _alt=p.altColor||'#fff4cc';
       ctx.save();
       ctx.translate(p.x,p.y);ctx.rotate(_ang);
-      ctx.shadowColor=_col;ctx.shadowBlur=18;
+      ctx.shadowColor=_col;ctx.shadowBlur=10;
       for(let i=3;i>=1;i--){
-        ctx.globalAlpha=0.12*i;
+        ctx.globalAlpha=0.07*i;
         ctx.fillStyle=i%2?_col:_alt;
         ctx.beginPath();
         ctx.moveTo(-_len*0.18-i*8,0);
@@ -87,7 +87,7 @@ export function createProjectilesRuntime(deps) {
         ctx.lineTo(-_len*0.70-i*11,_w*0.45);
         ctx.closePath();ctx.fill();
       }
-      ctx.globalAlpha=0.30;
+      ctx.globalAlpha=0.20;
       ctx.fillStyle=_col;ctx.beginPath();ctx.ellipse(-_len*0.18,0,_len*0.72,_w*0.92,0,0,Math.PI*2);ctx.fill();
       ctx.globalAlpha=1;
       ctx.fillStyle=_col;
@@ -112,9 +112,8 @@ export function createProjectilesRuntime(deps) {
       ctx.fillStyle='#2a1230';
       ctx.beginPath();ctx.roundRect(-_len*0.50,-_w*0.22,_len*0.28,_w*0.44,_w*0.22);ctx.fill();
       ctx.restore();
-      if(frame%2===0){
-        addP(p.x-Math.cos(_ang)*_len*0.30+rnd(-2,2),p.y-Math.sin(_ang)*_len*0.30+rnd(-2,2),p._trailColor||_col,2,3);
-        addP(p.x,p.y,_alt,1,2);
+      if(frame%3===0){
+        addP(p.x-Math.cos(_ang)*_len*0.30+rnd(-2,2),p.y-Math.sin(_ang)*_len*0.30+rnd(-2,2),p._trailColor||_col,1,2);
       }
     }else if(p.blackArrow){
       const _bsz=p.size||12;

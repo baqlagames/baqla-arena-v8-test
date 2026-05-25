@@ -697,22 +697,22 @@ function resolveKingArsenalLanes(unit, echo, { enemies, beamEffects, groundEffec
     if (echo.applyCc !== false) applyKingTimerArsenalCc(unit, main, echo.stance, { enemies, dealDamage, emitParticle, addDamageText });
   }
   for (const lane of echo.lanes || []) {
-    beamEffects.push({ x1: lane.x1, y1: lane.y1 - 8, x2: lane.x2, y2: lane.y2 - 8, color: data.color, width: echo.type === 'crownCrossEcho' ? 7 : 10, life: 0.58, maxLife: 0.58, straight: true });
-    beamEffects.push({ x1: lane.x1, y1: lane.y1 + 4, x2: lane.x2, y2: lane.y2 + 4, color: data.alt, width: 4, life: 0.48, maxLife: 0.48, straight: true });
-    groundEffects.push({ x: (lane.x1 + lane.x2) / 2, y: (lane.y1 + lane.y2) / 2, r: 0, maxR: Math.max(56, Math.hypot(lane.x2 - lane.x1, lane.y2 - lane.y1) * 0.40), life: 0.70, color: data.color, flatten: true });
+    beamEffects.push({ x1: lane.x1, y1: lane.y1 - 8, x2: lane.x2, y2: lane.y2 - 8, color: data.color, width: echo.type === 'crownCrossEcho' ? 4.5 : 6.5, life: 0.40, maxLife: 0.40, straight: true });
+    beamEffects.push({ x1: lane.x1, y1: lane.y1 + 4, x2: lane.x2, y2: lane.y2 + 4, color: data.alt, width: 2.2, life: 0.30, maxLife: 0.30, straight: true });
+    groundEffects.push({ x: (lane.x1 + lane.x2) / 2, y: (lane.y1 + lane.y2) / 2, r: 0, maxR: Math.max(42, Math.hypot(lane.x2 - lane.x1, lane.y2 - lane.y1) * 0.28), life: 0.42, color: data.color, flatten: true });
     for (const enemy of enemies) {
       if (hit.has(enemy) || !isValidPlayerOffensiveTarget(enemy)) continue;
       if (kingTimerLineDistance(enemy, lane.x1, lane.y1, lane.x2, lane.y2) > (lane.width || 44)) continue;
       dealDamage(enemy, Math.round((echo.lineDmg || Math.round((unit.dmg || 1) * 0.5)) * kingTimerDamageMult(echo.stance, enemy)), unit, 'magic');
       hit.add(enemy);
-      emitParticle(enemy.x, enemy.y, data.color, 8, 3);
+      emitParticle(enemy.x, enemy.y, data.color, 4, 2);
     }
   }
   const labelX = isValidPlayerOffensiveTarget(main) ? main.x : ((echo.lanes && echo.lanes[0]) ? echo.lanes[0].x2 : unit.x);
   const labelY = isValidPlayerOffensiveTarget(main) ? main.y : ((echo.lanes && echo.lanes[0]) ? echo.lanes[0].y2 : unit.y);
   addDamageText(labelX, labelY - 28, echo.label || 'ARSENAL HIT', data.color, { sz: 13, bold: true });
-  emitParticle(labelX, labelY, data.color, 30, 6);
-  if (hit.size) shake(echo.type === 'crownCrossEcho' ? 7 : 9);
+  emitParticle(labelX, labelY, data.color, 12, 4);
+  if (hit.size) shake(echo.type === 'crownCrossEcho' ? 4 : 6);
 }
 
 function tickKingHolySwordTimers(unit, {
@@ -727,14 +727,14 @@ function tickKingHolySwordTimers(unit, {
 }) {
   if (unit.crystalGuardTimer > 0) {
     unit.crystalGuardTimer--;
-    if (frame % 8 === 0) emitParticle(unit.x, unit.y - unit.size * 0.35, '#ffd166', 2, 2);
+    if (frame % 14 === 0) emitParticle(unit.x, unit.y - unit.size * 0.35, '#ffd166', 1.2, 1.5);
     if (unit.crystalGuardTimer <= 0) unit.crystalGuardDR = 0;
   }
   if (unit.holySwordDamageBuffTimer > 0) {
     unit.holySwordDamageBuffTimer--;
-    if (frame % 6 === 0) {
+    if (frame % 14 === 0) {
       const color = (unit.holySwordDamageBuffMult || 1) >= 1.15 ? '#ff3d8b' : '#ffb000';
-      emitParticle(unit.x, unit.y - unit.size * 0.55, color, 2.5, 3);
+      emitParticle(unit.x, unit.y - unit.size * 0.55, color, 1.4, 2);
     }
     if (unit.holySwordDamageBuffTimer <= 0) unit.holySwordDamageBuffMult = 1;
   }
@@ -752,7 +752,7 @@ function tickKingHolySwordTimers(unit, {
       const echo = unit.holySwordEchoes[i];
       echo.timer--;
       if (echo.timer > 0) {
-        if (frame % 3 === 0) emitParticle(echo.x, echo.y - 22, echo.type === 'pillar' ? '#ffd166' : '#b95cff', 2, 3);
+        if (frame % 8 === 0 && Number.isFinite(echo.x) && Number.isFinite(echo.y)) emitParticle(echo.x, echo.y - 22, echo.type === 'pillar' ? '#ffd166' : '#b95cff', 1.2, 2);
         continue;
       }
       unit.holySwordEchoes.splice(i, 1);

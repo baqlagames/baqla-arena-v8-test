@@ -183,9 +183,9 @@ export function applyZaytOnHitProcs(unit, target, {
     const angle = Math.atan2(t.y - u.y, t.x - u.x);
     const stance = kingArsenalStance(u);
     const stanceData = kingArsenalData(stance);
-    beamFx.push({ x1: u.x, y1: u.y - 4, x2: t.x, y2: t.y, life: 0.18, maxLife: 0.18, color: stanceData.color + 'bb', width: 3.2, straight: true });
+    beamFx.push({ x1: u.x, y1: u.y - 4, x2: t.x, y2: t.y, life: 0.12, maxLife: 0.12, color: stanceData.color + '77', width: 1.8, straight: true });
     if (_ohTier <= 0) {
-      if (frame % 3 === 0) addP(t.x, t.y, stanceData.color, 1, 2);
+      if (frame % 4 === 0) addP(t.x, t.y, stanceData.color, 1, 1.5);
     }
   }
   if (swordCfg && _ohTier > 0 && t.hp > 0) {
@@ -234,16 +234,16 @@ export function applyZaytOnHitProcs(unit, target, {
         const extra = !targets[i];
         const mult = (swordCfg.fivefoldSwordMult || 0.62) * (extra ? (swordCfg.fivefoldConvergeMult || 0.35) : 1);
         dealDamage(target, Math.round((u.dmg || dmg || 1) * mult * kingArsenalDamageMult(stance, target)), u, 'magic');
-        projectiles.push({ x: u.x + (i - 2) * 7, y: u.y - u.size * (0.92 + i * 0.04), target, tx: target.x, ty: target.y, speed: 1.9 + i * 0.10, projType: 'holySword', visualOnly: true, color: data.color, altColor: data.alt, _arrN: 18, _arrSz: 5, _swordLen: 42, _swordW: 10, _trailColor: data.alt, isPlayer: true, dmg: 0 });
-        beamFx.push({ x1: u.x, y1: u.y - 8, x2: target.x, y2: target.y, life: 0.28, maxLife: 0.28, color: data.color + 'bb', width: 3.5, straight: true });
-        addP(target.x, target.y, data.color, 6, 3);
+        projectiles.push({ x: u.x + (i - 2) * 7, y: u.y - u.size * (0.92 + i * 0.04), target, tx: target.x, ty: target.y, speed: 1.9 + i * 0.10, projType: 'holySword', visualOnly: true, color: data.color, altColor: data.alt, _arrN: 14, _arrSz: 4, _swordLen: 40, _swordW: 8, _trailColor: data.alt, isPlayer: true, dmg: 0 });
+        if (i === 0) beamFx.push({ x1: u.x, y1: u.y - 8, x2: priority.x, y2: priority.y, life: 0.18, maxLife: 0.18, color: data.color + '88', width: 2.2, straight: true });
+        addP(target.x, target.y, data.color, 3, 2);
       }
       applyKingArsenalCc(u, priority, stance, swordCfg, enemies, dealDamage, addP, addDmg);
-      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 82, life: 0.66, color: data.color, flatten: true });
-      addP(u.x, u.y, data.color, 24, 5);
-      addP(u.x, u.y, data.alt, 14, 3);
+      groundFx.push({ x: u.x, y: u.y, r: 0, maxR: 66, life: 0.42, color: data.color, flatten: true });
+      addP(u.x, u.y, data.color, 10, 3);
+      addP(u.x, u.y, data.alt, 6, 2);
       addDmg(priority.x, priority.y - priority.size - 8, 'FIVEFOLD JUDGMENT', data.color, { sz: 13, bold: true, outline: '#132033' });
-      addDmg(u.x, u.y - u.size - 14, 'SAINT EDGE +8%', data.alt, { sz: 11, bold: true, outline: '#2a0f2d' });
+      addDmg(u.x, u.y - u.size - 14, '+8% EDGE', data.alt, { sz: 10, bold: true, outline: '#2a0f2d' });
       advanceKingArsenalStance(u);
       if (SFX.holyLight) SFX.holyLight();
     }
@@ -254,7 +254,7 @@ export function applyZaytOnHitProcs(unit, target, {
       grantKingHolySwordDamageBuff(u, swordCfg.crownCrossDamageBuff || 0.15, swordCfg.crownCrossDamageBuffDur || 5 * GAME_TICK_HZ);
       const targets = pickKingSwordTargets(u, enemies, t, swordCfg.crownCrossRange || 300, 5);
       const lanes = buildKingArsenalLanes(u, t, targets, 5, swordCfg.crownCrossLength || 300, swordCfg.crownCrossWidth || 44);
-      for (const lane of lanes) pushKingArsenalLineWarn(groundFx, lane.x1, lane.y1, lane.x2, lane.y2, lane.width, data.color, 'CROSS', swordCfg.crownCrossDelay || 15);
+      lanes.forEach((lane, idx) => pushKingArsenalLineWarn(groundFx, lane.x1, lane.y1, lane.x2, lane.y2, lane.width, data.color, idx === Math.floor(lanes.length / 2) ? 'CROSS' : null, swordCfg.crownCrossDelay || 15));
       u.holySwordEchoes = u.holySwordEchoes || [];
       u.holySwordEchoes.push({
         type: 'crownCross',
@@ -269,12 +269,11 @@ export function applyZaytOnHitProcs(unit, target, {
         echoLineDmg: Math.round((u.dmg || dmg || 1) * (swordCfg.crownCrossEchoLineMult || 0.55)),
         label: 'CROWN CROSS'
       });
-      addP(t.x, t.y, data.color, 36, 6);
-      addP(t.x, t.y, data.alt, 18, 4);
+      addP(t.x, t.y, data.color, 16, 4);
+      addP(t.x, t.y, data.alt, 8, 2.5);
       addDmg(t.x, t.y - t.size - 12, 'CROWN CROSS', data.color, { sz: 14, bold: true, outline: '#132033' });
-      addDmg(u.x, u.y - u.size - 14, 'ARSENAL SURGE +15%', data.alt, { sz: 12, bold: true, outline: '#2a0f2d' });
-      showFlash('CROWN CROSS', data.color, 42);
-      shake(9);
+      addDmg(u.x, u.y - u.size - 14, '+15% SURGE', data.alt, { sz: 10, bold: true, outline: '#2a0f2d' });
+      shake(5);
       advanceKingArsenalStance(u);
       if (SFX.holyLight) SFX.holyLight();
     }

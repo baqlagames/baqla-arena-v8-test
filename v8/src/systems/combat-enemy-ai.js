@@ -236,6 +236,10 @@ function enemyApproachPoint(enemy, target, { arenaTop, arenaBottom, arenaPhase }
   }
   const ranged = enemy.range > 80 || enemy.arch === 'ranged' || enemy.arch === 'caster';
   if (ranged || enemy.prefersBackline || enemy._snipeReady) return { x: target.x, y: target.y };
+  if (enemy.isBoss || enemy.isElite) {
+    const standOff = Math.max(18, Math.min(42, ((target.size || 24) + (enemy.size || 34)) * 0.42));
+    return { x: target.x, y: Math.max(arenaTop + 58, target.y - standOff) };
+  }
   const bands = arenaEngagementBands({ arenaTop, arenaBot: arenaBottom });
   return { x: target.x, y: Math.min(target.y, bands.enemyDiveY) };
 }
@@ -366,6 +370,7 @@ function chooseEnemyTarget(enemy, {
     let nearMeleeDistance = Infinity;
     const isRangedEnemy = enemy.range > 80 || enemy.arch === 'ranged' || enemy.arch === 'caster';
     const isMeleeEnemy = !isRangedEnemy && !enemy.prefersBackline;
+    const locksOntoTank = !!(enemy.isBoss || enemy.strictTankAggro);
     for (const unit of units) {
       if (unit.hp <= 0) continue;
       if (unit.divineShield) continue;
@@ -394,6 +399,10 @@ function chooseEnemyTarget(enemy, {
       target = nearBackline;
       distance = nearBacklineDistance;
       enemy._v8TargetClass = 'forcedBackline';
+    } else if (nearTank && locksOntoTank) {
+      target = nearTank;
+      distance = nearTankDistance;
+      enemy._v8TargetClass = 'bossTankHold';
     } else if (nearTank && isRangedEnemy && nearBackline) {
       if (enemy._tauntBypassReady) {
         target = nearBackline;
